@@ -36,4 +36,5 @@ else()
     )
 endif()
 
-add_executable(hlsl-clippy src/main.cpp)
+add_subdirectory(core)
+add_subdirectory(cli)
