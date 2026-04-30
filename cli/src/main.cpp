@@ -3,15 +3,23 @@
 #include <cstdint>
 #include <exception>
 #include <filesystem>
+#include <fstream>
+#include <ios>
 #include <iostream>
+#include <iterator>
 #include <memory>
+#include <optional>
 #include <ostream>
+#include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
+#include "hlsl_clippy/config.hpp"
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/lint.hpp"
+#include "hlsl_clippy/rewriter.hpp"
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
 #include "hlsl_clippy/version.hpp"
@@ -23,7 +31,11 @@ void print_usage() {
               << "Usage: hlsl-clippy <command> [args]\n"
               << "\n"
               << "Commands:\n"
-              << "  lint <file>   Lint an HLSL source file\n"
+              << "  lint <file> [--fix] [--config <path>]\n"
+              << "                Lint an HLSL source file. With --fix, apply\n"
+              << "                machine-applicable rewrites in place. With\n"
+              << "                --config, use the given .hlsl-clippy.toml\n"
+              << "                instead of walking up from the file's parent.\n"
               << "  --help        Print this help\n"
               << "  --version     Print version\n";
 }
@@ -79,22 +91,84 @@ void render_diagnostic(const hlsl_clippy::Diagnostic& diag,
     }
 }
 
-[[nodiscard]] int run_lint(const std::string& path_arg) {
-    const std::filesystem::path path{path_arg};
+struct LintOptions {
+    std::string path;
+    bool apply_fix = false;
+    std::string config_path;  ///< Empty means walk-up resolution.
+};
+
+[[nodiscard]] std::string read_file(const std::filesystem::path& path) {
+    std::ifstream stream(path, std::ios::binary);
+    if (!stream) {
+        return {};
+    }
+    return std::string{std::istreambuf_iterator<char>{stream}, std::istreambuf_iterator<char>{}};
+}
+
+bool write_file(const std::filesystem::path& path, std::string_view contents) {
+    std::ofstream stream(path, std::ios::binary | std::ios::trunc);
+    if (!stream) {
+        return false;
+    }
+    stream.write(contents.data(), static_cast<std::streamsize>(contents.size()));
+    return stream.good();
+}
+
+[[nodiscard]] std::vector<hlsl_clippy::PrioritisedFix> collect_fixes(
+    const std::vector<hlsl_clippy::Diagnostic>& diagnostics) {
+    std::vector<hlsl_clippy::PrioritisedFix> out;
+    for (const auto& d : diagnostics) {
+        for (const auto& f : d.fixes) {
+            if (!f.machine_applicable) {
+                continue;
+            }
+            hlsl_clippy::PrioritisedFix pf;
+            pf.priority = hlsl_clippy::FixPriority{.severity = d.severity, .rule_id = d.code};
+            pf.fix = f;
+            out.push_back(std::move(pf));
+        }
+    }
+    return out;
+}
+
+[[nodiscard]] int run_lint(const LintOptions& opts) {
+    const std::filesystem::path path{opts.path};
     if (!std::filesystem::exists(path)) {
-        std::cerr << "hlsl-clippy: file not found: " << path_arg << '\n';
+        std::cerr << "hlsl-clippy: file not found: " << opts.path << '\n';
         return 2;
     }
 
     hlsl_clippy::SourceManager sources;
     const auto src_id = sources.add_file(path);
     if (!src_id.valid()) {
-        std::cerr << "hlsl-clippy: could not read " << path_arg << '\n';
+        std::cerr << "hlsl-clippy: could not read " << opts.path << '\n';
         return 2;
     }
 
     auto rules = hlsl_clippy::make_default_rules();
-    const auto diagnostics = hlsl_clippy::lint(sources, src_id, rules);
+
+    // Resolve a config: explicit `--config` first, then walk-up.
+    std::optional<hlsl_clippy::Config> config;
+    std::filesystem::path resolved_config_path;
+    if (!opts.config_path.empty()) {
+        resolved_config_path = opts.config_path;
+    } else if (auto found = hlsl_clippy::find_config(path); found.has_value()) {
+        resolved_config_path = *found;
+    }
+    if (!resolved_config_path.empty()) {
+        auto result = hlsl_clippy::load_config(resolved_config_path);
+        if (!result) {
+            const auto& err = result.error();
+            std::cerr << err.source.string() << ':' << err.line << ':' << err.column
+                      << ": error: " << err.message << " [clippy::config]\n";
+            return 2;
+        }
+        config = std::move(result).value();
+    }
+
+    const auto diagnostics = config.has_value()
+                                 ? hlsl_clippy::lint(sources, src_id, rules, *config, path)
+                                 : hlsl_clippy::lint(sources, src_id, rules);
 
     bool any_warning = false;
     bool any_error = false;
@@ -113,6 +187,38 @@ void render_diagnostic(const hlsl_clippy::Diagnostic& diag,
                   << (diagnostics.size() == 1U ? "" : "s") << " emitted\n";
     }
 
+    // Apply fixes after rendering diagnostics so users see what the rewrite
+    // addressed. We re-read the file from disk to get the original bytes
+    // (the SourceManager copy is fine but reading again keeps the rewrite
+    // path fully decoupled from the lint pipeline).
+    if (opts.apply_fix) {
+        const auto fixes = collect_fixes(diagnostics);
+        if (fixes.empty()) {
+            std::cout << "hlsl-clippy: --fix had nothing to apply\n";
+        } else {
+            const std::string original = read_file(path);
+            if (original.empty() && !std::filesystem::is_empty(path)) {
+                std::cerr << "hlsl-clippy: could not read " << opts.path << " for --fix\n";
+                return 2;
+            }
+            const hlsl_clippy::Rewriter rewriter;
+            std::vector<hlsl_clippy::FixConflict> conflicts;
+            const std::string rewritten = rewriter.apply(original, fixes, &conflicts);
+            if (!write_file(path, rewritten)) {
+                std::cerr << "hlsl-clippy: could not write " << opts.path << '\n';
+                return 2;
+            }
+            std::cout << "hlsl-clippy: applied " << (fixes.size() - conflicts.size()) << " fix"
+                      << (fixes.size() - conflicts.size() == 1U ? "" : "es") << " to " << opts.path
+                      << '\n';
+            for (const auto& c : conflicts) {
+                std::cerr << opts.path << ": note: dropped fix from `" << c.dropped_rule_id
+                          << "` because it overlaps `" << c.winning_rule_id
+                          << "` [clippy::fix-conflict]\n";
+            }
+        }
+    }
+
     if (any_error) {
         return 2;
     }
@@ -120,6 +226,45 @@ void render_diagnostic(const hlsl_clippy::Diagnostic& diag,
         return 1;
     }
     return 0;
+}
+
+[[nodiscard]] int parse_lint_args(std::span<const std::string_view> args, LintOptions& opts) {
+    // args here is the tail after the `lint` subcommand.
+    if (args.empty()) {
+        std::cerr << "hlsl-clippy: lint requires a file argument\n";
+        return 2;
+    }
+    for (std::size_t i = 0; i < args.size(); ++i) {
+        const auto a = args[i];
+        if (a == "--fix") {
+            opts.apply_fix = true;
+            continue;
+        }
+        if (a == "--config") {
+            if (i + 1U >= args.size()) {
+                std::cerr << "hlsl-clippy: --config requires a path argument\n";
+                return 2;
+            }
+            opts.config_path = std::string{args[i + 1U]};
+            ++i;
+            continue;
+        }
+        if (a.starts_with("--")) {
+            std::cerr << "hlsl-clippy: unknown lint option: " << a << '\n';
+            return 2;
+        }
+        if (opts.path.empty()) {
+            opts.path = std::string{a};
+            continue;
+        }
+        std::cerr << "hlsl-clippy: unexpected positional argument: " << a << '\n';
+        return 2;
+    }
+    if (opts.path.empty()) {
+        std::cerr << "hlsl-clippy: lint requires a file argument\n";
+        return 2;
+    }
+    return -1;  // sentinel: continue with run_lint.
 }
 
 [[nodiscard]] int run_main(int argc, char** argv) {
@@ -145,11 +290,12 @@ void render_diagnostic(const hlsl_clippy::Diagnostic& diag,
         return 0;
     }
     if (cmd == "lint") {
-        if (args.size() < 3U) {
-            std::cerr << "hlsl-clippy: lint requires a file argument\n";
-            return 2;
+        LintOptions opts;
+        const auto tail = std::span<const std::string_view>(args).subspan(2U, args.size() - 2U);
+        if (const int rc = parse_lint_args(tail, opts); rc >= 0) {
+            return rc;
         }
-        return run_lint(std::string{args[2]});
+        return run_lint(opts);
     }
     print_usage();
     return 1;

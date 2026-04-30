@@ -38,7 +38,8 @@ std::optional<ParsedSource> parse(const SourceManager& sources, SourceId source)
         return std::nullopt;
     }
 
-    return ParsedSource{.source = source, .bytes = bytes, .tree = std::move(tree)};
+    return ParsedSource{
+        .source = source, .bytes = bytes, .tree = std::move(tree), .language = tree_sitter_hlsl()};
 }
 
 }  // namespace hlsl_clippy::parser

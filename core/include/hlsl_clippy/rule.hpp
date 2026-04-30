@@ -7,6 +7,8 @@
 
 namespace hlsl_clippy {
 
+class SuppressionSet;
+
 /// Pipeline stage at which a rule's hook fires. Phase 0 only ships `Ast`;
 /// reflection-aware rules will introduce additional stages later.
 enum class Stage {
@@ -17,6 +19,10 @@ enum class Stage {
 /// lives in `core/src/parser_internal.hpp` and is not visible to public-header
 /// consumers (CLI, future LSP). Rules cast through this opaque wrapper.
 class AstCursor;
+
+/// Forward declaration of the tree-sitter tree wrapper. Used by rules that
+/// drive a TSQuery match loop (the declarative path).
+class AstTree;
 
 /// Context passed to rule hooks. Owns the diagnostic sink for the in-progress
 /// lint pass and exposes the source under analysis.
@@ -32,7 +38,15 @@ public:
         return source_;
     }
 
-    /// Append a diagnostic to the current pass.
+    /// Install a suppression filter. Diagnostics emitted via `emit()` whose
+    /// span intersects an active suppression are dropped silently. The pointer
+    /// is borrowed and must outlive the `RuleContext`.
+    void set_suppressions(const SuppressionSet* suppressions) noexcept {
+        suppressions_ = suppressions;
+    }
+
+    /// Append a diagnostic to the current pass. Diagnostics matching an
+    /// active inline-suppression are dropped silently.
     void emit(Diagnostic diag);
 
     /// Steal the accumulated diagnostics. Called by the lint orchestrator.
@@ -41,6 +55,7 @@ public:
 private:
     const SourceManager* sources_;
     SourceId source_;
+    const SuppressionSet* suppressions_ = nullptr;
     std::vector<Diagnostic> diagnostics_;
 };
 
@@ -73,6 +88,11 @@ public:
     /// Visit one AST node. Called by the lint orchestrator for every named
     /// node in document order. Default implementation does nothing.
     virtual void on_node(const AstCursor& cursor, RuleContext& ctx);
+
+    /// Whole-tree hook called once per parsed source. Declarative rules use
+    /// this to drive a TSQuery match loop in one shot rather than walking
+    /// every named node imperatively. Default implementation does nothing.
+    virtual void on_tree(const AstTree& tree, RuleContext& ctx);
 };
 
 }  // namespace hlsl_clippy

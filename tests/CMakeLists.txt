@@ -29,10 +29,21 @@ configure_file(
 
 add_executable(hlsl_clippy_unit_tests
     unit/test_pow_const_squared.cpp
+    unit/test_suppress.cpp
+    unit/test_query.cpp
+    unit/test_redundant_saturate.cpp
+    unit/test_clamp01_to_saturate.cpp
+    unit/test_rewriter.cpp
+    unit/test_config.cpp
 )
 
 target_include_directories(hlsl_clippy_unit_tests PRIVATE
     "${CMAKE_CURRENT_BINARY_DIR}"
+    # Tests touching the declarative query wrapper need the private core/src
+    # headers (parser_internal.hpp, query/query.hpp). Public headers live in
+    # core/include and are picked up via the hlsl_clippy_core target's
+    # PUBLIC include directory.
+    "${CMAKE_SOURCE_DIR}/core/src"
 )
 
 target_link_libraries(hlsl_clippy_unit_tests
@@ -40,6 +51,8 @@ target_link_libraries(hlsl_clippy_unit_tests
         hlsl_clippy_core
         hlsl_clippy_warnings
         Catch2::Catch2WithMain
+        tree_sitter::tree_sitter
+        tree_sitter::hlsl
 )
 
 set_target_properties(hlsl_clippy_unit_tests PROPERTIES

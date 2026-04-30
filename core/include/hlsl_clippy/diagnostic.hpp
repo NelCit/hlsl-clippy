@@ -27,7 +27,13 @@ struct TextEdit {
 struct Fix {
     /// Human-readable description of what the fix would do.
     std::string description;
-    /// Sequence of edits applied atomically.
+    /// Whether the fix is safe to apply unattended. Machine-applicable fixes
+    /// are pure textual substitutions with no semantic change; suggestion-only
+    /// fixes (e.g. those that change observable rounding behaviour) need user
+    /// review and are NOT applied by `--fix`.
+    bool machine_applicable = true;
+    /// Sequence of edits applied atomically. All edits in one Fix succeed
+    /// together or none of them are applied.
     std::vector<TextEdit> edits;
 };
 
