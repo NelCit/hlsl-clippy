@@ -17,6 +17,11 @@ linter produces a matching diagnostic on that line. Lines with no `HIT`
 marker should produce no diagnostic — silent rules are caught by the same
 test that asserts the count.
 
+The Catch2 runner under `tests/unit/` already loads these fixtures and runs
+the registered rule pack against them. Phase 0 covers `pow-const-squared`
+(see `tests/unit/test_pow_const_squared.cpp`); Phase 1 will introduce a
+generic HIT-marker driver that walks every fixture file automatically.
+
 ## Layout
 
 - `phase2/` — pure-AST rules (math, redundancy)
