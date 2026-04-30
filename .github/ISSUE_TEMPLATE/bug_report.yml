@@ -1,0 +1,86 @@
+name: "Bug report"
+description: "Report a bug in hlsl-clippy"
+title: "[Bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill out every required field below so
+        the problem can be reproduced quickly.
+
+        If you are reporting a security vulnerability, do not file a public issue.
+        See [SECURITY.md](../SECURITY.md) instead.
+
+  - type: input
+    id: version
+    attributes:
+      label: "hlsl-clippy version"
+      description: "Output of `hlsl-clippy --version`"
+      placeholder: "hlsl-clippy 0.1.0 (abc1234)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: "Operating system"
+      options:
+        - Windows
+        - Linux
+        - macOS
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: toolchain
+    attributes:
+      label: "Compiler / toolchain used to build hlsl-clippy"
+      description: "MSVC version, Clang version, etc. Leave blank if using a release binary."
+      placeholder: "MSVC 19.40 / Clang 18.1.0"
+    validations:
+      required: false
+
+  - type: textarea
+    id: repro_shader
+    attributes:
+      label: "Repro shader"
+      description: "The smallest HLSL snippet that triggers the bug."
+      render: hlsl
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: "Command run"
+      description: "The exact `hlsl-clippy` invocation."
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected behavior"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Actual behavior"
+      description: "Include the full diagnostics output."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: pre_submit
+    attributes:
+      label: "Pre-submission checklist"
+      options:
+        - label: "I have searched existing issues and this is not a duplicate."
+          required: true
+        - label: "I am not reporting a security vulnerability (use SECURITY.md instead)."
+          required: true
