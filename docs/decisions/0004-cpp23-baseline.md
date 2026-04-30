@@ -13,7 +13,7 @@ The project currently sets `CMAKE_CXX_STANDARD 20` (`CMakeLists.txt`) and the `.
 
 In early 2026 the major toolchains have shipped enough C++23 to make a baseline bump cheap:
 
-- MSVC 19.40+ (VS 17.10, May 2024) ships `std::expected`, `std::print`, deducing-this, `if consteval`, `[[assume]]`.
+- MSVC 19.44+ (VS 17.14, May 2025) ships `std::expected`, `std::print`, deducing-this, `if consteval`, `[[assume]]`.
 - Clang 18+ with libc++ 17+ or libstdc++ 13+ covers the same set.
 - GCC 14+ with libstdc++ 14 covers it.
 
@@ -54,7 +54,7 @@ Chosen option: **(3) C++23 baseline + selective C++26 adoption.**
 
 Compiler floors:
 
-- MSVC 19.40+ (VS 17.10). 19.42+ recommended.
+- MSVC 19.44+ (VS 17.14).
 - Clang 18+ (libc++ 17+ or libstdc++ 13+). Clang 19/20 strongly preferred. clang-tidy pinned to 19+ in CI.
 - GCC 14+.
 
@@ -71,15 +71,15 @@ Good:
 
 Bad:
 
-- MSVC < 19.40, Clang < 18, GCC < 13/14 stop building. Downstream packagers on older LTS images are excluded — acceptable for a 2026-launched tool.
+- MSVC < 19.44, Clang < 18, GCC < 13/14 stop building. Downstream packagers on older LTS images are excluded — acceptable for a 2026-launched tool.
 - libc++ 17 / libstdc++ 13 floors — Ubuntu 22.04's stock libstdc++ (12) is below the floor. Pin to Ubuntu 24.04 in CI (already required by ADR 0005).
 - Slang's C++17 build expectations + `_HAS_CXX23` macros: per-target `cxx_std_23` keeps Slang on its own standard. Mitigation: opaque-handle boundary across `libs/semantic/` (ADR 0003).
-- MSVC 19.40 had a `std::print` console-encoding bug on Windows; `/utf-8` is set, but verify by Phase 1.
+- MSVC 19.44 is the floor; the `std::print` console-encoding bug that affected 19.40 is resolved at this version. `/utf-8` remains set.
 
 ### Confirmation
 
 - `target_compile_features(<target> PRIVATE cxx_std_23)` lands on every first-party target; vendored targets keep their own.
-- CMake guards reject MSVC < 19.40, Clang < 18, GCC < 14:
+- CMake guards reject MSVC < 19.44, Clang < 18, GCC < 14:
 
 ```diff
  cmake_minimum_required(VERSION 3.20)
@@ -102,8 +102,8 @@ Bad:
  add_executable(hlsl-clippy src/main.cpp)
 +target_compile_features(hlsl-clippy PRIVATE cxx_std_23)
 +
-+if(MSVC AND MSVC_VERSION LESS 1940)
-+    message(FATAL_ERROR "MSVC 19.40+ required for C++23 std::expected/std::print")
++if(MSVC AND MSVC_VERSION LESS 1944)
++    message(FATAL_ERROR "MSVC 14.44 (VS 17.14) or newer required. Found MSVC ${MSVC_VERSION}.")
 +elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 18)
 +    message(FATAL_ERROR "Clang 18+ required")
 +elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 14)
