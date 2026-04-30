@@ -12,3 +12,5 @@ else()
 endif()
 
 add_executable(hlsl-clippy src/main.cpp)
+
+add_subdirectory(tools/slang-smoke)
