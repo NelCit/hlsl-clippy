@@ -90,6 +90,15 @@ std::vector<Diagnostic> lint(const SourceManager& sources,
     RuleContext ctx{sources, source};
     ctx.set_suppressions(&suppressions);
     const ::TSNode root = ts_tree_root_node(parsed->tree.get());
+
+    // Declarative pass: every rule's `on_tree` runs once with the whole tree.
+    const AstTree tree_view{parsed->tree.get(), parsed->language, parsed->bytes, parsed->source};
+    for (const auto& rule : rules) {
+        rule->on_tree(tree_view, ctx);
+    }
+
+    // Imperative pass: the rule walker invokes every rule's `on_node` on each
+    // named node in document order.
     walk(root, rules, ctx, parsed->bytes, parsed->source);
 
     auto diagnostics = ctx.take_diagnostics();

@@ -42,6 +42,9 @@ struct ParsedSource {
     SourceId source;
     std::string_view bytes;
     UniqueTree tree;
+    /// Language pointer used for the parse. Held so that declarative rules can
+    /// compile a `TSQuery` against the same language without re-discovering it.
+    const ::TSLanguage* language = nullptr;
 };
 
 /// Parse `source`'s contents through tree-sitter-hlsl. Returns `std::nullopt`
@@ -53,6 +56,45 @@ struct ParsedSource {
 }  // namespace hlsl_clippy::parser
 
 namespace hlsl_clippy {
+
+/// Concrete tree handle backing the public `AstTree` forward declaration.
+/// Holds the parsed `TSTree*`, the language used to parse it, the source
+/// bytes, and the source id, so declarative rules can compile a TSQuery
+/// against the language and drive a match loop without re-discovering the
+/// language.
+class AstTree {
+public:
+    AstTree(::TSTree* tree,
+            const ::TSLanguage* language,
+            std::string_view source_bytes,
+            SourceId source) noexcept
+        : tree_(tree), language_(language), source_bytes_(source_bytes), source_(source) {}
+
+    [[nodiscard]] ::TSTree* raw_tree() const noexcept {
+        return tree_;
+    }
+    [[nodiscard]] const ::TSLanguage* language() const noexcept {
+        return language_;
+    }
+    [[nodiscard]] std::string_view source_bytes() const noexcept {
+        return source_bytes_;
+    }
+    [[nodiscard]] SourceId source_id() const noexcept {
+        return source_;
+    }
+
+    /// Slice the source bytes covered by the given tree-sitter node.
+    [[nodiscard]] std::string_view text(::TSNode node) const noexcept;
+
+    /// Half-open byte range covered by the given node.
+    [[nodiscard]] ByteSpan byte_range(::TSNode node) const noexcept;
+
+private:
+    ::TSTree* tree_;
+    const ::TSLanguage* language_;
+    std::string_view source_bytes_;
+    SourceId source_;
+};
 
 /// Concrete cursor backing the public `AstCursor` forward declaration. Holds
 /// a tree-sitter node and a view of the underlying source bytes for the run.
