@@ -1,0 +1,162 @@
+# CI — build hlsl-clippy on Linux (Clang) and Windows (MSVC/Ninja)
+#
+# Third-party action SHAs pinned for supply-chain safety.
+# Update them with: gh api /repos/<owner>/<repo>/git/ref/tags/<tag>
+#
+# Pinned SHAs (as of 2026-04-30, verified via GitHub API):
+#   actions/checkout@v4.2.2            → 11bd71901bbe5b1630ceea73d27597364c9af683
+#   actions/cache@v4.2.3               → 5a3ec84eff668545956fd18022155c47e93e2684
+#   seanmiddleditch/gha-setup-ninja@v5 → 96bed6edff20d1dd61ecff9b75cc519d516e6401
+#   ilammy/msvc-dev-cmd@v1.13.0        → 0b201ec74fa43914dc39ae48a89fd1d8cb592756
+#     (ilammy SHA is the underlying commit; the tag is annotated — GHA resolves
+#      annotated tags to their commit object automatically)
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+# Cancel superseded runs for the same branch / PR.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & smoke test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
+
+      # ── 2. Restore build cache ─────────────────────────────────────────────
+      # Key: OS + hash of CMakeLists.txt + current submodule HEADs.
+      # Submodule SHAs are captured via .gitmodules HEAD pointers baked into
+      # the checkout; we hash them together with CMakeLists.txt.
+      #
+      # TODO: cache Slang's prebuilt artifacts via sccache once vendored.
+      - name: Cache build directory
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: build
+          key: build-${{ matrix.os }}-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt', '.gitmodules') }}
+          restore-keys: |
+            build-${{ matrix.os }}-
+
+      # ── 3. Ninja ───────────────────────────────────────────────────────────
+      - name: Set up Ninja
+        uses: seanmiddleditch/gha-setup-ninja@96bed6edff20d1dd61ecff9b75cc519d516e6401 # v5
+        # SHA verified: gh api repos/seanmiddleditch/gha-setup-ninja/git/ref/tags/v5
+
+      # ── 4a. (Linux) Install Clang 18 from llvm.org ────────────────────────
+      - name: Install Clang 18 (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          # Use the official LLVM installer script so we get a fresh Clang 18
+          # regardless of what Ubuntu ships in its default apt mirror.
+          wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
+          # Sanity-check
+          clang-18 --version
+          clang++-18 --version
+
+      # ── 4b. (Windows) Activate MSVC developer environment ─────────────────
+      - name: Set up MSVC dev environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+
+      # ── 5. CMake configure ────────────────────────────────────────────────
+      - name: CMake configure (Linux)
+        if: runner.os == 'Linux'
+        env:
+          CC: clang-18
+          CXX: clang++-18
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: CMake configure (Windows)
+        if: runner.os == 'Windows'
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      # ── 6. Build ──────────────────────────────────────────────────────────
+      - name: Build
+        run: cmake --build build
+
+      # ── 7. Smoke test ─────────────────────────────────────────────────────
+      # The rename agent restructures crates/cli + crates/core → cli/ + core/,
+      # placing the executable at:
+      #   ./build/cli/hlsl-clippy          (Linux, Ninja single-config)
+      #   ./build/cli/hlsl-clippy.exe      (Windows, Ninja single-config)
+      #   ./build/cli/Release/hlsl-clippy.exe  (MSVC multi-config — not used
+      #                                          here because we force Ninja,
+      #                                          but kept as a fallback)
+      # Before the rename lands the binary sits at:
+      #   ./build/hlsl-clippy   /   ./build/hlsl-clippy.exe
+      # We probe all candidate paths and run whichever we find first.
+
+      - name: Smoke test (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          BIN=""
+          for candidate in \
+              "./build/cli/hlsl-clippy" \
+              "./build/hlsl-clippy"; do
+            if [ -x "$candidate" ]; then
+              BIN="$candidate"
+              break
+            fi
+          done
+          if [ -z "$BIN" ]; then
+            echo "ERROR: could not locate hlsl-clippy binary" >&2
+            exit 1
+          fi
+          echo "Using binary: $BIN"
+          OUTPUT=$("$BIN" --version)
+          echo "Output: $OUTPUT"
+          if [ "$OUTPUT" != "0.0.0" ]; then
+            echo "ERROR: expected '0.0.0', got '$OUTPUT'" >&2
+            exit 1
+          fi
+          echo "Smoke test passed."
+
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $candidates = @(
+            ".\build\cli\hlsl-clippy.exe",
+            ".\build\cli\Release\hlsl-clippy.exe",
+            ".\build\hlsl-clippy.exe"
+          )
+          $bin = $null
+          foreach ($c in $candidates) {
+            if (Test-Path $c) {
+              $bin = $c
+              break
+            }
+          }
+          if (-not $bin) {
+            Write-Error "ERROR: could not locate hlsl-clippy binary"
+            exit 1
+          }
+          Write-Host "Using binary: $bin"
+          $output = & $bin --version
+          Write-Host "Output: $output"
+          if ($output -ne "0.0.0") {
+            Write-Error "ERROR: expected '0.0.0', got '$output'"
+            exit 1
+          }
+          Write-Host "Smoke test passed."
