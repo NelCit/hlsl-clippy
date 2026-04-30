@@ -111,6 +111,28 @@ TEST_CASE("redundant-saturate fires on the phase 2 fixture nested case",
     CHECK(contains(5U));
 }
 
+TEST_CASE("redundant-saturate carries a machine-applicable fix",
+          "[rules][redundant-saturate][fix]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float3 f(float3 c) { return saturate(saturate(c)); }
+)hlsl";
+    const auto diagnostics = lint_buffer(hlsl, sources);
+    const Diagnostic* hit = nullptr;
+    for (const auto& d : diagnostics) {
+        if (d.code == "redundant-saturate") {
+            hit = &d;
+            break;
+        }
+    }
+    REQUIRE(hit != nullptr);
+    REQUIRE_FALSE(hit->fixes.empty());
+    CHECK(hit->fixes[0].machine_applicable);
+    REQUIRE(hit->fixes[0].edits.size() == 1U);
+    // The replacement is exactly the inner call's text.
+    CHECK(hit->fixes[0].edits[0].replacement == "saturate(c)");
+}
+
 TEST_CASE("inline allow(redundant-saturate) suppresses the diagnostic",
           "[rules][redundant-saturate][suppress]") {
     SourceManager sources;

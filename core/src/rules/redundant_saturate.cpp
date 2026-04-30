@@ -88,15 +88,33 @@ public:
                     return;
                 }
 
+                const auto outer_range = tree.byte_range(outer_call);
+                const auto inner_call = match.capture("inner_call");
+                const auto inner_range = tree.byte_range(inner_call);
+
                 Diagnostic diag;
                 diag.code = std::string{k_rule_id};
                 diag.severity = Severity::Warning;
-                diag.primary_span =
-                    Span{.source = tree.source_id(), .bytes = tree.byte_range(outer_call)};
+                diag.primary_span = Span{.source = tree.source_id(), .bytes = outer_range};
                 diag.message = std::string{
                     "`saturate(saturate(x))` is redundant — the inner "
                     "`saturate` already clamps to [0, 1]; drop the "
                     "outer call"};
+
+                // Machine-applicable fix: replace the outer call's range with
+                // the inner call's text. This drops the outer wrapper while
+                // preserving the still-clamping inner call.
+                const auto inner_text = tree.text(inner_call);
+                if (!inner_text.empty() && inner_range.hi <= outer_range.hi) {
+                    Fix fix;
+                    fix.description = std::string{
+                        "drop the outer `saturate` (the inner call already clamps to [0, 1])"};
+                    TextEdit edit;
+                    edit.span = Span{.source = tree.source_id(), .bytes = outer_range};
+                    edit.replacement = std::string{inner_text};
+                    fix.edits.push_back(std::move(edit));
+                    diag.fixes.push_back(std::move(fix));
+                }
                 ctx.emit(std::move(diag));
             });
     }
