@@ -2,6 +2,10 @@
 
 This directory contains a curated set of real, publicly licensed HLSL shaders used as the validation set for hlsl-clippy's linting rules. All shaders are sourced verbatim (or with only a mandatory header comment prepended) from open-source repositories under permissive licenses.
 
+> **Canonical per-shader registry:** [`SOURCES.md`](SOURCES.md) is the authoritative
+> provenance and license table for every file in this corpus, per ADR 0006. The inventory
+> tables below are kept for quick reference but SOURCES.md is the source of truth.
+
 ---
 
 ## Licensing Policy
@@ -106,14 +110,17 @@ For library profiles (`lib_6_3`): use `-profile lib_6_3` without `-entry main`.
 
 | Stage | Count | License(s) |
 |---|---|---|
-| vertex | 3 | MIT |
-| pixel | 3 | MIT |
-| compute | 7 | MIT (6), MIT/AMD (1) |
-| raytracing | 3 | MIT |
+| vertex | 4 | MIT |
+| pixel | 4 | MIT |
+| compute | 10 | MIT (9), MIT/AMD (1) |
+| raytracing | 5 | MIT |
 | mesh | 1 | MIT |
-| **Total** | **17** | |
+| amplification | 2 | MIT |
+| **Total** | **27** | |
 
-**License breakdown:** 16 × MIT (microsoft/DirectX-Graphics-Samples), 1 × MIT (GPUOpen-Effects/FidelityFX-SPD / AMD)
+**License breakdown:** 26 × MIT (microsoft/DirectX-Graphics-Samples), 1 × MIT (GPUOpen-Effects/FidelityFX-SPD / AMD)
+
+For the full per-file provenance table see [`SOURCES.md`](SOURCES.md).
 
 ---
 
