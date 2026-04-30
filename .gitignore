@@ -8,3 +8,8 @@ out/
 CMakeUserPresets.json
 compile_commands.json
 .cache/
+
+# Node / VitePress
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
