@@ -12,6 +12,12 @@ add_library(hlsl_clippy_core STATIC
     src/rules/pow_const_squared.cpp
     src/rules/redundant_saturate.cpp
     src/rules/clamp01_to_saturate.cpp
+    src/rules/lerp_extremes.cpp
+    src/rules/mul_identity.cpp
+    src/rules/sin_cos_pair.cpp
+    src/rules/manual_reflect.cpp
+    src/rules/manual_step.cpp
+    src/rules/manual_smoothstep.cpp
 )
 
 target_include_directories(hlsl_clippy_core PUBLIC
