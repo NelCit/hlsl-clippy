@@ -144,8 +144,7 @@ See [ROADMAP.md](ROADMAP.md) for per-phase detail and open questions.
 
 Licensed under the [Apache License, Version 2.0](LICENSE).
 
-> **Note:** the `LICENSE` file currently contains the MIT license text. Migration to Apache-2.0 is tracked in [CHANGELOG.md](CHANGELOG.md) and will be completed before the first tagged release.
+Copyright 2026 NelCit and contributors.
 
-Copyright 2026 hlsl-clippy contributors.
-
-Vendored dependencies retain their own licenses; see individual source directories for details once dependencies are integrated (Phase 0–1).
+Vendored dependencies retain their own licenses; see [NOTICE](NOTICE) and
+[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for details.
