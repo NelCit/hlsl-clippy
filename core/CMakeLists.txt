@@ -4,6 +4,7 @@ add_library(hlsl_clippy_core STATIC
     src/parser.cpp
     src/lint.cpp
     src/rule_context.cpp
+    src/rewriter.cpp
     src/suppress.cpp
     src/query/query.cpp
     src/rules/registry.cpp
