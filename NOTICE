@@ -1,0 +1,15 @@
+hlsl-clippy
+Copyright 2026 NelCit and contributors
+
+This product includes software developed by Carnegie Mellon University,
+NVIDIA Corporation, and The Khronos Group, Inc. / shader-slang contributors
+(Slang, Apache-2.0 with LLVM exception):
+  https://github.com/shader-slang/slang
+
+This product includes software developed by Max Brunsfeld and tree-sitter
+contributors (tree-sitter, MIT):
+  https://github.com/tree-sitter/tree-sitter
+
+This product includes the tree-sitter-hlsl grammar developed by Max Brunsfeld
+and Stephan Seitz (MIT):
+  https://github.com/tree-sitter-grammars/tree-sitter-hlsl
