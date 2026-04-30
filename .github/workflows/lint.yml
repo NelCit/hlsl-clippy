@@ -1,0 +1,116 @@
+# Lint — clang-format + clang-tidy gates (Linux only)
+#
+# Third-party action SHAs pinned for supply-chain safety.
+#
+# Pinned SHAs (as of 2026-04-30):
+#   actions/checkout@v4.2.2  → 11bd71901bbe5b1630ceea73d27597364c9af683
+
+name: Lint
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+# Cancel superseded runs for the same branch / PR.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: clang-format + clang-tidy
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout (no submodules; lint only needs source files) ──────────
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        # Intentionally no `submodules:` — Slang/tree-sitter are not needed
+        # for format/tidy checks and omitting them keeps this job fast.
+
+      # ── 2. Install clang-format-18 and clang-tidy-18 ──────────────────────
+      - name: Install clang-format-18 and clang-tidy-18
+        run: |
+          wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
+          clang-format-18 --version
+          clang-tidy-18 --version
+
+      # ── 3. clang-format dry-run ────────────────────────────────────────────
+      # Scope: cli/, core/, tools/ — tracked .cpp/.hpp/.h files only.
+      # Uses `git ls-files` so untracked or generated files are never checked.
+      # EXCLUDES external/ (third-party code we do not own).
+      - name: clang-format check
+        run: |
+          set -euo pipefail
+          FILES=$(git ls-files -- \
+              'cli/*.cpp' 'cli/*.hpp' 'cli/*.h' \
+              'core/*.cpp' 'core/*.hpp' 'core/*.h' \
+              'tools/*.cpp' 'tools/*.hpp' 'tools/*.h' \
+              'cli/**/*.cpp' 'cli/**/*.hpp' 'cli/**/*.h' \
+              'core/**/*.cpp' 'core/**/*.hpp' 'core/**/*.h' \
+              'tools/**/*.cpp' 'tools/**/*.hpp' 'tools/**/*.h' \
+              ':(exclude)external/' \
+          )
+          if [ -z "$FILES" ]; then
+            # Fallback: current layout uses src/ before rename lands
+            FILES=$(git ls-files -- \
+                'src/*.cpp' 'src/*.hpp' 'src/*.h' \
+                ':(exclude)external/' \
+            )
+          fi
+          if [ -z "$FILES" ]; then
+            echo "No C++ source files found to format-check."
+            exit 0
+          fi
+          echo "Files to check:"
+          echo "$FILES"
+          # --dry-run: don't modify files; --Werror: fail on any difference.
+          echo "$FILES" | xargs clang-format-18 --dry-run --Werror
+          echo "clang-format check passed."
+
+      # ── 4. CMake configure with compile_commands.json ─────────────────────
+      - name: CMake configure (generate compile_commands.json)
+        env:
+          CC: clang-18
+          CXX: clang++-18
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      # ── 5. clang-tidy ─────────────────────────────────────────────────────
+      # Same file set as clang-format; warnings promoted to errors.
+      - name: clang-tidy check
+        run: |
+          set -euo pipefail
+          FILES=$(git ls-files -- \
+              'cli/*.cpp' 'cli/*.hpp' 'cli/*.h' \
+              'core/*.cpp' 'core/*.hpp' 'core/*.h' \
+              'tools/*.cpp' 'tools/*.hpp' 'tools/*.h' \
+              'cli/**/*.cpp' 'cli/**/*.hpp' 'cli/**/*.h' \
+              'core/**/*.cpp' 'core/**/*.hpp' 'core/**/*.h' \
+              'tools/**/*.cpp' 'tools/**/*.hpp' 'tools/**/*.h' \
+              ':(exclude)external/' \
+          )
+          if [ -z "$FILES" ]; then
+            FILES=$(git ls-files -- \
+                'src/*.cpp' 'src/*.hpp' 'src/*.h' \
+                ':(exclude)external/' \
+            )
+          fi
+          if [ -z "$FILES" ]; then
+            echo "No C++ source files found to tidy-check."
+            exit 0
+          fi
+          echo "Files to check:"
+          echo "$FILES"
+          # -p build      — point at the compile_commands.json directory
+          # -warnings-as-errors='*'  — any diagnostic is a hard failure
+          echo "$FILES" | xargs clang-tidy-18 \
+            -p build \
+            -warnings-as-errors='*'
+          echo "clang-tidy check passed."
