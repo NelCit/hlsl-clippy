@@ -7,6 +7,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# CTest opt-in. Defaults to ON for development; pass -DBUILD_TESTING=OFF for
+# release builds that don't want to fetch Catch2.
+include(CTest)
+
 # Project-wide warning flags as an INTERFACE target. We deliberately do NOT
 # apply these via add_compile_options() at the top level, because that would
 # propagate /WX -Werror into vendored third-party submodules (Slang, miniz,
@@ -47,10 +51,15 @@ else()
     )
 endif()
 
+# tree-sitter must be available before the core library that links it.
+include(cmake/UseTreeSitter.cmake)
+
 add_subdirectory(core)
 add_subdirectory(cli)
 
 add_subdirectory(tools/slang-smoke)
-
-include(cmake/UseTreeSitter.cmake)
 add_subdirectory(tools/treesitter-smoke)
+
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
