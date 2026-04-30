@@ -2,7 +2,7 @@
 
 A linter for HLSL — performance and correctness rules beyond what `dxc` catches.
 
-**Status as of 2026-04-30:** Phase 0 complete. The linter parses real HLSL via tree-sitter, validates with Slang, runs the `pow-const-squared` rule end-to-end, and emits rustc-style diagnostics. Phase 1 (rule engine + quick-fix Rewriter + suppressions + config + 2 more rules) is in flight. Phase 2 implementation plan is committed (ADR 0009).
+**Status as of 2026-04-30:** Phase 0 + Phase 1 complete. The linter ships three rules end-to-end (`pow-const-squared`, `redundant-saturate`, `clamp01-to-saturate`) with machine-applicable `--fix` rewrites, inline `// hlsl-clippy: allow(...)` suppressions, and a `.hlsl-clippy.toml` config (toml++ v3.4.0) supporting per-rule severity, includes/excludes, and per-directory `[[overrides]]`. The Catch2 v3 unit-test suite passes 46/46 under MSVC `/W4 /WX /permissive-` (compiler floor: MSVC 14.44 / VS 17.14 / Build Tools 19.44). Phase 2 implementation plan is queued (ADR 0009: 24 rules across math + saturate-redundancy + misc; parallelizable as a shared-utilities PR + 3 per-category packs). ADR 0010 queues a 36-rule SM 6.7/6.8/6.9 expansion pack (SER, Cooperative Vectors, Long Vectors, OMM, Mesh-in-WG nodes) for Phase 3+.
 
 ## What's shipped (Phase 0)
 
@@ -22,6 +22,17 @@ A linter for HLSL — performance and correctness rules beyond what `dxc` catche
 - `.github/PULL_REQUEST_TEMPLATE.md` and `ISSUE_TEMPLATE/{bug_report,rule_proposal}.yml`.
 - `cli/` and `core/` directory layout (renamed from `crates/`).
 - MSVC compiler floor pinned to MSVC 14.44 / Build Tools 19.44 / VS 17.14.
+
+## What's shipped (Phase 1)
+
+- Inline suppression parser — `// hlsl-clippy: allow(rule-id)` (line, block, file scope)
+- Declarative TSQuery wrapper for AST-pattern rules
+- Quick-fix `Rewriter` framework + `--fix` CLI flag (idempotent application)
+- Two new rules with machine-applicable fixes: `redundant-saturate`, `clamp01-to-saturate`
+- `.hlsl-clippy.toml` config (toml++ v3.4.0 single-include via FetchContent) — `[rules]`, `[includes]`, `[excludes]`, `[[overrides]]`; walk-up resolver bounded by `.git/`; `--config <path>` CLI flag
+- Catch2 v3.5.4 test suite — 46/46 passing
+- 22 hand-written fixture files across `tests/fixtures/{phase2,phase3,phase4,phase7}/` covering 76 unique rules with 116 `// HIT(...)` and 68 `// SHOULD-NOT-HIT(...)` annotations
+- Corpus expanded to 27 public-licensed shaders (`tests/corpus/SOURCES.md` registry per ADR 0006)
 
 ## North star
 
@@ -79,14 +90,14 @@ Additional Phase 0 work landed:
 - [x] Governance files: `CONTRIBUTING.md` (DCO sign-off, conventional commits), `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1), `SECURITY.md`, `CHANGELOG.md` (Keep a Changelog 1.1.0)
 - [x] `.github/PULL_REQUEST_TEMPLATE.md` and `ISSUE_TEMPLATE/{bug_report,rule_proposal}.yml`
 
-### Phase 1 — Rule engine + quick-fix infrastructure (2-3 weeks)
+### Phase 1 — Rule engine + quick-fix infrastructure (2-3 weeks) — COMPLETE
 
-- [ ] `Rule` interface + tree-sitter visitor harness; declarative s-expression query helper
-- [ ] Diagnostic format: file, span, code, severity, message, optional fix (rustc-style)
-- [ ] Quick-fix Rewriter: range-based source rewriter built on tree-sitter spans; machine-applicable fixes for `pow-const-squared` and other safe rewrites
-- [ ] Inline suppression: `// hlsl-clippy: allow(rule-name)` (line-scoped) and block-scoped variants
-- [ ] Config file: `.hlsl-clippy.toml` for rule severity, includes/excludes, per-directory overrides
-- [ ] Three rules total, each with quick-fix where safe and a blog post: `pow-const-squared`, `redundant-saturate`, `clamp01-to-saturate`
+- [x] `Rule` interface + tree-sitter visitor harness; declarative s-expression query helper
+- [x] Diagnostic format: file, span, code, severity, message, optional fix (rustc-style)
+- [x] Quick-fix Rewriter: range-based source rewriter built on tree-sitter spans; machine-applicable fixes for `pow-const-squared` and other safe rewrites
+- [x] Inline suppression: `// hlsl-clippy: allow(rule-name)` (line-scoped) and block-scoped variants
+- [x] Config file: `.hlsl-clippy.toml` for rule severity, includes/excludes, per-directory overrides
+- [x] Three rules total, each with quick-fix where safe and a blog post: `pow-const-squared`, `redundant-saturate`, `clamp01-to-saturate`
 
 ### Phase 2 — AST-only rule pack (3-4 weeks)
 
