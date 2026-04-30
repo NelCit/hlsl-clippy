@@ -5,8 +5,10 @@ add_library(hlsl_clippy_core STATIC
     src/lint.cpp
     src/rule_context.cpp
     src/suppress.cpp
+    src/query/query.cpp
     src/rules/registry.cpp
     src/rules/pow_const_squared.cpp
+    src/rules/redundant_saturate.cpp
 )
 
 target_include_directories(hlsl_clippy_core PUBLIC

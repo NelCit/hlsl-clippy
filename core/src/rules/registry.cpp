@@ -11,6 +11,7 @@ namespace hlsl_clippy {
 std::vector<std::unique_ptr<Rule>> make_default_rules() {
     std::vector<std::unique_ptr<Rule>> rules;
     rules.push_back(rules::make_pow_const_squared());
+    rules.push_back(rules::make_redundant_saturate());
     return rules;
 }
 

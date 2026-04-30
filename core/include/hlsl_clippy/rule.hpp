@@ -20,6 +20,10 @@ enum class Stage {
 /// consumers (CLI, future LSP). Rules cast through this opaque wrapper.
 class AstCursor;
 
+/// Forward declaration of the tree-sitter tree wrapper. Used by rules that
+/// drive a TSQuery match loop (the declarative path).
+class AstTree;
+
 /// Context passed to rule hooks. Owns the diagnostic sink for the in-progress
 /// lint pass and exposes the source under analysis.
 class RuleContext {
@@ -84,6 +88,11 @@ public:
     /// Visit one AST node. Called by the lint orchestrator for every named
     /// node in document order. Default implementation does nothing.
     virtual void on_node(const AstCursor& cursor, RuleContext& ctx);
+
+    /// Whole-tree hook called once per parsed source. Declarative rules use
+    /// this to drive a TSQuery match loop in one shot rather than walking
+    /// every named node imperatively. Default implementation does nothing.
+    virtual void on_tree(const AstTree& tree, RuleContext& ctx);
 };
 
 }  // namespace hlsl_clippy
