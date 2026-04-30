@@ -8,6 +8,7 @@ out/
 CMakeUserPresets.json
 compile_commands.json
 .cache/
+.dev/
 
 # Node / VitePress
 node_modules/

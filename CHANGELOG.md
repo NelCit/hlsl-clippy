@@ -21,6 +21,14 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 - Documentation scaffolding: `docs/` tree, governance files
   (`CODE_OF_CONDUCT.md`, `SECURITY.md`, `CHANGELOG.md`), and GitHub issue/PR
   templates.
+- Inline suppression parser (`// hlsl-clippy: allow(rule-name)`) with line,
+  block, and file scopes.
+- Declarative TSQuery wrapper for AST-pattern rules.
+- `redundant-saturate` rule with machine-applicable fix.
+- `clamp01-to-saturate` rule with machine-applicable fix.
+- Quick-fix `Rewriter` framework + `--fix` CLI flag (idempotent application).
+- `.hlsl-clippy.toml` config loader (toml++) with rule severity,
+  includes/excludes, per-directory overrides; `--config <path>` CLI flag.
 
 ### Changed
 

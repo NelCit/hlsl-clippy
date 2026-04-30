@@ -54,11 +54,32 @@ endif()
 # tree-sitter must be available before the core library that links it.
 include(cmake/UseTreeSitter.cmake)
 
+# toml++ for `.hlsl-clippy.toml` parsing (per ADR 0008 §5). Header-only;
+# fetched in single-include mode so only `core/src/config.cpp` pays the
+# compile cost.
+include(FetchContent)
+FetchContent_Declare(
+    tomlplusplus
+    GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
+    GIT_TAG        v3.4.0
+)
+FetchContent_MakeAvailable(tomlplusplus)
+
 add_subdirectory(core)
 add_subdirectory(cli)
 
-add_subdirectory(tools/slang-smoke)
-add_subdirectory(tools/treesitter-smoke)
+# Smoke tools require their respective vendored libraries (Slang, tree-sitter).
+# They are useful for diagnosing third-party integration but optional for
+# day-to-day rule-engine work, so default-on but allow opt-out for environments
+# where the heavyweight Slang submodule is not initialised.
+option(HLSL_CLIPPY_BUILD_SLANG_SMOKE "Build the Slang smoke-test tool" ON)
+option(HLSL_CLIPPY_BUILD_TREESITTER_SMOKE "Build the tree-sitter smoke-test tool" ON)
+if(HLSL_CLIPPY_BUILD_SLANG_SMOKE)
+    add_subdirectory(tools/slang-smoke)
+endif()
+if(HLSL_CLIPPY_BUILD_TREESITTER_SMOKE)
+    add_subdirectory(tools/treesitter-smoke)
+endif()
 
 if(BUILD_TESTING)
     add_subdirectory(tests)
