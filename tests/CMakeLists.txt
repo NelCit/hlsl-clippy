@@ -29,6 +29,7 @@ configure_file(
 
 add_executable(hlsl_clippy_unit_tests
     unit/test_pow_const_squared.cpp
+    unit/test_suppress.cpp
 )
 
 target_include_directories(hlsl_clippy_unit_tests PRIVATE

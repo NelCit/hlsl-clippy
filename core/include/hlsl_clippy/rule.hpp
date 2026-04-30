@@ -7,6 +7,8 @@
 
 namespace hlsl_clippy {
 
+class SuppressionSet;
+
 /// Pipeline stage at which a rule's hook fires. Phase 0 only ships `Ast`;
 /// reflection-aware rules will introduce additional stages later.
 enum class Stage {
@@ -32,7 +34,15 @@ public:
         return source_;
     }
 
-    /// Append a diagnostic to the current pass.
+    /// Install a suppression filter. Diagnostics emitted via `emit()` whose
+    /// span intersects an active suppression are dropped silently. The pointer
+    /// is borrowed and must outlive the `RuleContext`.
+    void set_suppressions(const SuppressionSet* suppressions) noexcept {
+        suppressions_ = suppressions;
+    }
+
+    /// Append a diagnostic to the current pass. Diagnostics matching an
+    /// active inline-suppression are dropped silently.
     void emit(Diagnostic diag);
 
     /// Steal the accumulated diagnostics. Called by the lint orchestrator.
@@ -41,6 +51,7 @@ public:
 private:
     const SourceManager* sources_;
     SourceId source_;
+    const SuppressionSet* suppressions_ = nullptr;
     std::vector<Diagnostic> diagnostics_;
 };
 

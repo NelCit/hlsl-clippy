@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <span>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -11,6 +12,7 @@
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
+#include "hlsl_clippy/suppress.hpp"
 
 #include "parser_internal.hpp"
 
@@ -83,10 +85,27 @@ std::vector<Diagnostic> lint(const SourceManager& sources,
         return {};
     }
 
+    const SuppressionSet suppressions = SuppressionSet::scan(parsed->bytes);
+
     RuleContext ctx{sources, source};
+    ctx.set_suppressions(&suppressions);
     const ::TSNode root = ts_tree_root_node(parsed->tree.get());
     walk(root, rules, ctx, parsed->bytes, parsed->source);
-    return ctx.take_diagnostics();
+
+    auto diagnostics = ctx.take_diagnostics();
+
+    // Surface scanner-internal diagnostics about malformed annotations.
+    for (const auto& sd : suppressions.scan_diagnostics()) {
+        Diagnostic diag;
+        diag.code = std::string{"clippy::malformed-suppression"};
+        diag.severity = Severity::Warning;
+        diag.primary_span =
+            Span{.source = source, .bytes = ByteSpan{.lo = sd.byte_lo, .hi = sd.byte_hi}};
+        diag.message = sd.message;
+        diagnostics.push_back(std::move(diag));
+    }
+
+    return diagnostics;
 }
 
 }  // namespace hlsl_clippy

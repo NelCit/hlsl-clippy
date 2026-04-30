@@ -4,6 +4,7 @@ add_library(hlsl_clippy_core STATIC
     src/parser.cpp
     src/lint.cpp
     src/rule_context.cpp
+    src/suppress.cpp
     src/rules/registry.cpp
     src/rules/pow_const_squared.cpp
 )
