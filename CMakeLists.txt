@@ -54,6 +54,17 @@ endif()
 # tree-sitter must be available before the core library that links it.
 include(cmake/UseTreeSitter.cmake)
 
+# toml++ for `.hlsl-clippy.toml` parsing (per ADR 0008 §5). Header-only;
+# fetched in single-include mode so only `core/src/config.cpp` pays the
+# compile cost.
+include(FetchContent)
+FetchContent_Declare(
+    tomlplusplus
+    GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
+    GIT_TAG        v3.4.0
+)
+FetchContent_MakeAvailable(tomlplusplus)
+
 add_subdirectory(core)
 add_subdirectory(cli)
 

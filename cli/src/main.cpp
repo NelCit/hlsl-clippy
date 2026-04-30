@@ -8,6 +8,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <span>
 #include <string>
@@ -15,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+#include "hlsl_clippy/config.hpp"
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/lint.hpp"
 #include "hlsl_clippy/rewriter.hpp"
@@ -144,7 +146,29 @@ bool write_file(const std::filesystem::path& path, std::string_view contents) {
     }
 
     auto rules = hlsl_clippy::make_default_rules();
-    const auto diagnostics = hlsl_clippy::lint(sources, src_id, rules);
+
+    // Resolve a config: explicit `--config` first, then walk-up.
+    std::optional<hlsl_clippy::Config> config;
+    std::filesystem::path resolved_config_path;
+    if (!opts.config_path.empty()) {
+        resolved_config_path = opts.config_path;
+    } else if (auto found = hlsl_clippy::find_config(path); found.has_value()) {
+        resolved_config_path = *found;
+    }
+    if (!resolved_config_path.empty()) {
+        auto result = hlsl_clippy::load_config(resolved_config_path);
+        if (!result) {
+            const auto& err = result.error();
+            std::cerr << err.source.string() << ':' << err.line << ':' << err.column
+                      << ": error: " << err.message << " [clippy::config]\n";
+            return 2;
+        }
+        config = std::move(result).value();
+    }
+
+    const auto diagnostics = config.has_value()
+                                 ? hlsl_clippy::lint(sources, src_id, rules, *config, path)
+                                 : hlsl_clippy::lint(sources, src_id, rules);
 
     bool any_warning = false;
     bool any_error = false;
