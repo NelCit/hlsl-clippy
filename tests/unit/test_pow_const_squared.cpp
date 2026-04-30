@@ -51,13 +51,16 @@ TEST_CASE("pow-const-squared fires on every pow(x, N.0) in math.hlsl", "[rules][
     SourceManager sources;
     const auto diagnostics = lint_fixture(fixture, sources);
 
+    // Phase 2 adds additional rules that also fire on math.hlsl; filter to
+    // only the pow-const-squared diagnostics for this test.
+    std::vector<Diagnostic> pow_diags;
+    for (const auto& d : diagnostics) {
+        if (d.code == "pow-const-squared") pow_diags.push_back(d);
+    }
+
     // The fixture has four firings: pow(1-NdotV, 5.0), pow(x, 2.0), pow(x, 3.0),
     // pow(x, 5.0). pow(2.0, -t*8.0) is excluded because the base is literal 2.
-    REQUIRE(diagnostics.size() >= 4U);
-
-    for (const auto& diag : diagnostics) {
-        CHECK(diag.code == "pow-const-squared");
-    }
+    CHECK(pow_diags.size() >= 4U);
 }
 
 TEST_CASE("pow-const-squared does not fire on raw multiplication", "[rules][pow]") {
