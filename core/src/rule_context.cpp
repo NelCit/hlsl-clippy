@@ -2,10 +2,16 @@
 
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/rule.hpp"
+#include "hlsl_clippy/suppress.hpp"
 
 namespace hlsl_clippy {
 
 void RuleContext::emit(Diagnostic diag) {
+    if (suppressions_ != nullptr &&
+        suppressions_->suppresses(
+            diag.code, diag.primary_span.bytes.lo, diag.primary_span.bytes.hi)) {
+        return;
+    }
     diagnostics_.push_back(std::move(diag));
 }
 
