@@ -20,7 +20,8 @@ Checks: >
   -readability-magic-numbers,
   -readability-identifier-length,
   -misc-non-private-member-variables-in-classes,
-  -misc-include-cleaner
+  -misc-include-cleaner,
+  -clang-diagnostic-unused-command-line-argument
 
 WarningsAsErrors: '*'
 HeaderFilterRegex: '^(cli|core|src)/.*\.(h|hpp)$'
@@ -48,7 +49,13 @@ CheckOptions:
   - key:   readability-identifier-naming.ConstantCase
     value: lower_case
   - key:   readability-identifier-naming.GlobalConstantCase
-    value: CamelCase
+    value: lower_case
+  - key:   readability-identifier-naming.GlobalConstantPrefix
+    value: 'k_'
+  - key:   readability-identifier-naming.ConstexprVariableCase
+    value: lower_case
+  - key:   readability-identifier-naming.ConstexprVariablePrefix
+    value: 'k_'
   - key:   readability-implicit-bool-conversion.AllowIntegerConditions
     value: 'true'
   - key:   readability-implicit-bool-conversion.AllowPointerConditions
