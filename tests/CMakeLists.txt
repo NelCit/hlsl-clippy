@@ -32,6 +32,7 @@ add_executable(hlsl_clippy_unit_tests
     unit/test_suppress.cpp
     unit/test_query.cpp
     unit/test_redundant_saturate.cpp
+    unit/test_clamp01_to_saturate.cpp
 )
 
 target_include_directories(hlsl_clippy_unit_tests PRIVATE

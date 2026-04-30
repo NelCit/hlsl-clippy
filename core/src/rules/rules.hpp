@@ -12,5 +12,6 @@ namespace hlsl_clippy::rules {
 
 [[nodiscard]] std::unique_ptr<Rule> make_pow_const_squared();
 [[nodiscard]] std::unique_ptr<Rule> make_redundant_saturate();
+[[nodiscard]] std::unique_ptr<Rule> make_clamp01_to_saturate();
 
 }  // namespace hlsl_clippy::rules

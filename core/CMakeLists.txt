@@ -9,6 +9,7 @@ add_library(hlsl_clippy_core STATIC
     src/rules/registry.cpp
     src/rules/pow_const_squared.cpp
     src/rules/redundant_saturate.cpp
+    src/rules/clamp01_to_saturate.cpp
 )
 
 target_include_directories(hlsl_clippy_core PUBLIC
