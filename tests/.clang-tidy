@@ -1,0 +1,9 @@
+# Tests use Catch2 macros that expand into do/while loops and static helper
+# functions. Suppress the checks that fight Catch2's expansion model while
+# still inheriting every other check from the project-wide .clang-tidy.
+InheritParentConfig: true
+Checks: >
+  -cppcoreguidelines-avoid-do-while,
+  -misc-use-anonymous-namespace,
+  -readability-function-cognitive-complexity,
+  -misc-const-correctness
