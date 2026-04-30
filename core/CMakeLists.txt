@@ -6,6 +6,7 @@ add_library(hlsl_clippy_core STATIC
     src/rule_context.cpp
     src/rewriter.cpp
     src/suppress.cpp
+    src/config.cpp
     src/query/query.cpp
     src/rules/registry.cpp
     src/rules/pow_const_squared.cpp
@@ -29,4 +30,5 @@ target_link_libraries(hlsl_clippy_core
         hlsl_clippy_warnings
         tree_sitter::tree_sitter
         tree_sitter::hlsl
+        tomlplusplus::tomlplusplus
 )
