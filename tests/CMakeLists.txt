@@ -35,6 +35,12 @@ add_executable(hlsl_clippy_unit_tests
     unit/test_clamp01_to_saturate.cpp
     unit/test_rewriter.cpp
     unit/test_config.cpp
+    unit/test_lerp_extremes.cpp
+    unit/test_mul_identity.cpp
+    unit/test_sin_cos_pair.cpp
+    unit/test_manual_reflect.cpp
+    unit/test_manual_step.cpp
+    unit/test_manual_smoothstep.cpp
 )
 
 target_include_directories(hlsl_clippy_unit_tests PRIVATE
