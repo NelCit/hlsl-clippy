@@ -289,8 +289,6 @@ The primary reason is patent protection. Apache-2.0 includes an explicit patent 
 
 Apache-2.0 is also the license used by several projects in this ecosystem (LLVM, DXC components, many Rust crates). This minimizes license-compatibility friction when vendoring or linking those dependencies.
 
-The `LICENSE` file in the repository currently contains the MIT license text. Migration to Apache-2.0 is tracked in `CHANGELOG.md` under `### Changed` and will be completed before the first tagged release.
-
 ---
 
 ## Where to start
