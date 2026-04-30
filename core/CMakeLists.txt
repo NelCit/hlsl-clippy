@@ -8,3 +8,5 @@ target_include_directories(hlsl_clippy_core PUBLIC
 )
 
 target_compile_features(hlsl_clippy_core PUBLIC cxx_std_20)
+
+target_link_libraries(hlsl_clippy_core PRIVATE hlsl_clippy_warnings)

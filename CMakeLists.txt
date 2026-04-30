@@ -7,8 +7,15 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Project-wide warning flags as an INTERFACE target. We deliberately do NOT
+# apply these via add_compile_options() at the top level, because that would
+# propagate /WX -Werror into vendored third-party submodules (Slang, miniz,
+# tree-sitter, etc.) and break their builds. Our own targets (core, cli, the
+# smoke tools) opt in by linking to hlsl_clippy_warnings.
+add_library(hlsl_clippy_warnings INTERFACE)
+
 if(MSVC)
-    add_compile_options(
+    target_compile_options(hlsl_clippy_warnings INTERFACE
         /W4
         /WX
         /permissive-
@@ -17,9 +24,13 @@ if(MSVC)
         /utf-8
         /EHsc
     )
-    add_compile_definitions(_CRT_SECURE_NO_WARNINGS NOMINMAX WIN32_LEAN_AND_MEAN)
+    target_compile_definitions(hlsl_clippy_warnings INTERFACE
+        _CRT_SECURE_NO_WARNINGS
+        NOMINMAX
+        WIN32_LEAN_AND_MEAN
+    )
 else()
-    add_compile_options(
+    target_compile_options(hlsl_clippy_warnings INTERFACE
         -Wall
         -Wextra
         -Wpedantic
