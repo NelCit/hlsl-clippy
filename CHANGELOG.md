@@ -24,5 +24,5 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- Planned license switch from MIT to Apache-2.0 (LICENSE file replacement is a
-  separate task).
+- Switched from MIT to Apache-2.0 license; added NOTICE and
+  THIRD_PARTY_LICENSES.md.
