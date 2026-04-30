@@ -1,0 +1,121 @@
+name: "Rule proposal"
+description: "Propose a new lint rule for hlsl-clippy"
+title: "[Rule] "
+labels: ["rule-proposal", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Rule proposals must include a clear hardware-level reason the pattern matters.
+        Vague "this is bad" proposals will be closed.
+
+  - type: input
+    id: rule_name
+    attributes:
+      label: "Proposed rule name"
+      description: "kebab-case identifier"
+      placeholder: "pow-to-mul"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: "Category"
+      options:
+        - math
+        - saturate-redundancy
+        - bindings
+        - texture
+        - workgroup
+        - control-flow
+        - interpolators
+        - numerical-safety
+        - ir-level
+        - dxr
+        - mesh
+        - work-graphs
+        - vrs
+        - sampler-feedback
+        - fp16-packed
+        - other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: "Suggested phase"
+      description: "Refer to ROADMAP.md for phase definitions."
+      options:
+        - "2 (AST-only)"
+        - "3 (type-aware)"
+        - "4 (data flow)"
+        - "7 (IR-level)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_it_detects
+    attributes:
+      label: "What it detects"
+      description: "One paragraph describing the pattern this rule flags."
+    validations:
+      required: true
+
+  - type: textarea
+    id: why_gpu
+    attributes:
+      label: "Why it matters on a GPU"
+      description: |
+        REQUIRED. This is the seed for the companion blog post.
+        Explain using hardware reasoning: ALU rate, transcendental units, VGPR pressure,
+        wave semantics, bandwidth cost, etc. Generic statements like "this is slow" are
+        not sufficient and will result in the proposal being closed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: bad_code
+    attributes:
+      label: "Example — bad code"
+      render: hlsl
+    validations:
+      required: true
+
+  - type: textarea
+    id: good_code
+    attributes:
+      label: "Example — good code"
+      render: hlsl
+    validations:
+      required: true
+
+  - type: dropdown
+    id: fix_availability
+    attributes:
+      label: "Fix availability"
+      options:
+        - machine-applicable
+        - suggestion
+        - none
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: "References"
+      description: "NVIDIA/AMD/Intel docs, blog posts, ISA references, prior art. Optional but encouraged."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: pre_submit
+    attributes:
+      label: "Pre-submission checklist"
+      options:
+        - label: "I have read [docs/rules/_template.md](../docs/rules/_template.md) and the proposal fits that format."
+          required: true
+        - label: "I have checked ROADMAP.md and this rule is not already listed."
+          required: true
