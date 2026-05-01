@@ -74,8 +74,39 @@ if ($slangVer) {
     Write-Host "dev-shell: cmake\SlangVersion.cmake not found; PATH not extended for Slang"
 }
 
-# ── 5. Quick sanity-check ──────────────────────────────────────────────────
-foreach ($t in @("cmake", "ninja", "cl", "link")) {
+# ── 5. Prefer clang-cl over cl.exe ─────────────────────────────────────────
+# clang-cl is the Clang front-end with MSVC-compatible flag syntax + MSVC
+# ABI. Same matrix as CI: smaller binaries (Clang LTO + better dead-code
+# elim), faster diagnostics, single compiler family across all 3 platforms.
+# Resolution order:
+#   (a) `C:\Program Files\LLVM\bin\clang-cl.exe`  (standalone LLVM install
+#       — same path as windows-latest CI runners)
+#   (b) `<VS>\VC\Tools\Llvm\x64\bin\clang-cl.exe` (VS 2022 17.4+ "C++ Clang
+#       Compiler for Windows" workload component)
+#   (c) Fall back to MSVC `cl.exe` if no clang-cl found.
+# Set CC/CXX env vars so cmake configure picks clang-cl up automatically.
+$ClangCl = $null
+$ClangClCandidates = @(
+    "C:\Program Files\LLVM\bin\clang-cl.exe",
+    (Join-Path $VS "VC\Tools\Llvm\x64\bin\clang-cl.exe"),
+    (Join-Path $VS "VC\Tools\Llvm\bin\clang-cl.exe")
+)
+foreach ($c in $ClangClCandidates) {
+    if (Test-Path $c) { $ClangCl = $c; break }
+}
+if ($ClangCl) {
+    $env:CC  = $ClangCl
+    $env:CXX = $ClangCl
+    Write-Host "dev-shell: using clang-cl at $ClangCl"
+} else {
+    Write-Host "dev-shell: clang-cl not found; falling back to MSVC cl.exe"
+    Write-Host "dev-shell: install via 'winget install LLVM.LLVM' or VS 2022 'C++ Clang Compiler for Windows' workload component"
+}
+
+# ── 6. Quick sanity-check ──────────────────────────────────────────────────
+$tools = @("cmake", "ninja", "cl", "link")
+if ($ClangCl) { $tools = @("cmake", "ninja", "clang-cl", "link") }
+foreach ($t in $tools) {
     $p = Get-Command $t -ErrorAction SilentlyContinue
     if ($p) { Write-Host "dev-shell:   $t -> $($p.Source)" }
     else    { Write-Warning "dev-shell:   $t NOT FOUND on PATH" }

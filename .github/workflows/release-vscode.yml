@@ -100,6 +100,9 @@ jobs:
           wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
           sudo apt-get install -y libc++-18-dev libc++abi-18-dev
 
+      # clang-cl on Windows (Clang front-end + MSVC ABI). msvc-dev-cmd wires
+      # up the VS install's linker / SDK / libs; the cmake configure step
+      # sets CC/CXX = clang-cl. See ci.yml for the rationale.
       - name: Set up MSVC dev environment (Windows)
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
@@ -142,6 +145,9 @@ jobs:
 
       - name: CMake configure (Windows)
         if: runner.os == 'Windows'
+        env:
+          CC: clang-cl
+          CXX: clang-cl
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: CMake configure (macOS)
