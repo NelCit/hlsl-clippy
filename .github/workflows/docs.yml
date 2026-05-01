@@ -58,8 +58,11 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.0.4
         with:
           node-version: '20'
-          # Use npm cache when a lockfile exists; harmless no-op otherwise.
-          cache: 'npm'
+          # NOTE: `cache: 'npm'` removed — setup-node's cache requires a
+          # package-lock.json to compute the cache key and hard-fails if
+          # one is missing. We don't ship a lockfile yet (the docs-site
+          # agent didn't run `npm install` to generate one). Re-enable
+          # this once `package-lock.json` is committed at the repo root.
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
