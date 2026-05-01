@@ -129,6 +129,17 @@ ReadResult read_message(std::istream& in) {
     }
     const std::uint32_t length = *length_opt;
 
+    // Cap body size at 16 MiB. LSP requests are small (typically <1 MiB even
+    // for large didChange events). A misbehaving or malicious peer sending
+    // `Content-Length: 4000000000` over stdin would otherwise allocate
+    // multiple GB. Reject as a header error so the dispatcher can recover
+    // (the read loop continues with the next message).
+    constexpr std::uint32_t k_max_body_bytes = 16U * 1024U * 1024U;
+    if (length > k_max_body_bytes) {
+        result.status = FramingStatus::HeaderError;
+        return result;
+    }
+
     result.body.resize(length);
     if (length > 0U) {
         in.read(result.body.data(), static_cast<std::streamsize>(length));

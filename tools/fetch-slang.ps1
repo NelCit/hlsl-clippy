@@ -133,6 +133,36 @@ if (-not ($magic[0] -eq 0x50 -and $magic[1] -eq 0x4B -and $magic[2] -eq 0x03 -an
     exit 1
 }
 
+# --- SHA-256 verification (optional but strongly recommended) --------------
+# When `HLSL_CLIPPY_SLANG_SHA256` (or the per-triple variant
+# `HLSL_CLIPPY_SLANG_SHA256_WINDOWS_X86_64`) is set, the downloaded zip's
+# hash MUST match exactly. Mismatch → abort, leaving the cache untouched.
+# Unset → warn-and-continue (the zip-magic check above is the only gate).
+$TripleVarName = 'HLSL_CLIPPY_SLANG_SHA256_' + ($Triple.ToUpper() -replace '-', '_')
+$ExpectedSha256 = ''
+if ($env:$TripleVarName) {
+    $ExpectedSha256 = $env:$TripleVarName
+} elseif ($env:HLSL_CLIPPY_SLANG_SHA256) {
+    $ExpectedSha256 = $env:HLSL_CLIPPY_SLANG_SHA256
+}
+
+if ($ExpectedSha256) {
+    $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $TempZip).Hash.ToLower()
+    $expected = $ExpectedSha256.ToLower()
+    if ($actual -ne $expected) {
+        Write-Error "fetch-slang: SHA-256 mismatch for $TempZip"
+        Write-Error "fetch-slang:   expected: $expected"
+        Write-Error "fetch-slang:   actual:   $actual"
+        Write-Error "fetch-slang: refusing to populate cache. Possible MITM or tampered upstream."
+        Remove-Item -LiteralPath $TempZip -Force
+        exit 1
+    }
+    Write-Host "fetch-slang: SHA-256 verified ($actual)"
+} else {
+    Write-Warning "fetch-slang: no $TripleVarName / HLSL_CLIPPY_SLANG_SHA256 set; skipping integrity verification."
+    Write-Warning "fetch-slang: set the env var for hardened CI runs."
+}
+
 # --- Extract ---------------------------------------------------------------
 Write-Host "fetch-slang: extracting to $CacheDir"
 try {

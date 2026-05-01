@@ -30,7 +30,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          submodules: recursive
+          submodules: true
         # Submodules ARE needed post-ADR 0012/0014: cmake configure now
         # unconditionally includes UseSlang.cmake + UseNlohmannJson.cmake at
         # top level (so `core` always sees `slang::slang`), and clang-tidy

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <ios>
@@ -11,6 +12,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -24,6 +26,26 @@ namespace {
         return {};
     }
     return std::string{std::istreambuf_iterator<char>{stream}, std::istreambuf_iterator<char>{}};
+}
+
+// Cap input file size at 8 MiB. The largest production HLSL shaders we know
+// of are ~3000 LOC (~150 KiB). 8 MiB is a generous ceiling for hand-written
+// content while bounding memory cost on attacker-controlled input (a 4 GiB
+// adversarial shader would otherwise allocate ~2× that during the read +
+// tree-sitter parse). The cap can be raised by setting the
+// `HLSL_CLIPPY_MAX_FILE_BYTES` environment variable to a larger value.
+constexpr std::uintmax_t k_default_max_file_bytes = 8U * 1024U * 1024U;
+
+[[nodiscard]] std::uintmax_t max_file_bytes() noexcept {
+    if (const char* env = std::getenv("HLSL_CLIPPY_MAX_FILE_BYTES");  // NOLINT(concurrency-mt-unsafe)
+        env != nullptr && env[0] != '\0') {
+        char* end = nullptr;
+        const auto parsed = std::strtoull(env, &end, 10);  // NOLINT(cert-err34-c)
+        if (end != env && *end == '\0' && parsed > 0U) {
+            return static_cast<std::uintmax_t>(parsed);
+        }
+    }
+    return k_default_max_file_bytes;
 }
 
 }  // namespace
@@ -100,10 +122,21 @@ std::string_view SourceFile::line_text(std::uint32_t byte_offset) const noexcept
 // ---------------------------------------------------------------------------
 
 SourceId SourceManager::add_file(const std::filesystem::path& path) {
-    std::string contents = read_file_to_string(path);
-    if (contents.empty() && !std::filesystem::exists(path)) {
+    if (!std::filesystem::exists(path)) {
         return SourceId{};
     }
+
+    // Refuse oversized inputs before we allocate the read buffer. The cap
+    // protects against pathological / adversarial shaders that would
+    // otherwise OOM the process. `file_size` may throw on weird filesystem
+    // states; treat any throw as "skip this file" rather than propagate.
+    std::error_code ec;
+    const auto bytes = std::filesystem::file_size(path, ec);
+    if (!ec && bytes > max_file_bytes()) {
+        return SourceId{};
+    }
+
+    std::string contents = read_file_to_string(path);
     const auto next_index = files_.size();
     const SourceId id{static_cast<std::uint32_t>(next_index + 1U)};
     files_.push_back(std::make_unique<SourceFile>(id, path, std::move(contents)));
