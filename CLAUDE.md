@@ -225,8 +225,11 @@ the ADR first.
 - **CMakeLists.txt still sets `CMAKE_CXX_STANDARD 20`.** ADR 0004 locks
   C++23; the build-system edit is a tracked follow-up before Phase 2.
 
-- **`<slang.h>` must never appear in `core/include/hlsl_clippy/`.** CI grep
-  enforces this. Same constraint for `tree_sitter/api.h`.
+- **`<slang.h>` must never appear in `core/include/hlsl_clippy/` OR
+  `core/src/rules/`.** CI grep enforces both. The only TU under `core/`
+  allowed to include `<slang.h>` is `core/src/reflection/slang_bridge.cpp`;
+  rules go through `RuleContext` / `ReflectionInfo` (ADR 0012). Same
+  constraint applies to `tree_sitter/api.h` in public headers.
 
 ---
 

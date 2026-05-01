@@ -74,6 +74,9 @@ add_executable(hlsl_clippy_unit_tests
     unit/test_redundant_unorm_snorm_conversion.cpp
     unit/test_wavereadlaneat_constant_zero_to_readfirst.cpp
     unit/test_loop_attribute_conflict.cpp
+
+    # Phase 3 — reflection infrastructure (ADR 0012)
+    unit/test_reflection.cpp
 )
 
 target_include_directories(hlsl_clippy_unit_tests PRIVATE
@@ -95,7 +98,7 @@ target_link_libraries(hlsl_clippy_unit_tests
 )
 
 set_target_properties(hlsl_clippy_unit_tests PROPERTIES
-    CXX_STANDARD 20
+    CXX_STANDARD 23
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
 )

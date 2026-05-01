@@ -14,7 +14,7 @@ target_include_directories(slang-smoke PRIVATE
 
 # Enforce the project's C++ standard.
 set_target_properties(slang-smoke PROPERTIES
-    CXX_STANDARD          20
+    CXX_STANDARD          23
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS        OFF
 )

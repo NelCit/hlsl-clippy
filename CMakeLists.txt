@@ -7,7 +7,7 @@ if(MSVC AND MSVC_VERSION LESS 1944)
     message(FATAL_ERROR "MSVC 14.44 (VS 17.14) or newer required. Found MSVC ${MSVC_VERSION}.")
 endif()
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -59,6 +59,11 @@ endif()
 
 # tree-sitter must be available before the core library that links it.
 include(cmake/UseTreeSitter.cmake)
+
+# Slang must be available before the core library that links it (Phase 3 —
+# reflection infrastructure, ADR 0012). Previously only `tools/slang-smoke`
+# included this; promote to unconditional so `core` always sees `slang::slang`.
+include(cmake/UseSlang.cmake)
 
 # toml++ for `.hlsl-clippy.toml` parsing (per ADR 0008 §5). Header-only;
 # fetched in single-include mode so only `core/src/config.cpp` pays the

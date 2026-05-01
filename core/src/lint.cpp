@@ -12,11 +12,13 @@
 
 #include "hlsl_clippy/config.hpp"
 #include "hlsl_clippy/diagnostic.hpp"
+#include "hlsl_clippy/reflection.hpp"
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
 #include "hlsl_clippy/suppress.hpp"
 
 #include "parser_internal.hpp"
+#include "reflection/engine.hpp"
 
 namespace hlsl_clippy {
 
@@ -43,8 +45,9 @@ private:
     ::TSTreeCursor cursor_;
 };
 
-/// Iterative depth-first walk of the tree-sitter CST. Calls each rule's
-/// `on_node` for every named node in document order.
+/// Iterative depth-first walk of the tree-sitter CST. Calls each AST-stage
+/// rule's `on_node` for every named node in document order. Reflection-stage
+/// rules are skipped here -- they fire later via `on_reflection`.
 void walk(::TSNode root,
           std::span<const std::unique_ptr<Rule>> rules,
           RuleContext& ctx,
@@ -60,6 +63,9 @@ void walk(::TSNode root,
         if (ts_node_is_named(node)) {
             const AstCursor ast{node, source_bytes, source_id};
             for (const auto& rule : rules) {
+                if (rule->stage() != Stage::Ast) {
+                    continue;
+                }
                 rule->on_node(ast, ctx);
             }
         }
@@ -77,24 +83,26 @@ void walk(::TSNode root,
     }
 }
 
+/// True when at least one rule in `rules` has `stage() == Stage::Reflection`.
+/// Used by the orchestrator to short-circuit reflection-engine construction
+/// for AST-only rule packs.
+[[nodiscard]] bool any_reflection_rule(std::span<const std::unique_ptr<Rule>> rules) noexcept {
+    for (const auto& rule : rules) {
+        if (rule && rule->stage() == Stage::Reflection) {
+            return true;
+        }
+    }
+    return false;
+}
+
 }  // namespace
 
 namespace {
 
-/// Filter-and-retag helper used by both `lint()` overloads. When `config` is
-/// non-null, rules with severity `Allow` are dropped; surviving rules' active
-/// list is built into `active_storage` and a span of pointers is returned.
-/// When `config` is null, the input rules are returned unchanged.
-struct FilteredRules {
-    std::span<const std::unique_ptr<Rule>> view;
-    // Used only when filtering happens. The unique_ptrs themselves are NOT
-    // owned here; we re-wrap raw pointers to satisfy the existing
-    // `std::span<const std::unique_ptr<Rule>>` API.
-};
-
 [[nodiscard]] std::vector<Diagnostic> run_rules(const SourceManager& sources,
                                                 SourceId source,
-                                                std::span<const std::unique_ptr<Rule>> rules) {
+                                                std::span<const std::unique_ptr<Rule>> rules,
+                                                const LintOptions& options) {
     auto parsed = parser::parse(sources, source);
     if (!parsed) {
         return {};
@@ -106,15 +114,43 @@ struct FilteredRules {
     ctx.set_suppressions(&suppressions);
     const ::TSNode root = ts_tree_root_node(parsed->tree.get());
 
+    // ----- AST stage --------------------------------------------------------
     // Declarative pass: every rule's `on_tree` runs once with the whole tree.
-    const AstTree tree_view{parsed->tree.get(), parsed->language, parsed->bytes, parsed->source};
+    const AstTree tree_view{
+        parsed->tree.get(), parsed->language, parsed->bytes, parsed->source};
     for (const auto& rule : rules) {
-        rule->on_tree(tree_view, ctx);
+        if (rule->stage() == Stage::Ast) {
+            rule->on_tree(tree_view, ctx);
+        }
     }
 
-    // Imperative pass: the rule walker invokes every rule's `on_node` on each
-    // named node in document order.
+    // Imperative pass: the rule walker invokes every Stage::Ast rule's
+    // `on_node` on each named node in document order. Reflection-stage rules
+    // are skipped here (they get dispatched via `on_reflection` below).
     walk(root, rules, ctx, parsed->bytes, parsed->source);
+
+    // ----- Reflection stage -------------------------------------------------
+    // Construct the engine only if at least one rule asked for reflection AND
+    // the caller didn't disable reflection via options. Per ADR 0012, an
+    // AST-only rule pack pays zero Slang cost.
+    if (options.enable_reflection && any_reflection_rule(rules)) {
+        const std::string profile =
+            options.target_profile.has_value() ? *options.target_profile : std::string{};
+        auto& engine = reflection::ReflectionEngine::instance();
+        auto reflection_or_error = engine.reflect(sources, source, profile);
+        if (!reflection_or_error.has_value()) {
+            // Surface the engine's diagnostic and skip reflection rules for
+            // this source.
+            ctx.emit(std::move(reflection_or_error.error()));
+        } else {
+            const ReflectionInfo& reflection = reflection_or_error.value();
+            for (const auto& rule : rules) {
+                if (rule->stage() == Stage::Reflection) {
+                    rule->on_reflection(tree_view, reflection, ctx);
+                }
+            }
+        }
+    }
 
     auto diagnostics = ctx.take_diagnostics();
 
@@ -137,7 +173,14 @@ struct FilteredRules {
 std::vector<Diagnostic> lint(const SourceManager& sources,
                              SourceId source,
                              std::span<const std::unique_ptr<Rule>> rules) {
-    return run_rules(sources, source, rules);
+    return run_rules(sources, source, rules, LintOptions{});
+}
+
+std::vector<Diagnostic> lint(const SourceManager& sources,
+                             SourceId source,
+                             std::span<const std::unique_ptr<Rule>> rules,
+                             const LintOptions& options) {
+    return run_rules(sources, source, rules, options);
 }
 
 std::vector<Diagnostic> lint(const SourceManager& sources,
@@ -145,6 +188,15 @@ std::vector<Diagnostic> lint(const SourceManager& sources,
                              std::span<const std::unique_ptr<Rule>> rules,
                              const Config& config,
                              const std::filesystem::path& file_path) {
+    return lint(sources, source, rules, config, file_path, LintOptions{});
+}
+
+std::vector<Diagnostic> lint(const SourceManager& sources,
+                             SourceId source,
+                             std::span<const std::unique_ptr<Rule>> rules,
+                             const Config& config,
+                             const std::filesystem::path& file_path,
+                             const LintOptions& options) {
     // Drop Allow-severity rules entirely so they never run. We have to
     // construct a temporary vector that holds the surviving `unique_ptr`s by
     // reference -- but since `std::span<const std::unique_ptr<Rule>>` requires
@@ -161,7 +213,7 @@ std::vector<Diagnostic> lint(const SourceManager& sources,
     // already gated by tree-sitter queries, that's a one-pass overhead, not a
     // behaviour change.
 
-    auto diagnostics = run_rules(sources, source, rules);
+    auto diagnostics = run_rules(sources, source, rules, options);
 
     std::vector<Diagnostic> kept;
     kept.reserve(diagnostics.size());

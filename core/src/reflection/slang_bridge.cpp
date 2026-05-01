@@ -1,0 +1,558 @@
+// slang_bridge.cpp -- THE ONE TU under core/ that includes <slang.h>.
+//
+// Per ADR 0012 (Phase 3 reflection infrastructure):
+//   * The bridge owns a process-singleton `IGlobalSession` (lazy-initialised
+//     on first use, never mutated after construction). `IGlobalSession` is
+//     not thread-safe, so we treat it as read-only post-construction.
+//   * The bridge owns a per-instance pool of `ISession` workers, sized at
+//     construction time. The pool guards mutation behind a mutex and hands
+//     out one `ISession` per `reflect()` call; sessions are returned to the
+//     pool on success or failure.
+//   * Compile + reflection failures surface as `Diagnostic` with
+//     `code = "clippy::reflection"` and `severity = Severity::Error`.
+//   * No Slang type ever escapes this TU. Everything the caller sees is a
+//     value type defined in `hlsl_clippy/reflection.hpp`.
+
+#include "reflection/slang_bridge.hpp"
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <expected>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+
+#include <slang-com-ptr.h>
+#include <slang.h>
+
+#include "hlsl_clippy/diagnostic.hpp"
+#include "hlsl_clippy/reflection.hpp"
+#include "hlsl_clippy/source.hpp"
+
+namespace hlsl_clippy::reflection {
+
+namespace {
+
+/// Convert a Slang IBlob into an owned std::string. Empty blob -> empty string.
+[[nodiscard]] std::string blob_to_string(slang::IBlob* blob) {
+    if (blob == nullptr) {
+        return {};
+    }
+    const char* data = static_cast<const char*>(blob->getBufferPointer());
+    const std::size_t size = blob->getBufferSize();
+    if (data == nullptr || size == 0U) {
+        return {};
+    }
+    return std::string{data, size};
+}
+
+/// Build a `Diagnostic` describing a Slang failure. The diagnostic anchors at
+/// `(source, byte 0..0)` because Slang's diagnostic blob is plain text (it
+/// embeds line/col info, but parsing it back into a precise span is left for
+/// a follow-up). The full Slang text is included in the message.
+[[nodiscard]] Diagnostic make_reflection_error(SourceId source, std::string message) {
+    Diagnostic diag;
+    diag.code = std::string{"clippy::reflection"};
+    diag.severity = Severity::Error;
+    diag.primary_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
+    diag.message = std::move(message);
+    return diag;
+}
+
+/// Map Slang's stage enum to the lowercase stage tag used in
+/// `EntryPointInfo::stage`.
+[[nodiscard]] std::string stage_name(SlangStage stage) noexcept {
+    switch (stage) {
+        case SLANG_STAGE_VERTEX:
+            return "vertex";
+        case SLANG_STAGE_HULL:
+            return "hull";
+        case SLANG_STAGE_DOMAIN:
+            return "domain";
+        case SLANG_STAGE_GEOMETRY:
+            return "geometry";
+        case SLANG_STAGE_FRAGMENT:
+            return "pixel";
+        case SLANG_STAGE_COMPUTE:
+            return "compute";
+        case SLANG_STAGE_RAY_GENERATION:
+            return "raygeneration";
+        case SLANG_STAGE_INTERSECTION:
+            return "intersection";
+        case SLANG_STAGE_ANY_HIT:
+            return "anyhit";
+        case SLANG_STAGE_CLOSEST_HIT:
+            return "closesthit";
+        case SLANG_STAGE_MISS:
+            return "miss";
+        case SLANG_STAGE_CALLABLE:
+            return "callable";
+        case SLANG_STAGE_MESH:
+            return "mesh";
+        case SLANG_STAGE_AMPLIFICATION:
+            return "amplification";
+        default:
+            return "unknown";
+    }
+}
+
+/// Map Slang's TypeReflection (resource) to our coarse-grained ResourceKind.
+/// Slang exposes a kind tag plus a resource shape; we project both into the
+/// public enum. Anything we cannot classify becomes `Unknown` -- rules then
+/// decide whether to skip or warn.
+[[nodiscard]] ResourceKind classify_resource(slang::TypeReflection* type) noexcept {
+    if (type == nullptr) {
+        return ResourceKind::Unknown;
+    }
+    const auto kind = type->getKind();
+    switch (kind) {
+        case slang::TypeReflection::Kind::SamplerState: {
+            // Slang doesn't separately surface ComparisonState in TypeReflection
+            // kinds; comparison samplers fall under the same kind in 2026.7.
+            // We map both to SamplerState. Comparison-sampler-specific rules
+            // can disambiguate via descriptor inspection (Phase 3b utilities).
+            return ResourceKind::SamplerState;
+        }
+        case slang::TypeReflection::Kind::ConstantBuffer:
+            return ResourceKind::ConstantBuffer;
+        case slang::TypeReflection::Kind::Resource:
+            break;  // fall through to shape switch below
+        default:
+            return ResourceKind::Unknown;
+    }
+
+    const SlangResourceShape shape = type->getResourceShape();
+    const SlangResourceAccess access = type->getResourceAccess();
+    const bool readwrite =
+        access == SLANG_RESOURCE_ACCESS_READ_WRITE || access == SLANG_RESOURCE_ACCESS_APPEND ||
+        access == SLANG_RESOURCE_ACCESS_CONSUME;
+
+    const auto shape_bits = static_cast<unsigned>(shape);
+    const auto base_shape = shape_bits & SLANG_RESOURCE_BASE_SHAPE_MASK;
+    const bool is_array = (shape_bits & SLANG_TEXTURE_ARRAY_FLAG) != 0U;
+    const bool is_feedback = (shape_bits & SLANG_TEXTURE_FEEDBACK_FLAG) != 0U;
+
+    if (is_feedback) {
+        return is_array ? ResourceKind::FeedbackTexture2DArray : ResourceKind::FeedbackTexture2D;
+    }
+
+    switch (base_shape) {
+        case SLANG_TEXTURE_1D:
+            if (is_array) {
+                return readwrite ? ResourceKind::RWTexture1DArray : ResourceKind::Texture1DArray;
+            }
+            return readwrite ? ResourceKind::RWTexture1D : ResourceKind::Texture1D;
+        case SLANG_TEXTURE_2D:
+            if (is_array) {
+                return readwrite ? ResourceKind::RWTexture2DArray : ResourceKind::Texture2DArray;
+            }
+            return readwrite ? ResourceKind::RWTexture2D : ResourceKind::Texture2D;
+        case SLANG_TEXTURE_3D:
+            return readwrite ? ResourceKind::RWTexture3D : ResourceKind::Texture3D;
+        case SLANG_TEXTURE_CUBE:
+            return is_array ? ResourceKind::TextureCubeArray : ResourceKind::TextureCube;
+        case SLANG_STRUCTURED_BUFFER:
+            switch (access) {
+                case SLANG_RESOURCE_ACCESS_READ:
+                    return ResourceKind::StructuredBuffer;
+                case SLANG_RESOURCE_ACCESS_APPEND:
+                    return ResourceKind::AppendStructuredBuffer;
+                case SLANG_RESOURCE_ACCESS_CONSUME:
+                    return ResourceKind::ConsumeStructuredBuffer;
+                case SLANG_RESOURCE_ACCESS_READ_WRITE:
+                default:
+                    return ResourceKind::RWStructuredBuffer;
+            }
+        case SLANG_BYTE_ADDRESS_BUFFER:
+            return readwrite ? ResourceKind::RWByteAddressBuffer : ResourceKind::ByteAddressBuffer;
+        case SLANG_TEXTURE_BUFFER:
+            return readwrite ? ResourceKind::RWBuffer : ResourceKind::Buffer;
+        case SLANG_ACCELERATION_STRUCTURE:
+            return ResourceKind::AccelerationStructure;
+        default:
+            return ResourceKind::Unknown;
+    }
+}
+
+/// Render a TypeReflection's name into a string suitable for diagnostic
+/// rendering. Falls back to a generic placeholder when Slang cannot give us
+/// a name (rare).
+[[nodiscard]] std::string type_name_string(slang::TypeReflection* type) {
+    if (type == nullptr) {
+        return std::string{"<unknown>"};
+    }
+    const char* raw = type->getName();
+    if (raw == nullptr) {
+        return std::string{"<anonymous>"};
+    }
+    return std::string{raw};
+}
+
+/// Walk a Slang VariableLayoutReflection that represents a constant-buffer
+/// type and project its element layout into a CBufferLayout.
+void populate_cbuffer_layout(const std::string& cbuffer_name,
+                             slang::VariableLayoutReflection* var_layout,
+                             SourceId source,
+                             CBufferLayout& out) {
+    out.name = cbuffer_name;
+    out.declaration_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
+    out.fields.clear();
+    out.total_bytes = 0U;
+
+    if (var_layout == nullptr) {
+        return;
+    }
+    slang::TypeLayoutReflection* outer_layout = var_layout->getTypeLayout();
+    if (outer_layout == nullptr) {
+        return;
+    }
+
+    // For a ConstantBuffer<T>, the outer layout's element type carries the
+    // member fields and total size.
+    slang::TypeLayoutReflection* element_layout = outer_layout->getElementTypeLayout();
+    if (element_layout == nullptr) {
+        element_layout = outer_layout;
+    }
+
+    out.total_bytes = static_cast<std::uint32_t>(element_layout->getSize(SLANG_PARAMETER_CATEGORY_UNIFORM));
+
+    const unsigned int field_count = element_layout->getFieldCount();
+    out.fields.reserve(field_count);
+    for (unsigned int i = 0; i < field_count; ++i) {
+        slang::VariableLayoutReflection* field = element_layout->getFieldByIndex(i);
+        if (field == nullptr) {
+            continue;
+        }
+        CBufferField cf;
+        const char* field_name = field->getName();
+        cf.name = field_name != nullptr ? std::string{field_name} : std::string{"<anonymous>"};
+        cf.byte_offset =
+            static_cast<std::uint32_t>(field->getOffset(SLANG_PARAMETER_CATEGORY_UNIFORM));
+        slang::TypeLayoutReflection* field_layout = field->getTypeLayout();
+        if (field_layout != nullptr) {
+            cf.byte_size = static_cast<std::uint32_t>(
+                field_layout->getSize(SLANG_PARAMETER_CATEGORY_UNIFORM));
+            cf.type_name = type_name_string(field_layout->getType());
+        } else {
+            cf.byte_size = 0U;
+            cf.type_name = std::string{"<unknown>"};
+        }
+        out.fields.push_back(std::move(cf));
+    }
+}
+
+/// Walk a Slang VariableLayoutReflection that represents a top-level shader
+/// parameter (resource or cbuffer) and emit either a ResourceBinding or a
+/// CBufferLayout into the appropriate output vector.
+void emit_parameter(slang::VariableLayoutReflection* param,
+                    SourceId source,
+                    std::vector<ResourceBinding>& bindings,
+                    std::vector<CBufferLayout>& cbuffers) {
+    if (param == nullptr) {
+        return;
+    }
+    slang::TypeLayoutReflection* type_layout = param->getTypeLayout();
+    if (type_layout == nullptr) {
+        return;
+    }
+    slang::TypeReflection* type = type_layout->getType();
+
+    const char* raw_name = param->getName();
+    const std::string name = raw_name != nullptr ? std::string{raw_name} : std::string{};
+
+    const auto kind = type != nullptr ? type->getKind() : slang::TypeReflection::Kind::None;
+
+    if (kind == slang::TypeReflection::Kind::ConstantBuffer ||
+        kind == slang::TypeReflection::Kind::ParameterBlock) {
+        CBufferLayout cb;
+        populate_cbuffer_layout(name, param, source, cb);
+        cbuffers.push_back(std::move(cb));
+
+        // ConstantBuffer also occupies a `b#` slot; surface it as a binding so
+        // root-signature-shape rules can see it alongside textures / samplers.
+        ResourceBinding rb;
+        rb.name = name;
+        rb.kind = ResourceKind::ConstantBuffer;
+        rb.register_slot = static_cast<std::uint32_t>(
+            param->getOffset(SLANG_PARAMETER_CATEGORY_CONSTANT_BUFFER));
+        rb.register_space = static_cast<std::uint32_t>(
+            param->getBindingSpace(SLANG_PARAMETER_CATEGORY_CONSTANT_BUFFER));
+        rb.declaration_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
+        bindings.push_back(std::move(rb));
+        return;
+    }
+
+    // For SRVs / UAVs / Samplers Slang reports the binding via the appropriate
+    // category. Probe the most specific category first; fall back to a generic
+    // descriptor-table-slot category when Slang reports nothing.
+    SlangParameterCategory category = type_layout->getParameterCategory();
+
+    ResourceBinding rb;
+    rb.name = name;
+    rb.kind = classify_resource(type);
+    rb.register_slot = static_cast<std::uint32_t>(param->getOffset(category));
+    rb.register_space = static_cast<std::uint32_t>(param->getBindingSpace(category));
+
+    // Slang reports unbounded arrays via the type-layout's element count.
+    if (type != nullptr && type->getKind() == slang::TypeReflection::Kind::Array) {
+        const std::size_t count = type->getElementCount();
+        if (count != 0U) {
+            rb.array_size = static_cast<std::uint32_t>(count);
+        }
+        // Promote the inner type to classify the resource correctly.
+        slang::TypeReflection* element_type = type->getElementType();
+        if (element_type != nullptr) {
+            rb.kind = classify_resource(element_type);
+        }
+    }
+
+    rb.declaration_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
+    bindings.push_back(std::move(rb));
+}
+
+/// Default profile string when the caller didn't override. We pick `sm_6_6`
+/// as the floor matching the Phase 3 ADR; per-stage variants are derived in
+/// `derive_profile()` below from each entry-point's stage.
+constexpr std::string_view k_default_profile = "sm_6_6";
+
+}  // namespace
+
+// ---------------------------------------------------------------------------
+// SlangBridge::Impl: holds the IGlobalSession + ISession pool. The PIMPL
+// keeps `<slang.h>` strictly inside this TU.
+// ---------------------------------------------------------------------------
+
+struct SlangBridge::Impl {
+    Slang::ComPtr<slang::IGlobalSession> global_session;
+
+    std::mutex pool_mu;
+    std::vector<Slang::ComPtr<slang::ISession>> session_pool;
+    std::uint32_t pool_size_cap = 4U;
+
+    explicit Impl(std::uint32_t pool_size) : pool_size_cap(pool_size == 0U ? 1U : pool_size) {
+        // IGlobalSession creation is documented as expensive but is the
+        // cheapest way to discover the host Slang library. CLAUDE.md notes
+        // it is not thread-safe; we never mutate it post-construction.
+        const SlangResult res = slang::createGlobalSession(global_session.writeRef());
+        if (SLANG_FAILED(res)) {
+            global_session = nullptr;
+        }
+    }
+
+    /// Acquire a session from the pool, creating one on demand. Returns null
+    /// when the global session is unavailable or session creation failed.
+    [[nodiscard]] Slang::ComPtr<slang::ISession> acquire(std::string_view target_profile) {
+        Slang::ComPtr<slang::ISession> session;
+        if (global_session == nullptr) {
+            return session;
+        }
+        {
+            std::lock_guard<std::mutex> lock(pool_mu);
+            if (!session_pool.empty()) {
+                session = std::move(session_pool.back());
+                session_pool.pop_back();
+                return session;
+            }
+        }
+
+        // Pool empty -- create a new session targeting DXIL with the
+        // requested profile.
+        slang::TargetDesc target_desc{};
+        target_desc.format = SLANG_DXIL;
+        const std::string profile_string{target_profile};
+        target_desc.profile = global_session->findProfile(profile_string.c_str());
+        if (target_desc.profile == SLANG_PROFILE_UNKNOWN) {
+            target_desc.profile = global_session->findProfile(std::string{k_default_profile}.c_str());
+        }
+
+        slang::SessionDesc session_desc{};
+        session_desc.targets = &target_desc;
+        session_desc.targetCount = 1;
+
+        const SlangResult res = global_session->createSession(session_desc, session.writeRef());
+        if (SLANG_FAILED(res)) {
+            session = nullptr;
+        }
+        return session;
+    }
+
+    /// Return a session to the pool when there's headroom, otherwise let it
+    /// drop (the ComPtr destructor will release).
+    void release(Slang::ComPtr<slang::ISession> session) {
+        if (session == nullptr) {
+            return;
+        }
+        std::lock_guard<std::mutex> lock(pool_mu);
+        if (session_pool.size() < pool_size_cap) {
+            session_pool.push_back(std::move(session));
+        }
+    }
+};
+
+SlangBridge::SlangBridge(std::uint32_t pool_size) : impl_(std::make_unique<Impl>(pool_size)) {}
+SlangBridge::~SlangBridge() = default;
+
+std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManager& sources,
+                                                                SourceId source,
+                                                                std::string_view target_profile) {
+    const SourceFile* file = sources.get(source);
+    if (file == nullptr) {
+        return std::unexpected{make_reflection_error(source, std::string{"unknown source id"})};
+    }
+    if (impl_->global_session == nullptr) {
+        return std::unexpected{
+            make_reflection_error(source, std::string{"failed to initialise Slang global session"})};
+    }
+
+    const std::string profile = target_profile.empty() ? std::string{k_default_profile}
+                                                       : std::string{target_profile};
+
+    Slang::ComPtr<slang::ISession> session = impl_->acquire(profile);
+    if (session == nullptr) {
+        return std::unexpected{make_reflection_error(
+            source, std::string{"failed to acquire Slang ISession from pool"})};
+    }
+
+    // RAII guard: always return the session to the pool, even on early exit.
+    // The guard borrows `session` through a pointer so the original ComPtr
+    // remains usable for the rest of the function; on destruction it moves
+    // the session out of that pointer and hands it back to the pool.
+    struct Releaser {
+        Impl* impl;
+        Slang::ComPtr<slang::ISession>* session_slot;
+        Releaser(Impl* i, Slang::ComPtr<slang::ISession>* s) : impl(i), session_slot(s) {}
+        Releaser(const Releaser&) = delete;
+        Releaser& operator=(const Releaser&) = delete;
+        Releaser(Releaser&&) = delete;
+        Releaser& operator=(Releaser&&) = delete;
+        ~Releaser() { impl->release(std::move(*session_slot)); }
+    };
+    [[maybe_unused]] Releaser releaser{impl_.get(), &session};
+
+    // Load the source as a module.
+    const std::string contents{file->contents()};
+    const std::string module_name = file->path().stem().string().empty()
+                                        ? std::string{"hlsl_clippy_module"}
+                                        : file->path().stem().string();
+    const std::string virtual_path = file->path().string().empty()
+                                         ? std::string{"<buffer>"}
+                                         : file->path().string();
+
+    Slang::ComPtr<slang::IBlob> load_diag;
+    slang::IModule* raw_module = session->loadModuleFromSourceString(
+        module_name.c_str(), virtual_path.c_str(), contents.c_str(), load_diag.writeRef());
+    if (raw_module == nullptr) {
+        std::string msg = std::string{"slang load failed: "} + blob_to_string(load_diag.get());
+        return std::unexpected{make_reflection_error(source, std::move(msg))};
+    }
+    Slang::ComPtr<slang::IModule> module_ptr;
+    module_ptr.attach(raw_module);
+    raw_module->addRef();
+
+    // Discover all entry points the module exposes via its `[shader(...)]`
+    // attributes. Each becomes one EntryPointInfo.
+    const std::int32_t entry_point_count = module_ptr->getDefinedEntryPointCount();
+    std::vector<Slang::ComPtr<slang::IEntryPoint>> entry_point_objs;
+    entry_point_objs.reserve(static_cast<std::size_t>(entry_point_count > 0 ? entry_point_count : 0));
+    for (std::int32_t i = 0; i < entry_point_count; ++i) {
+        Slang::ComPtr<slang::IEntryPoint> ep;
+        const SlangResult res = module_ptr->getDefinedEntryPoint(i, ep.writeRef());
+        if (SLANG_FAILED(res) || ep == nullptr) {
+            continue;
+        }
+        entry_point_objs.push_back(std::move(ep));
+    }
+
+    // Build a composite component containing the module + every entry point so
+    // that linked reflection sees them all.
+    std::vector<slang::IComponentType*> components;
+    components.reserve(1U + entry_point_objs.size());
+    components.push_back(module_ptr.get());
+    for (auto& ep : entry_point_objs) {
+        components.push_back(ep.get());
+    }
+
+    Slang::ComPtr<slang::IComponentType> composite;
+    {
+        Slang::ComPtr<slang::IBlob> compose_diag;
+        const SlangResult res = session->createCompositeComponentType(
+            components.data(),
+            static_cast<SlangInt>(components.size()),
+            composite.writeRef(),
+            compose_diag.writeRef());
+        if (SLANG_FAILED(res) || composite == nullptr) {
+            std::string msg = std::string{"slang composite failed: "} +
+                              blob_to_string(compose_diag.get());
+            return std::unexpected{make_reflection_error(source, std::move(msg))};
+        }
+    }
+
+    Slang::ComPtr<slang::IComponentType> linked;
+    {
+        Slang::ComPtr<slang::IBlob> link_diag;
+        const SlangResult res = composite->link(linked.writeRef(), link_diag.writeRef());
+        if (SLANG_FAILED(res) || linked == nullptr) {
+            std::string msg = std::string{"slang link failed: "} + blob_to_string(link_diag.get());
+            return std::unexpected{make_reflection_error(source, std::move(msg))};
+        }
+    }
+
+    slang::ProgramLayout* program_layout = linked->getLayout(0);
+    if (program_layout == nullptr) {
+        return std::unexpected{
+            make_reflection_error(source, std::string{"slang reflection produced no layout"})};
+    }
+
+    ReflectionInfo info;
+    info.target_profile = profile;
+
+    // Top-level shader parameters: SRVs / UAVs / samplers / cbuffers.
+    const unsigned int param_count = program_layout->getParameterCount();
+    info.bindings.reserve(param_count);
+    for (unsigned int i = 0; i < param_count; ++i) {
+        slang::VariableLayoutReflection* param = program_layout->getParameterByIndex(i);
+        emit_parameter(param, source, info.bindings, info.cbuffers);
+    }
+
+    // Entry points: one EntryPointInfo per `[shader(...)]` declaration.
+    const auto reflected_ep_count =
+        static_cast<unsigned int>(program_layout->getEntryPointCount());
+    info.entry_points.reserve(reflected_ep_count);
+    for (unsigned int i = 0; i < reflected_ep_count; ++i) {
+        slang::EntryPointReflection* ep = program_layout->getEntryPointByIndex(i);
+        if (ep == nullptr) {
+            continue;
+        }
+        EntryPointInfo epi;
+        const char* raw_name = ep->getName();
+        epi.name = raw_name != nullptr ? std::string{raw_name} : std::string{"<anonymous>"};
+        epi.stage = stage_name(ep->getStage());
+
+        SlangUInt thread_group[3] = {0U, 0U, 0U};
+        ep->getComputeThreadGroupSize(3, thread_group);
+        if (thread_group[0] != 0U || thread_group[1] != 0U || thread_group[2] != 0U) {
+            epi.numthreads = std::array<std::uint32_t, 3>{
+                static_cast<std::uint32_t>(thread_group[0]),
+                static_cast<std::uint32_t>(thread_group[1]),
+                static_cast<std::uint32_t>(thread_group[2]),
+            };
+        }
+
+        // Wave-size reflection is intentionally deferred to a Phase 3b
+        // shared-utility per ADR 0012 §6 (`reflect_stage.hpp`). Slang's
+        // wave-size accessor surface has churned across recent versions;
+        // we leave the optionals empty here so reflection-aware rules can
+        // detect "not reflected yet" without crashing.
+
+        epi.declaration_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
+        info.entry_points.push_back(std::move(epi));
+    }
+
+    return info;
+}
+
+}  // namespace hlsl_clippy::reflection

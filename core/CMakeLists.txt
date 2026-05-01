@@ -51,6 +51,11 @@ add_library(hlsl_clippy_core STATIC
     src/rules/redundant_unorm_snorm_conversion.cpp
     src/rules/wavereadlaneat_constant_zero_to_readfirst.cpp
     src/rules/loop_attribute_conflict.cpp
+
+    # Phase 3 — reflection infrastructure (ADR 0012)
+    src/reflection/reflection.cpp
+    src/reflection/engine.cpp
+    src/reflection/slang_bridge.cpp
 )
 
 target_include_directories(hlsl_clippy_core PUBLIC
@@ -62,7 +67,7 @@ target_include_directories(hlsl_clippy_core PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
 
-target_compile_features(hlsl_clippy_core PUBLIC cxx_std_20)
+target_compile_features(hlsl_clippy_core PUBLIC cxx_std_23)
 
 target_link_libraries(hlsl_clippy_core
     PRIVATE
@@ -70,4 +75,14 @@ target_link_libraries(hlsl_clippy_core
         tree_sitter::tree_sitter
         tree_sitter::hlsl
         tomlplusplus::tomlplusplus
+        # Phase 3 — reflection infrastructure (ADR 0012). Slang stays PRIVATE
+        # so it never appears in the public include path; only
+        # core/src/reflection/slang_bridge.cpp pulls in <slang.h>.
+        slang::slang
 )
+
+# slang_bridge.cpp needs the Slang public headers; those are propagated to
+# `core` compiles via the slang::slang imported target's
+# INTERFACE_INCLUDE_DIRECTORIES (set by cmake/UseSlang.cmake). The PRIVATE
+# link above keeps Slang headers off the public include path of `core` so
+# they remain invisible to CLI / LSP / test consumers.
