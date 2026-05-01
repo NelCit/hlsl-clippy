@@ -415,6 +415,7 @@ amend an Accepted ADR to change a decision — add an addendum ADR instead.
 
 ```
 cli/                    hlsl-clippy executable (src/main.cpp)
+lsp/                    hlsl-clippy-lsp executable (LSP server, ADR 0014)
 core/                   static lib
   include/hlsl_clippy/  PUBLIC headers (version.hpp, diagnostic.hpp,
                           rule.hpp, rewriter.hpp, suppress.hpp, config.hpp)

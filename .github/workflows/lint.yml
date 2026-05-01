@@ -47,8 +47,8 @@ jobs:
       - name: Forbid <slang.h> in public headers and rule TUs
         run: |
           set -e
-          if grep -RE '#\s*include\s*<slang\.h>' core/include/hlsl_clippy/ core/src/rules/; then
-            echo "ERROR: <slang.h> must not appear in core/include/hlsl_clippy/ or core/src/rules/"
+          if grep -RE '#\s*include\s*<slang\.h>' core/include/hlsl_clippy/ core/src/rules/ lsp/src/; then
+            echo "ERROR: <slang.h> must not appear in core/include/hlsl_clippy/, core/src/rules/, or lsp/src/"
             exit 1
           fi
           echo "Slang header confinement check passed."
@@ -63,9 +63,11 @@ jobs:
           FILES=$(git ls-files -- \
               'cli/*.cpp' 'cli/*.hpp' 'cli/*.h' \
               'core/*.cpp' 'core/*.hpp' 'core/*.h' \
+              'lsp/*.cpp' 'lsp/*.hpp' 'lsp/*.h' \
               'tools/*.cpp' 'tools/*.hpp' 'tools/*.h' \
               'cli/**/*.cpp' 'cli/**/*.hpp' 'cli/**/*.h' \
               'core/**/*.cpp' 'core/**/*.hpp' 'core/**/*.h' \
+              'lsp/**/*.cpp' 'lsp/**/*.hpp' 'lsp/**/*.h' \
               'tools/**/*.cpp' 'tools/**/*.hpp' 'tools/**/*.h' \
               ':(exclude)external/' \
           )
@@ -104,9 +106,11 @@ jobs:
           FILES=$(git ls-files -- \
               'cli/*.cpp' 'cli/*.hpp' 'cli/*.h' \
               'core/*.cpp' 'core/*.hpp' 'core/*.h' \
+              'lsp/*.cpp' 'lsp/*.hpp' 'lsp/*.h' \
               'tools/*.cpp' 'tools/*.hpp' 'tools/*.h' \
               'cli/**/*.cpp' 'cli/**/*.hpp' 'cli/**/*.h' \
               'core/**/*.cpp' 'core/**/*.hpp' 'core/**/*.h' \
+              'lsp/**/*.cpp' 'lsp/**/*.hpp' 'lsp/**/*.h' \
               'tools/**/*.cpp' 'tools/**/*.hpp' 'tools/**/*.h' \
               ':(exclude)external/' \
           )

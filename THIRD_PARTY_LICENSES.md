@@ -111,3 +111,13 @@ SOFTWARE.
 > license section here when releases begin bundling a test artifact.
 
 ---
+
+## nlohmann/json
+
+Vendored at `external/nlohmann_json/` as a git submodule pinned to v3.12.0.
+
+License: MIT (Copyright (c) 2013-2025 Niels Lohmann).
+
+Full license text: see `external/nlohmann_json/LICENSE.MIT`.
+
+---
