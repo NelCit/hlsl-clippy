@@ -1,0 +1,87 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "dev-debug",
+      "displayName": "Local development — Debug + tests",
+      "description": "Default for contributor work. Debug symbols, BUILD_TESTING on.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BUILD_TESTING": "ON"
+      }
+    },
+    {
+      "name": "dev-release",
+      "displayName": "Local development — Release with debug info",
+      "description": "Optimised build for benchmarking + reproducing CI-only failures.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "BUILD_TESTING": "ON"
+      }
+    },
+    {
+      "name": "ci-clang",
+      "displayName": "CI — Clang 18 + libc++",
+      "description": "Mirrors .github/workflows/{ci,release}.yml Linux + macOS toolchain config.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_FLAGS": "-stdlib=libc++",
+        "CMAKE_EXE_LINKER_FLAGS": "-stdlib=libc++",
+        "CMAKE_SHARED_LINKER_FLAGS": "-stdlib=libc++"
+      },
+      "environment": {
+        "CC": "clang-18",
+        "CXX": "clang++-18"
+      }
+    },
+    {
+      "name": "ci-msvc",
+      "displayName": "CI — MSVC 19.44+",
+      "description": "Mirrors .github/workflows/{ci,release}.yml Windows toolchain config.",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    }
+  ],
+
+  "buildPresets": [
+    { "name": "dev-debug",   "configurePreset": "dev-debug" },
+    { "name": "dev-release", "configurePreset": "dev-release" },
+    { "name": "ci-clang",    "configurePreset": "ci-clang" },
+    { "name": "ci-msvc",     "configurePreset": "ci-msvc" }
+  ],
+
+  "testPresets": [
+    {
+      "name": "dev-debug",
+      "configurePreset": "dev-debug",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error" }
+    },
+    {
+      "name": "dev-release",
+      "configurePreset": "dev-release",
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}
