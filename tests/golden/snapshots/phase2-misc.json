@@ -1,0 +1,19 @@
+{
+  "fixture": "phase2-misc.hlsl",
+  "diagnostics": [
+    {
+      "rule": "comparison-with-nan-literal",
+      "line": 15,
+      "col": 12,
+      "severity": "warning",
+      "message": "comparison with NaN literal `(0.0 / 0.0)` is always false (or always true for `!=`) per IEEE-754 — use `isnan(x)` instead"
+    },
+    {
+      "rule": "compare-equal-float",
+      "line": 32,
+      "col": 12,
+      "severity": "warning",
+      "message": "exact `!=` on floating-point values is unreliable — rounding error and NaN make the result unpredictable; use an explicit tolerance such as `abs(a - b) < epsilon` instead"
+    }
+  ]
+}

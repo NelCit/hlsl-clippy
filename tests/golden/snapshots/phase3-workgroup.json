@@ -1,0 +1,54 @@
+{
+  "fixture": "phase3-workgroup.hlsl",
+  "diagnostics": [
+    {
+      "rule": "groupshared-too-large",
+      "line": 5,
+      "col": 1,
+      "severity": "warning",
+      "message": "total `groupshared` allocation is 65536 bytes (> 16384-byte threshold) -- LDS pressure caps CU/SM occupancy at one thread group, eliminating wave-level latency hiding"
+    },
+    {
+      "rule": "numthreads-not-wave-aligned",
+      "line": 10,
+      "col": 1,
+      "severity": "warning",
+      "message": "`[numthreads(7, 7, 1)]` total 49 is not a multiple of 32 -- the final wave of every group launches with masked-off lanes that still consume a full wave slot"
+    },
+    {
+      "rule": "groupshared-first-read-without-barrier",
+      "line": 14,
+      "col": 23,
+      "severity": "error",
+      "message": "groupshared read of `SmallTile[[gi]]` is not separated by `GroupMemoryBarrier*` from a prior write to the same array on this CFG path; cross-lane reads are unordered without a barrier and produce undefined values once the workgroup spans more than one wave"
+    },
+    {
+      "rule": "groupshared-write-then-no-barrier-read",
+      "line": 14,
+      "col": 23,
+      "severity": "warning",
+      "message": "groupshared read after a cross-thread write with no GroupMemoryBarrier* between them -- the reader may observe stale or partially-updated values; UB per the HLSL memory model"
+    },
+    {
+      "rule": "numthreads-too-small",
+      "line": 18,
+      "col": 1,
+      "severity": "warning",
+      "message": "`[numthreads(4, 4, 1)]` total 16 is below the minimum wave size of 32 -- every wave slot launches with > 50% of lanes permanently masked off and no occupancy headroom for latency hiding"
+    },
+    {
+      "rule": "groupshared-first-read-without-barrier",
+      "line": 28,
+      "col": 23,
+      "severity": "error",
+      "message": "groupshared read of `SmallTile[[gi]]` is not separated by `GroupMemoryBarrier*` from a prior write to the same array on this CFG path; cross-lane reads are unordered without a barrier and produce undefined values once the workgroup spans more than one wave"
+    },
+    {
+      "rule": "groupshared-write-then-no-barrier-read",
+      "line": 28,
+      "col": 23,
+      "severity": "warning",
+      "message": "groupshared read after a cross-thread write with no GroupMemoryBarrier* between them -- the reader may observe stale or partially-updated values; UB per the HLSL memory model"
+    }
+  ]
+}

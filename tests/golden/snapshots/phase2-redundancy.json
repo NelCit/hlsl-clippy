@@ -1,0 +1,61 @@
+{
+  "fixture": "phase2-redundancy.hlsl",
+  "diagnostics": [
+    {
+      "rule": "redundant-saturate",
+      "line": 5,
+      "col": 12,
+      "severity": "warning",
+      "message": "`saturate(saturate(x))` is redundant — the inner `saturate` already clamps to [0, 1]; drop the outer call"
+    },
+    {
+      "rule": "clamp01-to-saturate",
+      "line": 16,
+      "col": 12,
+      "severity": "warning",
+      "message": "`clamp(x, 0, 1)` is `saturate(x)` — saturate folds into a free output modifier on AMD/NVIDIA/Intel; clamp lowers to a min/max pair"
+    },
+    {
+      "rule": "clamp01-to-saturate",
+      "line": 21,
+      "col": 12,
+      "severity": "warning",
+      "message": "`clamp(x, 0, 1)` is `saturate(x)` — saturate folds into a free output modifier on AMD/NVIDIA/Intel; clamp lowers to a min/max pair"
+    },
+    {
+      "rule": "redundant-normalize",
+      "line": 26,
+      "col": 12,
+      "severity": "warning",
+      "message": "`normalize(normalize(x))` is redundant -- the inner `normalize` already produces a unit-length vector; drop the outer call"
+    },
+    {
+      "rule": "redundant-transpose",
+      "line": 31,
+      "col": 12,
+      "severity": "warning",
+      "message": "`transpose(transpose(M))` is redundant -- transpose is its own inverse; the two calls cancel"
+    },
+    {
+      "rule": "redundant-abs",
+      "line": 36,
+      "col": 12,
+      "severity": "warning",
+      "message": "`abs(...)` is redundant here -- a self-product `x * x` is always non-negative, so the wrapping `abs` adds an instruction with no effect"
+    },
+    {
+      "rule": "redundant-abs",
+      "line": 41,
+      "col": 12,
+      "severity": "warning",
+      "message": "`abs(...)` is redundant here -- `dot(v, v)` is the squared magnitude and is always non-negative, so the wrapping `abs` adds an instruction with no effect"
+    },
+    {
+      "rule": "redundant-abs",
+      "line": 46,
+      "col": 12,
+      "severity": "warning",
+      "message": "`abs(...)` is redundant here -- `saturate` already clamps its result to [0, 1], so the wrapping `abs` adds an instruction with no effect"
+    }
+  ]
+}

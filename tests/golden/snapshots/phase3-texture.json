@@ -1,0 +1,47 @@
+{
+  "fixture": "phase3-texture.hlsl",
+  "diagnostics": [
+    {
+      "rule": "all-resources-bound-not-set",
+      "line": 1,
+      "col": 1,
+      "severity": "note",
+      "message": "shader declares 7 resource bindings but no `[RootSignature(...)]` attribute is present -- compiling with `-all-resources-bound` (D3D12) unlocks driver optimisations that skip per-resource null-binding checks on every IHV"
+    },
+    {
+      "rule": "cbuffer-fits-rootconstants",
+      "line": 1,
+      "col": 1,
+      "severity": "warning",
+      "message": "cbuffer `Globals` is 12 bytes -- fits in a D3D12 root-constant slot (<= 32 bytes / 8 DWORDs); promote to root constants to skip the descriptor-table indirection"
+    },
+    {
+      "rule": "samplelevel-with-zero-on-mipped-tex",
+      "line": 17,
+      "col": 16,
+      "severity": "warning",
+      "message": "`SampleLevel(s, uv, 0)` pins LOD to mip 0 -- on a mipped texture this defeats the texture cache's small-footprint fetch and disables trilinear filtering; replace with `Sample(s, uv)` in pixel-shader context"
+    },
+    {
+      "rule": "gather-channel-narrowing",
+      "line": 20,
+      "col": 25,
+      "severity": "note",
+      "message": "`Gather(...).\u0001r` consumes only one channel -- replace with `GatherRed` to encode the channel at TMU instruction level and drop the swizzle"
+    },
+    {
+      "rule": "samplegrad-with-constant-grads",
+      "line": 23,
+      "col": 16,
+      "severity": "warning",
+      "message": "`SampleGrad(s, uv, 0, 0)` is equivalent to `SampleLevel(s, uv, 0)` -- the explicit-gradient TMU path costs extra issue cycles versus the explicit-LOD path"
+    },
+    {
+      "rule": "missing-precise-on-pcf",
+      "line": 25,
+      "col": 73,
+      "severity": "note",
+      "message": "PCF / depth-compare site without a nearby `precise` qualifier -- fast-math reassociation can perturb the rounding of weight sums and produce visible shadow flicker"
+    }
+  ]
+}

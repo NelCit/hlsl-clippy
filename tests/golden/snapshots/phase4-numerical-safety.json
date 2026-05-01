@@ -1,0 +1,54 @@
+{
+  "fixture": "phase4-numerical-safety.hlsl",
+  "diagnostics": [
+    {
+      "rule": "all-resources-bound-not-set",
+      "line": 1,
+      "col": 1,
+      "severity": "note",
+      "message": "shader declares 4 resource bindings but no `[RootSignature(...)]` attribute is present -- compiling with `-all-resources-bound` (D3D12) unlocks driver optimisations that skip per-resource null-binding checks on every IHV"
+    },
+    {
+      "rule": "cbuffer-fits-rootconstants",
+      "line": 1,
+      "col": 1,
+      "severity": "warning",
+      "message": "cbuffer `SafetyCB` is 24 bytes -- fits in a D3D12 root-constant slot (<= 32 bytes / 8 DWORDs); promote to root constants to skip the descriptor-table indirection"
+    },
+    {
+      "rule": "acos-without-saturate",
+      "line": 21,
+      "col": 12,
+      "severity": "warning",
+      "message": "acos(dot(...)) without saturate/clamp -- normalised dot products can round outside [-1, 1] and produce NaN; wrap the argument in clamp(x, -1.0, 1.0)"
+    },
+    {
+      "rule": "div-without-epsilon",
+      "line": 45,
+      "col": 20,
+      "severity": "warning",
+      "message": "division by length(...) / dot(...) without epsilon guard -- produces +Inf or NaN at zero divisors; wrap the divisor in max(epsilon, ...) or use the SafeNormalize idiom"
+    },
+    {
+      "rule": "div-without-epsilon",
+      "line": 50,
+      "col": 12,
+      "severity": "warning",
+      "message": "division by length(...) / dot(...) without epsilon guard -- produces +Inf or NaN at zero divisors; wrap the divisor in max(epsilon, ...) or use the SafeNormalize idiom"
+    },
+    {
+      "rule": "length-then-divide",
+      "line": 50,
+      "col": 12,
+      "severity": "warning",
+      "message": "`v / length(v)` is the open-coded form of `normalize(v)` -- prefer the named intrinsic, which may compile to a single rsqrt-and-multiply"
+    },
+    {
+      "rule": "sqrt-of-potentially-negative",
+      "line": 74,
+      "col": 12,
+      "severity": "warning",
+      "message": "sqrt() of a difference expression may round negative, producing NaN; wrap the argument in max(0.0, ...) (or use rsqrt + reciprocal for the unit-vector case)"
+    }
+  ]
+}
