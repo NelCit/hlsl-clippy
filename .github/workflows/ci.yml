@@ -67,13 +67,20 @@ jobs:
         uses: seanmiddleditch/gha-setup-ninja@96bed6edff20d1dd61ecff9b75cc519d516e6401 # v5
         # SHA verified: gh api repos/seanmiddleditch/gha-setup-ninja/git/ref/tags/v5
 
-      # ── 4a. (Linux) Install Clang 18 from llvm.org ────────────────────────
+      # ── 4a. (Linux) Install Clang 18 + libc++ 18 from llvm.org ────────────
       - name: Install Clang 18 (Linux)
         if: runner.os == 'Linux'
         run: |
           # Use the official LLVM installer script so we get a fresh Clang 18
-          # regardless of what Ubuntu ships in its default apt mirror.
+          # regardless of what Ubuntu ships in its default apt mirror. The
+          # `all` flag installs the full LLVM 18 component set including
+          # libc++-18-dev, which we link against on Linux instead of the
+          # system libstdc++ — Ubuntu 24.04's libstdc++ 13 lacks reliable
+          # std::expected symbol visibility despite shipping <expected>.
+          # Per ADR 0004 the floor is "Clang 18+ with libc++ 17+ OR
+          # libstdc++ 13+"; we pick libc++ 18 here.
           wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
+          sudo apt-get install -y libc++-18-dev libc++abi-18-dev
           # Sanity-check
           clang-18 --version
           clang++-18 --version
@@ -94,9 +101,13 @@ jobs:
         run: |
           set -euo pipefail
           brew install llvm@18
+          # Homebrew's llvm@18 is keg-only and ships unversioned binaries
+          # (`clang`, `clang++`) — not `clang-18`/`clang++-18` like apt's
+          # llvm.sh on Linux. Prepend the keg's bin/ to PATH and use the
+          # unversioned names everywhere on macOS.
           echo "/opt/homebrew/opt/llvm@18/bin" >> "$GITHUB_PATH"
-          /opt/homebrew/opt/llvm@18/bin/clang-18 --version
-          /opt/homebrew/opt/llvm@18/bin/clang++-18 --version
+          /opt/homebrew/opt/llvm@18/bin/clang --version
+          /opt/homebrew/opt/llvm@18/bin/clang++ --version
 
       # ── 5. CMake configure ────────────────────────────────────────────────
       - name: CMake configure (Linux)
@@ -104,6 +115,10 @@ jobs:
         env:
           CC: clang-18
           CXX: clang++-18
+          # Use Clang's bundled libc++ (full <expected>); avoids libstdc++ 13
+          # symbol-visibility quirks on Ubuntu 24.04. Per ADR 0004's floor.
+          CXXFLAGS: "-stdlib=libc++"
+          LDFLAGS: "-stdlib=libc++"
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: CMake configure (Windows)
@@ -113,8 +128,15 @@ jobs:
       - name: CMake configure (macOS)
         if: runner.os == 'macOS'
         env:
-          CC: clang-18
-          CXX: clang++-18
+          # Homebrew llvm@18 ships unversioned `clang` / `clang++` (vs apt's
+          # versioned names on Linux). The PATH prepend in the install step
+          # ensures the keg's binary is found ahead of Apple Clang.
+          CC: clang
+          CXX: clang++
+          # Use Clang's bundled libc++ (matches Linux config; libc++ ships
+          # the full C++23 stdlib including std::expected).
+          CXXFLAGS: "-stdlib=libc++"
+          LDFLAGS: "-stdlib=libc++"
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       # ── 6. Build ──────────────────────────────────────────────────────────
