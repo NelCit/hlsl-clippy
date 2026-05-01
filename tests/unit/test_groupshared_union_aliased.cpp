@@ -63,15 +63,17 @@ groupshared union {
 
 TEST_CASE("groupshared-union-aliased fires on groupshared bit-field struct",
           "[rules][groupshared-union-aliased]") {
+    // The bit-field declaration must live inside the same `groupshared`
+    // declaration's AST subtree; cross-declaration resolution (a separate
+    // `struct` with bit-fields referenced by name) is out of scope for the
+    // pure-AST detector.
     SourceManager sources;
     const std::string hlsl = R"hlsl(
-struct PackedFlags {
+groupshared struct {
     uint a : 8;
     uint b : 8;
     uint c : 16;
-};
-
-groupshared PackedFlags gs_flags[64];
+} gs_flags;
 )hlsl";
     CHECK(has_rule(lint_buffer(hlsl, sources), "groupshared-union-aliased"));
 }

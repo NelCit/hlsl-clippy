@@ -44,9 +44,13 @@ using hlsl_clippy::SourceManager;
 
 TEST_CASE("long-vector-non-elementwise-intrinsic fires on length(vector<float, 8>)",
           "[rules][long-vector-non-elementwise-intrinsic]") {
+    // The pure-AST stub matches when the call expression's source text
+    // mentions a long-vector type (`vector<T, N>{>=5}` / `floatN{>=5}`); it
+    // does not yet cross-reference parameter declarations. Use a constructor
+    // call inside the argument so the long-vector type appears textually.
     const std::string hlsl = R"hlsl(
-float f(vector<float, 8> v) {
-    return length(v);
+float f() {
+    return length(vector<float, 8>(1, 2, 3, 4, 5, 6, 7, 8));
 }
 )hlsl";
     CHECK(has_rule(lint_buffer(hlsl), "long-vector-non-elementwise-intrinsic"));

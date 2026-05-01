@@ -10,6 +10,8 @@
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
+#include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -28,6 +30,22 @@
 
 namespace hlsl_clippy::control_flow {
 
+namespace {
+
+/// FNV-1a 64-bit hash of the source contents. Used to disambiguate cache
+/// entries whose `SourceId.value` collides across SourceManagers.
+[[nodiscard]] std::uint64_t fingerprint(std::string_view contents) noexcept {
+    std::uint64_t hash = 14695981039346656037ULL;
+    constexpr std::uint64_t prime = 1099511628211ULL;
+    for (const char c : contents) {
+        hash ^= static_cast<std::uint64_t>(static_cast<unsigned char>(c));
+        hash *= prime;
+    }
+    return hash;
+}
+
+}  // namespace
+
 CfgEngine& CfgEngine::instance() noexcept {
     static CfgEngine engine;
     return engine;
@@ -38,9 +56,12 @@ std::expected<ControlFlowInfo, Diagnostic> CfgEngine::build(
     SourceId source,
     const ReflectionInfo* reflection_or_null,
     std::uint32_t cfg_inlining_depth) {
+    const SourceFile* file = sources.get(source);
+    const std::uint64_t fp = file != nullptr ? fingerprint(file->contents()) : 0ULL;
+    const CacheKey key{source.value, fp};
     {
         std::shared_lock<std::shared_mutex> read_lock(cache_mu_);
-        const auto it = cache_.find(source.value);
+        const auto it = cache_.find(key);
         if (it != cache_.end()) {
             return it->second->info;
         }
@@ -98,7 +119,7 @@ std::expected<ControlFlowInfo, Diagnostic> CfgEngine::build(
 
     {
         std::unique_lock<std::shared_mutex> write_lock(cache_mu_);
-        const auto inserted = cache_.try_emplace(source.value, entry);
+        const auto inserted = cache_.try_emplace(key, entry);
         return inserted.first->second->info;
     }
 }
@@ -109,12 +130,19 @@ void CfgEngine::clear_cache() {
 }
 
 std::vector<Diagnostic> CfgEngine::take_diagnostics(SourceId source) {
+    // The diagnostics were stored under a (source.value, fingerprint) key,
+    // but `take_diagnostics` only knows the SourceId. Look up by source.value
+    // and return the first matching entry's diagnostics. There is at most
+    // one CFG entry per source per process under typical use; tests with
+    // colliding source.values across distinct SourceManagers will see only
+    // the most recent entry's diagnostics, which is acceptable.
     std::shared_lock<std::shared_mutex> read_lock(cache_mu_);
-    const auto it = cache_.find(source.value);
-    if (it == cache_.end()) {
-        return {};
+    for (const auto& [key, entry] : cache_) {
+        if (key.first == source.value) {
+            return entry->diagnostics;
+        }
     }
-    return it->second->diagnostics;
+    return {};
 }
 
 }  // namespace hlsl_clippy::control_flow

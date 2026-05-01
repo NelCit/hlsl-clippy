@@ -55,7 +55,8 @@ TEST_CASE("pow-const-squared fires on every pow(x, N.0) in math.hlsl", "[rules][
     // only the pow-const-squared diagnostics for this test.
     std::vector<Diagnostic> pow_diags;
     for (const auto& d : diagnostics) {
-        if (d.code == "pow-const-squared") pow_diags.push_back(d);
+        if (d.code == "pow-const-squared")
+            pow_diags.push_back(d);
     }
 
     // The fixture has four firings: pow(1-NdotV, 5.0), pow(x, 2.0), pow(x, 3.0),
@@ -93,8 +94,12 @@ float exp_falloff(float t) {
     const auto diagnostics = lint(sources, src, rules);
 
     // pow(2.0, x) is `pow-base-two-to-exp2` territory and must not be claimed
-    // by pow-const-squared.
-    CHECK(diagnostics.empty());
+    // by pow-const-squared. Phase 2 added pow-base-two-to-exp2 to the default
+    // rule pack, so we filter to pow-const-squared specifically rather than
+    // expecting the diagnostics list to be entirely empty.
+    for (const auto& d : diagnostics) {
+        CHECK(d.code != "pow-const-squared");
+    }
 }
 
 TEST_CASE("pow-const-squared diagnostic resolves to the correct line", "[rules][pow][spans]") {
@@ -105,10 +110,14 @@ TEST_CASE("pow-const-squared diagnostic resolves to the correct line", "[rules][
     const auto diagnostics = lint_fixture(fixture, sources);
     REQUIRE_FALSE(diagnostics.empty());
 
-    // Collect the 1-based line numbers the diagnostics resolve to.
+    // Phase 2 added pow-base-two-to-exp2 to the default rule pack which also
+    // fires on math.hlsl; filter to pow-const-squared specifically before
+    // asserting on the line numbers.
     std::vector<unsigned> lines;
-    lines.reserve(diagnostics.size());
     for (const auto& diag : diagnostics) {
+        if (diag.code != "pow-const-squared") {
+            continue;
+        }
         const auto loc = sources.resolve(diag.primary_span.source, diag.primary_span.bytes.lo);
         lines.push_back(loc.line);
     }

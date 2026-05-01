@@ -18,6 +18,7 @@
 #include <expected>
 #include <memory>
 #include <shared_mutex>
+#include <utility>
 #include <vector>
 
 // std::flat_map is C++23 (P0429) but landed in libstdc++ only at GCC 15.1
@@ -89,8 +90,13 @@ private:
         std::vector<Diagnostic> diagnostics;
     };
 
+    // Cache key includes a content fingerprint so two sources with the same
+    // numeric `SourceId.value` (e.g. unit tests each constructing a fresh
+    // SourceManager whose first add_buffer returns id `1`) but different
+    // contents do not collide on the process-singleton cache.
+    using CacheKey = std::pair<std::uint32_t, std::uint64_t>;
     mutable std::shared_mutex cache_mu_;
-    detail::CfgCacheMap<std::uint32_t, std::shared_ptr<Entry>> cache_;
+    detail::CfgCacheMap<CacheKey, std::shared_ptr<Entry>> cache_;
 };
 
 }  // namespace hlsl_clippy::control_flow

@@ -7,6 +7,7 @@
 #include <shared_mutex>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
 
 #include "hlsl_clippy/diagnostic.hpp"
@@ -15,6 +16,24 @@
 #include "reflection/slang_bridge.hpp"
 
 namespace hlsl_clippy::reflection {
+
+namespace {
+
+/// FNV-1a 64-bit hash of the source contents. Used to disambiguate cache
+/// entries whose `SourceId.value` collides across SourceManagers (e.g., unit
+/// tests that each construct a fresh SourceManager whose first add_buffer
+/// returns id 1).
+[[nodiscard]] std::uint64_t fingerprint(std::string_view contents) noexcept {
+    std::uint64_t hash = 14695981039346656037ULL;
+    constexpr std::uint64_t prime = 1099511628211ULL;
+    for (const char c : contents) {
+        hash ^= static_cast<std::uint64_t>(static_cast<unsigned char>(c));
+        hash *= prime;
+    }
+    return hash;
+}
+
+}  // namespace
 
 ReflectionEngine::ReflectionEngine(std::uint32_t pool_size)
     : bridge_(std::make_unique<SlangBridge>(pool_size)) {}
@@ -31,7 +50,9 @@ ReflectionEngine& ReflectionEngine::instance() noexcept {
 
 std::expected<ReflectionInfo, Diagnostic> ReflectionEngine::reflect(
     const SourceManager& sources, SourceId source, std::string_view target_profile) {
-    const CacheKey key{source.value, std::string{target_profile}};
+    const SourceFile* file = sources.get(source);
+    const std::uint64_t fp = file != nullptr ? fingerprint(file->contents()) : 0ULL;
+    const CacheKey key{source.value, std::string{target_profile}, fp};
 
     {
         std::shared_lock<std::shared_mutex> read_lock(cache_mu_);

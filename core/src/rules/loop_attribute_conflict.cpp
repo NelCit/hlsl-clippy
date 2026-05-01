@@ -153,10 +153,45 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
     const auto kind = node_kind(node);
     if (kind == "for_statement" || kind == "while_statement" || kind == "do_statement") {
-        const auto stmt_lo = static_cast<std::size_t>(::ts_node_start_byte(node));
+        // Tree-sitter-hlsl may attach `[attr]` as an `hlsl_attribute` child of
+        // the loop statement (in which case the loop's start_byte already
+        // includes the attribute), or it may emit ERROR nodes and leave the
+        // attribute in the textual prefix preceding the loop's start_byte
+        // (the start_byte then lands on `for`/`while`/`do`). Cover both: pull
+        // the prefix back from the earliest of (start_byte, first
+        // hlsl_attribute child start) to the closest preceding `;{}`.
+        auto stmt_lo = static_cast<std::size_t>(::ts_node_start_byte(node));
+        const std::uint32_t child_count = ::ts_node_child_count(node);
+        for (std::uint32_t i = 0; i < child_count; ++i) {
+            const ::TSNode child = ::ts_node_child(node, i);
+            if (node_kind(child) == "hlsl_attribute") {
+                const auto child_lo = static_cast<std::size_t>(::ts_node_start_byte(child));
+                if (child_lo < stmt_lo) {
+                    stmt_lo = child_lo;
+                }
+            } else {
+                break;  // attributes are leading; stop after the first non-attribute child.
+            }
+        }
         const std::size_t pref_lo = prefix_start(bytes, stmt_lo);
-        if (pref_lo < stmt_lo) {
-            const std::string_view prefix = bytes.substr(pref_lo, stmt_lo - pref_lo);
+        // We scan the prefix even when it is empty (defensive), because the
+        // attributes may also live inside the loop node's own byte range -- in
+        // that case `stmt_lo` already covers them and the prefix scan still
+        // succeeds because we walk `bytes.substr(pref_lo, span_hi - pref_lo)`
+        // up to the loop's `for` keyword. We approximate that by scanning up
+        // to the first child that is *not* an hlsl_attribute, which lands on
+        // the `for`/`while`/`do` keyword's column.
+        std::size_t scan_hi = static_cast<std::size_t>(::ts_node_start_byte(node));
+        for (std::uint32_t i = 0; i < child_count; ++i) {
+            const ::TSNode child = ::ts_node_child(node, i);
+            if (node_kind(child) != "hlsl_attribute") {
+                scan_hi = static_cast<std::size_t>(::ts_node_start_byte(child));
+                break;
+            }
+            scan_hi = static_cast<std::size_t>(::ts_node_end_byte(child));
+        }
+        if (pref_lo < scan_hi) {
+            const std::string_view prefix = bytes.substr(pref_lo, scan_hi - pref_lo);
             const AttrScan scan = scan_attributes(prefix);
 
             // (a) [unroll] + [loop] conflict.
@@ -167,7 +202,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                 diag.primary_span =
                     Span{.source = tree.source_id(),
                          .bytes = ByteSpan{.lo = static_cast<std::uint32_t>(pref_lo),
-                                           .hi = static_cast<std::uint32_t>(stmt_lo)}};
+                                           .hi = static_cast<std::uint32_t>(scan_hi)}};
                 diag.message = std::string{
                     "`[unroll]` and `[loop]` on the same loop conflict -- the "
                     "compiler silently picks one; this is almost always a "
@@ -191,7 +226,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                 diag.primary_span =
                     Span{.source = tree.source_id(),
                          .bytes = ByteSpan{.lo = static_cast<std::uint32_t>(pref_lo),
-                                           .hi = static_cast<std::uint32_t>(stmt_lo)}};
+                                           .hi = static_cast<std::uint32_t>(scan_hi)}};
                 diag.message = std::string{"`[unroll(N)]` with N = "} +
                                std::to_string(scan.unroll_n) + " exceeds the portable threshold (" +
                                std::to_string(k_unroll_threshold) +
