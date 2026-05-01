@@ -5,6 +5,23 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.2] — 2026-05-01
+
+Same-day continuation. v0.5.1's CI fixes worked: the Slang prebuilt
+fetch resolved cleanly on Linux + macOS, libc++ + unversioned-clang
+landed correctly, and the build progressed to step 72/187 on macOS
+(versus 0/666 on v0.5.0). One Clang-strict warning surfaced and
+killed it — fix in this release.
+
+### Fixed
+
+- `core/src/rules/dead_store_sv_target.cpp`: removed an unused
+  `trim()` static helper. MSVC `/W4` doesn't flag unused-static
+  functions but Clang `-Wunused-function` + `-Werror` does, so
+  Linux + macOS hard-failed at step 72 of the binary release. The
+  function had no callers in the file; deletion is a no-op for
+  rule behavior.
+
 ## [0.5.1] — 2026-05-01
 
 Same-day post-launch hardening. v0.5.0 shipped the .vsix Marketplace
@@ -148,5 +165,6 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.5.2]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/NelCit/hlsl-clippy/releases/tag/v0.5.0

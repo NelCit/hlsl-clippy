@@ -43,16 +43,6 @@ constexpr std::string_view k_category = "bindings";
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
 }
 
-[[nodiscard]] std::string_view trim(std::string_view s) noexcept {
-    while (!s.empty() &&
-           (s.front() == ' ' || s.front() == '\t' || s.front() == '\n' || s.front() == '\r'))
-        s.remove_prefix(1);
-    while (!s.empty() &&
-           (s.back() == ' ' || s.back() == '\t' || s.back() == '\n' || s.back() == '\r'))
-        s.remove_suffix(1);
-    return s;
-}
-
 /// Read a token (identifier) ending at byte `i`. Returns the byte range
 /// covering the token, or {i, i} if the previous character is not an
 /// identifier char.
