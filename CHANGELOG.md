@@ -5,6 +5,72 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.5] — 2026-05-01
+
+Same-day continuation. v0.5.4 binary Release failed on the
+windows-x86_64 leg with a PowerShell syntax error in the new SHA-256
+verification block I'd added in v0.5.4 (`$env:$VarName` doesn't expand
+the way bash's `${!VAR}` does). v0.5.5 fixes that and ships the
+binaries that v0.5.4 couldn't.
+
+### Fixed
+
+- `tools/fetch-slang.ps1` — replaced `$env:$TripleVarName` (PowerShell
+  syntax error) with `[System.Environment]::GetEnvironmentVariable(...)`.
+  Linux/macOS were unaffected (bash uses `${!VAR}` indirect expansion
+  which works correctly).
+
+### Added
+
+- **Multi-file CLI invocation.** `hlsl-clippy lint a.hlsl b.hlsl c.hlsl`
+  now lints all three files in one process, amortizing Slang
+  `IGlobalSession` + ReflectionEngine cache + CFG engine cache + the
+  154-rule registry across the whole tree. Previously each file
+  required a separate process — the runtime-perf audit flagged this
+  as the single highest-ROI perf win (3-10× speedup on tree-wide CI
+  gates). JSON output remains a single combined array across all
+  files; human format gets a per-file count summary at the end.
+- **`docs/troubleshooting.md`** — first FAQ page covering the most
+  common install / build / lint / VS Code / CI failure modes flagged
+  by the user-facing-docs audit. Wired into the docs sidebar.
+- **`tests/KNOWN_FAILURES.md`** — documents the 4 pre-existing
+  golden-snapshot crashes so new contributors aren't alarmed by a
+  fresh `ctest` reporting 4 failures.
+- **`CMakePresets.json`** — `dev-debug` / `dev-release` / `ci-clang` /
+  `ci-msvc` configure presets matching the names CLAUDE.md and
+  CONTRIBUTING.md reference. Previously the documented preset
+  commands all returned `No such preset`.
+- **`tools/dev-shell.sh`** — POSIX equivalent of `dev-shell.ps1`.
+  Detects OS, validates clang-18 / brew llvm@18, prepends keg bin/
+  to PATH on macOS, runs `tools/fetch-slang.sh` if the cache is
+  empty, exports `Slang_ROOT`. Idempotent via
+  `HLSL_CLIPPY_DEV_SHELL_READY` guard.
+- **`.github/dependabot.yml`** — weekly bumps for github-actions,
+  npm (root + vscode-extension), and git submodules. Slang +
+  tomlplusplus excluded (manual SHA-rotation maintainer tasks).
+- **OpenGraph + sitemap** — `docs/.vitepress/config.mts` now ships
+  Twitter card meta, OpenGraph site description, and a sitemap with
+  the GitHub Pages hostname. Improves HN/Reddit/Twitter preview
+  rendering of shared docs links.
+- **Reflection multi-call regression test** in `test_reflection.cpp`
+  — locks in commit `36e7cd4` (Slang module-name uniquification).
+  Tagged `[regression]`.
+
+### Changed
+
+- `docs.yml` `actions/setup-node` SHA pin unified to
+  `0a44ba7841725637a19e28fa30b79a866c81b0a6` (matches
+  release-vscode.yml; both files claimed v4.0.4 with divergent
+  SHAs). `cache: 'npm'` re-enabled now that `package-lock.json`
+  ships at repo root.
+- 4 rule doc pages (`gather-channel-narrowing`,
+  `min16float-opportunity`, `texture-array-known-slice-uniform`,
+  `texture-as-buffer`) — `severity: info` → `severity: note` (info
+  was outside the loader's allow list).
+- `core/src/source.cpp` clang-format compliance fix (the
+  `max_file_bytes()` helper added in v0.5.4 had one over-long line
+  that broke the Lint workflow on every commit since 08a4640).
+
 ## [0.5.4] — 2026-05-01
 
 Audit-driven cleanup pass. The 2026-05-01 multi-domain audit chain
@@ -324,6 +390,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.5.5]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.1...v0.5.2
