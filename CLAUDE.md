@@ -15,39 +15,48 @@ decisions, see [docs/decisions/](docs/decisions/).
 `hlsl-clippy` is a static linter for HLSL written in C++23, built on
 tree-sitter-hlsl (AST) and Slang (compile + reflection + IR). It surfaces
 portable anti-patterns that hurt GPU performance or hide correctness bugs —
-patterns that `dxc` and vendor analyzers do not flag. Phase 0 and Phase 1
-are complete: the linter ships three end-to-end rules with machine-applicable
-`--fix` rewrites, inline suppressions, and a `.hlsl-clippy.toml` config. A
-companion blog series explaining the GPU reasoning behind each rule is central
-to the project's reputation goal.
+patterns that `dxc` and vendor analyzers do not flag. Phases 0 → 5 are
+complete and v0.5.3 has shipped with **154 rules** end-to-end across math,
+bindings, texture, workgroup, control-flow, mesh, DXR, work-graphs, SER,
+cooperative-vector, long-vectors, opacity-micromaps, sampler-feedback,
+VRS, and wave-helper-lane — plus machine-applicable `--fix` rewrites,
+inline suppressions, a `.hlsl-clippy.toml` config, an LSP server, and a
+VS Code extension. A companion blog series (9 launch posts) explaining
+the GPU reasoning behind each rule category is central to the project's
+reputation goal.
 
 ---
 
-## Current status (as of 2026-05-01)
+## Current status (as of 2026-05-01, v0.5.3 shipped)
 
 - **Phases 0 → 5 complete.** `cli/`, `core/`, `lsp/`, `vscode-extension/`
-  all ship; CI on Linux + Windows + macOS; 27-shader corpus.
+  all ship; CI matrix on Linux + Windows + macOS; binary release pipeline
+  fully green on v0.5.3 (Linux/Windows/macOS CLI+LSP archives + per-platform
+  `.vsix` for VS Code Marketplace).
 - **154 rules registered + tested.** 154 `.cpp` rule files, 154
   `registry.cpp` factory entries, 154 `tests/unit/test_*.cpp` per-rule
   tests. ctest baseline 667/671 (4 known golden-snapshot
-  STATUS_STACK_BUFFER_OVERRUN flakes — unrelated, deferred).
+  STATUS_STACK_BUFFER_OVERRUN flakes — pre-existing, deferred to v0.6).
   Documentation surface is wider: 186 rule pages under `docs/rules/`,
-  of which 32 are doc-only stubs (rule pages for Phase 6+ work that
+  of which 31 are doc-only stubs (rule pages for Phase 6+ work that
   hasn't shipped yet — see audit 2026-05-01 for the list).
 - **15 ADRs landed** (`docs/decisions/0001`–`0015`). ADR 0010 queues 36
   SM 6.7/6.8/6.9 rules (SER, Cooperative Vectors, Long Vectors, OMM,
   Mesh Nodes) — most have shipped through Phase 3 sub-phase 3c. ADR
-  0015 plans the v0.5.0 launch.
+  0015 plans the v0.5.0 launch (sub-phases 6a + 6b + 6c shipped;
+  6d/6e/6f/6g maintainer-driven).
 - **C++23 baseline shipped** (sub-phase 3a, commit `1ea2aaa`):
   `CMakeLists.txt` line 10 sets `CMAKE_CXX_STANDARD 23`; per-target
   `target_compile_features(... PUBLIC cxx_std_23)` so vendored Slang
   / tree-sitter keep their own standard.
-- **Phase 6 (launch — v0.5) in progress.** Tagging done; CI
-  gate-mode polish (sub-phase 6a) shipped; docs site live at
-  https://nelcit.github.io/hlsl-clippy/; 6/8 category-overview blog
-  posts shipped; release pipeline being hardened (commit `53800cf`
-  fixes Linux libc++ + macOS unversioned-clang regressions in
-  release.yml + adds prebuilt-Slang fetch to skip from-source builds).
+- **Phase 6 (launch — v0.5) in progress.** v0.5.0/0.5.1/0.5.2/0.5.3
+  tags shipped same day (release-pipeline triage chain — see
+  CHANGELOG); v0.5.3 is the first fully-green release. Docs site
+  live at https://nelcit.github.io/hlsl-clippy/; 9 launch blog posts
+  shipped (preface + 8 category overviews + 1 per-rule); per-platform
+  `.vsix` bundling lands in v0.5.3. Slang submodule retired in commit
+  73c0322 — Slang is now consumed via the prebuilt cache populated by
+  `tools/fetch-slang.{sh,ps1}` (or `Slang_ROOT` for power users).
 
 ---
 
@@ -67,11 +76,13 @@ the ADR first.
   "Known issues" below). See
   [ADR 0002](docs/decisions/0002-parser-tree-sitter-hlsl.md).
 
-- **Module decomposition**: current `cli/` + `core/` split is what is
-  shipped. The more granular `apps/` + `libs/` + `include/` layout per
-  [ADR 0003](docs/decisions/0003-module-decomposition.md) is **Proposed**
-  for Phase 1+; it is not silently adopted. Do not restructure the source
-  tree without user approval.
+- **Module decomposition**: current `cli/` + `core/` + `lsp/` +
+  `vscode-extension/` split is what is shipped. The more granular
+  `apps/` + `libs/` + `include/` layout per
+  [ADR 0003](docs/decisions/0003-module-decomposition.md) remains
+  **Proposed** — the 2026-05-01 architecture audit found "no concrete
+  harm of staying with the current layout"; do not restructure the
+  source tree without user approval.
 
 - **C++ baseline**: C++23 + selective C++26. Compiler floors: MSVC 19.44+
   (VS 17.14 / Build Tools 14.44), Clang 18+ with libc++ 17+ or libstdc++
@@ -120,7 +131,7 @@ the ADR first.
   ByteAddressBuffer alignment, samplers, root-signature ergonomics, mesh
   extras, compute-pipeline shape, numerical / precision, wave-quad extras,
   texture-format, divergence hints) — 6 Phase 2, 17 Phase 3, 16 Phase 4,
-  2 Phase 7 — plus 20 DEFERRED and 2 DROPPED candidates. **Proposed**;
+  2 Phase 7 — plus 20 DEFERRED and 2 DROPPED candidates. **Accepted**;
   per-phase plans mirror ADR 0009's shared-utilities-PR + parallel-pack
   pattern. See
   [ADR 0011](docs/decisions/0011-candidate-rule-adoption.md).
@@ -129,7 +140,7 @@ the ADR first.
   header + new `Stage::Reflection` + `Rule::on_reflection` virtual + lazy
   per-(SourceId, target-profile) cached `ReflectionEngine` (one global
   Slang `IGlobalSession`, per-worker `ISession` pool); `<slang.h>`
-  confined to `core/src/reflection/slang_bridge.cpp`. **Proposed**;
+  confined to `core/src/reflection/slang_bridge.cpp`. **Accepted**;
   gates ALL ~55 Phase 3 rules across ADR 0007 / 0010 / 0011. Lands as
   sub-phase 3a (infra PR) → 3b (shared utilities) → 3c (5 parallel
   rule packs). See
@@ -141,7 +152,7 @@ the ADR first.
   built over tree-sitter AST, Lengauer-Tarjan dominator tree, taint-
   propagation uniformity oracle, helper-lane analyzer, bounded
   inter-procedural inlining at `cfg_inlining_depth = 3`); ERROR-node
-  tolerance per ADR 0002. **Proposed**; gates ALL ~45 Phase 4 rules
+  tolerance per ADR 0002. **Accepted**; gates ALL ~45 Phase 4 rules
   across ADR 0007 §Phase 4 / ADR 0010 §Phase 4 / ADR 0011 §Phase 4.
   Does NOT depend on ADR 0012 / Phase 3 — CFG works without
   reflection. Lands as sub-phase 4a (infra PR) → 4b (shared utilities)
@@ -154,7 +165,7 @@ the ADR first.
   (`vscode-extension/`, Apache-2.0, `nelcit` publisher) thin-wrapping
   the LSP; quick-fixes surfaced as `quickfix` code actions; per-document
   `.hlsl-clippy.toml` walk-up reused; macOS CI matrix added in the same
-  phase. **Proposed**; lands as 5a (server scaffolding) → 5b (code
+  phase. **Accepted**; lands as 5a (server scaffolding) → 5b (code
   actions) → 5c (extension, parallel-after-5a) → 5d (macOS CI,
   parallel-after-5a) → 5e (distribution). See
   [ADR 0014](docs/decisions/0014-phase-5-lsp-architecture.md).
@@ -168,7 +179,7 @@ the ADR first.
   (final pre-tag audit), 6f (tag + release), 6g (staggered launch
   posts: Discord day 0, HN day 1, r/GraphicsProgramming day 2). The
   ~150 individual per-rule blog posts are a v0.6+ flywheel — v0.5
-  ships category overviews. **Proposed**. See
+  ships category overviews. **Accepted**. See
   [ADR 0015](docs/decisions/0015-phase-6-launch-plan.md).
 
 ---
@@ -452,14 +463,14 @@ decision is settled.
 | [0005](docs/decisions/0005-cicd-pipeline.md) | CI/CD pipeline | Accepted |
 | [0006](docs/decisions/0006-license-apache-2-0.md) | License — Apache-2.0 (code) + CC-BY-4.0 (docs) + DCO | Accepted |
 | [0007](docs/decisions/0007-rule-pack-expansion.md) | Rule-pack expansion (+41 rules) | Accepted |
-| [0008](docs/decisions/0008-phase-1-implementation-plan.md) | Phase 1 implementation plan | Proposed |
-| [0009](docs/decisions/0009-phase-2-implementation-plan.md) | Phase 2 implementation plan — AST-only rule pack | Proposed |
-| [0010](docs/decisions/0010-sm69-rule-expansion.md) | SM 6.9 rule expansion (+36 rules) | Proposed |
-| [0011](docs/decisions/0011-candidate-rule-adoption.md) | Candidate rule adoption — underexplored portable surfaces (per-phase plan) | Proposed |
-| [0012](docs/decisions/0012-phase-3-reflection-infrastructure.md) | Phase 3 reflection infrastructure — Slang reflection plumbed into RuleContext | Proposed |
-| [0013](docs/decisions/0013-phase-4-control-flow-infrastructure.md) | Phase 4 control-flow / data-flow infrastructure — CFG + uniformity oracle | Proposed |
-| [0014](docs/decisions/0014-phase-5-lsp-architecture.md) | Phase 5 LSP + IDE architecture — JSON-RPC server + VS Code extension | Proposed |
-| [0015](docs/decisions/0015-phase-6-launch-plan.md) | Phase 6 launch plan — v0.5.0 release | Proposed |
+| [0008](docs/decisions/0008-phase-1-implementation-plan.md) | Phase 1 implementation plan | Accepted |
+| [0009](docs/decisions/0009-phase-2-implementation-plan.md) | Phase 2 implementation plan — AST-only rule pack | Accepted |
+| [0010](docs/decisions/0010-sm69-rule-expansion.md) | SM 6.9 rule expansion (+36 rules) | Accepted |
+| [0011](docs/decisions/0011-candidate-rule-adoption.md) | Candidate rule adoption — underexplored portable surfaces (per-phase plan) | Accepted |
+| [0012](docs/decisions/0012-phase-3-reflection-infrastructure.md) | Phase 3 reflection infrastructure — Slang reflection plumbed into RuleContext | Accepted |
+| [0013](docs/decisions/0013-phase-4-control-flow-infrastructure.md) | Phase 4 control-flow / data-flow infrastructure — CFG + uniformity oracle | Accepted |
+| [0014](docs/decisions/0014-phase-5-lsp-architecture.md) | Phase 5 LSP + IDE architecture — JSON-RPC server + VS Code extension | Accepted |
+| [0015](docs/decisions/0015-phase-6-launch-plan.md) | Phase 6 launch plan — v0.5.0 release | Accepted |
 
 "Proposed" ADRs represent plans that are approved in principle but not yet
 fully implemented. "Accepted" ADRs represent shipped decisions. Do not

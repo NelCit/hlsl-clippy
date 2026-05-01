@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 date: 2026-05-01
 deciders: NelCit
 tags: [phase-3, reflection, slang, rule-engine, infrastructure, planning]

@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 date: 2026-05-01
 deciders: NelCit
 tags: [phase-6, launch, v0.5, ci-gate, docs-site, marketplace, blog, planning]

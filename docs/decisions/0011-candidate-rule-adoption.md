@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 date: 2026-05-01
 deciders: NelCit
 tags: [rules, candidates, per-phase-plan, groupshared, buffers, samplers, root-signature, mesh, compute, numerical, wave-quad-extras, texture-format, divergence-hints]

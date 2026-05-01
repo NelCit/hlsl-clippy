@@ -1,8 +1,20 @@
+---
+title: Configuration
+outline: deep
+---
+
 # Configuration
 
-> **Status:** pre-v0 — the config schema is at design stage and may change before v0.1. See [ROADMAP](../ROADMAP.md).
+`hlsl-clippy` reads `.hlsl-clippy.toml` from the directory of each
+linted file (or any ancestor directory up to the first `.git/`
+parent). When no config file is found, all rules run at their
+built-in default severity.
 
-`hlsl-clippy` reads `.hlsl-clippy.toml` from the invocation directory or the nearest ancestor directory that contains one. When no config file is found, all rules run at their default severity.
+The CLI also accepts an explicit path:
+
+```sh
+hlsl-clippy lint --config path/to/.hlsl-clippy.toml shader.hlsl
+```
 
 ## `[rules]` — per-rule severity
 
@@ -10,71 +22,156 @@ The `[rules]` table maps rule IDs to severity levels:
 
 ```toml
 [rules]
-pow-to-mul              = "warn"
-redundant-saturate      = "deny"
-derivative-in-divergent-cf = "deny"
+pow-const-squared           = "warn"
+redundant-saturate          = "warn"
+derivative-in-divergent-cf  = "error"
+clamp01-to-saturate         = "off"
 ```
 
-Omitting a rule from `[rules]` leaves it at its built-in default (shown in the [rules catalog](rules/index.md)).
+Omitting a rule from `[rules]` leaves it at its built-in default
+(shown in the [rules catalog](/rules/)).
 
 ## Severity levels
 
-| Level  | Behaviour                                        |
-|--------|--------------------------------------------------|
-| `allow` | Rule is silenced; no diagnostic emitted.        |
-| `warn`  | Diagnostic emitted; exit code 1.                |
-| `deny`  | Diagnostic emitted; exit code 2 (hard error).   |
+| Level     | Behaviour                                              |
+|-----------|--------------------------------------------------------|
+| `error`   | Diagnostic emitted; exit code `2` (hard error).        |
+| `warning` | Diagnostic emitted; exit code `1`.                     |
+| `note`    | Informational diagnostic; exit code `1`.               |
+| `off`     | Rule is silenced; no diagnostic emitted.               |
 
-These mirror Rust's `clippy::` lint level names intentionally — the semantics are the same.
+The shorthand `"warn"` is accepted as an alias for `"warning"`.
 
-## `[includes]` and `[excludes]` — glob arrays
+## `includes` and `excludes` — glob arrays
 
-Control which files are linted:
+Control which files the linter walks:
 
 ```toml
-[includes]
-paths = ["shaders/**/*.hlsl", "src/gpu/**/*.hlsl"]
-
-[excludes]
-paths = ["shaders/vendor/**", "shaders/generated/**"]
+includes = ["shaders/**/*.hlsl", "src/gpu/**/*.hlsl"]
+excludes = ["shaders/third_party/**", "shaders/generated/**"]
 ```
 
-When `[includes]` is absent, all `.hlsl` files under the invocation directory are linted (subject to `[excludes]`).
+When `includes` is absent, every `.hlsl` file under the invocation
+directory is considered (subject to `excludes`).
 
 ## `[[overrides]]` — per-directory rule tuning
 
-The `[[overrides]]` array allows different severity levels for specific directory subtrees:
+The `[[overrides]]` array allows different severity for specific
+directory subtrees:
 
 ```toml
 [[overrides]]
 paths = ["shaders/experimental/**"]
-rules = { derivative-in-divergent-cf = "warn" }
+[overrides.rules]
+derivative-in-divergent-cf = "warning"
 
 [[overrides]]
 paths = ["shaders/vendor/**"]
-rules = { pow-to-mul = "allow", redundant-saturate = "allow" }
+[overrides.rules]
+pow-const-squared  = "off"
+redundant-saturate = "off"
 ```
 
-Overrides are applied in order; later entries win.
+Overrides are applied in source order; later matches win.
+
+## Walk-up resolution
+
+The CLI walks up the directory tree from each file's parent looking for
+`.hlsl-clippy.toml`. The walk stops at the first `.git/` ancestor. If
+no `.git/` is present (e.g. you extracted a tarball with no
+repository), the walk continues to the filesystem root — set
+`--config <path>` explicitly in that case to avoid surprises.
 
 ## Inline suppression
 
 ### Line scope
 
-Suppress a single rule on the next line (or on the same line, depending on final syntax — TBD):
+Suppress a single rule on the same line:
 
 ```hlsl
-// hlsl-clippy: allow(pow-to-mul)
+float k = pow(x, 2.0);  // hlsl-clippy: allow(pow-const-squared)
+```
+
+Or the next non-comment line:
+
+```hlsl
+// hlsl-clippy: allow(pow-const-squared)
 float k = pow(x, 2.0);
+```
+
+Multiple rules in one comment: `allow(pow-const-squared, redundant-saturate)`.
+
+### Block scope
+
+Place an `allow(...)` directive immediately before an opening brace
+to suppress the named rules for the entire `{...}` block:
+
+```hlsl
+// hlsl-clippy: allow(redundant-saturate)
+{
+    float a = saturate(saturate(x));   // suppressed
+    float b = saturate(y);             // suppressed
+}
+float c = saturate(saturate(z));       // NOT suppressed
 ```
 
 ### File scope
 
-Placing a file-scope suppression at the very top of the file (before any non-comment token) silences the named rule for the entire file:
+Place an `allow(...)` directive before any non-comment token at the
+top of the file:
 
 ```hlsl
 // hlsl-clippy: allow(*)
-// Suppress all diagnostics — this is a vendor file we do not control.
+// Vendor file we do not control.
 ```
 
-Using `allow(*)` suppresses all rules. Individual rules can also be listed: `allow(pow-to-mul, redundant-saturate)`.
+`allow(*)` suppresses every rule for the file. Individual rules can
+also be listed: `allow(pow-const-squared, redundant-saturate)`.
+
+## Example configs
+
+### Minimal — opt one rule into "error"
+
+```toml
+[rules]
+derivative-in-divergent-cf = "error"
+```
+
+### Typical project layout
+
+```toml
+[rules]
+pow-const-squared           = "warn"
+redundant-saturate          = "warn"
+clamp01-to-saturate         = "off"
+
+includes = ["shaders/**/*.hlsl"]
+excludes = ["shaders/third_party/**"]
+
+[[overrides]]
+paths = ["shaders/experimental/**"]
+[overrides.rules]
+pow-const-squared = "off"
+```
+
+### Strict — every rule at "warning", a few promoted to "error"
+
+```toml
+[[overrides]]
+paths = ["**/*.hlsl"]
+[overrides.rules]
+derivative-in-divergent-cf  = "error"
+barrier-in-divergent-cf     = "error"
+wave-intrinsic-non-uniform  = "error"
+```
+
+## Experimental flags
+
+```toml
+[experimental]
+work-graph-mesh-nodes = true
+```
+
+Gates preview rule packs whose target API hasn't stabilised yet (per
+ADR 0010). Off by default; opt in if you author SM 6.9 mesh-node
+shaders.

@@ -46,30 +46,59 @@ GPU mechanism so the warning doubles as a teaching tool.
 
 ## Install
 
+### Prebuilt CLI / LSP binaries
+
+Each tagged release attaches per-platform archives to its
+[GitHub Release](https://github.com/NelCit/hlsl-clippy/releases) page:
+
+- `hlsl-clippy-<version>-linux-x86_64.tar.gz`
+- `hlsl-clippy-<version>-windows-x86_64.zip`
+- `hlsl-clippy-<version>-macos-aarch64.tar.gz`
+
+Each archive contains the `hlsl-clippy` CLI + `hlsl-clippy-lsp` LSP
+server + `LICENSE` / `NOTICE` / `THIRD_PARTY_LICENSES.md`. Drop on
+`PATH` and run.
+
 ### From source
 
-**Prerequisites:** CMake 3.20+, C++23 compiler (MSVC 19.44+, Clang 18+,
-GCC 14+).
+**Prerequisites:** CMake 3.20+, C++23 compiler (MSVC 19.44+ /
+VS 17.14 / Build Tools 14.44, Clang 18+ with libc++ 17+ or
+libstdc++ 13+, GCC 14+). Per-platform first-time setup:
+
+- **Windows:** install Visual Studio 2022 17.14+ with the
+  "Desktop development with C++" workload. Dot-source
+  `tools\dev-shell.ps1` to enter the MSVC dev shell + put VS-bundled
+  CMake / Ninja / Slang DLLs on PATH.
+- **Linux (Ubuntu 24.04+):** `wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all && sudo apt-get install -y libc++-18-dev libc++abi-18-dev cmake ninja-build`.
+- **macOS (Apple Silicon):** `brew install cmake ninja llvm@18` then `export PATH="/opt/homebrew/opt/llvm@18/bin:$PATH"` (Apple's bundled Clang is too old for C++23).
 
 ```sh
 git clone --recurse-submodules https://github.com/NelCit/hlsl-clippy.git
 cd hlsl-clippy
-cmake -B build && cmake --build build
+
+# Bootstrap the Slang prebuilt cache (skip the ~20-min from-source build):
+bash  tools/fetch-slang.sh         # Linux / macOS
+pwsh  tools/fetch-slang.ps1        # Windows
+
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build
 ./build/cli/hlsl-clippy lint shader.hlsl
 ```
 
-On Windows, `tools\dev-shell.ps1` sets up MSVC + the Slang prebuilt cache
-in one shot.
-
 ### VS Code extension
 
-Coming with v0.5 (sub-phase 5e). Until then: clone, build, and point your
-editor at `./build/lsp/hlsl-clippy-lsp[.exe]`.
+Install **HLSL Clippy** by `nelcit` from the Marketplace, or:
 
-### Marketplace
+```sh
+code --install-extension nelcit.hlsl-clippy
+```
 
-Available once the v0.5 release tag ships (gates on
-`.github/workflows/release-vscode.yml`).
+The extension ships the `hlsl-clippy-lsp` binary inside the per-platform
+`.vsix` (linux-x64 / win32-x64 / darwin-arm64). Marketplace serves the
+matching one for your OS automatically; no extra download or PATH
+configuration needed. Per-platform `.vsix` files are also attached to
+every [GitHub Release](https://github.com/NelCit/hlsl-clippy/releases)
+for sideload.
 
 ## CLI usage
 

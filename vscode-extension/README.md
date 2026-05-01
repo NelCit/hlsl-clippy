@@ -22,43 +22,55 @@ same as the diagnostics the CLI emits in CI logs (modulo formatting).
 ## Requirements
 
 - VS Code 1.85 or newer.
-- The `hlsl-clippy-lsp` binary on disk. Three options:
-  1. **Recommended once GitHub Releases ship the artifact** (sub-phase 5e):
-     leave settings empty — the extension will download + cache the binary
-     on first activation.
-  2. **Build from source** ([`hlsl-clippy` repo](https://github.com/NelCit/hlsl-clippy)).
-     The `hlsl-clippy-lsp` binary is built alongside the CLI (`cmake --build
-     build-debug --target hlsl-clippy-lsp`); add it to your `PATH` or set
-     `hlslClippy.serverPath`.
-  3. **Sideload pre-built binary**: drop `hlsl-clippy-lsp` (or
-     `hlsl-clippy-lsp.exe` on Windows) somewhere on `PATH`.
 
-> **5c status note:** until sub-phase 5e ships per-platform release
-> artifacts, the auto-download path will fail with a 404 and you must use
-> option 2 or 3 above.
+The `hlsl-clippy-lsp` server binary is **bundled inside the extension** —
+since v0.5.3 the Marketplace ships a per-platform `.vsix` for each of
+`linux-x64`, `win32-x64`, and `darwin-arm64`, and the matching binary
+lives at `<extension>/server/<platform>/hlsl-clippy-lsp[.exe]`. Marketplace
+installs and `.vsix` sideloads both Just Work with no extra download.
+
+Power-user overrides (only set these if you need them):
+
+- **`hlslClippy.serverPath`** — point at a custom-built `hlsl-clippy-lsp`
+  binary (e.g. a local debug build). Bypasses the bundled binary.
+- **PATH lookup** — if `hlsl-clippy-lsp` (or `hlsl-clippy-lsp.exe`) is on
+  `PATH`, it takes precedence over the bundled binary.
 
 ## Installation
 
-### From the Marketplace (planned for v0.5 launch)
+### From the Marketplace
 
-Search for "HLSL Clippy" by `nelcit` in the Extensions view, or install via
-`code --install-extension nelcit.hlsl-clippy`.
-
-### From a `.vsix` (sideload, available now)
-
-Download `hlsl-clippy-<version>.vsix` from the
-[GitHub Releases](https://github.com/NelCit/hlsl-clippy/releases) page and
-install with:
+Search for **"HLSL Clippy"** by `nelcit` in the Extensions view (`Ctrl+Shift+X`),
+or install from the command line:
 
 ```
-code --install-extension hlsl-clippy-<version>.vsix
+code --install-extension nelcit.hlsl-clippy
+```
+
+The Marketplace serves the matching `.vsix` for your OS+arch automatically;
+the LSP binary is included.
+
+### From a `.vsix` (sideload)
+
+Per-platform `.vsix` files are attached to every
+[GitHub Release](https://github.com/NelCit/hlsl-clippy/releases) — pick the
+one for your platform:
+
+- `hlsl-clippy-<version>-linux-x64.vsix`
+- `hlsl-clippy-<version>-win32-x64.vsix`
+- `hlsl-clippy-<version>-darwin-arm64.vsix`
+
+Then:
+
+```
+code --install-extension hlsl-clippy-<version>-<target>.vsix
 ```
 
 ## Settings
 
 | Setting | Type | Default | Purpose |
 | --- | --- | --- | --- |
-| `hlslClippy.serverPath` | `string` | `""` | Explicit path to the `hlsl-clippy-lsp` binary. Empty = auto-discover (PATH → bundled → cached → download). |
+| `hlslClippy.serverPath` | `string` | `""` | Explicit path to a custom `hlsl-clippy-lsp` binary. Empty = use the binary bundled with the extension (or `hlsl-clippy-lsp` on `PATH`). |
 | `hlslClippy.targetProfile` | `string` | `""` | Slang target profile (e.g. `sm_6_6`, `vs_6_7`, `ps_6_8`). Empty = server default per stage. Forwarded to `LintOptions::target_profile`. |
 | `hlslClippy.enableReflection` | `boolean` | `true` | Enable Phase 3 reflection-aware rules. Disable on slow machines to keep AST-only latency. |
 | `hlslClippy.enableControlFlow` | `boolean` | `true` | Enable Phase 4 CFG-aware rules. |

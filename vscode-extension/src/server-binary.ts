@@ -10,10 +10,11 @@
 //   4. Cached download at `<global_storage>/hlsl-clippy-lsp-<version>/...`.
 //   5. Trigger download (via `download.ts`).
 //
-// IMPORTANT (5c): GitHub release artifacts for `hlsl-clippy-lsp` do not exist
-// until sub-phase 5e ships them. Until then, falling through to step 5 will
-// fail with a `ServerResolutionError`; the user must set
-// `hlslClippy.serverPath` or place the binary on `PATH`.
+// As of v0.5.3 the Marketplace ships per-platform .vsix files that bundle
+// the LSP binary at step 3 — every Marketplace install hits step 3 with no
+// network access required. Steps 4 + 5 (cache + download) survive only as
+// fallbacks for the rare cases where a sideloaded .vsix is missing the
+// bundled binary, or where the user explicitly cleared the bundled path.
 
 import { promises as fs } from "fs";
 import * as os from "os";
