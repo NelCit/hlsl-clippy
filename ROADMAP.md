@@ -159,80 +159,80 @@ Rules needing Slang's reflection API for binding / layout / type data, married t
 **Gating dependency:** [ADR 0012](docs/decisions/0012-phase-3-reflection-infrastructure.md) (Proposed) — the Slang-reflection-into-RuleContext infrastructure must land first. See ADR 0012 §"Implementation sub-phases" for the 3a (infra) → 3b (shared utilities) → 3c (5 parallel rule packs) sequence.
 
 **Resource bindings:**
-- [ ] `non-uniform-resource-index`: dynamic resource index missing the marker (uses Slang reflection to identify `Texture2D[]`-class params)
-- [ ] `cbuffer-padding-hole`: alignment gaps in `cbuffer` layouts
-- [ ] `bool-straddles-16b`: `bool` packed across 16-byte boundary
-- [ ] `oversized-cbuffer`: cbuffer > N bytes (configurable threshold, default 4 KB)
-- [ ] `cbuffer-fits-rootconstants`: small cbuffer (≤8 DWORDs) is root-constant material on D3D12
-- [ ] `structured-buffer-stride-mismatch`: element stride not 16-aligned where it should be
-- [ ] `unused-cbuffer-field`: declared but never read (needs reachability — moved here from old Phase 2)
-- [ ] `dead-store-sv-target`: `SV_Target` written but always overwritten (also moved here)
-- [ ] `rwresource-read-only-usage`: `RWBuffer` / `RWTexture` only ever read → demote to SRV
-- [ ] `descriptor-heap-no-non-uniform-marker`: `ResourceDescriptorHeap[i]` / `SamplerDescriptorHeap[i]` without `NonUniformResourceIndex` when divergent (SM 6.6+)
-- [ ] `descriptor-heap-type-confusion`: sampler assigned to CBV/SRV/UAV slot via wrong heap (SM 6.6+)
+- [x] `non-uniform-resource-index`: dynamic resource index missing the marker (uses Slang reflection to identify `Texture2D[]`-class params)
+- [x] `cbuffer-padding-hole`: alignment gaps in `cbuffer` layouts
+- [x] `bool-straddles-16b`: `bool` packed across 16-byte boundary
+- [x] `oversized-cbuffer`: cbuffer > N bytes (configurable threshold, default 4 KB)
+- [x] `cbuffer-fits-rootconstants`: small cbuffer (≤8 DWORDs) is root-constant material on D3D12
+- [x] `structured-buffer-stride-mismatch`: element stride not 16-aligned where it should be
+- [x] `unused-cbuffer-field`: declared but never read (needs reachability — moved here from old Phase 2)
+- [x] `dead-store-sv-target`: `SV_Target` written but always overwritten (also moved here)
+- [x] `rwresource-read-only-usage`: `RWBuffer` / `RWTexture` only ever read → demote to SRV
+- [x] `descriptor-heap-no-non-uniform-marker`: `ResourceDescriptorHeap[i]` / `SamplerDescriptorHeap[i]` without `NonUniformResourceIndex` when divergent (SM 6.6+)
+- [x] `descriptor-heap-type-confusion`: sampler assigned to CBV/SRV/UAV slot via wrong heap (SM 6.6+)
 - [ ] `all-resources-bound-not-set` (project-level): compiles without `-all-resources-bound` while declaring fully-populated root signatures (driver opts unlocked by the flag)
-- [ ] `rov-without-earlydepthstencil`: `RasterizerOrdered*` in PS without `[earlydepthstencil]` and without depth/discard hazards
-- [ ] `byteaddressbuffer-load-misaligned`: `Load2`/`Load3`/`Load4` on `ByteAddressBuffer` at constant offset failing the natural-alignment check (8/12/16)  *(via ADR 0011)*
-- [ ] `byteaddressbuffer-narrow-when-typed-fits`: `ByteAddressBuffer.Load4` of a POD that exactly matches a `Buffer<float4>` / `StructuredBuffer<T>` view (cache-path mismatch)  *(via ADR 0011)*
-- [ ] `structured-buffer-stride-not-cache-aligned`: stride a multiple of 4 but not of 16 / 32 / 64 (configurable cache-line target)  *(via ADR 0011)*
-- [ ] `cbuffer-large-fits-rootcbv-not-table`: cbuffer ≤ 64 KB referenced once per dispatch where a root CBV would dodge the descriptor-table indirection  *(via ADR 0011)*
-- [ ] `uav-srv-implicit-transition-assumed`: shader writes UAV `U` then reads SRV `S` where reflection notes `U` and `S` alias (suggestion-grade)  *(via ADR 0011)*
+- [x] `rov-without-earlydepthstencil`: `RasterizerOrdered*` in PS without `[earlydepthstencil]` and without depth/discard hazards
+- [x] `byteaddressbuffer-load-misaligned`: `Load2`/`Load3`/`Load4` on `ByteAddressBuffer` at constant offset failing the natural-alignment check (8/12/16)  *(via ADR 0011)*
+- [x] `byteaddressbuffer-narrow-when-typed-fits`: `ByteAddressBuffer.Load4` of a POD that exactly matches a `Buffer<float4>` / `StructuredBuffer<T>` view (cache-path mismatch)  *(via ADR 0011)*
+- [x] `structured-buffer-stride-not-cache-aligned`: stride a multiple of 4 but not of 16 / 32 / 64 (configurable cache-line target)  *(via ADR 0011)*
+- [x] `cbuffer-large-fits-rootcbv-not-table`: cbuffer ≤ 64 KB referenced once per dispatch where a root CBV would dodge the descriptor-table indirection  *(via ADR 0011)*
+- [x] `uav-srv-implicit-transition-assumed`: shader writes UAV `U` then reads SRV `S` where reflection notes `U` and `S` alias (suggestion-grade)  *(via ADR 0011)*
 
 **Texture / sampling (type-aware):**
-- [ ] `samplelevel-with-zero-on-mipped-tex`: explicit `SampleLevel(s, uv, 0)` on a mipped resource (probably wrong)
-- [ ] `texture-as-buffer`: `Texture2D` accessed only as 1D linear → suggest `Buffer<>` / `StructuredBuffer<>`
-- [ ] `samplegrad-with-constant-grads`: zero gradients → `SampleLevel(0)`
-- [ ] `gather-channel-narrowing`: `Gather().r` → `GatherRed` (saves bandwidth on some HW)
-- [ ] `samplecmp-vs-manual-compare`: hand-rolled depth compare → `SampleCmp` with comparison sampler
-- [ ] `texture-array-known-slice-uniform`: `Texture2DArray.Sample(s, float3(uv, K))` where K is uniform — possibly demote to `Texture2D`
-- [ ] `gather-cmp-vs-manual-pcf`: 2x2 unrolled `SampleCmp` for PCF → `GatherCmp` + manual filter weights
-- [ ] `texture-lod-bias-without-grad`: `SampleBias` in compute or non-quad-uniform contexts (implicit-derivatives UB)
-- [ ] `static-sampler-when-dynamic-used`: a sampler whose state never varies across draws → promote to static sampler  *(via ADR 0011)*
-- [ ] `mip-clamp-zero-on-mipped-texture`: `MaxLOD = 0` (or `MinMipLevel = 0`) on a sampler bound to a fully-mipped texture (silently disables mip filtering)  *(via ADR 0011)*
-- [ ] `comparison-sampler-without-comparison-op`: `SamplerComparisonState` declared but only `Sample`/`SampleLevel` (non-`Cmp` variants) called  *(via ADR 0011)*
-- [ ] `anisotropy-without-anisotropic-filter`: `MaxAnisotropy > 1` on a sampler whose `Filter` doesn't request anisotropic filtering (silently ignored)  *(via ADR 0011)*
-- [ ] `bgra-rgba-swizzle-mismatch`: shader reads `.rgba` from a `Texture2D<float4>` whose binding maps a `DXGI_FORMAT_B8G8R8A8_UNORM` resource without `.bgra` swizzle  *(via ADR 0011)*
-- [ ] `manual-srgb-conversion`: hand-rolled gamma 2.2 / sRGB transfer where the resource format already carries the sRGB conversion (double-applies the curve)  *(via ADR 0011)*
+- [x] `samplelevel-with-zero-on-mipped-tex`: explicit `SampleLevel(s, uv, 0)` on a mipped resource (probably wrong)
+- [x] `texture-as-buffer`: `Texture2D` accessed only as 1D linear → suggest `Buffer<>` / `StructuredBuffer<>`
+- [x] `samplegrad-with-constant-grads`: zero gradients → `SampleLevel(0)`
+- [x] `gather-channel-narrowing`: `Gather().r` → `GatherRed` (saves bandwidth on some HW)
+- [x] `samplecmp-vs-manual-compare`: hand-rolled depth compare → `SampleCmp` with comparison sampler
+- [x] `texture-array-known-slice-uniform`: `Texture2DArray.Sample(s, float3(uv, K))` where K is uniform — possibly demote to `Texture2D`
+- [x] `gather-cmp-vs-manual-pcf`: 2x2 unrolled `SampleCmp` for PCF → `GatherCmp` + manual filter weights
+- [x] `texture-lod-bias-without-grad`: `SampleBias` in compute or non-quad-uniform contexts (implicit-derivatives UB)
+- [x] `static-sampler-when-dynamic-used`: a sampler whose state never varies across draws → promote to static sampler  *(via ADR 0011)*
+- [x] `mip-clamp-zero-on-mipped-texture`: `MaxLOD = 0` (or `MinMipLevel = 0`) on a sampler bound to a fully-mipped texture (silently disables mip filtering)  *(via ADR 0011)*
+- [x] `comparison-sampler-without-comparison-op`: `SamplerComparisonState` declared but only `Sample`/`SampleLevel` (non-`Cmp` variants) called  *(via ADR 0011)*
+- [x] `anisotropy-without-anisotropic-filter`: `MaxAnisotropy > 1` on a sampler whose `Filter` doesn't request anisotropic filtering (silently ignored)  *(via ADR 0011)*
+- [x] `bgra-rgba-swizzle-mismatch`: shader reads `.rgba` from a `Texture2D<float4>` whose binding maps a `DXGI_FORMAT_B8G8R8A8_UNORM` resource without `.bgra` swizzle  *(via ADR 0011)*
+- [x] `manual-srgb-conversion`: hand-rolled gamma 2.2 / sRGB transfer where the resource format already carries the sRGB conversion (double-applies the curve)  *(via ADR 0011)*
 
 **Workgroup / threadgroup:**
-- [ ] `numthreads-not-wave-aligned`: `[numthreads]` total not a multiple of 32 / 64 (configurable target wave size)
-- [ ] `numthreads-too-small`: total < wave size (huge occupancy hit)
-- [ ] `groupshared-too-large`: bytes > occupancy threshold
-- [ ] `compute-dispatch-grid-shape-vs-quad`: `[numthreads(N,1,1)]` chosen for a kernel that reads `ddx`/`ddy` (compute-quad derivatives expect 2x2 quad)  *(via ADR 0011)*
-- [ ] `wavesize-attribute-missing`: kernel uses wave intrinsics whose result depends on wave size and lacks `[WaveSize(N)]` / `[WaveSize(min, max)]`  *(via ADR 0011)*
+- [x] `numthreads-not-wave-aligned`: `[numthreads]` total not a multiple of 32 / 64 (configurable target wave size)
+- [x] `numthreads-too-small`: total < wave size (huge occupancy hit)
+- [x] `groupshared-too-large`: bytes > occupancy threshold
+- [x] `compute-dispatch-grid-shape-vs-quad`: `[numthreads(N,1,1)]` chosen for a kernel that reads `ddx`/`ddy` (compute-quad derivatives expect 2x2 quad)  *(via ADR 0011)*
+- [x] `wavesize-attribute-missing`: kernel uses wave intrinsics whose result depends on wave size and lacks `[WaveSize(N)]` / `[WaveSize(min, max)]`  *(via ADR 0011)*
 
 **Interpolators / semantics:**
-- [ ] `excess-interpolators`: total `TEXCOORDn` slots exceed hardware budget
-- [ ] `nointerpolation-mismatch`: pixel shader treats input as flat but vertex output isn't `nointerpolation`
-- [ ] `missing-precise-on-pcf`: depth-compare arithmetic without `precise` qualifier (numerical drift)
+- [x] `excess-interpolators`: total `TEXCOORDn` slots exceed hardware budget
+- [x] `nointerpolation-mismatch`: pixel shader treats input as flat but vertex output isn't `nointerpolation`
+- [x] `missing-precise-on-pcf`: depth-compare arithmetic without `precise` qualifier (numerical drift)
 
 **Packed math / fp16 (SM 6.4+):**
-- [ ] `pack-clamp-on-prove-bounded`: `pack_clamp_u8` where operand provably in [0,255] → truncating `pack_u8`
-- [ ] `min16float-in-cbuffer-roundtrip`: `min16float` param loaded from 32-bit cbuffer field — re-pays 32→16 conversion every read
+- [x] `pack-clamp-on-prove-bounded`: `pack_clamp_u8` where operand provably in [0,255] → truncating `pack_u8`
+- [x] `min16float-in-cbuffer-roundtrip`: `min16float` param loaded from 32-bit cbuffer field — re-pays 32→16 conversion every read
 
 **Variable rate shading / pixel shader:**
-- [ ] `vrs-incompatible-output`: PS writes `SV_Depth` / `SV_StencilRef` / `discard` while pipeline declares per-draw or per-primitive shading rate (silently forces fine-rate shading)
-- [ ] `sv-depth-vs-conservative-depth`: PS writes `SV_Depth` where value is monotonically `>=` or `<=` rasterized depth → `SV_DepthGreaterEqual` / `SV_DepthLessEqual` keeps early-Z
+- [x] `vrs-incompatible-output`: PS writes `SV_Depth` / `SV_StencilRef` / `discard` while pipeline declares per-draw or per-primitive shading rate (silently forces fine-rate shading)
+- [x] `sv-depth-vs-conservative-depth`: PS writes `SV_Depth` where value is monotonically `>=` or `<=` rasterized depth → `SV_DepthGreaterEqual` / `SV_DepthLessEqual` keeps early-Z
 
 **Sampler feedback (SM 6.5+):**
-- [ ] `feedback-write-wrong-stage`: `WriteSamplerFeedback*` outside PS (spec-restricted)
-- [ ] `sampler-feedback-without-streaming-flag`: `WriteSamplerFeedback*` used without a corresponding tiled-resource binding visible in reflection  *(via ADR 0011)*
+- [x] `feedback-write-wrong-stage`: `WriteSamplerFeedback*` outside PS (spec-restricted)
+- [x] `sampler-feedback-without-streaming-flag`: `WriteSamplerFeedback*` used without a corresponding tiled-resource binding visible in reflection  *(via ADR 0011)*
 
 **Mesh / amplification (SM 6.5):**
-- [ ] `mesh-numthreads-over-128`: `[numthreads]` on mesh/AS entry with X*Y*Z > 128 (PSO creation fails)
-- [ ] `mesh-output-decl-exceeds-256`: `out vertices` / `out indices` with N or M > 256 (PSO creation fails)
-- [ ] `as-payload-over-16k`: amplification-shader payload struct > 16384 bytes (Slang reflection knows layout)
+- [x] `mesh-numthreads-over-128`: `[numthreads]` on mesh/AS entry with X*Y*Z > 128 (PSO creation fails)
+- [x] `mesh-output-decl-exceeds-256`: `out vertices` / `out indices` with N or M > 256 (PSO creation fails)
+- [x] `as-payload-over-16k`: amplification-shader payload struct > 16384 bytes (Slang reflection knows layout)
 
 **Ray tracing (DXR):**
-- [ ] `missing-ray-flag-cull-non-opaque`: `TraceRay` against opaque-only geometry without `RAY_FLAG_CULL_NON_OPAQUE` (disables a class of BVH culling)
+- [x] `missing-ray-flag-cull-non-opaque`: `TraceRay` against opaque-only geometry without `RAY_FLAG_CULL_NON_OPAQUE` (disables a class of BVH culling)
 
 **Work graphs (SM 6.8):**
-- [ ] `nodeid-implicit-mismatch`: `NodeOutput<T>` declarations without explicit `[NodeId(...)]` when struct/downstream node names disagree
+- [x] `nodeid-implicit-mismatch`: `NodeOutput<T>` declarations without explicit `[NodeId(...)]` when struct/downstream node names disagree
 
 **ADR 0011 additions:**
-- [ ] `groupshared-union-aliased`: groupshared declaration of two distinct typed views over the same offset (manual `asuint` round-trips or struct hack)  *(via ADR 0011)*
-- [ ] `groupshared-16bit-unpacked`: `groupshared min16float` / `groupshared uint16_t` arrays where every access widens to 32 bits before use  *(via ADR 0011)*
-- [ ] `wavereadlaneat-constant-non-zero-portability`: `WaveReadLaneAt(x, K)` with constant K when wave size is not pinned via `[WaveSize]`  *(via ADR 0011)*
+- [x] `groupshared-union-aliased`: groupshared declaration of two distinct typed views over the same offset (manual `asuint` round-trips or struct hack)  *(via ADR 0011)*
+- [x] `groupshared-16bit-unpacked`: `groupshared min16float` / `groupshared uint16_t` arrays where every access widens to 32 bits before use  *(via ADR 0011)*
+- [x] `wavereadlaneat-constant-non-zero-portability`: `WaveReadLaneAt(x, K)` with constant K when wave size is not pinned via `[WaveSize]`  *(via ADR 0011)*
 
 ### Phase 4 — Control flow + light data flow (4-6 weeks)
 
@@ -240,32 +240,32 @@ Build a CFG over the tree-sitter AST. Add basic uniformity / loop-invariance ana
 
 **Gating dependency:** [ADR 0013](docs/decisions/0013-phase-4-control-flow-infrastructure.md) (Proposed) — the CFG + uniformity oracle infrastructure (`Stage::ControlFlow` + `Rule::on_cfg` + `CfgEngine` over tree-sitter spans, with bounded inter-procedural inlining and ERROR-node tolerance per ADR 0002) must land first. See ADR 0013 §"Implementation sub-phases" for the 4a (infra) → 4b (shared utilities) → 4c (5 parallel rule packs) sequence. Phase 4 does NOT depend on ADR 0012 / Phase 3 — the CFG works without reflection (with conservative fallbacks where reflection would tighten facts, e.g. helper-lane PS detection).
 
-- [ ] `loop-invariant-sample`: texture sample inside loop with loop-invariant UV
-- [ ] `cbuffer-load-in-loop`: same cbuffer field reloaded each iteration (CSE hint)
-- [ ] `redundant-computation-in-branch`: same expr in both arms of `if/else` → hoist
-- [ ] `derivative-in-divergent-cf`: `ddx`/`ddy` / implicit-gradient `Sample` inside non-uniform CF
-- [ ] `barrier-in-divergent-cf`: `GroupMemoryBarrier*` inside `if` (UB)
-- [ ] `wave-intrinsic-non-uniform`: `WaveActiveSum` etc. in divergent CF
-- [ ] `branch-on-uniform-missing-attribute`: dynamically-uniform branch missing `[branch]` hint
-- [ ] `small-loop-no-unroll`: constant-bounded loop ≤ N iterations without `[unroll]`
-- [ ] `discard-then-work`: significant work after `discard` (helper-lane semantics)
-- [ ] `groupshared-uninitialized-read`: read of groupshared cell before any thread writes it
-- [ ] `sample-in-loop-implicit-grad`: `Texture.Sample` (implicit derivatives) inside loop / conditional / non-uniform function (cross-lane derivative UB)
-- [ ] `early-z-disabled-by-conditional-discard`: `discard` / `clip` reachable from non-uniform CF in PS without `[earlydepthstencil]`
-- [ ] `wave-intrinsic-helper-lane-hazard`: wave intrinsics in PS after potential `discard` where helper lanes may participate (distinct from `wave-intrinsic-non-uniform`)
-- [ ] `wave-active-all-equal-precheck`: scalarization opportunity for divergent descriptor index where `WaveActiveAllEqual(i)` enables the cheap uniform path
-- [ ] `cbuffer-divergent-index`: cbuffer / ICB read with divergent index (serializes on the constant cache)
+- [x] `loop-invariant-sample`: texture sample inside loop with loop-invariant UV
+- [x] `cbuffer-load-in-loop`: same cbuffer field reloaded each iteration (CSE hint)
+- [x] `redundant-computation-in-branch`: same expr in both arms of `if/else` → hoist
+- [x] `derivative-in-divergent-cf`: `ddx`/`ddy` / implicit-gradient `Sample` inside non-uniform CF
+- [x] `barrier-in-divergent-cf`: `GroupMemoryBarrier*` inside `if` (UB)
+- [x] `wave-intrinsic-non-uniform`: `WaveActiveSum` etc. in divergent CF
+- [x] `branch-on-uniform-missing-attribute`: dynamically-uniform branch missing `[branch]` hint
+- [x] `small-loop-no-unroll`: constant-bounded loop ≤ N iterations without `[unroll]`
+- [x] `discard-then-work`: significant work after `discard` (helper-lane semantics)
+- [x] `groupshared-uninitialized-read`: read of groupshared cell before any thread writes it
+- [x] `sample-in-loop-implicit-grad`: `Texture.Sample` (implicit derivatives) inside loop / conditional / non-uniform function (cross-lane derivative UB)
+- [x] `early-z-disabled-by-conditional-discard`: `discard` / `clip` reachable from non-uniform CF in PS without `[earlydepthstencil]`
+- [x] `wave-intrinsic-helper-lane-hazard`: wave intrinsics in PS after potential `discard` where helper lanes may participate (distinct from `wave-intrinsic-non-uniform`)
+- [x] `wave-active-all-equal-precheck`: scalarization opportunity for divergent descriptor index where `WaveActiveAllEqual(i)` enables the cheap uniform path
+- [x] `cbuffer-divergent-index`: cbuffer / ICB read with divergent index (serializes on the constant cache)
 
 **Atomics / groupshared:**
-- [ ] `interlocked-bin-without-wave-prereduce`: `InterlockedAdd` to small fixed bin set without `WaveActiveSum` / `WavePrefixSum` pre-reduction (32x/64x atomic-traffic drop)
-- [ ] `interlocked-float-bit-cast-trick`: hand-rolled `asuint` / sign-flip dance for atomic min/max on floats → SM 6.6 native `InterlockedMin/Max` on float
-- [ ] `groupshared-stride-32-bank-conflict`: `groupshared` array indexed `[tid*32+k]` — LDS 32-bank serialization; fix by `+1` padding
-- [ ] `groupshared-write-then-no-barrier-read`: thread reads groupshared cell written by another thread without barrier between (UB; distinct from `groupshared-uninitialized-read`)
-- [ ] `groupshared-stride-non-32-bank-conflict`: groupshared float arrays indexed `[tid*S+k]` for S in {2,4,8,16,64} hitting ≥2-way LDS bank serialization  *(via ADR 0011)*
-- [ ] `groupshared-dead-store`: write to a groupshared cell never read on any subsequent path before workgroup exit  *(via ADR 0011)*
-- [ ] `groupshared-overwrite-before-barrier`: groupshared cell written, then re-written by the same thread before any `GroupMemoryBarrier*`  *(via ADR 0011)*
-- [ ] `groupshared-atomic-replaceable-by-wave`: `InterlockedAdd(gs[0], 1)` / `InterlockedOr(gs[0], mask)` collapsible to `WaveActiveSum` + one representative-lane atomic  *(via ADR 0011)*
-- [ ] `groupshared-first-read-without-barrier`: read of `gs[expr]` before the first `GroupMemoryBarrierWithGroupSync` on any path where `expr` may resolve to a cross-thread-written cell  *(via ADR 0011)*
+- [x] `interlocked-bin-without-wave-prereduce`: `InterlockedAdd` to small fixed bin set without `WaveActiveSum` / `WavePrefixSum` pre-reduction (32x/64x atomic-traffic drop)
+- [x] `interlocked-float-bit-cast-trick`: hand-rolled `asuint` / sign-flip dance for atomic min/max on floats → SM 6.6 native `InterlockedMin/Max` on float
+- [x] `groupshared-stride-32-bank-conflict`: `groupshared` array indexed `[tid*32+k]` — LDS 32-bank serialization; fix by `+1` padding
+- [x] `groupshared-write-then-no-barrier-read`: thread reads groupshared cell written by another thread without barrier between (UB; distinct from `groupshared-uninitialized-read`)
+- [x] `groupshared-stride-non-32-bank-conflict`: groupshared float arrays indexed `[tid*S+k]` for S in {2,4,8,16,64} hitting ≥2-way LDS bank serialization  *(via ADR 0011)*
+- [x] `groupshared-dead-store`: write to a groupshared cell never read on any subsequent path before workgroup exit  *(via ADR 0011)*
+- [x] `groupshared-overwrite-before-barrier`: groupshared cell written, then re-written by the same thread before any `GroupMemoryBarrier*`  *(via ADR 0011)*
+- [x] `groupshared-atomic-replaceable-by-wave`: `InterlockedAdd(gs[0], 1)` / `InterlockedOr(gs[0], mask)` collapsible to `WaveActiveSum` + one representative-lane atomic  *(via ADR 0011)*
+- [x] `groupshared-first-read-without-barrier`: read of `gs[expr]` before the first `GroupMemoryBarrierWithGroupSync` on any path where `expr` may resolve to a cross-thread-written cell  *(via ADR 0011)*
 
 **Packed math / fp16 (SM 6.4+):**
 - [ ] `pack-then-unpack-roundtrip`: `pack_u8(unpack_u8u32(x))`, `f32tof16/f16tof32` round-trips — dead conversion ALU
@@ -273,8 +273,8 @@ Build a CFG over the tree-sitter AST. Add basic uniformity / loop-invariance ana
 
 **Mesh / amplification (SM 6.5):**
 - [ ] `setmeshoutputcounts-in-divergent-cf`: `SetMeshOutputCounts` reachable from non-thread-uniform CF or called more than once (UB)
-- [ ] `primcount-overrun-in-conditional-cf`: `SetMeshOutputCounts(v, p)` followed by primitive writes guarded by branches whose join produces > p primitives on some path  *(via ADR 0011)*
-- [ ] `dispatchmesh-not-called`: amplification entry point with at least one CFG path that does not call `DispatchMesh` (UB)  *(via ADR 0011)*
+- [x] `primcount-overrun-in-conditional-cf`: `SetMeshOutputCounts(v, p)` followed by primitive writes guarded by branches whose join produces > p primitives on some path  *(via ADR 0011)*
+- [x] `dispatchmesh-not-called`: amplification entry point with at least one CFG path that does not call `DispatchMesh` (UB)  *(via ADR 0011)*
 
 **Ray tracing (DXR):**
 - [ ] `tracerray-conditional`: `TraceRay` / `RayQuery::TraceRayInline` inside `if` whose condition isn't trivially uniform (live-range extension across trace, ray-stack spill)
@@ -289,20 +289,20 @@ Build a CFG over the tree-sitter AST. Add basic uniformity / loop-invariance ana
 - [ ] `quad-or-derivative-in-thread-launch-node`: `QuadAny` / `QuadReadAcross*` / `ddx` / `ddy` / implicit-deriv sample inside thread-launch node (no quad structure available)
 
 **Numerical safety:**
-- [ ] `acos-without-saturate`: `acos(dot(a,b))` without clamping → NaN risk
-- [ ] `div-without-epsilon`: divisor is a length / dot product that can hit zero
-- [ ] `sqrt-of-potentially-negative`: signed expression passed to `sqrt`
-- [ ] `clip-from-non-uniform-cf`: `clip(x)` reachable from non-uniform CF in PS without `[earlydepthstencil]` (sibling rule to `early-z-disabled-by-conditional-discard`)  *(via ADR 0011)*
-- [ ] `precise-missing-on-iterative-refine`: a Newton-Raphson / Halley iteration lacking `precise` qualifiers on the residual (fast-math reordering can collapse the iteration)  *(via ADR 0011)*
+- [x] `acos-without-saturate`: `acos(dot(a,b))` without clamping → NaN risk
+- [x] `div-without-epsilon`: divisor is a length / dot product that can hit zero
+- [x] `sqrt-of-potentially-negative`: signed expression passed to `sqrt`
+- [x] `clip-from-non-uniform-cf`: `clip(x)` reachable from non-uniform CF in PS without `[earlydepthstencil]` (sibling rule to `early-z-disabled-by-conditional-discard`)  *(via ADR 0011)*
+- [x] `precise-missing-on-iterative-refine`: a Newton-Raphson / Halley iteration lacking `precise` qualifiers on the residual (fast-math reordering can collapse the iteration)  *(via ADR 0011)*
 
 **ADR 0011 additions:**
-- [ ] `divergent-buffer-index-on-uniform-resource`: `buf[i]` with divergent `i` on a buffer whose binding is uniform (Xe-HPG / Ada serialize divergent loads on the K$ / scalar cache)  *(via ADR 0011)*
-- [ ] `rwbuffer-store-without-globallycoherent`: writes to a UAV later read on the same dispatch by a different wave without a barrier and without `globallycoherent`  *(via ADR 0011)*
-- [ ] `manual-wave-reduction-pattern`: explicit `for` / `InterlockedAdd` / atomics that reproduce a `WaveActiveSum` / `WavePrefixSum`  *(via ADR 0011)*
-- [ ] `quadany-quadall-opportunity`: per-lane PS `if (cond)` branch around derivative-bearing ops → wrap in `QuadAny(cond)` to keep helper-lane participation  *(via ADR 0011)*
-- [ ] `wave-prefix-sum-vs-scan-with-atomics`: hand-rolled compute-pass scan implemented with groupshared + barriers → `WavePrefixSum` + a single barrier  *(via ADR 0011)*
-- [ ] `flatten-on-uniform-branch`: `[flatten]` on an `if` whose condition is dynamically uniform (use `[branch]`)  *(via ADR 0011)*
-- [ ] `forcecase-missing-on-ps-switch`: `switch` in PS whose cases each contain texture sampling and that lacks `[forcecase]`  *(via ADR 0011)*
+- [x] `divergent-buffer-index-on-uniform-resource`: `buf[i]` with divergent `i` on a buffer whose binding is uniform (Xe-HPG / Ada serialize divergent loads on the K$ / scalar cache)  *(via ADR 0011)*
+- [x] `rwbuffer-store-without-globallycoherent`: writes to a UAV later read on the same dispatch by a different wave without a barrier and without `globallycoherent`  *(via ADR 0011)*
+- [x] `manual-wave-reduction-pattern`: explicit `for` / `InterlockedAdd` / atomics that reproduce a `WaveActiveSum` / `WavePrefixSum`  *(via ADR 0011)*
+- [x] `quadany-quadall-opportunity`: per-lane PS `if (cond)` branch around derivative-bearing ops → wrap in `QuadAny(cond)` to keep helper-lane participation  *(via ADR 0011)*
+- [x] `wave-prefix-sum-vs-scan-with-atomics`: hand-rolled compute-pass scan implemented with groupshared + barriers → `WavePrefixSum` + a single barrier  *(via ADR 0011)*
+- [x] `flatten-on-uniform-branch`: `[flatten]` on an `if` whose condition is dynamically uniform (use `[branch]`)  *(via ADR 0011)*
+- [x] `forcecase-missing-on-ps-switch`: `switch` in PS whose cases each contain texture sampling and that lacks `[forcecase]`  *(via ADR 0011)*
 
 ### Phase 5 — Ergonomics: LSP + IDE (2-3 weeks)
 
@@ -356,60 +356,60 @@ The rules listed below are **candidates** sourced from a research pass dated 202
 
 ### Shared memory / groupshared
 
-- [ ] `groupshared-stride-non-32-bank-conflict`: groupshared float arrays indexed `[tid*S+k]` for S in {2,4,8,16,64} that hit ≥2-way LDS bank serialization on RDNA / NVIDIA 32-bank LDS — *workgroup, target Phase 4* — RDNA 2/3 LDS and Turing/Ada shared memory both have 32 banks of 4 bytes; any stride sharing a non-trivial GCD with 32 still serializes accesses even when the stride isn't exactly 32. *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `groupshared-stride-non-32-bank-conflict`: groupshared float arrays indexed `[tid*S+k]` for S in {2,4,8,16,64} that hit ≥2-way LDS bank serialization on RDNA / NVIDIA 32-bank LDS — *workgroup, target Phase 4* — RDNA 2/3 LDS and Turing/Ada shared memory both have 32 banks of 4 bytes; any stride sharing a non-trivial GCD with 32 still serializes accesses even when the stride isn't exactly 32. *(LOCKED → Phase 4 per ADR 0011)*
 - [ ] `groupshared-float64-bank-conflict`: `groupshared double` / `groupshared uint64_t` accesses split across two banks per lane on NVIDIA, doubling LDS issue cost — *workgroup, target Phase 4* — Turing/Ada LDS banks are 32 bits wide; 64-bit accesses always touch two banks per lane and cost 2 issues even when otherwise conflict-free. *(DEFERRED per ADR 0011 — NVIDIA-specific bank width; needs IHV-target gate)*
-- [ ] `groupshared-dead-store`: write to groupshared cell that is never read on any subsequent path before workgroup exit — *workgroup, target Phase 4* — wastes LDS bandwidth and pressures occupancy; surfaces refactors where a temporary became a leftover after a code move. *(LOCKED → Phase 4 per ADR 0011)*
-- [ ] `groupshared-overwrite-before-barrier`: groupshared cell written, then re-written by the same thread before any `GroupMemoryBarrier*` — *workgroup, target Phase 4* — first write is unobservable to other threads (no barrier separates them), so it is dead and the LDS write is pure waste. *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `groupshared-dead-store`: write to groupshared cell that is never read on any subsequent path before workgroup exit — *workgroup, target Phase 4* — wastes LDS bandwidth and pressures occupancy; surfaces refactors where a temporary became a leftover after a code move. *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `groupshared-overwrite-before-barrier`: groupshared cell written, then re-written by the same thread before any `GroupMemoryBarrier*` — *workgroup, target Phase 4* — first write is unobservable to other threads (no barrier separates them), so it is dead and the LDS write is pure waste. *(LOCKED → Phase 4 per ADR 0011)*
 - [ ] `groupshared-aos-when-soa-pays`: `groupshared Foo arr[N]` where threads access `arr[tid].field` and `Foo` is wider than one bank — *workgroup, target Phase 4* — AoS in LDS forces tids to stride over the structure size; SoA (`groupshared float field[N]`) keeps lane k mapped to bank k and avoids serialization on RDNA/Ada/Xe-HPG alike. *(DEFERRED per ADR 0011 — heuristic-heavy "wider than one bank"; needs sharper definition + confidence threshold)*
-- [ ] `groupshared-atomic-replaceable-by-wave`: `InterlockedAdd(gs[0], 1)` / `InterlockedOr(gs[0], mask)` where the operands are wave-derivable and a `WaveActiveSum` / `WaveActiveBitOr` + a single representative-lane `InterlockedAdd` would replace 32-64 LDS atomics with one — *workgroup, target Phase 4* — distinct from the existing `interlocked-bin-without-wave-prereduce` (small fixed-bin set); this targets single-counter accumulation patterns that drop to one atomic per wave. *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `groupshared-atomic-replaceable-by-wave`: `InterlockedAdd(gs[0], 1)` / `InterlockedOr(gs[0], mask)` where the operands are wave-derivable and a `WaveActiveSum` / `WaveActiveBitOr` + a single representative-lane `InterlockedAdd` would replace 32-64 LDS atomics with one — *workgroup, target Phase 4* — distinct from the existing `interlocked-bin-without-wave-prereduce` (small fixed-bin set); this targets single-counter accumulation patterns that drop to one atomic per wave. *(LOCKED → Phase 4 per ADR 0011)*
 - [ ] `groupshared-when-registers-suffice`: groupshared backing for a per-thread temporary array of size ≤ N (configurable, default 8) that the compiler can keep in registers — *workgroup, target Phase 4* — every byte spent in LDS comes out of the occupancy budget; on RDNA 32 KB / NVIDIA 100 KB shared per CU/SM the marginal occupancy cliff is steep. *(LOCKED → Phase 7 per ADR 0011 — needs IR-level register-pressure estimation)*
 - [ ] `groupshared-non-pow2-size`: groupshared array sized to a non-power-of-two byte count that pushes the workgroup over an occupancy threshold (configurable target architecture: RDNA / NVIDIA / Xe-HPG) — *workgroup, target Phase 4* — RDNA's 32 KB LDS partitions in fixed steps; a 5 KB allocation rounds the same as 8 KB and silently pessimises occupancy. *(DEFERRED per ADR 0011 — needs per-arch occupancy table)*
 - [x] `groupshared-volatile`: `volatile` qualifier on a `groupshared` declaration — *workgroup, target Phase 2* — `volatile` on groupshared is meaningless under the HLSL memory model (use `GroupMemoryBarrier*` or `globallycoherent` on UAVs instead) and confuses the optimiser into pessimising LDS scheduling. *(LOCKED → Phase 2 per ADR 0011)*
-- [ ] `groupshared-first-read-without-barrier`: read of `gs[expr]` before the first `GroupMemoryBarrierWithGroupSync` on any path where `expr` may resolve to a cell another thread writes — *workgroup, target Phase 4* — distinct from `groupshared-uninitialized-read` (any-thread); this targets the cross-lane race that occurs even when *some* thread has written, just not before the barrier. *(LOCKED → Phase 4 per ADR 0011 — distinct from `groupshared-uninitialized-read`)*
-- [ ] `groupshared-union-aliased`: groupshared declaration of two distinct typed views over the same offset (manually packed via `asuint` round-trips or a struct hack) — *workgroup, target Phase 3* — the optimiser cannot reason about aliasing in LDS and falls back to round-tripping every access through memory; surfaces accidental aliasing across reuse phases. *(LOCKED → Phase 3 per ADR 0011)*
-- [ ] `groupshared-16bit-unpacked`: `groupshared min16float`/`groupshared uint16_t` arrays where every access widens to 32 bits before use — *workgroup, target Phase 3* — RDNA 2/3 packs 16-bit LDS lanes 2-per-bank only when consumed via packed-math intrinsics; widening at the load site collapses the saving. *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `groupshared-first-read-without-barrier`: read of `gs[expr]` before the first `GroupMemoryBarrierWithGroupSync` on any path where `expr` may resolve to a cell another thread writes — *workgroup, target Phase 4* — distinct from `groupshared-uninitialized-read` (any-thread); this targets the cross-lane race that occurs even when *some* thread has written, just not before the barrier. *(LOCKED → Phase 4 per ADR 0011 — distinct from `groupshared-uninitialized-read`)*
+- [x] `groupshared-union-aliased`: groupshared declaration of two distinct typed views over the same offset (manually packed via `asuint` round-trips or a struct hack) — *workgroup, target Phase 3* — the optimiser cannot reason about aliasing in LDS and falls back to round-tripping every access through memory; surfaces accidental aliasing across reuse phases. *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `groupshared-16bit-unpacked`: `groupshared min16float`/`groupshared uint16_t` arrays where every access widens to 32 bits before use — *workgroup, target Phase 3* — RDNA 2/3 packs 16-bit LDS lanes 2-per-bank only when consumed via packed-math intrinsics; widening at the load site collapses the saving. *(LOCKED → Phase 3 per ADR 0011)*
 - [ ] `groupshared-index-arith-defeats-coalescing`: `gs[base + tid*0 + offset]` / `gs[lane_to_offset(tid)]` patterns that the compiler can't prove monotonic in `tid` — *workgroup, target Phase 4* — RDNA/Ada/Xe-HPG LDS wants lane k → bank k mapping; arithmetic the compiler can't prove monotonic forces a fall-back gather path. *(DEFERRED per ADR 0011 — monotonicity proof is itself a compiler-internal property)*
 
 ### Buffer access patterns
 
-- [ ] `byteaddressbuffer-load-misaligned`: `Load2`/`Load3`/`Load4` on `ByteAddressBuffer` at an offset whose constant component fails the natural-alignment check (8/12/16) — *bindings, target Phase 3* — under-aligned widened loads either fault or split into single-DWORD reads on RDNA/Turing/Ada/Xe-HPG; constant-folded offsets make this AST + reflection trivial. *(LOCKED → Phase 3 per ADR 0011)*
-- [ ] `byteaddressbuffer-narrow-when-typed-fits`: `ByteAddressBuffer.Load4` of POD that exactly matches a `Buffer<float4>` / `StructuredBuffer<T>` view — *bindings, target Phase 3* — typed views go through the texture cache on most IHVs (RDNA TC$, Turing/Ada L1tex), ByteAddressBuffer goes through the K$ on RDNA and L1 on Turing/Ada; one path is usually wrong for the access pattern. *(LOCKED → Phase 3 per ADR 0011 — subsumes `byteaddressbuffer-when-typed-load-suffices`)*
+- [x] `byteaddressbuffer-load-misaligned`: `Load2`/`Load3`/`Load4` on `ByteAddressBuffer` at an offset whose constant component fails the natural-alignment check (8/12/16) — *bindings, target Phase 3* — under-aligned widened loads either fault or split into single-DWORD reads on RDNA/Turing/Ada/Xe-HPG; constant-folded offsets make this AST + reflection trivial. *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `byteaddressbuffer-narrow-when-typed-fits`: `ByteAddressBuffer.Load4` of POD that exactly matches a `Buffer<float4>` / `StructuredBuffer<T>` view — *bindings, target Phase 3* — typed views go through the texture cache on most IHVs (RDNA TC$, Turing/Ada L1tex), ByteAddressBuffer goes through the K$ on RDNA and L1 on Turing/Ada; one path is usually wrong for the access pattern. *(LOCKED → Phase 3 per ADR 0011 — subsumes `byteaddressbuffer-when-typed-load-suffices`)*
 - [ ] `structured-buffer-aos-when-soa-pays`: `StructuredBuffer<Foo>` where every shader reads exactly `field_a` from a wide `Foo` — *bindings, target Phase 4* — the read pulls the entire struct stride into cache for a fraction of the bytes used; SoA via parallel `StructuredBuffer<float>`s typically halves bandwidth on path-tracer hot loops. *(DEFERRED per ADR 0011 — engine-architecture refactor; needs whole-shader read-pattern analysis)*
-- [ ] `divergent-buffer-index-on-uniform-resource`: `buf[i]` with divergent `i` on a buffer whose binding is uniform — *bindings, target Phase 4* — Xe-HPG and Ada both serialize divergent loads on the K$ / scalar cache; surfacing the pattern enables the developer to scalarize via `WaveActiveAllEqual` (companion to `wave-active-all-equal-precheck` for descriptor heaps). *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `divergent-buffer-index-on-uniform-resource`: `buf[i]` with divergent `i` on a buffer whose binding is uniform — *bindings, target Phase 4* — Xe-HPG and Ada both serialize divergent loads on the K$ / scalar cache; surfacing the pattern enables the developer to scalarize via `WaveActiveAllEqual` (companion to `wave-active-all-equal-precheck` for descriptor heaps). *(LOCKED → Phase 4 per ADR 0011)*
 - [ ] `buffer-load-width-vs-cache-line`: scalar `Load` per lane that aggregates to a wave's worth of contiguous bytes that would coalesce with `Load4` — *bindings, target Phase 4* — RDNA 64-byte cache line / Turing-Ada 128-byte L1 line want one wide transaction per wave; per-lane scalar loads burn extra request slots. *(LOCKED → Phase 7 per ADR 0011 — needs IR-level per-wave aggregation)*
-- [ ] `structured-buffer-stride-not-cache-aligned`: stride that is a multiple of 4 but not of 16 / 32 / 64 (configurable to target cache line) — *bindings, target Phase 3* — distinct from the existing `structured-buffer-stride-mismatch` (16-aligned for HLSL packing rules); this targets cache-line wastage where every stride straddles two lines on RDNA/Turing/Ada. *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `structured-buffer-stride-not-cache-aligned`: stride that is a multiple of 4 but not of 16 / 32 / 64 (configurable to target cache line) — *bindings, target Phase 3* — distinct from the existing `structured-buffer-stride-mismatch` (16-aligned for HLSL packing rules); this targets cache-line wastage where every stride straddles two lines on RDNA/Turing/Ada. *(LOCKED → Phase 3 per ADR 0011)*
 - [ ] `byteaddressbuffer-when-typed-load-suffices`: ByteAddressBuffer + `asfloat` round-trip that reproduces a `Buffer<float>` load — *bindings, target Phase 3* — the ByteAddressBuffer path bypasses the texture cache on most IHVs; surfaces refactoring opportunities when the resource was originally typed and got "promoted" to ByteAddress without need. *(DROPPED per ADR 0011 — duplicate of `byteaddressbuffer-narrow-when-typed-fits` (same cache-path mechanism, opposite framing))*
-- [ ] `rwbuffer-store-without-globallycoherent`: writes to a UAV later read on the same dispatch by a different wave without a barrier and without `globallycoherent` — *bindings, target Phase 4* — without `globallycoherent` the L1 cache on RDNA / L1tex on Turing-Ada caches writes per-CU/SM and reads on a different unit see stale data; companion to the planned barrier rules. *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `rwbuffer-store-without-globallycoherent`: writes to a UAV later read on the same dispatch by a different wave without a barrier and without `globallycoherent` — *bindings, target Phase 4* — without `globallycoherent` the L1 cache on RDNA / L1tex on Turing-Ada caches writes per-CU/SM and reads on a different unit see stale data; companion to the planned barrier rules. *(LOCKED → Phase 4 per ADR 0011)*
 
 ### Sampler / static sampler
 
-- [ ] `static-sampler-when-dynamic-used`: shader uses a sampler whose state never varies across draws — *bindings, target Phase 3* — static samplers cost no descriptor slot on D3D12 and are pre-resident on every IHV; promoting saves a descriptor and sometimes a sampler-heap fetch. *(LOCKED → Phase 3 per ADR 0011)*
-- [ ] `mip-clamp-zero-on-mipped-texture`: `SetSamplerMinLOD`-equivalent of `MaxLOD = 0` (or `MinMipLevel = 0` clamp) on a sampler bound to a fully-mipped texture — *texture, target Phase 3* — silently disables all mip filtering, costs bandwidth (always reads mip 0) and aliasing-quality regressions on terrain / streaming surfaces. *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `static-sampler-when-dynamic-used`: shader uses a sampler whose state never varies across draws — *bindings, target Phase 3* — static samplers cost no descriptor slot on D3D12 and are pre-resident on every IHV; promoting saves a descriptor and sometimes a sampler-heap fetch. *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `mip-clamp-zero-on-mipped-texture`: `SetSamplerMinLOD`-equivalent of `MaxLOD = 0` (or `MinMipLevel = 0` clamp) on a sampler bound to a fully-mipped texture — *texture, target Phase 3* — silently disables all mip filtering, costs bandwidth (always reads mip 0) and aliasing-quality regressions on terrain / streaming surfaces. *(LOCKED → Phase 3 per ADR 0011)*
 - [ ] `mip-bias-default-on-streaming`: `MipLODBias = 0` on a sampler used with virtual / tiled / streaming textures where a slight negative bias is the standard recommendation — *texture, target Phase 3* — surfaces a configurable rule (off by default) that streaming-pipeline authors can opt into; avoids the typical "sharp at distance, blurry up close" complaint. *(DEFERRED per ADR 0011 — opt-in / project-policy; awaits opt-in rule configuration surface)*
-- [ ] `comparison-sampler-without-comparison-op`: `SamplerComparisonState` declared but only `Sample`/`SampleLevel` (non-`Cmp` variants) called — *texture, target Phase 3* — wastes a sampler descriptor slot and trains readers to expect PCF where there is none; almost always a refactor leftover. *(LOCKED → Phase 3 per ADR 0011)*
-- [ ] `anisotropy-without-anisotropic-filter`: `MaxAnisotropy > 1` on a sampler whose `Filter` field doesn't request anisotropic filtering — *texture, target Phase 3* — silently ignored on every IHV; surfaces author intent / driver-specific tuning regressions. *(LOCKED → Phase 3 per ADR 0011)*
-- [ ] `sampler-feedback-without-streaming-flag`: `WriteSamplerFeedback*` used without a corresponding tiled-resource binding visible in reflection — *sampler-feedback, target Phase 3* — sampler feedback that doesn't feed a streaming system is dead bandwidth on IHVs that materialise the feedback texture; companion rule to the existing `feedback-write-wrong-stage` and `feedback-every-sample`. *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `comparison-sampler-without-comparison-op`: `SamplerComparisonState` declared but only `Sample`/`SampleLevel` (non-`Cmp` variants) called — *texture, target Phase 3* — wastes a sampler descriptor slot and trains readers to expect PCF where there is none; almost always a refactor leftover. *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `anisotropy-without-anisotropic-filter`: `MaxAnisotropy > 1` on a sampler whose `Filter` field doesn't request anisotropic filtering — *texture, target Phase 3* — silently ignored on every IHV; surfaces author intent / driver-specific tuning regressions. *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `sampler-feedback-without-streaming-flag`: `WriteSamplerFeedback*` used without a corresponding tiled-resource binding visible in reflection — *sampler-feedback, target Phase 3* — sampler feedback that doesn't feed a streaming system is dead bandwidth on IHVs that materialise the feedback texture; companion rule to the existing `feedback-write-wrong-stage` and `feedback-every-sample`. *(LOCKED → Phase 3 per ADR 0011)*
 
 ### Push / root constants (D3D12)
 
 - [ ] `root-32bit-constant-pack-mismatch`: cbuffer field declared at the root signature's 32-bit-constants slot whose HLSL type's natural alignment doesn't match the root constant's slot index — *bindings (proposed category: `root-signature`), target Phase 3* — silent miscompare on D3D12; root constants have no per-field alignment, so a `float3` followed by a `float` packs differently than a CBV would. *(DEFERRED per ADR 0011 — needs application-side root signature shape; awaits project-level root-signature input)*
-- [ ] `cbuffer-large-fits-rootcbv-not-table`: cbuffer ≤ 64 KB referenced once per dispatch where a root CBV would dodge the descriptor-table indirection — *bindings (`root-signature`), target Phase 3* — companion to `cbuffer-fits-rootconstants`; root CBVs save a descriptor heap dereference on every IHV. *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `cbuffer-large-fits-rootcbv-not-table`: cbuffer ≤ 64 KB referenced once per dispatch where a root CBV would dodge the descriptor-table indirection — *bindings (`root-signature`), target Phase 3* — companion to `cbuffer-fits-rootconstants`; root CBVs save a descriptor heap dereference on every IHV. *(LOCKED → Phase 3 per ADR 0011)*
 - [ ] `root-signature-shape-overflows-fast-path`: root signature exceeding 64 DWORDs total — *bindings (`root-signature`), target Phase 3* — D3D12 spec limit; some IHVs spill to memory beyond a smaller threshold (configurable: default 16 DWORDs to match driver fast-paths on RDNA / Ada). *(DEFERRED per ADR 0011 — depends on IHV fast-path numeric thresholds the linter does not yet vendor)*
 - [ ] `root-constant-rebind-per-draw`: small per-draw cbuffer field that varies every draw call sitting in a CBV table when root constants would avoid the rebind — *bindings (`root-signature`), target Phase 3* — surfaces a project-level pattern that the developer can validate against their root signature. *(DEFERRED per ADR 0011 — application-level per-draw variability invisible to shader)*
 
 ### Mesh / amplification (beyond the locked set)
 
 - [ ] `payload-output-mismatch`: AS payload struct declared with field count / types differing from the MS `in payload` declaration — *mesh, target Phase 3* — produces a hard PSO link error on D3D12; surfacing it at lint time is friendlier than the runtime diagnostic. *(DEFERRED per ADR 0011 — Slang/DXC already emit hard PSO link error; revisit with "explain compiler errors better" surface)*
-- [ ] `primcount-overrun-in-conditional-cf`: `SetMeshOutputCounts(v, p)` followed by primitive writes guarded by branches whose join produces > p primitives on some path — *mesh, target Phase 4* — UB on RDNA/Ada/Xe-HPG; companion to the locked `setmeshoutputcounts-in-divergent-cf` which targets the call site, not the writer side. *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `primcount-overrun-in-conditional-cf`: `SetMeshOutputCounts(v, p)` followed by primitive writes guarded by branches whose join produces > p primitives on some path — *mesh, target Phase 4* — UB on RDNA/Ada/Xe-HPG; companion to the locked `setmeshoutputcounts-in-divergent-cf` which targets the call site, not the writer side. *(LOCKED → Phase 4 per ADR 0011)*
 - [ ] `as-launch-grid-too-small`: `DispatchMesh(x,y,z)` with `x*y*z` smaller than one wave on the target architecture — *mesh, target Phase 4* — wastes the AS dispatch entirely; on RDNA the wave is 32/64, on Ada it is 32, on Xe-HPG it is 16/32 — configurable. *(DEFERRED per ADR 0011 — `DispatchMesh` args often runtime; AST-only detection too noisy)*
 - [ ] `mesh-vertex-output-soa-mismatch`: per-vertex output struct interleaves position / attribute fields in a way that misses the implicit SoA expansion the driver expects — *mesh, target Phase 3* — Ada / RDNA 3 mesh-shader hardware lays out vertex outputs SoA; AoS authoring forces a re-pack on emit. *(DEFERRED per ADR 0011 — vendor-specific layout; needs IHV-target gate)*
 - [ ] `as-payload-write-in-divergent-cf`: writes to the AS payload struct under non-uniform CF — *mesh, target Phase 4* — distinct from the locked `setmeshoutputcounts-in-divergent-cf`; AS payload writes under divergent CF latch the last-writer-wins lane on D3D12, which is rarely what the author wanted. *(DEFERRED per ADR 0011 — close enough to `setmeshoutputcounts-in-divergent-cf` that suppression semantics need explicit design)*
-- [ ] `dispatchmesh-not-called`: amplification entry point with at least one CFG path that does not call `DispatchMesh` — *mesh, target Phase 4* — UB; trivially observable from the CFG. *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `dispatchmesh-not-called`: amplification entry point with at least one CFG path that does not call `DispatchMesh` — *mesh, target Phase 4* — UB; trivially observable from the CFG. *(LOCKED → Phase 4 per ADR 0011)*
 
 ### Compute pipeline
 
-- [ ] `compute-dispatch-grid-shape-vs-quad`: `[numthreads(N,1,1)]` chosen for a kernel that reads `ddx`/`ddy` (compute-quad derivatives) — *workgroup, target Phase 3* — SM 6.6 compute-quad derivatives expect a 2x2 quad in the X/Y plane; 1D dispatch packs four threads in X and produces nonsense derivatives. *(LOCKED → Phase 3 per ADR 0011)*
-- [ ] `wavesize-attribute-missing`: kernel uses wave intrinsics in a way whose result depends on wave size and lacks `[WaveSize(N)]` / `[WaveSize(min, max)]` — *workgroup, target Phase 3* — without the attribute, RDNA 1/2/3 may run wave32 or wave64, Turing/Ada always wave32, Xe-HPG wave8/16/32; results that index by lane count silently change. *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `compute-dispatch-grid-shape-vs-quad`: `[numthreads(N,1,1)]` chosen for a kernel that reads `ddx`/`ddy` (compute-quad derivatives) — *workgroup, target Phase 3* — SM 6.6 compute-quad derivatives expect a 2x2 quad in the X/Y plane; 1D dispatch packs four threads in X and produces nonsense derivatives. *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `wavesize-attribute-missing`: kernel uses wave intrinsics in a way whose result depends on wave size and lacks `[WaveSize(N)]` / `[WaveSize(min, max)]` — *workgroup, target Phase 3* — without the attribute, RDNA 1/2/3 may run wave32 or wave64, Turing/Ada always wave32, Xe-HPG wave8/16/32; results that index by lane count silently change. *(LOCKED → Phase 3 per ADR 0011)*
 - [ ] `numthreads-bad-for-1d-workload`: `[numthreads(8,8,1)]` on a kernel that reads `dispatchThreadID.x` only and ignores `.y` / `.z` — *workgroup, target Phase 3* — wastes 7/8 of the threadgroup; surfaces a refactor where a 2D kernel was repurposed for a 1D pass. *(DEFERRED per ADR 0011 — heuristic too noisy on legitimate 2D-indexed kernels)*
 - [ ] `numthreads-z-greater-than-one-without-3d-tid-use`: `[numthreads(X,Y,Z)]` with `Z > 1` while `dispatchThreadID.z` / `groupThreadID.z` are unused — *workgroup, target Phase 3* — same family as above; the Z dimension is pure overhead. *(DEFERRED per ADR 0011 — same heuristic family as above)*
 - [ ] `groupshared-after-early-return`: groupshared use after a non-uniform `return` / `discard` (compute) on some lane — *workgroup, target Phase 4* — barriers downstream may deadlock; modern compute shaders run unified-helper-lane semantics that this rule documents. *(DEFERRED per ADR 0011 — close to locked `barrier-in-divergent-cf`; needs clean separation spec)*
@@ -417,37 +417,37 @@ The rules listed below are **candidates** sourced from a research pass dated 202
 ### Numerical / precision
 
 - [ ] `min16float-subnormal-flush-mismatch`: arithmetic on `min16float` whose result enters a subnormal range that the target IHV flushes-to-zero by default — *math (proposed category: `precision`), target Phase 3* — RDNA and Ada flush fp16 subnormals by default; Xe-HPG preserves them — silently changes the result.  *(DEFERRED per ADR 0011 — IHV-default-flush behaviour varies; needs IHV-target gate and flush-mode reflection accessor)*
-- [ ] `clip-from-non-uniform-cf`: `clip(x)` reachable from non-uniform CF in PS without `[earlydepthstencil]` — *control-flow, target Phase 4* — close to the locked `early-z-disabled-by-conditional-discard` but `clip()` has its own semantics distinct from `discard`; surfaces explicitly so the suppression scope is independent.  *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `clip-from-non-uniform-cf`: `clip(x)` reachable from non-uniform CF in PS without `[earlydepthstencil]` — *control-flow, target Phase 4* — close to the locked `early-z-disabled-by-conditional-discard` but `clip()` has its own semantics distinct from `discard`; surfaces explicitly so the suppression scope is independent.  *(LOCKED → Phase 4 per ADR 0011)*
 - [x] `lerp-on-bool-cond`: `lerp(a, b, (float)cond)` where `cond` is a bool — *math, target Phase 2* — produces a `select` codegen on most IHVs but a true `lerp` (mul + mad) on others; portable form is `cond ? b : a` or explicit `select`.  *(LOCKED → Phase 2 per ADR 0011)*
 - [x] `select-vs-lerp-of-constant`: `lerp(K1, K2, t)` with both K1/K2 constants — *math, target Phase 2* — the compiler may not fold to `K1 + (K2-K1)*t` on every IHV; explicit `mad(t, K2-K1, K1)` makes the intent compile-portable.  *(LOCKED → Phase 2 per ADR 0011)*
 - [ ] `saturate-then-multiply-by-one`: `saturate(x) * 1.0` and similar `*1` combinators — *math, target Phase 2* — companion to the locked `mul-identity` rule but specifically targets the `saturate(...) * 1.0` idiom that survives template / macro expansion.  *(DROPPED per ADR 0011 — strict subset of the locked `mul-identity` rule; macro-expansion concern is a refinement of that rule, not a new one)*
-- [ ] `precise-missing-on-iterative-refine`: a Newton-Raphson / Halley iteration that lacks `precise` qualifiers on the residual — *math (`precision`), target Phase 4* — fast-math reordering on Ada / RDNA / Xe-HPG can collapse the iteration to a no-op; surfaces a footgun for analytic-derivative SDF / collision code.  *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `precise-missing-on-iterative-refine`: a Newton-Raphson / Halley iteration that lacks `precise` qualifiers on the residual — *math (`precision`), target Phase 4* — fast-math reordering on Ada / RDNA / Xe-HPG can collapse the iteration to a no-op; surfaces a footgun for analytic-derivative SDF / collision code.  *(LOCKED → Phase 4 per ADR 0011)*
 
 ### Resource state / barriers (documentation-grade)
 
-- [ ] `uav-srv-implicit-transition-assumed`: shader writes to UAV `U` then reads from SRV `S` where reflection notes `U` and `S` alias — *bindings, target Phase 3* — D3D12 requires an explicit barrier; surfacing the alias from reflection lets the developer audit the application-side barrier.  *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `uav-srv-implicit-transition-assumed`: shader writes to UAV `U` then reads from SRV `S` where reflection notes `U` and `S` alias — *bindings, target Phase 3* — D3D12 requires an explicit barrier; surfacing the alias from reflection lets the developer audit the application-side barrier.  *(LOCKED → Phase 3 per ADR 0011)*
 - [ ] `transient-resource-not-aliased`: dispatch uses two UAVs whose lifetimes (write-then-read) don't overlap and could share memory via a placed-resource alias — *bindings, target Phase 3* — Suggestion-grade; saves VRAM on render-graph-managed engines (Frostbite / Granite-style).  *(DEFERRED per ADR 0011 — render-graph / placed-resource alias surface is application-side; awaits project-level memory graph input)*
 
 ### Wave / lane intrinsics (extras)
 
 - [x] `wavereadlaneat-constant-zero-to-readfirst`: `WaveReadLaneAt(x, 0)` with constant zero — *control-flow (proposed category: `wave-quad-extras`), target Phase 2* — `WaveReadLaneFirst(x)` is the idiomatic spelling and lets the compiler skip the lane-index broadcast on RDNA / Ada.  *(LOCKED → Phase 2 per ADR 0011)*
-- [ ] `wavereadlaneat-constant-non-zero-portability`: `WaveReadLaneAt(x, K)` with constant K when the wave size is not pinned via `[WaveSize]` — *control-flow (`wave-quad-extras`), target Phase 3* — K may be out of range on wave32 vs wave64; surfaces a portability bug between RDNA wave64 and Ada wave32.  *(LOCKED → Phase 3 per ADR 0011)*
-- [ ] `manual-wave-reduction-pattern`: explicit `for`/`InterlockedAdd`/atomics that reproduce a `WaveActiveSum` / `WavePrefixSum` — *control-flow (`wave-quad-extras`), target Phase 4* — saves 32-64 ALU ops + the LDS / atomic round-trip on every modern IHV.  *(LOCKED → Phase 4 per ADR 0011)*
-- [ ] `quadany-quadall-opportunity`: `if (cond)` in PS where `cond` is per-lane and the branch body only executes derivative-bearing ops; could become `if (QuadAny(cond))` to keep helper-lane participation — *control-flow (`wave-quad-extras`), target Phase 4* — companion (not duplicate) of the locked `quadany-replaceable-with-derivative-uniform-branch` which detects the *opposite* direction (replace `QuadAny` with derivative-uniform branch).  *(LOCKED → Phase 4 per ADR 0011)*
-- [ ] `wave-prefix-sum-vs-scan-with-atomics`: hand-rolled compute-pass scan implemented with groupshared + barriers — *control-flow (`wave-quad-extras`), target Phase 4* — `WavePrefixSum` + a single barrier collapses the multi-step scan on RDNA / Ada / Xe-HPG.  *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `wavereadlaneat-constant-non-zero-portability`: `WaveReadLaneAt(x, K)` with constant K when the wave size is not pinned via `[WaveSize]` — *control-flow (`wave-quad-extras`), target Phase 3* — K may be out of range on wave32 vs wave64; surfaces a portability bug between RDNA wave64 and Ada wave32.  *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `manual-wave-reduction-pattern`: explicit `for`/`InterlockedAdd`/atomics that reproduce a `WaveActiveSum` / `WavePrefixSum` — *control-flow (`wave-quad-extras`), target Phase 4* — saves 32-64 ALU ops + the LDS / atomic round-trip on every modern IHV.  *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `quadany-quadall-opportunity`: `if (cond)` in PS where `cond` is per-lane and the branch body only executes derivative-bearing ops; could become `if (QuadAny(cond))` to keep helper-lane participation — *control-flow (`wave-quad-extras`), target Phase 4* — companion (not duplicate) of the locked `quadany-replaceable-with-derivative-uniform-branch` which detects the *opposite* direction (replace `QuadAny` with derivative-uniform branch).  *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `wave-prefix-sum-vs-scan-with-atomics`: hand-rolled compute-pass scan implemented with groupshared + barriers — *control-flow (`wave-quad-extras`), target Phase 4* — `WavePrefixSum` + a single barrier collapses the multi-step scan on RDNA / Ada / Xe-HPG.  *(LOCKED → Phase 4 per ADR 0011)*
 
 ### Texture format
 
-- [ ] `bgra-rgba-swizzle-mismatch`: shader reads `.rgba` from a `Texture2D<float4>` whose binding maps a `DXGI_FORMAT_B8G8R8A8_UNORM` resource without a corresponding `.bgra` swizzle in the sample-site code — *texture (proposed category: `texture-format`), target Phase 3* — silently inverts red and blue channels; surfaces a real bug for IMGUI / UI pipelines that mix swap-chain BGRA with R8G8B8A8 SRGB sampling.  *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `bgra-rgba-swizzle-mismatch`: shader reads `.rgba` from a `Texture2D<float4>` whose binding maps a `DXGI_FORMAT_B8G8R8A8_UNORM` resource without a corresponding `.bgra` swizzle in the sample-site code — *texture (proposed category: `texture-format`), target Phase 3* — silently inverts red and blue channels; surfaces a real bug for IMGUI / UI pipelines that mix swap-chain BGRA with R8G8B8A8 SRGB sampling.  *(LOCKED → Phase 3 per ADR 0011)*
 - [x] `redundant-unorm-snorm-conversion`: explicit `* (1.0/255.0)` after sampling a UNORM texture — *math, target Phase 2* — UNORM sampling already returns `[0,1]`; the divide is dead arithmetic on every IHV.  *(LOCKED → Phase 2 per ADR 0011)*
-- [ ] `manual-srgb-conversion`: hand-rolled gamma 2.2 / sRGB transfer in shader code where the resource format already carries the sRGB conversion — *texture (`texture-format`), target Phase 3* — double-applies the curve; common when a pipeline migrates from `R8G8B8A8_UNORM` to `R8G8B8A8_UNORM_SRGB`.  *(LOCKED → Phase 3 per ADR 0011)*
+- [x] `manual-srgb-conversion`: hand-rolled gamma 2.2 / sRGB transfer in shader code where the resource format already carries the sRGB conversion — *texture (`texture-format`), target Phase 3* — double-applies the curve; common when a pipeline migrates from `R8G8B8A8_UNORM` to `R8G8B8A8_UNORM_SRGB`.  *(LOCKED → Phase 3 per ADR 0011)*
 - [ ] `format-bit-width-mismatch-on-load`: `Buffer<float4>` viewing a 16-bit-per-channel resource without explicit conversion intent — *texture (`texture-format`), target Phase 3* — driver inserts a per-load convert that masks bandwidth wins from the narrower format.  *(DEFERRED per ADR 0011 — without explicit conversion intent surface, the rule conflicts with valid format-narrowing patterns; awaits intent-annotation surface)*
 
 ### Branch / divergence hints
 
-- [ ] `flatten-on-uniform-branch`: `[flatten]` attribute on an `if` whose condition is dynamically uniform — *control-flow (proposed category: `divergence-hints`), target Phase 4* — `[flatten]` forces both arms to execute even on the cheap path; on uniform branches `[branch]` is the right choice (and on RDNA/Ada/Xe-HPG `[branch]` lets the compiler skip the inactive arm entirely).  *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `flatten-on-uniform-branch`: `[flatten]` attribute on an `if` whose condition is dynamically uniform — *control-flow (proposed category: `divergence-hints`), target Phase 4* — `[flatten]` forces both arms to execute even on the cheap path; on uniform branches `[branch]` is the right choice (and on RDNA/Ada/Xe-HPG `[branch]` lets the compiler skip the inactive arm entirely).  *(LOCKED → Phase 4 per ADR 0011)*
 - [ ] `branch-on-trivially-constant-cond`: `[branch]` on an `if` whose condition is provably constant after Slang reflection of cbuffer specialisation constants — *control-flow (`divergence-hints`), target Phase 4* — the attribute is dead; the compiler removes the branch but the attribute may suppress later optimisation passes.  *(DEFERRED per ADR 0011 — needs cbuffer specialisation-constant analysis; awaits specialisation-aware fold)*
-- [ ] `forcecase-missing-on-ps-switch`: `switch` in PS whose cases each contain texture sampling and that lacks `[forcecase]` — *control-flow (`divergence-hints`), target Phase 4* — without `[forcecase]` the compiler may unroll the switch into chained `if`s, breaking quad-uniform sampling on RDNA / Ada.  *(LOCKED → Phase 4 per ADR 0011)*
+- [x] `forcecase-missing-on-ps-switch`: `switch` in PS whose cases each contain texture sampling and that lacks `[forcecase]` — *control-flow (`divergence-hints`), target Phase 4* — without `[forcecase]` the compiler may unroll the switch into chained `if`s, breaking quad-uniform sampling on RDNA / Ada.  *(LOCKED → Phase 4 per ADR 0011)*
 - [x] `loop-attribute-conflict`: both `[unroll]` and `[loop]` on the same loop, or `[unroll(N)]` with N exceeding a configurable threshold (default 32) — *control-flow (`divergence-hints`), target Phase 2* — silently picks one; explicit conflict is almost always a refactor leftover.  *(LOCKED → Phase 2 per ADR 0011)*
 
 ## Non-goals

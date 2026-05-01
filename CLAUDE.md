@@ -23,23 +23,31 @@ to the project's reputation goal.
 
 ---
 
-## Current status (as of 2026-04-30)
+## Current status (as of 2026-05-01)
 
-- **Phase 0 complete.** `pow-const-squared` end-to-end, tree-sitter + Slang
-  vendored, CI on Windows + Linux, 17-shader corpus, 7 ADRs, blog stub.
-- **Phase 1 complete.** Inline suppression parser, declarative TSQuery
-  wrapper, quick-fix `Rewriter` + `--fix`, `.hlsl-clippy.toml` config
-  (toml++ v3.4.0), two new rules (`redundant-saturate`,
-  `clamp01-to-saturate`); 46/46 Catch2 tests passing; corpus expanded to 27
-  shaders; 22 hand-written expansion fixture files.
-- **10 ADRs landed** (`docs/decisions/0001`–`0010`). ADR 0010 queues 36
-  SM 6.7/6.8/6.9 rules (SER, Cooperative Vectors, Long Vectors, OMM, Mesh
-  Nodes) for Phase 3+.
-- **C++23 uplift pending.** ADR 0004 locks the C++23 baseline; `CMakeLists.txt`
-  still reads `CMAKE_CXX_STANDARD 20` — tracked follow-up before Phase 2
-  implementation starts.
-- **Phase 2 queued.** ADR 0009: shared-utilities PR + 3 parallel per-category
-  packs (math / saturate-redundancy / misc), 24 net-new rules.
+- **Phases 0 → 5 complete.** `cli/`, `core/`, `lsp/`, `vscode-extension/`
+  all ship; CI on Linux + Windows + macOS; 27-shader corpus.
+- **154 rules registered + tested.** 154 `.cpp` rule files, 154
+  `registry.cpp` factory entries, 154 `tests/unit/test_*.cpp` per-rule
+  tests. ctest baseline 667/671 (4 known golden-snapshot
+  STATUS_STACK_BUFFER_OVERRUN flakes — unrelated, deferred).
+  Documentation surface is wider: 186 rule pages under `docs/rules/`,
+  of which 32 are doc-only stubs (rule pages for Phase 6+ work that
+  hasn't shipped yet — see audit 2026-05-01 for the list).
+- **15 ADRs landed** (`docs/decisions/0001`–`0015`). ADR 0010 queues 36
+  SM 6.7/6.8/6.9 rules (SER, Cooperative Vectors, Long Vectors, OMM,
+  Mesh Nodes) — most have shipped through Phase 3 sub-phase 3c. ADR
+  0015 plans the v0.5.0 launch.
+- **C++23 baseline shipped** (sub-phase 3a, commit `1ea2aaa`):
+  `CMakeLists.txt` line 10 sets `CMAKE_CXX_STANDARD 23`; per-target
+  `target_compile_features(... PUBLIC cxx_std_23)` so vendored Slang
+  / tree-sitter keep their own standard.
+- **Phase 6 (launch — v0.5) in progress.** Tagging done; CI
+  gate-mode polish (sub-phase 6a) shipped; docs site live at
+  https://nelcit.github.io/hlsl-clippy/; 6/8 category-overview blog
+  posts shipped; release pipeline being hardened (commit `53800cf`
+  fixes Linux libc++ + macOS unversioned-clang regressions in
+  release.yml + adds prebuilt-Slang fetch to skip from-source builds).
 
 ---
 
@@ -483,11 +491,11 @@ tests/
   unit/                 Catch2 v3 unit tests
   golden/               golden output snapshots
 docs/
-  decisions/            ADRs in MADR 4.0 format (0001–0010)
+  decisions/            ADRs in MADR 4.0 format (0001–0015)
   rules/                per-rule pages; _template.md; pre-populated catalog
   blog/                 per-rule blog posts (CC-BY-4.0); VitePress scaffold
   architecture.md       high-level pipeline diagram
-.github/workflows/      ci.yml, lint.yml, codeql.yml
+.github/workflows/      ci.yml, lint.yml, docs.yml, release.yml, release-vscode.yml
 ROADMAP.md              phased plan + open questions
 CHANGELOG.md            Keep a Changelog 1.1.0
 CONTRIBUTING.md         DCO, conventional commits, rule authoring guide
