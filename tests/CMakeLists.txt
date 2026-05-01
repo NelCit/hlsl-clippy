@@ -251,18 +251,6 @@ add_executable(hlsl_clippy_unit_tests
 
     # Golden-snapshot regression net (drives `tests/golden/`).
     unit/test_golden_snapshots.cpp
-
-    # LSP source files compiled directly into the test target so the unit
-    # tests can call into the dispatcher / handlers / framing without
-    # depending on the hlsl_clippy_lsp executable.
-    "${CMAKE_SOURCE_DIR}/lsp/src/rpc/framing.cpp"
-    "${CMAKE_SOURCE_DIR}/lsp/src/rpc/dispatcher.cpp"
-    "${CMAKE_SOURCE_DIR}/lsp/src/document/manager.cpp"
-    "${CMAKE_SOURCE_DIR}/lsp/src/document/uri.cpp"
-    "${CMAKE_SOURCE_DIR}/lsp/src/server/handlers.cpp"
-    "${CMAKE_SOURCE_DIR}/lsp/src/server/diagnostic_convert.cpp"
-    "${CMAKE_SOURCE_DIR}/lsp/src/server/code_actions.cpp"
-    "${CMAKE_SOURCE_DIR}/lsp/src/config_resolver.cpp"
 )
 
 target_include_directories(hlsl_clippy_unit_tests PRIVATE
@@ -280,6 +268,12 @@ target_include_directories(hlsl_clippy_unit_tests PRIVATE
 target_link_libraries(hlsl_clippy_unit_tests
     PRIVATE
         hlsl_clippy_core
+        # Static lib factor of the LSP TUs (lsp/CMakeLists.txt). Pre-v0.6
+        # the test target compiled all 8 LSP source files itself, doubling
+        # the per-clean-build compile cost for the LSP surface (each TU
+        # pulls ~25 k LOC of nlohmann/json). Now `hlsl_clippy_lsp_lib`
+        # is built once and linked here + into the lsp executable.
+        hlsl_clippy_lsp_lib
         hlsl_clippy_warnings
         Catch2::Catch2WithMain
         tree_sitter::tree_sitter

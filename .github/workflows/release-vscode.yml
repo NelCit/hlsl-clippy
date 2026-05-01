@@ -115,6 +115,21 @@ jobs:
           echo "/opt/homebrew/opt/llvm@18/bin" >> "$GITHUB_PATH"
 
       # ── Slang prebuilt cache ──────────────────────────────────────────────
+      # Cache Slang prebuilt across runs to skip the 50-100MB download.
+      - name: Cache Slang prebuilt (Linux + macOS)
+        if: runner.os != 'Windows'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/hlsl-clippy/slang
+          key: slang-${{ runner.os }}-${{ hashFiles('cmake/SlangVersion.cmake') }}
+
+      - name: Cache Slang prebuilt (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ env.LOCALAPPDATA }}\hlsl-clippy\slang
+          key: slang-${{ runner.os }}-${{ hashFiles('cmake/SlangVersion.cmake') }}
+
       - name: Fetch Slang prebuilt (Linux + macOS)
         if: runner.os != 'Windows'
         run: bash tools/fetch-slang.sh
@@ -129,7 +144,7 @@ jobs:
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: build
-          key: vsix-build-${{ matrix.binary_platform }}-${{ steps.version.outputs.tag }}-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt', '.gitmodules') }}
+          key: vsix-build-${{ matrix.binary_platform }}-${{ steps.version.outputs.tag }}-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt', '.gitmodules', 'cmake/SlangVersion.cmake') }}
           restore-keys: |
             vsix-build-${{ matrix.binary_platform }}-
 

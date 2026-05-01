@@ -4,6 +4,7 @@
 #
 # Pinned SHAs (as of 2026-04-30):
 #   actions/checkout@v4.2.2  → 11bd71901bbe5b1630ceea73d27597364c9af683
+#   actions/cache@v4.2.3     → 5a3ec84eff668545956fd18022155c47e93e2684
 
 name: Lint
 
@@ -55,9 +56,15 @@ jobs:
 
       # ── 2.6 Slang prebuilt cache ──────────────────────────────────────────
       # `cmake/UseSlang.cmake` FATAL_ERRORs if neither `Slang_ROOT` nor the
-      # per-user prebuilt cache is populated (commit 73c0322 retired the
-      # from-source submodule fallback). Mirror what ci.yml and release.yml
-      # do: invoke `tools/fetch-slang.sh` before `cmake configure`.
+      # per-user prebuilt cache is populated. Cache the cache dir across
+      # runs (keyed on cmake/SlangVersion.cmake) and let fetch-slang.sh
+      # short-circuit on the idempotency check.
+      - name: Cache Slang prebuilt
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/hlsl-clippy/slang
+          key: slang-Linux-${{ hashFiles('cmake/SlangVersion.cmake') }}
+
       - name: Fetch Slang prebuilt
         run: bash tools/fetch-slang.sh
 

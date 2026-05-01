@@ -65,6 +65,13 @@ jobs:
           wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
           sudo apt-get install -y libc++-18-dev libc++abi-18-dev cmake ninja-build
 
+      - name: Cache Slang prebuilt (C++ only)
+        if: matrix.language == 'cpp'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/hlsl-clippy/slang
+          key: slang-Linux-${{ hashFiles('cmake/SlangVersion.cmake') }}
+
       - name: Fetch Slang prebuilt (C++ only)
         if: matrix.language == 'cpp'
         run: bash tools/fetch-slang.sh
