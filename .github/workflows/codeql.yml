@@ -80,14 +80,28 @@ jobs:
           queries: security-and-quality
 
       # ── Build (C++ only — JS/TS analysis doesn't need a build step) ─────
-      - name: Autobuild
+      # We don't use codeql/autobuild because for our project shape it stops
+      # at `cmake configure`, leaving CodeQL with zero compilation events to
+      # trace and `database finalize` failing on a missing trap dir
+      # (`cp: cannot stat '...cpp/trap/cpp/tarballs'`). Explicit cmake build
+      # runs the compiler under CodeQL's auto-injected tracer (LD_PRELOAD on
+      # Linux) so the cpp database actually gets populated. Toolchain config
+      # mirrors ci.yml + release.yml.
+      - name: Build (C++ only)
         if: matrix.language == 'cpp'
-        uses: github/codeql-action/autobuild@0daab03d71ff584ef619d027a3fd9146679c5d84 # v3.35.3
         env:
           CC: clang-18
           CXX: clang++-18
           CXXFLAGS: "-stdlib=libc++"
           LDFLAGS: "-stdlib=libc++"
+        run: |
+          set -euo pipefail
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DHLSL_CLIPPY_USE_PCH=OFF
+          cmake --build build --target hlsl_clippy_core
+          cmake --build build --target hlsl-clippy
+          cmake --build build --target hlsl_clippy_lsp
 
       # ── Analyze + upload to the Security tab ────────────────────────────
       - name: Perform CodeQL Analysis

@@ -2,6 +2,7 @@
 // rule fires on every literal-zero / literal-one variant and is silent for
 // non-literal bounds or non-zero/non-one bounds.
 
+#include <algorithm>
 #include <filesystem>
 #include <ranges>
 #include <string>

@@ -122,7 +122,13 @@ jobs:
         run: |
           cmake -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DHLSL_CLIPPY_USE_PCH=OFF
+        # PCH off: clang-tidy walks compile_commands.json and tries to
+        # follow the `-include cmake_pch.hxx` flag, then errors with
+        # "PCH file not found" because we don't actually `cmake --build`
+        # in the lint job. PCH wins on the warm build path; lint doesn't
+        # benefit from it.
 
       # ── 5. clang-tidy ─────────────────────────────────────────────────────
       # Same file set as clang-format; warnings promoted to errors.

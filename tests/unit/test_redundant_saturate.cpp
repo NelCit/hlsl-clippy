@@ -2,6 +2,7 @@
 // fixture. Phase 1 only matches the direct lexical nest (`saturate(saturate
 // (...))`); the split-variable form is documented as a follow-up.
 
+#include <algorithm>
 #include <filesystem>
 #include <ranges>
 #include <string>
