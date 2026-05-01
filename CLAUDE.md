@@ -342,6 +342,15 @@ ctest --test-dir build-debug --output-on-failure
 ./build-debug/hlsl-clippy lint --format=json shader.hlsl
 ```
 
+**Windows shortcut: dot-source `tools\dev-shell.ps1`** before running cmake / ninja / ctest. It locates the latest VS install via `vswhere`, enters the VS Dev Shell (puts `cl.exe`, `link.exe`, `INCLUDE`, `LIB` on PATH), prepends VS-bundled `cmake.exe` + `ninja.exe`, and adds the Slang prebuilt cache's `bin/` so test exes resolve `slang.dll` + the 6 transitive runtime DLLs at runtime. Idempotent (`HLSL_CLIPPY_DEV_SHELL_READY` guard). Replaces ~30 lines of manual env munging per build attempt.
+
+```powershell
+. .\tools\dev-shell.ps1                                 # one-time per session
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release       # then run cmake / ninja / ctest directly
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
 On Windows with MSVC, use `--preset ci-msvc` or configure without a preset
 and let CMake pick MSVC. The `hlsl-clippy_warnings` INTERFACE library
 applies `/W4 /WX /permissive-` automatically to first-party targets.
