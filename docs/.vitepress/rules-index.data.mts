@@ -11,7 +11,7 @@ import {
   load_rules_for_index,
   k_categories_in_order,
   k_category_display_titles,
-} from './sidebar'
+} from './sidebar.mts'
 
 export interface RuleEntry {
   id: string
