@@ -357,7 +357,7 @@ TEST_CASE("code-action: machine-applicable Fix produces quickfix with isPreferre
     REQUIRE(actions.size() == 1);
     const auto& a = actions[0];
     REQUIRE(a["kind"].get<std::string>() == "quickfix");
-    REQUIRE(a["title"].get<std::string>() == "Apply quick-fix: Replace with x*x");
+    REQUIRE(a["title"].get<std::string>() == "Replace with x*x");
     REQUIRE(a["isPreferred"].get<bool>() == true);
 
     // diagnostics array carries the LSP-shaped diagnostic.

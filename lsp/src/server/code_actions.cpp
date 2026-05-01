@@ -114,7 +114,11 @@ struct Position {
                                                const hlsl_clippy::SourceManager& sources,
                                                std::string_view document_uri) {
     nlohmann::json action = nlohmann::json::object();
-    action["title"] = std::string{"Apply quick-fix: "} + fix.description;
+    // VS Code already groups code-actions by `kind: quickfix` and labels
+    // the menu accordingly, so prefixing every title with "Apply quick-fix:"
+    // is redundant noise. Use the fix's own description (e.g. "Replace
+    // pow(x, 2.0) with x * x") so the lightbulb reads as a sentence.
+    action["title"] = fix.description;
     action["kind"] = std::string{k_quickfix_kind};
 
     nlohmann::json diags = nlohmann::json::array();

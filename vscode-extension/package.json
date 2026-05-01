@@ -3,25 +3,31 @@
   "displayName": "HLSL Clippy",
   "description": "Linter for HLSL — performance + correctness rules beyond what dxc catches.",
   "publisher": "nelcit",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
-    "Linters"
+    "Linters",
+    "Programming Languages"
   ],
   "keywords": [
     "hlsl",
     "shader",
+    "shader-lint",
     "linter",
     "directx",
-    "slang"
+    "d3d12",
+    "performance",
+    "slang",
+    "clippy"
   ],
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
   "main": "./out/extension.js",
-  "activationEvents": [
-    "onLanguage:hlsl"
-  ],
   "contributes": {
     "languages": [
       {
