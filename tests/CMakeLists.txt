@@ -230,6 +230,9 @@ add_executable(hlsl_clippy_unit_tests
     unit/test_wave_reduction_pixel_without_helper_attribute.cpp
     unit/test_quadany_replaceable_with_derivative_uniform_branch.cpp
 
+    # Golden-snapshot regression net (drives `tests/golden/`).
+    unit/test_golden_snapshots.cpp
+
     # LSP source files compiled directly into the test target so the unit
     # tests can call into the dispatcher / handlers / framing without
     # depending on the hlsl_clippy_lsp executable.

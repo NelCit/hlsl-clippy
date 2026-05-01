@@ -1,0 +1,75 @@
+{
+  "fixture": "phase4-atomics.hlsl",
+  "diagnostics": [
+    {
+      "rule": "branch-on-uniform-missing-attribute",
+      "line": 26,
+      "col": 5,
+      "severity": "note",
+      "message": "`if` whose condition looks dynamically uniform lacks an explicit `[branch]` attribute -- without the hint the compiler may flatten the branch and execute both arms"
+    },
+    {
+      "rule": "interlocked-bin-without-wave-prereduce",
+      "line": 29,
+      "col": 5,
+      "severity": "warning",
+      "message": "InterlockedAdd() with no preceding WaveActive* / WavePrefix* reduction -- per-lane atomics serialise the wave; wave-reduce first, then issue one atomic per wave"
+    },
+    {
+      "rule": "branch-on-uniform-missing-attribute",
+      "line": 36,
+      "col": 5,
+      "severity": "note",
+      "message": "`if` whose condition looks dynamically uniform lacks an explicit `[branch]` attribute -- without the hint the compiler may flatten the branch and execute both arms"
+    },
+    {
+      "rule": "branch-on-uniform-missing-attribute",
+      "line": 53,
+      "col": 5,
+      "severity": "note",
+      "message": "`if` whose condition looks dynamically uniform lacks an explicit `[branch]` attribute -- without the hint the compiler may flatten the branch and execute both arms"
+    },
+    {
+      "rule": "interlocked-bin-without-wave-prereduce",
+      "line": 55,
+      "col": 9,
+      "severity": "warning",
+      "message": "InterlockedAdd() with no preceding WaveActive* / WavePrefix* reduction -- per-lane atomics serialise the wave; wave-reduce first, then issue one atomic per wave"
+    },
+    {
+      "rule": "groupshared-first-read-without-barrier",
+      "line": 55,
+      "col": 24,
+      "severity": "error",
+      "message": "groupshared read of `LocalBins[[bin]]` is not separated by `GroupMemoryBarrier*` from a prior write to the same array on this CFG path; cross-lane reads are unordered without a barrier and produce undefined values once the workgroup spans more than one wave"
+    },
+    {
+      "rule": "groupshared-write-then-no-barrier-read",
+      "line": 55,
+      "col": 24,
+      "severity": "warning",
+      "message": "groupshared read after a cross-thread write with no GroupMemoryBarrier* between them -- the reader may observe stale or partially-updated values; UB per the HLSL memory model"
+    },
+    {
+      "rule": "interlocked-bin-without-wave-prereduce",
+      "line": 60,
+      "col": 9,
+      "severity": "warning",
+      "message": "InterlockedAdd() with no preceding WaveActive* / WavePrefix* reduction -- per-lane atomics serialise the wave; wave-reduce first, then issue one atomic per wave"
+    },
+    {
+      "rule": "groupshared-first-read-without-barrier",
+      "line": 60,
+      "col": 39,
+      "severity": "error",
+      "message": "groupshared read of `LocalBins[[gi]]` is not separated by `GroupMemoryBarrier*` from a prior write to the same array on this CFG path; cross-lane reads are unordered without a barrier and produce undefined values once the workgroup spans more than one wave"
+    },
+    {
+      "rule": "branch-on-uniform-missing-attribute",
+      "line": 84,
+      "col": 5,
+      "severity": "note",
+      "message": "`if` whose condition looks dynamically uniform lacks an explicit `[branch]` attribute -- without the hint the compiler may flatten the branch and execute both arms"
+    }
+  ]
+}

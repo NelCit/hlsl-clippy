@@ -1,0 +1,138 @@
+{
+  "fixture": "phase4-control-flow.hlsl",
+  "diagnostics": [
+    {
+      "rule": "all-resources-bound-not-set",
+      "line": 1,
+      "col": 1,
+      "severity": "note",
+      "message": "shader declares 4 resource bindings but no `[RootSignature(...)]` attribute is present -- compiling with `-all-resources-bound` (D3D12) unlocks driver optimisations that skip per-resource null-binding checks on every IHV"
+    },
+    {
+      "rule": "cbuffer-fits-rootconstants",
+      "line": 1,
+      "col": 1,
+      "severity": "warning",
+      "message": "cbuffer `CB` is 8 bytes -- fits in a D3D12 root-constant slot (<= 32 bytes / 8 DWORDs); promote to root constants to skip the descriptor-table indirection"
+    },
+    {
+      "rule": "branch-on-uniform-missing-attribute",
+      "line": 17,
+      "col": 5,
+      "severity": "note",
+      "message": "`if` whose condition looks dynamically uniform lacks an explicit `[branch]` attribute -- without the hint the compiler may flatten the branch and execute both arms"
+    },
+    {
+      "rule": "branch-on-uniform-missing-attribute",
+      "line": 27,
+      "col": 5,
+      "severity": "note",
+      "message": "`if` whose condition looks dynamically uniform lacks an explicit `[branch]` attribute -- without the hint the compiler may flatten the branch and execute both arms"
+    },
+    {
+      "rule": "barrier-in-divergent-cf",
+      "line": 29,
+      "col": 9,
+      "severity": "error",
+      "message": "memory barrier inside non-uniform control flow -- this is undefined behaviour; lanes that never reach the barrier deadlock the workgroup"
+    },
+    {
+      "rule": "branch-on-uniform-missing-attribute",
+      "line": 36,
+      "col": 5,
+      "severity": "note",
+      "message": "`if` whose condition looks dynamically uniform lacks an explicit `[branch]` attribute -- without the hint the compiler may flatten the branch and execute both arms"
+    },
+    {
+      "rule": "wave-intrinsic-non-uniform",
+      "line": 39,
+      "col": 18,
+      "severity": "warning",
+      "message": "wave intrinsic dispatched from non-uniform control flow -- the reduction only counts active lanes; this is rarely intended and a frequent source of scan / reduction bugs"
+    },
+    {
+      "rule": "wavesize-attribute-missing",
+      "line": 39,
+      "col": 18,
+      "severity": "warning",
+      "message": "entry point `cs_wave_op_divergent` calls wave intrinsic `WaveActiveSum` but does not pin the wave size via `[WaveSize(N)]` or `[WaveSize(min, max)]` -- results that index by lane count silently change between RDNA wave32/wave64, Turing/Ada wave32, and Xe-HPG wave8/16/32"
+    },
+    {
+      "rule": "branch-on-uniform-missing-attribute",
+      "line": 45,
+      "col": 5,
+      "severity": "note",
+      "message": "`if` whose condition looks dynamically uniform lacks an explicit `[branch]` attribute -- without the hint the compiler may flatten the branch and execute both arms"
+    },
+    {
+      "rule": "vrs-incompatible-output",
+      "line": 45,
+      "col": 21,
+      "severity": "note",
+      "message": "pixel shader uses `discard` -- if this PSO has per-draw / per-primitive shading-rate enabled the GPU silently forces fine-rate (1x1) shading and the VRS savings are lost"
+    },
+    {
+      "rule": "discard-then-work",
+      "line": 50,
+      "col": 19,
+      "severity": "warning",
+      "message": "non-trivial work after a `discard` -- helper lanes still execute every instruction; move work that does not feed derivatives to before the discard"
+    },
+    {
+      "rule": "loop-invariant-sample",
+      "line": 50,
+      "col": 19,
+      "severity": "warning",
+      "message": "texture sample inside a loop with loop-invariant UV -- the fetch returns the same value on every iteration; hoist it out of the loop"
+    },
+    {
+      "rule": "sample-in-loop-implicit-grad",
+      "line": 50,
+      "col": 19,
+      "severity": "warning",
+      "message": "implicit-derivative `Sample` inside a loop -- if the loop iteration count diverges across the 2x2 quad, the derivative is undefined; use `SampleLevel` / `SampleGrad` to make the LOD explicit"
+    },
+    {
+      "rule": "small-loop-no-unroll",
+      "line": 69,
+      "col": 5,
+      "severity": "note",
+      "message": "small constant-bounded loop (4 iterations) without `[unroll]` -- the compiler usually unrolls anyway, but the explicit hint guarantees the rewrite and frees the iterator register"
+    },
+    {
+      "rule": "loop-invariant-sample",
+      "line": 70,
+      "col": 16,
+      "severity": "warning",
+      "message": "texture sample inside a loop with loop-invariant UV -- the fetch returns the same value on every iteration; hoist it out of the loop"
+    },
+    {
+      "rule": "sample-in-loop-implicit-grad",
+      "line": 70,
+      "col": 16,
+      "severity": "warning",
+      "message": "implicit-derivative `Sample` inside a loop -- if the loop iteration count diverges across the 2x2 quad, the derivative is undefined; use `SampleLevel` / `SampleGrad` to make the LOD explicit"
+    },
+    {
+      "rule": "acos-without-saturate",
+      "line": 78,
+      "col": 19,
+      "severity": "warning",
+      "message": "acos(dot(...)) without saturate/clamp -- normalised dot products can round outside [-1, 1] and produce NaN; wrap the argument in clamp(x, -1.0, 1.0)"
+    },
+    {
+      "rule": "div-without-epsilon",
+      "line": 84,
+      "col": 12,
+      "severity": "warning",
+      "message": "division by length(...) / dot(...) without epsilon guard -- produces +Inf or NaN at zero divisors; wrap the divisor in max(epsilon, ...) or use the SafeNormalize idiom"
+    },
+    {
+      "rule": "sqrt-of-potentially-negative",
+      "line": 89,
+      "col": 12,
+      "severity": "warning",
+      "message": "sqrt() of a difference expression may round negative, producing NaN; wrap the argument in max(0.0, ...) (or use rsqrt + reciprocal for the unit-vector case)"
+    }
+  ]
+}

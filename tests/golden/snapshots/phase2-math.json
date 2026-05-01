@@ -1,0 +1,166 @@
+{
+  "fixture": "phase2-math.hlsl",
+  "diagnostics": [
+    {
+      "rule": "pow-const-squared",
+      "line": 6,
+      "col": 15,
+      "severity": "warning",
+      "message": "`pow(x, 5.0)` should be written as `(x * x) * (x * x) * x` (pow-by-squaring; 3 multiplies vs. transcendental) — `pow` lowers to a transcendental sequence on every current GPU"
+    },
+    {
+      "rule": "pow-integer-decomposition",
+      "line": 6,
+      "col": 15,
+      "severity": "warning",
+      "message": "`pow(x, 5.0)` should be replaced with a pow-by-squaring chain -- `pow` lowers to a transcendental sequence on every current GPU, but a handful of multiplies is strictly cheaper"
+    },
+    {
+      "rule": "pow-base-two-to-exp2",
+      "line": 12,
+      "col": 12,
+      "severity": "warning",
+      "message": "`pow(2.0, x)` should be written as `exp2(x)` -- `exp2` is a single GPU instruction; `pow(2, x)` typically lowers to log2 + multiply + exp2"
+    },
+    {
+      "rule": "pow-const-squared",
+      "line": 17,
+      "col": 12,
+      "severity": "warning",
+      "message": "`pow(x, 2.0)` should be written as `x * x` — `pow` lowers to a transcendental sequence on every current GPU"
+    },
+    {
+      "rule": "pow-to-mul",
+      "line": 17,
+      "col": 12,
+      "severity": "warning",
+      "message": "`pow(x, 2.0)` should be written as `x * x` -- `pow` lowers to a transcendental sequence on every current GPU"
+    },
+    {
+      "rule": "pow-const-squared",
+      "line": 22,
+      "col": 12,
+      "severity": "warning",
+      "message": "`pow(x, 3.0)` should be written as `x * x * x` — `pow` lowers to a transcendental sequence on every current GPU"
+    },
+    {
+      "rule": "pow-to-mul",
+      "line": 22,
+      "col": 12,
+      "severity": "warning",
+      "message": "`pow(x, 3.0)` should be written as `x * x * x` -- `pow` lowers to a transcendental sequence on every current GPU"
+    },
+    {
+      "rule": "pow-const-squared",
+      "line": 27,
+      "col": 12,
+      "severity": "warning",
+      "message": "`pow(x, 5.0)` should be written as `(x * x) * (x * x) * x` (pow-by-squaring; 3 multiplies vs. transcendental) — `pow` lowers to a transcendental sequence on every current GPU"
+    },
+    {
+      "rule": "pow-integer-decomposition",
+      "line": 27,
+      "col": 12,
+      "severity": "warning",
+      "message": "`pow(x, 5.0)` should be replaced with a pow-by-squaring chain -- `pow` lowers to a transcendental sequence on every current GPU, but a handful of multiplies is strictly cheaper"
+    },
+    {
+      "rule": "inv-sqrt-to-rsqrt",
+      "line": 32,
+      "col": 12,
+      "severity": "warning",
+      "message": "`1.0 / sqrt(x)` should be written as `rsqrt(x)` -- `rsqrt` is a single hardware instruction on every modern GPU"
+    },
+    {
+      "rule": "lerp-extremes",
+      "line": 37,
+      "col": 12,
+      "severity": "warning",
+      "message": "`lerp(a, b, 0)` always returns `a` — the interpolant is 0, so the result is the first endpoint"
+    },
+    {
+      "rule": "lerp-extremes",
+      "line": 42,
+      "col": 12,
+      "severity": "warning",
+      "message": "`lerp(a, b, 1)` always returns `b` — the interpolant is 1, so the result is the second endpoint"
+    },
+    {
+      "rule": "mul-identity",
+      "line": 47,
+      "col": 16,
+      "severity": "warning",
+      "message": "multiply by 1 is a no-op"
+    },
+    {
+      "rule": "mul-identity",
+      "line": 49,
+      "col": 16,
+      "severity": "warning",
+      "message": "adding 0 is a no-op"
+    },
+    {
+      "rule": "mul-identity",
+      "line": 51,
+      "col": 16,
+      "severity": "warning",
+      "message": "multiply by 0 is 0 for finite values, but preserves NaN for floats — use `0` directly only if the operand cannot be NaN"
+    },
+    {
+      "rule": "sin-cos-pair",
+      "line": 57,
+      "col": 15,
+      "severity": "warning",
+      "message": "`sin(angle)` and `cos(angle)` are both present — use `sincos(angle, s, c)` to compute both for the cost of one transcendental instruction"
+    },
+    {
+      "rule": "manual-reflect",
+      "line": 64,
+      "col": 12,
+      "severity": "warning",
+      "message": "`v - 2 * dot(n, v) * n` is the reflect formula — use `reflect(v, n)`"
+    },
+    {
+      "rule": "manual-distance",
+      "line": 69,
+      "col": 12,
+      "severity": "warning",
+      "message": "`length(a - b)` is the open-coded form of `distance(a, b)` -- prefer the named intrinsic for clarity"
+    },
+    {
+      "rule": "manual-step",
+      "line": 74,
+      "col": 12,
+      "severity": "warning",
+      "message": "`x > threshold ? 1.0 : 0.0` is the `step` idiom — note: `step(threshold, x)` uses `>=` semantics; verify the boundary behaviour is correct"
+    },
+    {
+      "rule": "manual-smoothstep",
+      "line": 79,
+      "col": 5,
+      "severity": "warning",
+      "message": "hand-rolled cubic Hermite interpolation — `n = saturate((t - a) / (b - a)); n * n * (3 - 2 * n)` is `smoothstep(a, b, t)`"
+    },
+    {
+      "rule": "length-comparison",
+      "line": 85,
+      "col": 12,
+      "severity": "warning",
+      "message": "`length(v)` compared against a scalar can usually be rewritten as `dot(v, v)` against the squared scalar -- saves a sqrt at the cost of an earlier overflow point"
+    },
+    {
+      "rule": "compare-equal-float",
+      "line": 90,
+      "col": 12,
+      "severity": "warning",
+      "message": "exact `==` on floating-point values is unreliable — rounding error and NaN make the result unpredictable; use an explicit tolerance such as `abs(a - b) < epsilon` instead"
+    },
+    {
+      "rule": "comparison-with-nan-literal",
+      "line": 95,
+      "col": 12,
+      "severity": "warning",
+      "message": "comparison with NaN literal `(0.0 / 0.0)` is always false (or always true for `!=`) per IEEE-754 — use `isnan(x)` instead"
+    }
+  ]
+}

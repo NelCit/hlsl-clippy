@@ -1,0 +1,89 @@
+{
+  "fixture": "phase3-bindings.hlsl",
+  "diagnostics": [
+    {
+      "rule": "all-resources-bound-not-set",
+      "line": 1,
+      "col": 1,
+      "severity": "note",
+      "message": "shader declares 7 resource bindings but no `[RootSignature(...)]` attribute is present -- compiling with `-all-resources-bound` (D3D12) unlocks driver optimisations that skip per-resource null-binding checks on every IHV"
+    },
+    {
+      "rule": "bool-straddles-16b",
+      "line": 1,
+      "col": 1,
+      "severity": "error",
+      "message": "`bool` field `UseTint` in cbuffer `StraddleCB` lands at offset 12 (in-slot byte 12) -- the layout is implementation-defined across `dxc` / `fxc` / Slang; insert a `float` pad or reorder so the `bool` starts on a 16-byte slot"
+    },
+    {
+      "rule": "cbuffer-fits-rootconstants",
+      "line": 1,
+      "col": 1,
+      "severity": "warning",
+      "message": "cbuffer `Tiny` is 8 bytes -- fits in a D3D12 root-constant slot (<= 32 bytes / 8 DWORDs); promote to root constants to skip the descriptor-table indirection"
+    },
+    {
+      "rule": "cbuffer-fits-rootconstants",
+      "line": 1,
+      "col": 1,
+      "severity": "warning",
+      "message": "cbuffer `StraddleCB` is 32 bytes -- fits in a D3D12 root-constant slot (<= 32 bytes / 8 DWORDs); promote to root constants to skip the descriptor-table indirection"
+    },
+    {
+      "rule": "cbuffer-large-fits-rootcbv-not-table",
+      "line": 1,
+      "col": 1,
+      "severity": "warning",
+      "message": "cbuffer `FramePadded` (96 bytes) is too large for root constants but well under the 64 KB cbuffer limit -- consider binding as a root CBV to dodge the descriptor-table indirection on every dispatch"
+    },
+    {
+      "rule": "cbuffer-large-fits-rootcbv-not-table",
+      "line": 1,
+      "col": 1,
+      "severity": "warning",
+      "message": "cbuffer `Unused` (48 bytes) is too large for root constants but well under the 64 KB cbuffer limit -- consider binding as a root CBV to dodge the descriptor-table indirection on every dispatch"
+    },
+    {
+      "rule": "cbuffer-large-fits-rootcbv-not-table",
+      "line": 1,
+      "col": 1,
+      "severity": "warning",
+      "message": "cbuffer `Huge` (4112 bytes) is too large for root constants but well under the 64 KB cbuffer limit -- consider binding as a root CBV to dodge the descriptor-table indirection on every dispatch"
+    },
+    {
+      "rule": "cbuffer-padding-hole",
+      "line": 1,
+      "col": 1,
+      "severity": "warning",
+      "message": "cbuffer `FramePadded` has a 12-byte padding hole between fields `Exposure` and `ViewProj` (offset 20..32) -- reorder fields largest-to-smallest to reclaim cbuffer bandwidth"
+    },
+    {
+      "rule": "oversized-cbuffer",
+      "line": 1,
+      "col": 1,
+      "severity": "warning",
+      "message": "cbuffer `Huge` is 4112 bytes (> 4096-byte threshold) -- consider splitting or moving large arrays to a `StructuredBuffer`"
+    },
+    {
+      "rule": "rwresource-read-only-usage",
+      "line": 1,
+      "col": 1,
+      "severity": "warning",
+      "message": "`ReadOnlyRW` is declared as a writable resource but is only ever read -- demote to the matching SRV (Buffer / Texture* / StructuredBuffer / ByteAddressBuffer) to free a UAV slot and use the texture-cache path"
+    },
+    {
+      "rule": "structured-buffer-stride-mismatch",
+      "line": 45,
+      "col": 1,
+      "severity": "warning",
+      "message": "structured-buffer element type `Particle` is 12 bytes (not a multiple of 16) -- pad to a 16-byte boundary to avoid cache-line straddling on every Nth element load"
+    },
+    {
+      "rule": "structured-buffer-stride-not-cache-aligned",
+      "line": 45,
+      "col": 1,
+      "severity": "warning",
+      "message": "`Particles` has element type `Particle` with stride 12 bytes -- not a multiple of the 64-byte cache line, so every random read straddles two lines on RDNA / Turing / Ada"
+    }
+  ]
+}

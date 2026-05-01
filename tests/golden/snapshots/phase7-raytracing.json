@@ -1,0 +1,61 @@
+{
+  "fixture": "phase7-raytracing.hlsl",
+  "diagnostics": [
+    {
+      "rule": "all-resources-bound-not-set",
+      "line": 1,
+      "col": 1,
+      "severity": "note",
+      "message": "shader declares 5 resource bindings but no `[RootSignature(...)]` attribute is present -- compiling with `-all-resources-bound` (D3D12) unlocks driver optimisations that skip per-resource null-binding checks on every IHV"
+    },
+    {
+      "rule": "cbuffer-large-fits-rootcbv-not-table",
+      "line": 1,
+      "col": 1,
+      "severity": "warning",
+      "message": "cbuffer `RaytrCB` (96 bytes) is too large for root constants but well under the 64 KB cbuffer limit -- consider binding as a root CBV to dodge the descriptor-table indirection on every dispatch"
+    },
+    {
+      "rule": "static-sampler-when-dynamic-used",
+      "line": 1,
+      "col": 1,
+      "severity": "warning",
+      "message": "sampler `LinearSS` is referenced from a single entry point and never varies across draws -- consider promoting it to a D3D12 static sampler in the root signature (saves a descriptor heap slot, pre-resident on every IHV)"
+    },
+    {
+      "rule": "branch-on-uniform-missing-attribute",
+      "line": 85,
+      "col": 5,
+      "severity": "note",
+      "message": "`if` whose condition looks dynamically uniform lacks an explicit `[branch]` attribute -- without the hint the compiler may flatten the branch and execute both arms"
+    },
+    {
+      "rule": "samplelevel-with-zero-on-mipped-tex",
+      "line": 103,
+      "col": 21,
+      "severity": "warning",
+      "message": "`SampleLevel(s, uv, 0)` pins LOD to mip 0 -- on a mipped texture this defeats the texture cache's small-footprint fetch and disables trilinear filtering; replace with `Sample(s, uv)` in pixel-shader context"
+    },
+    {
+      "rule": "branch-on-uniform-missing-attribute",
+      "line": 104,
+      "col": 5,
+      "severity": "note",
+      "message": "`if` whose condition looks dynamically uniform lacks an explicit `[branch]` attribute -- without the hint the compiler may flatten the branch and execute both arms"
+    },
+    {
+      "rule": "dot-on-axis-aligned-vector",
+      "line": 108,
+      "col": 27,
+      "severity": "warning",
+      "message": "`dot(v, axis)` against an axis-aligned constant unit vector is just a swizzle (`v.y`) -- saves a multiply-add chain and avoids loading the constant vector"
+    },
+    {
+      "rule": "pow-integer-decomposition",
+      "line": 109,
+      "col": 18,
+      "severity": "warning",
+      "message": "`pow(x, 32.0)` should be replaced with a pow-by-squaring chain -- `pow` lowers to a transcendental sequence on every current GPU, but a handful of multiplies is strictly cheaper"
+    }
+  ]
+}
