@@ -204,8 +204,12 @@ the ADR first.
 
 - **clang-format** enforced. Single style file at root. No bikeshedding.
 
-- **Microsoft GSL** for `gsl::span`, `gsl::not_null`, `gsl::narrow_cast`,
-  `Expects`/`Ensures`. NOT `gsl::owner` or `gsl::string_span`.
+- **C++23 stdlib equivalents preferred over Microsoft GSL.** `std::span`
+  for views, `gsl::not_null` deemed unnecessary (use references or bare
+  pointers documented as non-null), `gsl::narrow_cast` deferred to
+  static_cast with explicit assertions where needed. GSL was discussed
+  in ADR 0006 + early CLAUDE.md drafts but never actually linked into
+  the build; do not re-introduce it without an addendum ADR.
 
 - **C++23 idioms to use**:
   - `std::expected<T, Diagnostic>` — canonical fallible-return type across

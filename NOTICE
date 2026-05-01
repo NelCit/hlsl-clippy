@@ -13,3 +13,17 @@ contributors (tree-sitter, MIT):
 This product includes the tree-sitter-hlsl grammar developed by Max Brunsfeld
 and Stephan Seitz (MIT):
   https://github.com/tree-sitter-grammars/tree-sitter-hlsl
+
+This product includes toml++ developed by Mark Gillard (MIT):
+  https://github.com/marzer/tomlplusplus
+
+This product includes nlohmann/json developed by Niels Lohmann and contributors
+(MIT, used by hlsl-clippy-lsp for JSON-RPC framing):
+  https://github.com/nlohmann/json
+
+The vscode-extension/ subtree includes vscode-languageclient developed by
+Microsoft and contributors (MIT, runtime dep of the extension):
+  https://github.com/microsoft/vscode-languageserver-node
+
+Full license texts for each vendored dependency are reproduced in
+THIRD_PARTY_LICENSES.md.
