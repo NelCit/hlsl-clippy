@@ -31,14 +31,8 @@ target_link_libraries(hlsl_clippy_lsp PRIVATE
 
 target_compile_features(hlsl_clippy_lsp PRIVATE cxx_std_23)
 
-# Windows: deploy runtime DLLs (slang.dll etc.) next to the LSP exe so it
-# runs out of the build tree without requiring the user to mutate PATH.
-# No-op on Linux/macOS (RPATH handles it).
-if(WIN32)
-    add_custom_command(TARGET hlsl_clippy_lsp POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_RUNTIME_DLLS:hlsl_clippy_lsp>
-            $<TARGET_FILE_DIR:hlsl_clippy_lsp>
-        COMMAND_EXPAND_LISTS
-    )
-endif()
+# Windows: deploy the full Slang runtime DLL constellation (slang.dll +
+# 6 transitive dlopen()ed siblings) next to the LSP exe so it runs out of
+# the build tree without requiring the user to mutate PATH. No-op on
+# Linux/macOS (RPATH handles it). See cmake/UseSlang.cmake for details.
+hlsl_clippy_deploy_slang_dlls(hlsl_clippy_lsp)
