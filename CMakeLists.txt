@@ -76,7 +76,14 @@ include(FetchContent)
 FetchContent_Declare(
     tomlplusplus
     GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
-    GIT_TAG        v3.4.0
+    # Pinned to the commit SHA of tag v3.4.0. Git tags are mutable; pinning
+    # to the commit SHA prevents an upstream maintainer (or attacker with
+    # a stolen token) from re-pointing the v3.4.0 tag at a different tree.
+    # Bump procedure: resolve the new commit SHA via
+    #   gh api repos/marzer/tomlplusplus/git/ref/tags/v<X.Y.Z>
+    # and update both the SHA below and `THIRD_PARTY_LICENSES.md` if the
+    # license changed.
+    GIT_TAG        30172438cee64926dc41fdd9c11fb3ba5b2ba9de  # v3.4.0
 )
 FetchContent_MakeAvailable(tomlplusplus)
 

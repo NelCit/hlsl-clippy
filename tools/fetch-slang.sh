@@ -195,6 +195,46 @@ if [[ "$MAGIC" != "1f8b" ]]; then
     exit 1
 fi
 
+# --- SHA-256 verification (optional but strongly recommended) ---------------
+# When `HLSL_CLIPPY_SLANG_SHA256` is set, the downloaded tarball's hash MUST
+# match exactly. Mismatch → abort, leaving the cache untouched. Unset →
+# warn-and-continue (the gzip-magic check above is the only integrity gate).
+#
+# Per-triple expected hashes can also be supplied via
+# `HLSL_CLIPPY_SLANG_SHA256_<UPPER_TRIPLE_WITH_UNDERSCORES>`; e.g. for
+# the `linux-x86_64` tarball, set `HLSL_CLIPPY_SLANG_SHA256_LINUX_X86_64`.
+# The per-triple variable wins over the generic one when both are set.
+EXPECTED_SHA256=""
+TRIPLE_VAR="HLSL_CLIPPY_SLANG_SHA256_$(echo "$TRIPLE" | tr 'a-z-' 'A-Z_')"
+if [[ -n "${!TRIPLE_VAR:-}" ]]; then
+    EXPECTED_SHA256="${!TRIPLE_VAR}"
+elif [[ -n "${HLSL_CLIPPY_SLANG_SHA256:-}" ]]; then
+    EXPECTED_SHA256="${HLSL_CLIPPY_SLANG_SHA256}"
+fi
+
+if [[ -n "$EXPECTED_SHA256" ]]; then
+    if command -v sha256sum >/dev/null 2>&1; then
+        ACTUAL_SHA256="$(sha256sum "$TMP_TGZ" | awk '{print $1}')"
+    elif command -v shasum >/dev/null 2>&1; then
+        ACTUAL_SHA256="$(shasum -a 256 "$TMP_TGZ" | awk '{print $1}')"
+    else
+        echo "fetch-slang: neither sha256sum nor shasum available; cannot verify SHA-256." >&2
+        exit 1
+    fi
+    if [[ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]]; then
+        echo "fetch-slang: SHA-256 mismatch for $TMP_TGZ" >&2
+        echo "fetch-slang:   expected: $EXPECTED_SHA256" >&2
+        echo "fetch-slang:   actual:   $ACTUAL_SHA256" >&2
+        echo "fetch-slang: refusing to populate cache. Possible MITM or" >&2
+        echo "fetch-slang: tampered upstream — verify the release manually." >&2
+        exit 1
+    fi
+    echo "fetch-slang: SHA-256 verified ($ACTUAL_SHA256)"
+else
+    echo "fetch-slang: warning — no HLSL_CLIPPY_SLANG_SHA256 set; skipping integrity verification." >&2
+    echo "fetch-slang: set HLSL_CLIPPY_SLANG_SHA256_${TRIPLE_VAR#HLSL_CLIPPY_SLANG_SHA256_} for hardened CI." >&2
+fi
+
 # --- Extract ---------------------------------------------------------------
 echo "fetch-slang: extracting to $CACHE_DIR"
 if ! tar -xzf "$TMP_TGZ" -C "$CACHE_DIR"; then
