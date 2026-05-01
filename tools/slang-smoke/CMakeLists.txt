@@ -7,10 +7,11 @@ add_executable(slang-smoke src/main.cpp)
 
 target_link_libraries(slang-smoke PRIVATE slang::slang)
 
-# The smoke test needs the Slang public headers.
-target_include_directories(slang-smoke PRIVATE
-    "${CMAKE_SOURCE_DIR}/external/slang/include"
-)
+# Slang public headers come transitively from `slang::slang`'s
+# INTERFACE_INCLUDE_DIRECTORIES (set by `_hlsl_clippy_slang_import_prefix`
+# in cmake/UseSlang.cmake against the resolved prebuilt prefix). The
+# previous explicit `external/slang/include` path was retired with the
+# Slang submodule.
 
 # Enforce the project's C++ standard.
 set_target_properties(slang-smoke PROPERTIES
