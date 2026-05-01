@@ -24,10 +24,7 @@
 # Third-party action SHAs pinned for supply-chain safety:
 #   actions/checkout@v4.2.2  → 11bd71901bbe5b1630ceea73d27597364c9af683
 #   actions/setup-node@v4.0.4 → 0a44ba7841725637a19e28fa30b79a866c81b0a6
-#
-# softprops/action-gh-release@v2: tag-only pin — orchestrator follow-up to
-# resolve a SHA pin via `gh api repos/softprops/action-gh-release/git/ref/
-# tags/v2` once a stable v2.x tag is selected for the v0.5 release.
+#   softprops/action-gh-release@v2.3.4 → 3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
 
 name: Release VS Code Extension
 
@@ -64,7 +61,17 @@ jobs:
 
       - name: Install dependencies
         working-directory: vscode-extension
-        run: npm ci
+        # NOTE: `npm ci` requires a committed `package-lock.json`. We don't
+        # ship one yet (parallel with `docs.yml`); fall back to `npm install`
+        # in its absence so the workflow doesn't hard-fail on tag. Switch
+        # back to `npm ci` once the lockfile is committed.
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install --no-audit --no-fund
+          fi
+        shell: bash
 
       - name: Compile TypeScript
         working-directory: vscode-extension
@@ -135,7 +142,7 @@ jobs:
       #     npx --yes ovsx publish "$out" --pat "$OVSX_PAT"
 
       - name: Attach .vsix to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.3.4
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           fail_on_unmatched_files: true

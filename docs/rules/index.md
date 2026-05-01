@@ -5,7 +5,7 @@ outline: [2, 2]
 
 <script setup>
 import { withBase } from 'vitepress'
-import { data as catalog } from '../.vitepress/rules-index.data.ts'
+import { data as catalog } from '../.vitepress/rules-index.data.mts'
 </script>
 
 # Rules catalog
@@ -62,7 +62,7 @@ quick-fix rewrite.
 ---
 
 For contributors adding a new rule: start from
-[`docs/rules/_template.md`](_template.md). The catalog above is generated
+[`docs/rules/_template.md`](https://github.com/NelCit/hlsl-clippy/blob/main/docs/rules/_template.md). The catalog above is generated
 from each page's YAML front-matter at build time — keep `id`, `category`,
 `severity`, `applicability`, and `phase` accurate and the entry will appear
 automatically.

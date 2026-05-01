@@ -5,6 +5,14 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-05-01
+
+Initial public release. **154 rules** ship across math, bindings, texture,
+workgroup, control-flow, mesh, DXR, work-graphs, SER, cooperative-vector,
+long-vectors, opacity-micromaps, sampler-feedback, VRS, and
+wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
+(launch) is in progress around this release.
+
 ### Added
 
 - Phase 5 — LSP server (`hlsl-clippy-lsp`) thinly wrapping `core` over
@@ -12,8 +20,27 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
   publisher `nelcit`) that activates on the `hlsl` language id and
   surfaces diagnostics + quick-fix code actions.
 - macOS CI runner (`macos-14`, Apple Silicon) wired into the build matrix.
-- Phase 3 reflection-aware rule packs (ADR 0007 Phase 3, ADR 0010 SM 6.9)
-  gated on `LintOptions::enable_reflection`.
+- Phase 4 — control-flow / data-flow infrastructure (ADR 0013): CFG
+  built over the tree-sitter AST with a Lengauer-Tarjan dominator tree, a
+  taint-propagation uniformity oracle, helper-lane analyzer, and bounded
+  inter-procedural inlining (`cfg_inlining_depth = 3`). Plus the rule
+  packs that ride on it: control-flow / divergence / atomics /
+  helper-lane (e.g. `derivative-in-divergent-cf`,
+  `barrier-in-divergent-cf`, `wave-intrinsic-non-uniform`,
+  `branch-on-uniform-missing-attribute`, `small-loop-no-unroll`,
+  `loop-invariant-sample`, `groupshared-stride-non-32-bank-conflict`,
+  `groupshared-atomic-replaceable-by-wave`, `dispatchmesh-not-called`).
+- Phase 3 — reflection-aware rule packs (ADR 0007 Phase 3, ADR 0010
+  SM 6.9) gated on `LintOptions::enable_reflection`. Sub-phases:
+  3a (reflection infra per ADR 0012 — opaque `reflection.hpp`,
+  `Stage::Reflection`, `Rule::on_reflection`, lazy
+  per-`(SourceId, target-profile)` cached `ReflectionEngine`),
+  3b (shared utilities), 3c (5 parallel rule packs covering buffers,
+  groupshared-typed, samplers, root-sig, compute, wave, state, plus the
+  ADR 0010 SM 6.9 surfaces — SER, Cooperative Vectors, Long Vectors,
+  OMM, Mesh Nodes preview-gated).
+- Phase 2 — AST-only rule pack (ADR 0009): math / saturate-redundancy /
+  misc category packs adding 24 net-new rules.
 - Release-artifact pipeline (`.github/workflows/release.yml`): tag-triggered
   builds for `windows-x86_64`, `linux-x86_64`, and `macos-aarch64`; bundles
   the CLI + LSP binaries with LICENSE / NOTICE / THIRD_PARTY_LICENSES.md;
@@ -61,3 +88,5 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 ### Deprecated
 
 - _(none this cycle)_
+
+[0.5.0]: https://github.com/NelCit/hlsl-clippy/releases/tag/v0.5.0
