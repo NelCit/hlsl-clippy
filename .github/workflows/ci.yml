@@ -109,6 +109,23 @@ jobs:
           /opt/homebrew/opt/llvm@18/bin/clang --version
           /opt/homebrew/opt/llvm@18/bin/clang++ --version
 
+      # ── 4d. Slang prebuilt cache (skip the ~20-min from-source build) ────
+      # `tools/fetch-slang.{sh,ps1}` populates the per-user prebuilt cache
+      # at `$HOME/.cache/hlsl-clippy/slang/<version>/` (Linux/macOS) or
+      # `%LOCALAPPDATA%\hlsl-clippy\slang\<version>\` (Windows). The
+      # `cmake/UseSlang.cmake` resolver picks up that cache before the
+      # submodule fallback path. The cache is keyed by version pin in
+      # `cmake/SlangVersion.cmake`; bumping the submodule SHA also bumps
+      # that file, so the next CI run downloads the matching prebuilt.
+      - name: Fetch Slang prebuilt (Linux + macOS)
+        if: runner.os != 'Windows'
+        run: bash tools/fetch-slang.sh
+
+      - name: Fetch Slang prebuilt (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pwsh tools/fetch-slang.ps1
+
       # ── 5. CMake configure ────────────────────────────────────────────────
       - name: CMake configure (Linux)
         if: runner.os == 'Linux'
