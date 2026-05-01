@@ -23,7 +23,7 @@ Thank you for your interest in contributing. This document covers everything nee
 
 ## Code of conduct
 
-This project follows the [Contributor Covenant 2.1](CODE_OF_CONDUCT.md). By participating, you agree to abide by its terms. Reports go to `[TODO: maintainer contact]`.
+This project follows the [Contributor Covenant 2.1](CODE_OF_CONDUCT.md). By participating, you agree to abide by its terms. Reports go to the maintainer (<vin.legrand11@gmail.com>) — for security-sensitive concerns, use [GitHub's private advisory channel](https://github.com/NelCit/hlsl-clippy/security/advisories/new) per [SECURITY.md](SECURITY.md).
 
 ---
 

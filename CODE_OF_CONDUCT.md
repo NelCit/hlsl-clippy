@@ -14,7 +14,7 @@ conflict or ambiguity, the canonical text at that URL takes precedence.
 ## Reporting
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to [TODO: maintainer contact]. All complaints will be reviewed and
+reported to the maintainer at <vin.legrand11@gmail.com>. All complaints will be reviewed and
 investigated promptly and fairly in accordance with the Enforcement section of
 the Contributor Covenant. See the canonical text for the full enforcement
 guidelines.

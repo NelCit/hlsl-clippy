@@ -11,7 +11,7 @@ tags: [license, governance, phase-0]
 
 The repository currently ships an MIT `LICENSE` file. Before any third-party contribution lands and before any binary is uploaded to a release page, we need a deliberate license choice that:
 
-- Is compatible with our vendored dependencies (Slang under Apache-2.0 + LLVM exception, tree-sitter under MIT, tree-sitter-hlsl pending verification, Microsoft GSL under MIT).
+- Is compatible with our vendored dependencies (Slang under Apache-2.0 + LLVM exception, tree-sitter under MIT, tree-sitter-hlsl under MIT, toml++ under MIT, nlohmann/json under MIT).
 - Carries a patent grant — `hlsl-clippy` operates in GPU-compilation territory where multiple IHVs hold patents.
 - Reads as a credible, non-amateur choice to AAA studios, IHVs, and engine teams who might want to integrate the linter into their CI.
 - Makes contribution friction-free for a solo project (no CLA paperwork dance).
@@ -61,7 +61,7 @@ For **`tests/corpus/`** (third-party shaders): each file retains its upstream li
 - **Contributions**: DCO. Signed-off-by on every commit, enforced via the DCO GitHub App or a small workflow (~10 lines).
 - **Required files at repo root**:
   - `LICENSE` — verbatim Apache-2.0 text, unmodified.
-  - `NOTICE` — short attribution paragraph + per-vendored-dep one-liners (Slang Apache-2.0 + LLVM exception; tree-sitter MIT; tree-sitter-hlsl MIT-pending-verify; Microsoft GSL MIT).
+  - `NOTICE` — short attribution paragraph + per-vendored-dep one-liners (Slang Apache-2.0 + LLVM exception; tree-sitter MIT; tree-sitter-hlsl MIT; toml++ MIT; nlohmann/json MIT; vscode-languageclient MIT).
   - `THIRD_PARTY_LICENSES.md` — full text of each vendored dep license, sectioned. Ships inside binary releases.
 - **Naming**: keep `hlsl-clippy`. Rust-clippy precedent (2014, no Microsoft action); HLSL is descriptive; `dxc`, `glslang`, `naga` already coexist. No trademark filing pre-v0.
 
@@ -69,7 +69,7 @@ For **`tests/corpus/`** (third-party shaders): each file retains its upstream li
 
 Good:
 
-- Slang + tree-sitter + tree-sitter-hlsl + GSL are all permissive and compatible.
+- Slang + tree-sitter + tree-sitter-hlsl + toml++ + nlohmann/json are all permissive and compatible.
 - Patent grant signals legal-team-friendly to AAA / IHV consumers.
 - DCO is friction-free for contributors; no paperwork for the solo maintainer.
 - CC-BY-4.0 docs maximize reach (translations, mirroring, reuse in courses) while preserving attribution.
