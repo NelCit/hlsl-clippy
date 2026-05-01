@@ -115,6 +115,16 @@ the ADR first.
   pattern. See
   [ADR 0011](docs/decisions/0011-candidate-rule-adoption.md).
 
+- **Phase 3 reflection infrastructure**: opaque `reflection.hpp` public
+  header + new `Stage::Reflection` + `Rule::on_reflection` virtual + lazy
+  per-(SourceId, target-profile) cached `ReflectionEngine` (one global
+  Slang `IGlobalSession`, per-worker `ISession` pool); `<slang.h>`
+  confined to `core/src/reflection/slang_bridge.cpp`. **Proposed**;
+  gates ALL ~55 Phase 3 rules across ADR 0007 / 0010 / 0011. Lands as
+  sub-phase 3a (infra PR) → 3b (shared utilities) → 3c (5 parallel
+  rule packs). See
+  [ADR 0012](docs/decisions/0012-phase-3-reflection-infrastructure.md).
+
 ---
 
 ## Code standards (enforced by CI)
@@ -347,7 +357,7 @@ to source build by clearing the cache. macOS path not implemented (Phase 5).
 
 ## ADR index
 
-All 11 ADRs are in MADR 4.0 format under `docs/decisions/`. Each ADR's
+All 12 ADRs are in MADR 4.0 format under `docs/decisions/`. Each ADR's
 `status` field is the canonical authority — read it before assuming a
 decision is settled.
 
@@ -364,6 +374,7 @@ decision is settled.
 | [0009](docs/decisions/0009-phase-2-implementation-plan.md) | Phase 2 implementation plan — AST-only rule pack | Proposed |
 | [0010](docs/decisions/0010-sm69-rule-expansion.md) | SM 6.9 rule expansion (+36 rules) | Proposed |
 | [0011](docs/decisions/0011-candidate-rule-adoption.md) | Candidate rule adoption — underexplored portable surfaces (per-phase plan) | Proposed |
+| [0012](docs/decisions/0012-phase-3-reflection-infrastructure.md) | Phase 3 reflection infrastructure — Slang reflection plumbed into RuleContext | Proposed |
 
 "Proposed" ADRs represent plans that are approved in principle but not yet
 fully implemented. "Accepted" ADRs represent shipped decisions. Do not

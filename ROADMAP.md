@@ -155,6 +155,8 @@ Rules expressible as clang AST patterns — no flow analysis. Group by category 
 
 Rules needing Slang's reflection API for binding / layout / type data, married to tree-sitter spans for diagnostics.
 
+**Gating dependency:** [ADR 0012](docs/decisions/0012-phase-3-reflection-infrastructure.md) (Proposed) — the Slang-reflection-into-RuleContext infrastructure must land first. See ADR 0012 §"Implementation sub-phases" for the 3a (infra) → 3b (shared utilities) → 3c (5 parallel rule packs) sequence.
+
 **Resource bindings:**
 - [ ] `non-uniform-resource-index`: dynamic resource index missing the marker (uses Slang reflection to identify `Texture2D[]`-class params)
 - [ ] `cbuffer-padding-hole`: alignment gaps in `cbuffer` layouts
