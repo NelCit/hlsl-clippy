@@ -1,0 +1,50 @@
+# Dependency Review — fail PRs that introduce dependencies with known
+# CVEs, license incompatibilities, or unwanted ecosystem changes.
+#
+# Per the v0.6 hardening backlog from the 2026-05-01 CI/CD + security
+# audits.
+#
+# Action SHAs pinned for supply-chain safety:
+#   actions/checkout@v4.2.2                  → 11bd71901bbe5b1630ceea73d27597364c9af683
+#   actions/dependency-review-action@v4.9.0  → 2031cfc080254a8a887f58cffee85186f0e49e48
+
+name: Dependency Review
+
+on:
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  pull-requests: write   # required for the inline PR comment summary
+
+jobs:
+  review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        with:
+          # Block PRs that introduce dependencies with critical or high
+          # severity CVEs. Medium/low CVEs are reported but don't gate.
+          fail-on-severity: high
+          # ADR 0006: code is Apache-2.0; CC-BY-4.0 is allowed for docs but
+          # never baked into the binary. The dep-review action treats
+          # license info as advisory unless explicitly listed; we accept
+          # the standard permissive set and reject GPL-family copyleft.
+          allow-licenses: >
+            Apache-2.0,
+            MIT,
+            BSD-2-Clause,
+            BSD-3-Clause,
+            ISC,
+            Unlicense,
+            CC0-1.0,
+            Zlib,
+            BSL-1.0
+          comment-summary-in-pr: on-failure

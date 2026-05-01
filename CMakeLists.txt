@@ -13,6 +13,18 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# sccache / ccache compiler launcher (per ADR 0005). When sccache is on
+# PATH the configure step picks it up automatically; otherwise this is a
+# no-op. CI provisions sccache in `.github/workflows/ci.yml` + `release.yml`.
+# Local contributors get the win for free if they run `cargo install
+# sccache` (or apt/brew/winget equivalent).
+find_program(HLSL_CLIPPY_SCCACHE sccache)
+if(HLSL_CLIPPY_SCCACHE)
+    set(CMAKE_C_COMPILER_LAUNCHER   "${HLSL_CLIPPY_SCCACHE}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${HLSL_CLIPPY_SCCACHE}")
+    message(STATUS "hlsl-clippy: using sccache at ${HLSL_CLIPPY_SCCACHE}")
+endif()
+
 # CTest opt-in. Defaults to ON for development; pass -DBUILD_TESTING=OFF for
 # release builds that don't want to fetch Catch2.
 include(CTest)
