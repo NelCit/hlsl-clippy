@@ -15,6 +15,26 @@ from first principles.
 
 ## Posts
 
+### v0.5.0 launch series — category overviews (2026-05-01)
+
+The v0.5.0 launch ships eight category overviews plus a preface essay.
+Each overview walks one rule-pack at GPU-mechanism level and links to
+the per-rule pages for the deep dives.
+
+| Date | Category | Title |
+|------|----------|-------|
+| 2026-05-01 | _preface_ | [Why your HLSL is slower than it has to be](./why-your-hlsl-is-slower-than-it-has-to-be) |
+| 2026-05-01 | math | [Where the cycles go: math intrinsics on modern GPUs](./math-overview) |
+| 2026-05-01 | workgroup | [Your groupshared array is bank-conflicting on RDNA](./workgroup-overview) |
+| 2026-05-01 | control-flow | [Divergent control flow is the silent killer of your shader](./control-flow-overview) |
+| 2026-05-01 | bindings | [Where root signatures and descriptor heaps quietly cost you](./bindings-overview) |
+| 2026-05-01 | texture | [Texture sampling is doing more work than your shader admits](./texture-overview) |
+| 2026-05-01 | mesh + dxr | [Mesh shaders + DXR](./mesh-dxr-overview) |
+| 2026-05-01 | wave + helper-lane | [Wave intrinsics and helper-lane traps](./wave-helper-lane-overview) |
+| 2026-05-01 | sm 6.9 | [SM 6.9: shader execution reordering, cooperative vectors, and the new ray-tracing primitives](./ser-coop-vector-overview) |
+
+### Per-rule deep dives
+
 | Date | Rule | Title |
 |------|------|-------|
 | 2026-04-30 | [`pow-const-squared`](./pow-const-squared) | [pow(x, 2.0) is hiding a transcendental in your shader](./pow-const-squared) |

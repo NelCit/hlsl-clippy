@@ -29,7 +29,7 @@ on D3D12: the syntax is fine, the API call is fine, the perf is gone.
 This post walks the four root signature parameter types, then digs into five
 specific patterns that the bindings rules in `hlsl-clippy` flag and explains
 the GPU mechanism behind each one. The companion [bindings rules
-catalogue](/rules) has the full list; the deep dives below cover the
+catalogue](/rules/) has the full list; the deep dives below cover the
 mechanism buckets that account for most of the cost we have observed in real
 codebases.
 

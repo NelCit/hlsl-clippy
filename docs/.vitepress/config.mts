@@ -48,12 +48,6 @@ export default defineConfig({
     // Sibling rules referenced in cross-link sections that haven't been
     // authored yet — listed in ROADMAP.md and tracked for a later pack.
     /(samplecmp-without-comparison-sampler|shadow-bias-too-small|unused-vs-output|discard-after-heavy-work|redundant-rcp-mul)$/,
-    // Category-overview blog posts referenced as forward links from the
-    // v0.5.0 preface ("why-your-hlsl-is-slower-than-it-has-to-be"). Each
-    // overview is being authored by a parallel agent during launch; the
-    // forward links resolve as those posts land. Tighten this regex to a
-    // shorter list (or remove it entirely) once all eight overviews ship.
-    /^\/blog\/(math|workgroup|control-flow|bindings|texture|mesh-dxr|wave-helper-lane|ser-coop-vector)-overview$/,
   ],
 
   themeConfig: {
@@ -74,16 +68,33 @@ export default defineConfig({
       '/blog/': [
         {
           text: 'Blog',
+          items: [{ text: 'Index', link: '/blog/' }],
+        },
+        {
+          text: 'v0.5.0 launch series',
+          collapsed: false,
           items: [
-            { text: 'Index', link: '/blog/' },
             {
-              text: 'Posts',
-              items: [
-                {
-                  text: 'pow(x, 2.0) is hiding a transcendental in your shader',
-                  link: '/blog/pow-const-squared',
-                },
-              ],
+              text: 'Why your HLSL is slower than it has to be',
+              link: '/blog/why-your-hlsl-is-slower-than-it-has-to-be',
+            },
+            { text: 'Math intrinsics', link: '/blog/math-overview' },
+            { text: 'Workgroup / groupshared', link: '/blog/workgroup-overview' },
+            { text: 'Control flow + divergence', link: '/blog/control-flow-overview' },
+            { text: 'Bindings + root signature', link: '/blog/bindings-overview' },
+            { text: 'Texture + sampler', link: '/blog/texture-overview' },
+            { text: 'Mesh shaders + DXR', link: '/blog/mesh-dxr-overview' },
+            { text: 'Wave + helper-lane', link: '/blog/wave-helper-lane-overview' },
+            { text: 'SM 6.9: SER, coop-vec, long-vec, OMM', link: '/blog/ser-coop-vector-overview' },
+          ],
+        },
+        {
+          text: 'Per-rule deep dives',
+          collapsed: true,
+          items: [
+            {
+              text: 'pow(x, 2.0) is hiding a transcendental in your shader',
+              link: '/blog/pow-const-squared',
             },
           ],
         },
