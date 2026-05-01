@@ -37,15 +37,18 @@ constexpr std::string_view k_rule_id = "redundant-abs";
 constexpr std::string_view k_category = "saturate-redundancy";
 
 [[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
     const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) return {};
+    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
+        return {};
     return bytes.substr(lo, hi - lo);
 }
 
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const char* t = ::ts_node_type(node);
     return t != nullptr ? std::string_view{t} : std::string_view{};
 }
@@ -55,7 +58,8 @@ constexpr std::string_view k_category = "saturate-redundancy";
     const uint32_t count = ::ts_node_child_count(expr);
     for (uint32_t i = 0; i < count; ++i) {
         const ::TSNode child = ::ts_node_child(expr, i);
-        if (::ts_node_is_null(child) || ::ts_node_is_named(child)) continue;
+        if (::ts_node_is_null(child) || ::ts_node_is_named(child))
+            continue;
         return node_text(child, bytes);
     }
     return {};
@@ -65,11 +69,14 @@ constexpr std::string_view k_category = "saturate-redundancy";
 [[nodiscard]] bool is_unary_call_to(::TSNode node,
                                     std::string_view bytes,
                                     std::string_view fn_name) noexcept {
-    if (node_kind(node) != "call_expression") return false;
+    if (node_kind(node) != "call_expression")
+        return false;
     const ::TSNode fn = ::ts_node_child_by_field_name(node, "function", 8);
-    if (node_text(fn, bytes) != fn_name) return false;
+    if (node_text(fn, bytes) != fn_name)
+        return false;
     const ::TSNode args = ::ts_node_child_by_field_name(node, "arguments", 9);
-    if (::ts_node_is_null(args)) return false;
+    if (::ts_node_is_null(args))
+        return false;
     return ::ts_node_named_child_count(args) == 1U;
 }
 
@@ -83,7 +90,8 @@ enum class Reason : std::uint8_t {
 /// Determine whether the (sole) argument of an `abs(...)` call is provably
 /// non-negative under our three patterns. Returns the Reason if so.
 [[nodiscard]] bool classify_arg(::TSNode arg, std::string_view bytes, Reason& reason_out) noexcept {
-    if (::ts_node_is_null(arg)) return false;
+    if (::ts_node_is_null(arg))
+        return false;
 
     // abs(saturate(x))
     if (is_unary_call_to(arg, bytes, "saturate")) {
@@ -137,7 +145,8 @@ enum class Reason : std::uint8_t {
 }
 
 void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
-    if (::ts_node_is_null(node)) return;
+    if (::ts_node_is_null(node))
+        return;
 
     if (is_unary_call_to(node, bytes, "abs")) {
         const ::TSNode args = ::ts_node_child_by_field_name(node, "arguments", 9);
@@ -158,8 +167,9 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
             if (!arg_text.empty()) {
                 Fix fix;
                 fix.machine_applicable = true;
-                fix.description = std::string{"drop the outer `abs` -- the inner expression "
-                                              "is already non-negative"};
+                fix.description = std::string{
+                    "drop the outer `abs` -- the inner expression "
+                    "is already non-negative"};
                 TextEdit edit;
                 edit.span = Span{.source = tree.source_id(), .bytes = call_range};
                 edit.replacement = std::string{arg_text};
@@ -178,9 +188,15 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
 class RedundantAbs : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         const auto bytes = tree.source_bytes();

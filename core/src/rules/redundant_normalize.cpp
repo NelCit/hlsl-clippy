@@ -82,8 +82,10 @@ public:
                     ::ts_node_is_null(outer_call) || ::ts_node_is_null(inner_call)) {
                     return;
                 }
-                if (tree.text(outer) != k_normalize_name) return;
-                if (tree.text(inner) != k_normalize_name) return;
+                if (tree.text(outer) != k_normalize_name)
+                    return;
+                if (tree.text(inner) != k_normalize_name)
+                    return;
 
                 const auto outer_range = tree.byte_range(outer_call);
                 const auto inner_range = tree.byte_range(inner_call);

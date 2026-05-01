@@ -47,7 +47,8 @@ constexpr std::string_view k_category = "control-flow";
 constexpr std::uint32_t k_unroll_threshold = 32;
 
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const char* t = ::ts_node_type(node);
     return t != nullptr ? std::string_view{t} : std::string_view{};
 }
@@ -60,7 +61,8 @@ constexpr std::uint32_t k_unroll_threshold = 32;
     std::size_t i = start;
     while (i > 0) {
         const char c = bytes[i - 1];
-        if (c == ';' || c == '}' || c == '{') break;
+        if (c == ';' || c == '}' || c == '{')
+            break;
         --i;
     }
     return i;
@@ -69,18 +71,21 @@ constexpr std::uint32_t k_unroll_threshold = 32;
 /// True if `text` starts with `keyword` followed by either end-of-string or
 /// a non-identifier character.
 [[nodiscard]] bool match_keyword(std::string_view text, std::string_view keyword) noexcept {
-    if (text.size() < keyword.size()) return false;
-    if (text.substr(0, keyword.size()) != keyword) return false;
-    if (text.size() == keyword.size()) return true;
+    if (text.size() < keyword.size())
+        return false;
+    if (text.substr(0, keyword.size()) != keyword)
+        return false;
+    if (text.size() == keyword.size())
+        return true;
     const char c = text[keyword.size()];
-    return !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-             (c >= '0' && c <= '9') || c == '_');
+    return !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+             c == '_');
 }
 
 /// Skip ASCII whitespace; return the new index.
 [[nodiscard]] std::size_t skip_ws(std::string_view text, std::size_t i) noexcept {
-    while (i < text.size() && (text[i] == ' ' || text[i] == '\t' ||
-                                text[i] == '\r' || text[i] == '\n')) {
+    while (i < text.size() &&
+           (text[i] == ' ' || text[i] == '\t' || text[i] == '\r' || text[i] == '\n')) {
         ++i;
     }
     return i;
@@ -108,7 +113,8 @@ struct AttrScan {
             continue;
         }
         std::size_t j = skip_ws(prefix, i + 1);
-        if (j >= prefix.size()) break;
+        if (j >= prefix.size())
+            break;
         const auto rest = prefix.substr(j);
         if (match_keyword(rest, "unroll")) {
             out.has_unroll = true;
@@ -121,8 +127,7 @@ struct AttrScan {
                 std::uint32_t n = 0;
                 bool any = false;
                 while (j < prefix.size() && prefix[j] >= '0' && prefix[j] <= '9') {
-                    const std::uint32_t digit =
-                        static_cast<std::uint32_t>(prefix[j] - '0');
+                    const std::uint32_t digit = static_cast<std::uint32_t>(prefix[j] - '0');
                     // Saturate at 1e9 to avoid overflow on absurd inputs.
                     if (n < 1'000'000'000U) {
                         n = n * 10U + digit;
@@ -130,7 +135,8 @@ struct AttrScan {
                     any = true;
                     ++j;
                 }
-                if (any) out.unroll_n = n;
+                if (any)
+                    out.unroll_n = n;
             }
         } else if (match_keyword(rest, "loop")) {
             out.has_loop = true;
@@ -142,13 +148,12 @@ struct AttrScan {
 }
 
 void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
-    if (::ts_node_is_null(node)) return;
+    if (::ts_node_is_null(node))
+        return;
 
     const auto kind = node_kind(node);
-    if (kind == "for_statement" || kind == "while_statement" ||
-        kind == "do_statement") {
-        const auto stmt_lo =
-            static_cast<std::size_t>(::ts_node_start_byte(node));
+    if (kind == "for_statement" || kind == "while_statement" || kind == "do_statement") {
+        const auto stmt_lo = static_cast<std::size_t>(::ts_node_start_byte(node));
         const std::size_t pref_lo = prefix_start(bytes, stmt_lo);
         if (pref_lo < stmt_lo) {
             const std::string_view prefix = bytes.substr(pref_lo, stmt_lo - pref_lo);
@@ -161,9 +166,8 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                 diag.severity = Severity::Warning;
                 diag.primary_span =
                     Span{.source = tree.source_id(),
-                         .bytes = ByteSpan{
-                             .lo = static_cast<std::uint32_t>(pref_lo),
-                             .hi = static_cast<std::uint32_t>(stmt_lo)}};
+                         .bytes = ByteSpan{.lo = static_cast<std::uint32_t>(pref_lo),
+                                           .hi = static_cast<std::uint32_t>(stmt_lo)}};
                 diag.message = std::string{
                     "`[unroll]` and `[loop]` on the same loop conflict -- the "
                     "compiler silently picks one; this is almost always a "
@@ -186,16 +190,13 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                 diag.severity = Severity::Warning;
                 diag.primary_span =
                     Span{.source = tree.source_id(),
-                         .bytes = ByteSpan{
-                             .lo = static_cast<std::uint32_t>(pref_lo),
-                             .hi = static_cast<std::uint32_t>(stmt_lo)}};
-                diag.message =
-                    std::string{"`[unroll(N)]` with N = "} +
-                    std::to_string(scan.unroll_n) +
-                    " exceeds the portable threshold (" +
-                    std::to_string(k_unroll_threshold) +
-                    ") -- aggressive unrolling balloons program size and may "
-                    "silently fall back to a runtime loop on some compilers";
+                         .bytes = ByteSpan{.lo = static_cast<std::uint32_t>(pref_lo),
+                                           .hi = static_cast<std::uint32_t>(stmt_lo)}};
+                diag.message = std::string{"`[unroll(N)]` with N = "} +
+                               std::to_string(scan.unroll_n) + " exceeds the portable threshold (" +
+                               std::to_string(k_unroll_threshold) +
+                               ") -- aggressive unrolling balloons program size and may "
+                               "silently fall back to a runtime loop on some compilers";
 
                 Fix fix;
                 fix.machine_applicable = false;
@@ -218,9 +219,15 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
 class LoopAttributeConflict : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         walk(::ts_tree_root_node(tree.raw_tree()), tree.source_bytes(), tree, ctx);

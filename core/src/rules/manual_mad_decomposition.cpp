@@ -42,15 +42,18 @@ constexpr std::string_view k_rule_id = "manual-mad-decomposition";
 constexpr std::string_view k_category = "math";
 
 [[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
     const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) return {};
+    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
+        return {};
     return bytes.substr(lo, hi - lo);
 }
 
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const char* t = ::ts_node_type(node);
     return t != nullptr ? std::string_view{t} : std::string_view{};
 }
@@ -59,9 +62,11 @@ constexpr std::string_view k_category = "math";
     const uint32_t count = ::ts_node_child_count(expr);
     for (uint32_t i = 0; i < count; ++i) {
         const ::TSNode child = ::ts_node_child(expr, i);
-        if (::ts_node_is_null(child) || ::ts_node_is_named(child)) continue;
+        if (::ts_node_is_null(child) || ::ts_node_is_named(child))
+            continue;
         const auto t = node_text(child, bytes);
-        if (!t.empty()) return t;
+        if (!t.empty())
+            return t;
     }
     return {};
 }
@@ -70,7 +75,8 @@ constexpr std::string_view k_category = "math";
 /// expression node. Returns the original node if it's not parenthesised.
 [[nodiscard]] ::TSNode unwrap_paren(::TSNode node) noexcept {
     while (!::ts_node_is_null(node) && node_kind(node) == "parenthesized_expression") {
-        if (::ts_node_named_child_count(node) < 1U) break;
+        if (::ts_node_named_child_count(node) < 1U)
+            break;
         node = ::ts_node_named_child(node, 0);
     }
     return node;
@@ -82,17 +88,21 @@ constexpr std::string_view k_category = "math";
                                    std::string_view bytes,
                                    ::TSNode& a_out,
                                    ::TSNode& b_out) noexcept {
-    if (node_kind(node) != "parenthesized_expression") return false;
+    if (node_kind(node) != "parenthesized_expression")
+        return false;
     const ::TSNode inner = unwrap_paren(node);
-    if (node_kind(inner) != "binary_expression") return false;
-    if (binary_op(inner, bytes) != "*") return false;
+    if (node_kind(inner) != "binary_expression")
+        return false;
+    if (binary_op(inner, bytes) != "*")
+        return false;
     a_out = ::ts_node_child_by_field_name(inner, "left", 4);
     b_out = ::ts_node_child_by_field_name(inner, "right", 5);
     return !::ts_node_is_null(a_out) && !::ts_node_is_null(b_out);
 }
 
 void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
-    if (::ts_node_is_null(node)) return;
+    if (::ts_node_is_null(node))
+        return;
 
     if (node_kind(node) == "binary_expression" && binary_op(node, bytes) == "+") {
         const ::TSNode lhs = ::ts_node_child_by_field_name(node, "left", 4);
@@ -165,9 +175,15 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
 class ManualMadDecomposition : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         const auto bytes = tree.source_bytes();

@@ -37,15 +37,18 @@ constexpr std::string_view k_category = "math";
 constexpr std::string_view k_lerp_name = "lerp";
 
 [[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
     const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) return {};
+    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
+        return {};
     return bytes.substr(lo, hi - lo);
 }
 
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const char* t = ::ts_node_type(node);
     return t != nullptr ? std::string_view{t} : std::string_view{};
 }
@@ -54,7 +57,8 @@ constexpr std::string_view k_lerp_name = "lerp";
 /// a number_literal.
 [[nodiscard]] bool is_numeric_literal(::TSNode node, std::string_view bytes) noexcept {
     const auto kind = node_kind(node);
-    if (kind == "number_literal") return true;
+    if (kind == "number_literal")
+        return true;
     if (kind == "unary_expression") {
         // The operator must be `-` (or `+`); operand must be a number_literal.
         std::string_view op;
@@ -62,9 +66,11 @@ constexpr std::string_view k_lerp_name = "lerp";
         const std::uint32_t cnt = ::ts_node_child_count(node);
         for (std::uint32_t i = 0; i < cnt; ++i) {
             ::TSNode child = ::ts_node_child(node, i);
-            if (::ts_node_is_null(child)) continue;
+            if (::ts_node_is_null(child))
+                continue;
             if (!::ts_node_is_named(child)) {
-                if (op.empty()) op = node_text(child, bytes);
+                if (op.empty())
+                    op = node_text(child, bytes);
             } else if (::ts_node_is_null(operand)) {
                 operand = child;
             }
@@ -72,14 +78,16 @@ constexpr std::string_view k_lerp_name = "lerp";
         if (::ts_node_is_null(operand)) {
             operand = ::ts_node_child_by_field_name(node, "argument", 8);
         }
-        if (op != "-" && op != "+") return false;
+        if (op != "-" && op != "+")
+            return false;
         return node_kind(operand) == "number_literal";
     }
     return false;
 }
 
 void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
-    if (::ts_node_is_null(node)) return;
+    if (::ts_node_is_null(node))
+        return;
 
     if (node_kind(node) == "call_expression") {
         const ::TSNode fn = ::ts_node_child_by_field_name(node, "function", 8);
@@ -100,8 +108,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                         Diagnostic diag;
                         diag.code = std::string{k_rule_id};
                         diag.severity = Severity::Warning;
-                        diag.primary_span =
-                            Span{.source = tree.source_id(), .bytes = call_range};
+                        diag.primary_span = Span{.source = tree.source_id(), .bytes = call_range};
                         diag.message = std::string{
                             "`lerp(K1, K2, t)` with two constant endpoints relies on "
                             "the compiler's constant fold to collapse to a single mad "
@@ -110,16 +117,14 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
                         Fix fix;
                         fix.machine_applicable = false;
-                        std::string replacement = std::string{"mad("} +
-                            std::string{t_text} + ", " + std::string{k2_text} +
-                            " - " + std::string{k1_text} + ", " + std::string{k1_text} +
-                            ")";
-                        fix.description = std::string{
-                            "replace with `"} + replacement +
-                            "` to make the multiply-add lowering compile-portable";
+                        std::string replacement = std::string{"mad("} + std::string{t_text} + ", " +
+                                                  std::string{k2_text} + " - " +
+                                                  std::string{k1_text} + ", " +
+                                                  std::string{k1_text} + ")";
+                        fix.description = std::string{"replace with `"} + replacement +
+                                          "` to make the multiply-add lowering compile-portable";
                         TextEdit edit;
-                        edit.span =
-                            Span{.source = tree.source_id(), .bytes = call_range};
+                        edit.span = Span{.source = tree.source_id(), .bytes = call_range};
                         edit.replacement = replacement;
                         fix.edits.push_back(std::move(edit));
                         diag.fixes.push_back(std::move(fix));
@@ -139,9 +144,15 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
 class SelectVsLerpOfConstant : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         walk(::ts_tree_root_node(tree.raw_tree()), tree.source_bytes(), tree, ctx);

@@ -187,12 +187,11 @@ namespace {
                     }
                     const auto sev = parse_rule_severity(sv->get());
                     if (!sev.has_value()) {
-                        return make_error(
-                            "invalid severity for `overrides[].rules." + std::string{key.str()} +
-                                "`",
-                            source,
-                            static_cast<std::uint32_t>(value.source().begin.line),
-                            static_cast<std::uint32_t>(value.source().begin.column));
+                        return make_error("invalid severity for `overrides[].rules." +
+                                              std::string{key.str()} + "`",
+                                          source,
+                                          static_cast<std::uint32_t>(value.source().begin.line),
+                                          static_cast<std::uint32_t>(value.source().begin.column));
                     }
                     entry.rule_severity.emplace(std::string{key.str()}, *sev);
                 }
@@ -296,7 +295,7 @@ bool path_glob_match(std::string_view glob, const std::filesystem::path& path) {
 }
 
 std::optional<RuleSeverity> Config::severity_for(std::string_view rule_id,
-                                                  const std::filesystem::path& file_path) const {
+                                                 const std::filesystem::path& file_path) const {
     // [[overrides]] win over [rules]; later overrides win over earlier.
     std::optional<RuleSeverity> override_sev;
     for (const auto& entry : overrides) {
@@ -345,8 +344,7 @@ ConfigResult load_config(const std::filesystem::path& path) {
     if (!stream) {
         return ConfigResult{make_error("could not open config file", path)};
     }
-    std::string contents{std::istreambuf_iterator<char>{stream},
-                         std::istreambuf_iterator<char>{}};
+    std::string contents{std::istreambuf_iterator<char>{stream}, std::istreambuf_iterator<char>{}};
     return load_config_string(contents, path);
 }
 
@@ -362,7 +360,8 @@ std::optional<std::filesystem::path> find_config(const std::filesystem::path& st
 
     while (true) {
         const auto candidate = cur / ".hlsl-clippy.toml";
-        if (std::filesystem::exists(candidate, ec) && std::filesystem::is_regular_file(candidate, ec)) {
+        if (std::filesystem::exists(candidate, ec) &&
+            std::filesystem::is_regular_file(candidate, ec)) {
             return candidate;
         }
 

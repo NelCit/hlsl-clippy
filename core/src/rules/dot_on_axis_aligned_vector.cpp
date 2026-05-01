@@ -42,15 +42,18 @@ constexpr std::string_view k_category = "math";
 constexpr std::string_view k_dot_name = "dot";
 
 [[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
     const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) return {};
+    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
+        return {};
     return bytes.substr(lo, hi - lo);
 }
 
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const char* t = ::ts_node_type(node);
     return t != nullptr ? std::string_view{t} : std::string_view{};
 }
@@ -62,21 +65,30 @@ constexpr std::string_view k_dot_name = "dot";
 /// True if `text` is a numeric literal whose value is exactly 0 (no sign, no
 /// scientific notation, optional `.0...0` fraction, optional float suffix).
 [[nodiscard]] bool literal_is_zero(std::string_view text) noexcept {
-    if (text.empty()) return false;
+    if (text.empty())
+        return false;
     std::size_t i = 0;
-    if (i < text.size() && text[i] == '+') ++i;
-    if (i >= text.size() || text[i] < '0' || text[i] > '9') return false;
+    if (i < text.size() && text[i] == '+')
+        ++i;
+    if (i >= text.size() || text[i] < '0' || text[i] > '9')
+        return false;
     // All integer digits must be 0
-    while (i < text.size() && text[i] == '0') ++i;
-    if (i < text.size() && text[i] >= '1' && text[i] <= '9') return false;
+    while (i < text.size() && text[i] == '0')
+        ++i;
+    if (i < text.size() && text[i] >= '1' && text[i] <= '9')
+        return false;
     if (i < text.size() && text[i] == '.') {
         ++i;
-        while (i < text.size() && text[i] == '0') ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9') return false;
+        while (i < text.size() && text[i] == '0')
+            ++i;
+        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
+            return false;
     }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E')) return false;
+    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
+        return false;
     while (i < text.size()) {
-        if (!is_float_suffix(text[i])) return false;
+        if (!is_float_suffix(text[i]))
+            return false;
         ++i;
     }
     return true;
@@ -84,21 +96,30 @@ constexpr std::string_view k_dot_name = "dot";
 
 /// True if `text` is a numeric literal whose value is exactly 1.
 [[nodiscard]] bool literal_is_one(std::string_view text) noexcept {
-    if (text.empty()) return false;
+    if (text.empty())
+        return false;
     std::size_t i = 0;
-    if (i < text.size() && text[i] == '+') ++i;
-    while (i < text.size() && text[i] == '0') ++i;
-    if (i >= text.size() || text[i] != '1') return false;
+    if (i < text.size() && text[i] == '+')
+        ++i;
+    while (i < text.size() && text[i] == '0')
+        ++i;
+    if (i >= text.size() || text[i] != '1')
+        return false;
     ++i;
-    if (i < text.size() && text[i] >= '0' && text[i] <= '9') return false;
+    if (i < text.size() && text[i] >= '0' && text[i] <= '9')
+        return false;
     if (i < text.size() && text[i] == '.') {
         ++i;
-        while (i < text.size() && text[i] == '0') ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9') return false;
+        while (i < text.size() && text[i] == '0')
+            ++i;
+        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
+            return false;
     }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E')) return false;
+    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
+        return false;
     while (i < text.size()) {
-        if (!is_float_suffix(text[i])) return false;
+        if (!is_float_suffix(text[i]))
+            return false;
         ++i;
     }
     return true;
@@ -108,20 +129,28 @@ constexpr std::string_view k_dot_name = "dot";
 /// count. We also accept `int2`/`int3`/`int4` since dot is sometimes called
 /// on integer vectors.
 [[nodiscard]] std::optional<std::uint32_t> vector_ctor_arity(std::string_view name) noexcept {
-    if (name == "float2" || name == "int2" || name == "uint2" || name == "half2") return 2U;
-    if (name == "float3" || name == "int3" || name == "uint3" || name == "half3") return 3U;
-    if (name == "float4" || name == "int4" || name == "uint4" || name == "half4") return 4U;
+    if (name == "float2" || name == "int2" || name == "uint2" || name == "half2")
+        return 2U;
+    if (name == "float3" || name == "int3" || name == "uint3" || name == "half3")
+        return 3U;
+    if (name == "float4" || name == "int4" || name == "uint4" || name == "half4")
+        return 4U;
     return std::nullopt;
 }
 
 /// Map an axis index (0=x, 1=y, 2=z, 3=w) to the swizzle character.
 [[nodiscard]] char axis_swizzle(std::uint32_t axis) noexcept {
     switch (axis) {
-        case 0: return 'x';
-        case 1: return 'y';
-        case 2: return 'z';
-        case 3: return 'w';
-        default: return 'x';
+        case 0:
+            return 'x';
+        case 1:
+            return 'y';
+        case 2:
+            return 'z';
+        case 3:
+            return 'w';
+        default:
+            return 'x';
     }
 }
 
@@ -131,16 +160,19 @@ constexpr std::string_view k_dot_name = "dot";
 /// Otherwise return `std::nullopt`.
 [[nodiscard]] std::optional<std::uint32_t> axis_index_of_constructor(
     ::TSNode node, std::string_view bytes) noexcept {
-    if (node_kind(node) != "call_expression") return std::nullopt;
+    if (node_kind(node) != "call_expression")
+        return std::nullopt;
 
     const ::TSNode fn = ::ts_node_child_by_field_name(node, "function", 8);
-    if (::ts_node_is_null(fn)) return std::nullopt;
+    if (::ts_node_is_null(fn))
+        return std::nullopt;
     // Accept either an `identifier` or `primitive_type` / `type_identifier`
     // node here -- different versions of tree-sitter-hlsl use different node
     // types for vector type constructors. We use the textual name.
     const auto fn_text = node_text(fn, bytes);
     const auto arity_opt = vector_ctor_arity(fn_text);
-    if (!arity_opt) return std::nullopt;
+    if (!arity_opt)
+        return std::nullopt;
     const std::uint32_t arity = *arity_opt;
 
     const ::TSNode args = ::ts_node_child_by_field_name(node, "arguments", 9);
@@ -151,10 +183,12 @@ constexpr std::string_view k_dot_name = "dot";
     std::optional<std::uint32_t> one_index;
     for (std::uint32_t i = 0; i < arity; ++i) {
         const ::TSNode child = ::ts_node_named_child(args, i);
-        if (node_kind(child) != "number_literal") return std::nullopt;
+        if (node_kind(child) != "number_literal")
+            return std::nullopt;
         const auto t = node_text(child, bytes);
         if (literal_is_one(t)) {
-            if (one_index) return std::nullopt;  // More than one `1` -- not axis-aligned.
+            if (one_index)
+                return std::nullopt;  // More than one `1` -- not axis-aligned.
             one_index = i;
         } else if (!literal_is_zero(t)) {
             return std::nullopt;
@@ -164,7 +198,8 @@ constexpr std::string_view k_dot_name = "dot";
 }
 
 void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
-    if (::ts_node_is_null(node)) return;
+    if (::ts_node_is_null(node))
+        return;
 
     if (node_kind(node) == "call_expression") {
         const ::TSNode fn = ::ts_node_child_by_field_name(node, "function", 8);
@@ -194,23 +229,22 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                     Diagnostic diag;
                     diag.code = std::string{k_rule_id};
                     diag.severity = Severity::Warning;
-                    diag.primary_span =
-                        Span{.source = tree.source_id(), .bytes = call_range};
-                    std::string msg = "`dot(v, axis)` against an axis-aligned "
-                                       "constant unit vector is just a swizzle "
-                                       "(`v.";
+                    diag.primary_span = Span{.source = tree.source_id(), .bytes = call_range};
+                    std::string msg =
+                        "`dot(v, axis)` against an axis-aligned "
+                        "constant unit vector is just a swizzle "
+                        "(`v.";
                     msg += swiz;
-                    msg += "`) -- saves a multiply-add chain and avoids loading "
-                           "the constant vector";
+                    msg +=
+                        "`) -- saves a multiply-add chain and avoids loading "
+                        "the constant vector";
                     diag.message = std::move(msg);
 
                     Fix fix;
                     fix.machine_applicable = true;
-                    fix.description = std::string{
-                        "replace the dot product with a swizzle"};
+                    fix.description = std::string{"replace the dot product with a swizzle"};
                     TextEdit edit;
-                    edit.span =
-                        Span{.source = tree.source_id(), .bytes = call_range};
+                    edit.span = Span{.source = tree.source_id(), .bytes = call_range};
                     std::string replacement;
                     replacement.reserve(v_text.size() + 2);
                     replacement.append(v_text);
@@ -234,9 +268,15 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
 class DotOnAxisAlignedVector : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         walk(::ts_tree_root_node(tree.raw_tree()), tree.source_bytes(), tree, ctx);

@@ -48,15 +48,18 @@ constexpr std::string_view k_rule_id = "manual-refract";
 constexpr std::string_view k_category = "math";
 
 [[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
     const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) return {};
+    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
+        return {};
     return bytes.substr(lo, hi - lo);
 }
 
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const char* t = ::ts_node_type(node);
     return t != nullptr ? std::string_view{t} : std::string_view{};
 }
@@ -66,7 +69,8 @@ constexpr std::string_view k_category = "math";
     const std::uint32_t count = ::ts_node_child_count(expr);
     for (std::uint32_t i = 0; i < count; ++i) {
         ::TSNode child = ::ts_node_child(expr, i);
-        if (::ts_node_is_null(child) || ::ts_node_is_named(child)) continue;
+        if (::ts_node_is_null(child) || ::ts_node_is_named(child))
+            continue;
         return node_text(child, bytes);
     }
     return {};
@@ -75,9 +79,12 @@ constexpr std::string_view k_category = "math";
 /// If `node` is a parenthesized_expression with a single named child, return
 /// that child; otherwise return `node` unchanged.
 [[nodiscard]] ::TSNode unwrap_parens(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return node;
-    if (node_kind(node) != "parenthesized_expression") return node;
-    if (::ts_node_named_child_count(node) != 1U) return node;
+    if (::ts_node_is_null(node))
+        return node;
+    if (node_kind(node) != "parenthesized_expression")
+        return node;
+    if (::ts_node_named_child_count(node) != 1U)
+        return node;
     const ::TSNode inner = ::ts_node_named_child(node, 0);
     return ::ts_node_is_null(inner) ? node : inner;
 }
@@ -86,7 +93,8 @@ constexpr std::string_view k_category = "math";
 [[nodiscard]] bool is_call_to(::TSNode node,
                               std::string_view bytes,
                               std::string_view name) noexcept {
-    if (node_kind(node) != "call_expression") return false;
+    if (node_kind(node) != "call_expression")
+        return false;
     const ::TSNode fn = ::ts_node_child_by_field_name(node, "function", 8);
     return node_text(fn, bytes) == name;
 }
@@ -96,11 +104,14 @@ constexpr std::string_view k_category = "math";
 [[nodiscard]] bool contains_call_to(::TSNode node,
                                     std::string_view bytes,
                                     std::string_view name) noexcept {
-    if (::ts_node_is_null(node)) return false;
-    if (is_call_to(node, bytes, name)) return true;
+    if (::ts_node_is_null(node))
+        return false;
+    if (is_call_to(node, bytes, name))
+        return true;
     const std::uint32_t count = ::ts_node_child_count(node);
     for (std::uint32_t i = 0; i < count; ++i) {
-        if (contains_call_to(::ts_node_child(node, i), bytes, name)) return true;
+        if (contains_call_to(::ts_node_child(node, i), bytes, name))
+            return true;
     }
     return false;
 }
@@ -109,9 +120,9 @@ constexpr std::string_view k_category = "math";
 /// look like simple vector-typed identifiers (i.e. both args are `identifier`
 /// nodes). This avoids matching `dot(some.field, vec)` accidentally and keeps
 /// the heuristic conservative.
-[[nodiscard]] bool contains_dot_of_two_identifiers(::TSNode node,
-                                                   std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return false;
+[[nodiscard]] bool contains_dot_of_two_identifiers(::TSNode node, std::string_view bytes) noexcept {
+    if (::ts_node_is_null(node))
+        return false;
     if (is_call_to(node, bytes, "dot")) {
         const ::TSNode args = ::ts_node_child_by_field_name(node, "arguments", 9);
         if (!::ts_node_is_null(args) && ::ts_node_named_child_count(args) == 2U) {
@@ -124,7 +135,8 @@ constexpr std::string_view k_category = "math";
     }
     const std::uint32_t count = ::ts_node_child_count(node);
     for (std::uint32_t i = 0; i < count; ++i) {
-        if (contains_dot_of_two_identifiers(::ts_node_child(node, i), bytes)) return true;
+        if (contains_dot_of_two_identifiers(::ts_node_child(node, i), bytes))
+            return true;
     }
     return false;
 }
@@ -132,16 +144,20 @@ constexpr std::string_view k_category = "math";
 /// True if any direct or nested operand of a `*` binary_expression rooted at
 /// `node` is an `identifier` node.
 [[nodiscard]] bool mul_has_identifier_operand(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return false;
+    if (::ts_node_is_null(node))
+        return false;
     if (node_kind(node) == "binary_expression" && binary_op(node, bytes) == "*") {
         const ::TSNode lhs = ::ts_node_child_by_field_name(node, "left", 4);
         const ::TSNode rhs = ::ts_node_child_by_field_name(node, "right", 5);
-        if (node_kind(unwrap_parens(lhs)) == "identifier") return true;
-        if (node_kind(unwrap_parens(rhs)) == "identifier") return true;
+        if (node_kind(unwrap_parens(lhs)) == "identifier")
+            return true;
+        if (node_kind(unwrap_parens(rhs)) == "identifier")
+            return true;
     }
     const std::uint32_t count = ::ts_node_child_count(node);
     for (std::uint32_t i = 0; i < count; ++i) {
-        if (mul_has_identifier_operand(::ts_node_child(node, i), bytes)) return true;
+        if (mul_has_identifier_operand(::ts_node_child(node, i), bytes))
+            return true;
     }
     return false;
 }
@@ -155,32 +171,41 @@ constexpr std::string_view k_category = "math";
 ///     contains a `sqrt(...)` call AND a `dot(...)` call
 ///   * the other operand of that `*` is an identifier (the `N`)
 ///   * LHS contains an identifier somewhere as a `*` operand (the `eta * I`)
-[[nodiscard]] bool return_expr_matches_refract(::TSNode expr,
-                                               std::string_view bytes) noexcept {
+[[nodiscard]] bool return_expr_matches_refract(::TSNode expr, std::string_view bytes) noexcept {
     expr = unwrap_parens(expr);
-    if (node_kind(expr) != "binary_expression") return false;
-    if (binary_op(expr, bytes) != "-") return false;
+    if (node_kind(expr) != "binary_expression")
+        return false;
+    if (binary_op(expr, bytes) != "-")
+        return false;
 
     const ::TSNode lhs = ::ts_node_child_by_field_name(expr, "left", 4);
     const ::TSNode rhs_raw = ::ts_node_child_by_field_name(expr, "right", 5);
-    if (::ts_node_is_null(lhs) || ::ts_node_is_null(rhs_raw)) return false;
+    if (::ts_node_is_null(lhs) || ::ts_node_is_null(rhs_raw))
+        return false;
 
     const ::TSNode rhs = unwrap_parens(rhs_raw);
-    if (node_kind(rhs) != "binary_expression") return false;
-    if (binary_op(rhs, bytes) != "*") return false;
+    if (node_kind(rhs) != "binary_expression")
+        return false;
+    if (binary_op(rhs, bytes) != "*")
+        return false;
 
     const ::TSNode rhs_l = ::ts_node_child_by_field_name(rhs, "left", 4);
     const ::TSNode rhs_r = ::ts_node_child_by_field_name(rhs, "right", 5);
-    if (::ts_node_is_null(rhs_l) || ::ts_node_is_null(rhs_r)) return false;
+    if (::ts_node_is_null(rhs_l) || ::ts_node_is_null(rhs_r))
+        return false;
 
     // One side must be a parenthesised sum containing sqrt() and dot();
     // the other side must be a (vector) identifier.
     auto looks_like_sum = [&](::TSNode candidate) {
         const ::TSNode inner = unwrap_parens(candidate);
-        if (node_kind(inner) != "binary_expression") return false;
-        if (binary_op(inner, bytes) != "+") return false;
-        if (!contains_call_to(inner, bytes, "sqrt")) return false;
-        if (!contains_call_to(inner, bytes, "dot")) return false;
+        if (node_kind(inner) != "binary_expression")
+            return false;
+        if (binary_op(inner, bytes) != "+")
+            return false;
+        if (!contains_call_to(inner, bytes, "sqrt"))
+            return false;
+        if (!contains_call_to(inner, bytes, "dot"))
+            return false;
         return true;
     };
     auto looks_like_n = [&](::TSNode candidate) {
@@ -189,13 +214,16 @@ constexpr std::string_view k_category = "math";
 
     bool sum_l_n_r = looks_like_sum(rhs_l) && looks_like_n(rhs_r);
     bool sum_r_n_l = looks_like_sum(rhs_r) && looks_like_n(rhs_l);
-    if (!sum_l_n_r && !sum_r_n_l) return false;
+    if (!sum_l_n_r && !sum_r_n_l)
+        return false;
 
     // LHS must be a `*` whose operands include an identifier (the `eta * I`).
-    if (!mul_has_identifier_operand(lhs, bytes)) return false;
+    if (!mul_has_identifier_operand(lhs, bytes))
+        return false;
 
     // Sanity / belt-and-braces: the whole expression must mention dot(id, id).
-    if (!contains_dot_of_two_identifiers(expr, bytes)) return false;
+    if (!contains_dot_of_two_identifiers(expr, bytes))
+        return false;
 
     return true;
 }
@@ -203,7 +231,8 @@ constexpr std::string_view k_category = "math";
 /// Walk every node in the tree looking for return statements whose expression
 /// matches the manual-refract shape. Emit a suggestion diagnostic when found.
 void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
-    if (::ts_node_is_null(node)) return;
+    if (::ts_node_is_null(node))
+        return;
 
     if (node_kind(node) == "return_statement") {
         // The returned expression is the first named child.
@@ -243,9 +272,15 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
 class ManualRefract : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         walk(::ts_tree_root_node(tree.raw_tree()), tree.source_bytes(), tree, ctx);

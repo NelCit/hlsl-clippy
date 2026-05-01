@@ -53,12 +53,12 @@ constexpr std::string_view k_pattern = R"(
         right: (_) @right) @expr
 )";
 
-[[nodiscard]] std::string_view binary_op(::TSNode expr,
-                                         std::string_view bytes) noexcept {
+[[nodiscard]] std::string_view binary_op(::TSNode expr, std::string_view bytes) noexcept {
     const uint32_t count = ::ts_node_child_count(expr);
     for (uint32_t i = 0; i < count; ++i) {
         ::TSNode child = ::ts_node_child(expr, i);
-        if (::ts_node_is_null(child) || ::ts_node_is_named(child)) continue;
+        if (::ts_node_is_null(child) || ::ts_node_is_named(child))
+            continue;
         const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(child));
         const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(child));
         if (lo < bytes.size() && hi <= bytes.size() && hi > lo) {
@@ -69,18 +69,17 @@ constexpr std::string_view k_pattern = R"(
 }
 
 [[nodiscard]] bool is_comparison_op(std::string_view op) noexcept {
-    return op == "==" || op == "!=" || op == "<" || op == "<=" ||
-           op == ">"  || op == ">=";
+    return op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">=";
 }
 
 /// Strip ASCII whitespace from both ends of `s`.
 [[nodiscard]] std::string_view trim_ws(std::string_view s) noexcept {
-    while (!s.empty() && (s.front() == ' ' || s.front() == '\t' ||
-                           s.front() == '\r' || s.front() == '\n')) {
+    while (!s.empty() &&
+           (s.front() == ' ' || s.front() == '\t' || s.front() == '\r' || s.front() == '\n')) {
         s.remove_prefix(1);
     }
-    while (!s.empty() && (s.back() == ' ' || s.back() == '\t' ||
-                           s.back() == '\r' || s.back() == '\n')) {
+    while (!s.empty() &&
+           (s.back() == ' ' || s.back() == '\t' || s.back() == '\r' || s.back() == '\n')) {
         s.remove_suffix(1);
     }
     return s;
@@ -115,87 +114,92 @@ constexpr std::string_view k_pattern = R"(
         "(-1.#IND)",
     };
     for (auto form : k_forms) {
-        if (text == form) return true;
+        if (text == form)
+            return true;
     }
     return false;
 }
 
 class ComparisonWithNanLiteral : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         auto compiled = query::Query::compile(tree.language(), k_pattern);
         if (!compiled.has_value()) {
             Diagnostic diag;
-            diag.code     = std::string{"clippy::query-compile"};
+            diag.code = std::string{"clippy::query-compile"};
             diag.severity = Severity::Error;
             diag.primary_span =
                 Span{.source = tree.source_id(), .bytes = ByteSpan{.lo = 0, .hi = 0}};
-            diag.message =
-                std::string{"failed to compile comparison-with-nan-literal query"};
+            diag.message = std::string{"failed to compile comparison-with-nan-literal query"};
             ctx.emit(std::move(diag));
             return;
         }
 
         query::QueryEngine engine;
-        engine.run(
-            compiled.value(),
-            ::ts_tree_root_node(tree.raw_tree()),
-            [&](const query::QueryMatch& match) {
-                const ::TSNode left  = match.capture("left");
-                const ::TSNode right = match.capture("right");
-                const ::TSNode expr  = match.capture("expr");
-                if (::ts_node_is_null(left) || ::ts_node_is_null(right) ||
-                    ::ts_node_is_null(expr)) {
-                    return;
-                }
+        engine.run(compiled.value(),
+                   ::ts_tree_root_node(tree.raw_tree()),
+                   [&](const query::QueryMatch& match) {
+                       const ::TSNode left = match.capture("left");
+                       const ::TSNode right = match.capture("right");
+                       const ::TSNode expr = match.capture("expr");
+                       if (::ts_node_is_null(left) || ::ts_node_is_null(right) ||
+                           ::ts_node_is_null(expr)) {
+                           return;
+                       }
 
-                const auto op = binary_op(expr, tree.source_bytes());
-                if (!is_comparison_op(op)) return;
+                       const auto op = binary_op(expr, tree.source_bytes());
+                       if (!is_comparison_op(op))
+                           return;
 
-                const auto left_text  = trim_ws(tree.text(left));
-                const auto right_text = trim_ws(tree.text(right));
-                const auto left_normalised  = strip_all_ws(left_text);
-                const auto right_normalised = strip_all_ws(right_text);
+                       const auto left_text = trim_ws(tree.text(left));
+                       const auto right_text = trim_ws(tree.text(right));
+                       const auto left_normalised = strip_all_ws(left_text);
+                       const auto right_normalised = strip_all_ws(right_text);
 
-                std::string_view nan_side;
-                std::string_view other_side_text;
-                if (is_nan_literal_text(left_normalised)) {
-                    nan_side = left_text;
-                    other_side_text = right_text;
-                } else if (is_nan_literal_text(right_normalised)) {
-                    nan_side = right_text;
-                    other_side_text = left_text;
-                } else {
-                    return;
-                }
+                       std::string_view nan_side;
+                       std::string_view other_side_text;
+                       if (is_nan_literal_text(left_normalised)) {
+                           nan_side = left_text;
+                           other_side_text = right_text;
+                       } else if (is_nan_literal_text(right_normalised)) {
+                           nan_side = right_text;
+                           other_side_text = left_text;
+                       } else {
+                           return;
+                       }
 
-                const auto expr_range = tree.byte_range(expr);
+                       const auto expr_range = tree.byte_range(expr);
 
-                Diagnostic diag;
-                diag.code     = std::string{k_rule_id};
-                diag.severity = Severity::Warning;
-                diag.primary_span =
-                    Span{.source = tree.source_id(), .bytes = expr_range};
-                diag.message =
-                    std::string{"comparison with NaN literal `"} +
-                    std::string{nan_side} +
-                    "` is always false (or always true for `!=`) per IEEE-754 — "
-                    "use `isnan(" + std::string{other_side_text} + ")` instead";
+                       Diagnostic diag;
+                       diag.code = std::string{k_rule_id};
+                       diag.severity = Severity::Warning;
+                       diag.primary_span = Span{.source = tree.source_id(), .bytes = expr_range};
+                       diag.message = std::string{"comparison with NaN literal `"} +
+                                      std::string{nan_side} +
+                                      "` is always false (or always true for `!=`) per IEEE-754 — "
+                                      "use `isnan(" +
+                                      std::string{other_side_text} + ")` instead";
 
-                Fix fix;
-                fix.machine_applicable = false;
-                fix.description = std::string{
-                    "replace the comparison with `isnan(x)` (or `!isnan(x)` for "
-                    "the negated form); the textual rewrite depends on whether "
-                    "the original `op` was `==`, `!=`, or an ordering `<`/`>`"};
-                diag.fixes.push_back(std::move(fix));
+                       Fix fix;
+                       fix.machine_applicable = false;
+                       fix.description = std::string{
+                           "replace the comparison with `isnan(x)` (or `!isnan(x)` for "
+                           "the negated form); the textual rewrite depends on whether "
+                           "the original `op` was `==`, `!=`, or an ordering `<`/`>`"};
+                       diag.fixes.push_back(std::move(fix));
 
-                ctx.emit(std::move(diag));
-            });
+                       ctx.emit(std::move(diag));
+                   });
     }
 };
 

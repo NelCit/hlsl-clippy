@@ -51,21 +51,30 @@ constexpr std::string_view k_pattern = R"(
 
 /// True if `text` is a numeric literal whose value is exactly 1.
 [[nodiscard]] bool literal_is_one(std::string_view text) noexcept {
-    if (text.empty()) return false;
+    if (text.empty())
+        return false;
     std::size_t i = 0;
-    if (text[i] == '+') ++i;
-    while (i < text.size() && text[i] == '0') ++i;
-    if (i >= text.size() || text[i] != '1') return false;
+    if (text[i] == '+')
+        ++i;
+    while (i < text.size() && text[i] == '0')
+        ++i;
+    if (i >= text.size() || text[i] != '1')
+        return false;
     ++i;
-    if (i < text.size() && text[i] >= '0' && text[i] <= '9') return false;
+    if (i < text.size() && text[i] >= '0' && text[i] <= '9')
+        return false;
     if (i < text.size() && text[i] == '.') {
         ++i;
-        while (i < text.size() && text[i] == '0') ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9') return false;
+        while (i < text.size() && text[i] == '0')
+            ++i;
+        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
+            return false;
     }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E')) return false;
+    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
+        return false;
     while (i < text.size()) {
-        if (!is_float_suffix(text[i])) return false;
+        if (!is_float_suffix(text[i]))
+            return false;
         ++i;
     }
     return true;
@@ -73,12 +82,12 @@ constexpr std::string_view k_pattern = R"(
 
 /// Return the operator text of a binary_expression node (anonymous child
 /// between `left` and `right` named children).
-[[nodiscard]] std::string_view binary_operator(::TSNode expr,
-                                               std::string_view source) noexcept {
+[[nodiscard]] std::string_view binary_operator(::TSNode expr, std::string_view source) noexcept {
     const std::uint32_t count = ::ts_node_child_count(expr);
     for (std::uint32_t i = 0; i < count; ++i) {
         ::TSNode child = ::ts_node_child(expr, i);
-        if (::ts_node_is_null(child) || ::ts_node_is_named(child)) continue;
+        if (::ts_node_is_null(child) || ::ts_node_is_named(child))
+            continue;
         const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(child));
         const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(child));
         if (lo < source.size() && hi <= source.size() && hi > lo) {
@@ -90,9 +99,15 @@ constexpr std::string_view k_pattern = R"(
 
 class InvSqrtToRsqrt : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         auto compiled = query::Query::compile(tree.language(), k_pattern);
@@ -120,24 +135,29 @@ public:
                            return;
                        }
 
-                       if (binary_operator(expr, tree.source_bytes()) != "/") return;
-                       if (!literal_is_one(tree.text(one))) return;
-                       if (tree.text(fn) != k_sqrt_name) return;
+                       if (binary_operator(expr, tree.source_bytes()) != "/")
+                           return;
+                       if (!literal_is_one(tree.text(one)))
+                           return;
+                       if (tree.text(fn) != k_sqrt_name)
+                           return;
 
                        // sqrt should take exactly one argument.
-                       if (::ts_node_named_child_count(args) != 1U) return;
+                       if (::ts_node_named_child_count(args) != 1U)
+                           return;
                        const ::TSNode sqrt_arg = ::ts_node_named_child(args, 0);
-                       if (::ts_node_is_null(sqrt_arg)) return;
+                       if (::ts_node_is_null(sqrt_arg))
+                           return;
                        const auto inner_text = tree.text(sqrt_arg);
-                       if (inner_text.empty()) return;
+                       if (inner_text.empty())
+                           return;
 
                        const auto expr_range = tree.byte_range(expr);
 
                        Diagnostic diag;
                        diag.code = std::string{k_rule_id};
                        diag.severity = Severity::Warning;
-                       diag.primary_span =
-                           Span{.source = tree.source_id(), .bytes = expr_range};
+                       diag.primary_span = Span{.source = tree.source_id(), .bytes = expr_range};
                        diag.message = std::string{
                            "`1.0 / sqrt(x)` should be written as `rsqrt(x)` -- "
                            "`rsqrt` is a single hardware instruction on every "
@@ -145,11 +165,9 @@ public:
 
                        Fix fix;
                        fix.machine_applicable = true;
-                       fix.description = std::string{
-                           "replace `1.0 / sqrt(x)` with `rsqrt(x)`"};
+                       fix.description = std::string{"replace `1.0 / sqrt(x)` with `rsqrt(x)`"};
                        TextEdit edit;
-                       edit.span =
-                           Span{.source = tree.source_id(), .bytes = expr_range};
+                       edit.span = Span{.source = tree.source_id(), .bytes = expr_range};
                        std::string replacement;
                        replacement.reserve(inner_text.size() + 7);
                        replacement.append("rsqrt(");

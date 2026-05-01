@@ -47,15 +47,18 @@ constexpr std::string_view k_rule_id = "countbits-vs-manual-popcount";
 constexpr std::string_view k_category = "math";
 
 [[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
     const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) return {};
+    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
+        return {};
     return bytes.substr(lo, hi - lo);
 }
 
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const char* t = ::ts_node_type(node);
     return t != nullptr ? std::string_view{t} : std::string_view{};
 }
@@ -66,9 +69,11 @@ constexpr std::string_view k_category = "math";
     const uint32_t count = ::ts_node_child_count(node);
     for (uint32_t i = 0; i < count; ++i) {
         const ::TSNode child = ::ts_node_child(node, i);
-        if (::ts_node_is_null(child) || ::ts_node_is_named(child)) continue;
+        if (::ts_node_is_null(child) || ::ts_node_is_named(child))
+            continue;
         const auto t = node_text(child, bytes);
-        if (!t.empty()) return t;
+        if (!t.empty())
+            return t;
     }
     return {};
 }
@@ -76,12 +81,15 @@ constexpr std::string_view k_category = "math";
 /// True if the node is a number_literal whose textual value is exactly `1`
 /// (allowing an optional unsigned suffix `u` or `U`).
 [[nodiscard]] bool is_literal_one(::TSNode node, std::string_view bytes) noexcept {
-    if (node_kind(node) != "number_literal") return false;
+    if (node_kind(node) != "number_literal")
+        return false;
     const auto text = node_text(node, bytes);
-    if (text.empty() || text[0] != '1') return false;
+    if (text.empty() || text[0] != '1')
+        return false;
     for (std::size_t i = 1; i < text.size(); ++i) {
         const char c = text[i];
-        if (c != 'u' && c != 'U' && c != 'l' && c != 'L') return false;
+        if (c != 'u' && c != 'U' && c != 'l' && c != 'L')
+            return false;
     }
     return true;
 }
@@ -92,11 +100,14 @@ constexpr std::string_view k_category = "math";
     while (node_kind(node) == "parenthesized_expression") {
         // The inner expression is the (sole) named child.
         const uint32_t nc = ::ts_node_named_child_count(node);
-        if (nc < 1U) return false;
+        if (nc < 1U)
+            return false;
         node = ::ts_node_named_child(node, 0);
     }
-    if (node_kind(node) != "binary_expression") return false;
-    if (operator_text(node, bytes) != "&") return false;
+    if (node_kind(node) != "binary_expression")
+        return false;
+    if (operator_text(node, bytes) != "&")
+        return false;
     const ::TSNode l = ::ts_node_child_by_field_name(node, "left", 4);
     const ::TSNode r = ::ts_node_child_by_field_name(node, "right", 5);
     return is_literal_one(l, bytes) || is_literal_one(r, bytes);
@@ -106,7 +117,8 @@ constexpr std::string_view k_category = "math";
 /// assignment. We accept either an assignment_expression or update_expression
 /// node whose operator text is `+=`, with the RHS being a `& 1` binary expr.
 [[nodiscard]] bool has_popcount_increment(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return false;
+    if (::ts_node_is_null(node))
+        return false;
     const auto kind = node_kind(node);
     if (kind == "assignment_expression" || kind == "update_expression" ||
         kind == "augmented_assignment_expression") {
@@ -126,7 +138,8 @@ constexpr std::string_view k_category = "math";
     }
     const uint32_t count = ::ts_node_child_count(node);
     for (uint32_t i = 0; i < count; ++i) {
-        if (has_popcount_increment(::ts_node_child(node, i), bytes)) return true;
+        if (has_popcount_increment(::ts_node_child(node, i), bytes))
+            return true;
     }
     return false;
 }
@@ -135,9 +148,11 @@ constexpr std::string_view k_category = "math";
 /// assignment, a `>>` binary expression, or `x = x >> N`. Exists to
 /// disambiguate the popcount loop from a generic accumulator.
 [[nodiscard]] bool has_right_shift(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return false;
+    if (::ts_node_is_null(node))
+        return false;
     const auto kind = node_kind(node);
-    if (kind == "binary_expression" && operator_text(node, bytes) == ">>") return true;
+    if (kind == "binary_expression" && operator_text(node, bytes) == ">>")
+        return true;
     if ((kind == "assignment_expression" || kind == "update_expression" ||
          kind == "augmented_assignment_expression") &&
         operator_text(node, bytes) == ">>=") {
@@ -145,13 +160,15 @@ constexpr std::string_view k_category = "math";
     }
     const uint32_t count = ::ts_node_child_count(node);
     for (uint32_t i = 0; i < count; ++i) {
-        if (has_right_shift(::ts_node_child(node, i), bytes)) return true;
+        if (has_right_shift(::ts_node_child(node, i), bytes))
+            return true;
     }
     return false;
 }
 
 void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
-    if (::ts_node_is_null(node)) return;
+    if (::ts_node_is_null(node))
+        return;
 
     const auto kind = node_kind(node);
     if (kind == "for_statement" || kind == "while_statement") {
@@ -191,9 +208,15 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
 class CountBitsVsManualPopcount : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         const auto bytes = tree.source_bytes();

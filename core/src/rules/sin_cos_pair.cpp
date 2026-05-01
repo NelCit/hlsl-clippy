@@ -46,26 +46,32 @@ constexpr std::string_view k_category = "math";
 /// side effects. This admits identifiers, literals, field accesses, and
 /// arithmetic expressions of those (e.g. `phase + time`, `uv.x * 2.0`).
 [[nodiscard]] bool is_pure_arg(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return false;
+    if (::ts_node_is_null(node))
+        return false;
     const char* t = ::ts_node_type(node);
-    if (t == nullptr) return false;
+    if (t == nullptr)
+        return false;
     const std::string_view kind{t};
     // Any call expression is impure.
-    if (kind == "call_expression") return false;
+    if (kind == "call_expression")
+        return false;
     // Recursively check all children.
     const uint32_t count = ::ts_node_child_count(node);
     for (uint32_t i = 0; i < count; ++i) {
-        if (!is_pure_arg(::ts_node_child(node, i))) return false;
+        if (!is_pure_arg(::ts_node_child(node, i)))
+            return false;
     }
     return true;
 }
 
 /// Return the text of a TSNode as a string_view into `bytes`.
 [[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
     const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) return {};
+    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
+        return {};
     return bytes.substr(lo, hi - lo);
 }
 
@@ -75,15 +81,19 @@ constexpr std::string_view k_category = "math";
                                     std::string_view bytes,
                                     std::string_view fn_name,
                                     ::TSNode& arg_out) noexcept {
-    if (::ts_node_is_null(node)) return false;
+    if (::ts_node_is_null(node))
+        return false;
     const char* t = ::ts_node_type(node);
-    if (t == nullptr || std::string_view{t} != "call_expression") return false;
+    if (t == nullptr || std::string_view{t} != "call_expression")
+        return false;
 
     const ::TSNode fn = ::ts_node_child_by_field_name(node, "function", 8);
-    if (::ts_node_is_null(fn) || node_text(fn, bytes) != fn_name) return false;
+    if (::ts_node_is_null(fn) || node_text(fn, bytes) != fn_name)
+        return false;
 
     const ::TSNode args = ::ts_node_child_by_field_name(node, "arguments", 9);
-    if (::ts_node_is_null(args) || ::ts_node_named_child_count(args) != 1U) return false;
+    if (::ts_node_is_null(args) || ::ts_node_named_child_count(args) != 1U)
+        return false;
 
     arg_out = ::ts_node_named_child(args, 0);
     return !::ts_node_is_null(arg_out);
@@ -103,7 +113,8 @@ void collect_sin_cos(::TSNode compound,
     const uint32_t count = ::ts_node_child_count(compound);
     for (uint32_t i = 0; i < count; ++i) {
         const ::TSNode stmt = ::ts_node_child(compound, i);
-        if (::ts_node_is_null(stmt) || !::ts_node_is_named(stmt)) continue;
+        if (::ts_node_is_null(stmt) || !::ts_node_is_named(stmt))
+            continue;
         // Walk descendants within this statement to find call_expression nodes.
         // We use a simple iterative descent.
         std::vector<::TSNode> stack;
@@ -111,7 +122,8 @@ void collect_sin_cos(::TSNode compound,
         while (!stack.empty()) {
             const ::TSNode cur = stack.back();
             stack.pop_back();
-            if (::ts_node_is_null(cur)) continue;
+            if (::ts_node_is_null(cur))
+                continue;
 
             // If we hit a nested compound_statement we stop (different scope).
             const char* ct = ::ts_node_type(cur);
@@ -145,7 +157,8 @@ void collect_sin_cos(::TSNode compound,
             const uint32_t nc = ::ts_node_child_count(cur);
             for (uint32_t j = 0; j < nc; ++j) {
                 const ::TSNode child = ::ts_node_child(cur, j);
-                if (!::ts_node_is_null(child)) stack.push_back(child);
+                if (!::ts_node_is_null(child))
+                    stack.push_back(child);
             }
         }
     }
@@ -156,7 +169,8 @@ void walk_compound_statements(::TSNode node,
                               std::string_view bytes,
                               const AstTree& tree,
                               RuleContext& ctx) {
-    if (::ts_node_is_null(node)) return;
+    if (::ts_node_is_null(node))
+        return;
 
     const char* t = ::ts_node_type(node);
     if (t != nullptr && std::string_view{t} == "compound_statement") {
@@ -172,7 +186,7 @@ void walk_compound_statements(::TSNode node,
             const auto sin_range = tree.byte_range(entry.sin_call);
 
             Diagnostic diag;
-            diag.code     = std::string{k_rule_id};
+            diag.code = std::string{k_rule_id};
             diag.severity = Severity::Warning;
             diag.primary_span = Span{.source = tree.source_id(), .bytes = sin_range};
             diag.message =
@@ -201,9 +215,15 @@ void walk_compound_statements(::TSNode node,
 
 class SinCosPair : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         const auto bytes = tree.source_bytes();
