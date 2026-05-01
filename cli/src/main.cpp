@@ -179,9 +179,8 @@ bool write_file(const std::filesystem::path& path, std::string_view contents) {
     }
 
     const auto diagnostics =
-        config.has_value()
-            ? hlsl_clippy::lint(sources, src_id, rules, *config, path, lint_options)
-            : hlsl_clippy::lint(sources, src_id, rules, lint_options);
+        config.has_value() ? hlsl_clippy::lint(sources, src_id, rules, *config, path, lint_options)
+                           : hlsl_clippy::lint(sources, src_id, rules, lint_options);
 
     bool any_warning = false;
     bool any_error = false;

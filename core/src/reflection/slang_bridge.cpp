@@ -127,9 +127,9 @@ namespace {
 
     const SlangResourceShape shape = type->getResourceShape();
     const SlangResourceAccess access = type->getResourceAccess();
-    const bool readwrite =
-        access == SLANG_RESOURCE_ACCESS_READ_WRITE || access == SLANG_RESOURCE_ACCESS_APPEND ||
-        access == SLANG_RESOURCE_ACCESS_CONSUME;
+    const bool readwrite = access == SLANG_RESOURCE_ACCESS_READ_WRITE ||
+                           access == SLANG_RESOURCE_ACCESS_APPEND ||
+                           access == SLANG_RESOURCE_ACCESS_CONSUME;
 
     const auto shape_bits = static_cast<unsigned>(shape);
     const auto base_shape = shape_bits & SLANG_RESOURCE_BASE_SHAPE_MASK;
@@ -218,7 +218,8 @@ void populate_cbuffer_layout(const std::string& cbuffer_name,
         element_layout = outer_layout;
     }
 
-    out.total_bytes = static_cast<std::uint32_t>(element_layout->getSize(SLANG_PARAMETER_CATEGORY_UNIFORM));
+    out.total_bytes =
+        static_cast<std::uint32_t>(element_layout->getSize(SLANG_PARAMETER_CATEGORY_UNIFORM));
 
     const unsigned int field_count = element_layout->getFieldCount();
     out.fields.reserve(field_count);
@@ -234,8 +235,8 @@ void populate_cbuffer_layout(const std::string& cbuffer_name,
             static_cast<std::uint32_t>(field->getOffset(SLANG_PARAMETER_CATEGORY_UNIFORM));
         slang::TypeLayoutReflection* field_layout = field->getTypeLayout();
         if (field_layout != nullptr) {
-            cf.byte_size = static_cast<std::uint32_t>(
-                field_layout->getSize(SLANG_PARAMETER_CATEGORY_UNIFORM));
+            cf.byte_size =
+                static_cast<std::uint32_t>(field_layout->getSize(SLANG_PARAMETER_CATEGORY_UNIFORM));
             cf.type_name = type_name_string(field_layout->getType());
         } else {
             cf.byte_size = 0U;
@@ -277,8 +278,8 @@ void emit_parameter(slang::VariableLayoutReflection* param,
         ResourceBinding rb;
         rb.name = name;
         rb.kind = ResourceKind::ConstantBuffer;
-        rb.register_slot = static_cast<std::uint32_t>(
-            param->getOffset(SLANG_PARAMETER_CATEGORY_CONSTANT_BUFFER));
+        rb.register_slot =
+            static_cast<std::uint32_t>(param->getOffset(SLANG_PARAMETER_CATEGORY_CONSTANT_BUFFER));
         rb.register_space = static_cast<std::uint32_t>(
             param->getBindingSpace(SLANG_PARAMETER_CATEGORY_CONSTANT_BUFFER));
         rb.declaration_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
@@ -366,7 +367,8 @@ struct SlangBridge::Impl {
         const std::string profile_string{target_profile};
         target_desc.profile = global_session->findProfile(profile_string.c_str());
         if (target_desc.profile == SLANG_PROFILE_UNKNOWN) {
-            target_desc.profile = global_session->findProfile(std::string{k_default_profile}.c_str());
+            target_desc.profile =
+                global_session->findProfile(std::string{k_default_profile}.c_str());
         }
 
         slang::SessionDesc session_desc{};
@@ -397,19 +399,19 @@ SlangBridge::SlangBridge(std::uint32_t pool_size) : impl_(std::make_unique<Impl>
 SlangBridge::~SlangBridge() = default;
 
 std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManager& sources,
-                                                                SourceId source,
-                                                                std::string_view target_profile) {
+                                                               SourceId source,
+                                                               std::string_view target_profile) {
     const SourceFile* file = sources.get(source);
     if (file == nullptr) {
         return std::unexpected{make_reflection_error(source, std::string{"unknown source id"})};
     }
     if (impl_->global_session == nullptr) {
-        return std::unexpected{
-            make_reflection_error(source, std::string{"failed to initialise Slang global session"})};
+        return std::unexpected{make_reflection_error(
+            source, std::string{"failed to initialise Slang global session"})};
     }
 
-    const std::string profile = target_profile.empty() ? std::string{k_default_profile}
-                                                       : std::string{target_profile};
+    const std::string profile =
+        target_profile.empty() ? std::string{k_default_profile} : std::string{target_profile};
 
     Slang::ComPtr<slang::ISession> session = impl_->acquire(profile);
     if (session == nullptr) {
@@ -429,7 +431,9 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManag
         Releaser& operator=(const Releaser&) = delete;
         Releaser(Releaser&&) = delete;
         Releaser& operator=(Releaser&&) = delete;
-        ~Releaser() { impl->release(std::move(*session_slot)); }
+        ~Releaser() {
+            impl->release(std::move(*session_slot));
+        }
     };
     [[maybe_unused]] Releaser releaser{impl_.get(), &session};
 
@@ -438,9 +442,8 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManag
     const std::string module_name = file->path().stem().string().empty()
                                         ? std::string{"hlsl_clippy_module"}
                                         : file->path().stem().string();
-    const std::string virtual_path = file->path().string().empty()
-                                         ? std::string{"<buffer>"}
-                                         : file->path().string();
+    const std::string virtual_path =
+        file->path().string().empty() ? std::string{"<buffer>"} : file->path().string();
 
     Slang::ComPtr<slang::IBlob> load_diag;
     slang::IModule* raw_module = session->loadModuleFromSourceString(
@@ -457,7 +460,8 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManag
     // attributes. Each becomes one EntryPointInfo.
     const std::int32_t entry_point_count = module_ptr->getDefinedEntryPointCount();
     std::vector<Slang::ComPtr<slang::IEntryPoint>> entry_point_objs;
-    entry_point_objs.reserve(static_cast<std::size_t>(entry_point_count > 0 ? entry_point_count : 0));
+    entry_point_objs.reserve(
+        static_cast<std::size_t>(entry_point_count > 0 ? entry_point_count : 0));
     for (std::int32_t i = 0; i < entry_point_count; ++i) {
         Slang::ComPtr<slang::IEntryPoint> ep;
         const SlangResult res = module_ptr->getDefinedEntryPoint(i, ep.writeRef());
@@ -479,14 +483,14 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManag
     Slang::ComPtr<slang::IComponentType> composite;
     {
         Slang::ComPtr<slang::IBlob> compose_diag;
-        const SlangResult res = session->createCompositeComponentType(
-            components.data(),
-            static_cast<SlangInt>(components.size()),
-            composite.writeRef(),
-            compose_diag.writeRef());
+        const SlangResult res =
+            session->createCompositeComponentType(components.data(),
+                                                  static_cast<SlangInt>(components.size()),
+                                                  composite.writeRef(),
+                                                  compose_diag.writeRef());
         if (SLANG_FAILED(res) || composite == nullptr) {
-            std::string msg = std::string{"slang composite failed: "} +
-                              blob_to_string(compose_diag.get());
+            std::string msg =
+                std::string{"slang composite failed: "} + blob_to_string(compose_diag.get());
             return std::unexpected{make_reflection_error(source, std::move(msg))};
         }
     }
@@ -519,8 +523,7 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManag
     }
 
     // Entry points: one EntryPointInfo per `[shader(...)]` declaration.
-    const auto reflected_ep_count =
-        static_cast<unsigned int>(program_layout->getEntryPointCount());
+    const auto reflected_ep_count = static_cast<unsigned int>(program_layout->getEntryPointCount());
     info.entry_points.reserve(reflected_ep_count);
     for (unsigned int i = 0; i < reflected_ep_count; ++i) {
         slang::EntryPointReflection* ep = program_layout->getEntryPointByIndex(i);

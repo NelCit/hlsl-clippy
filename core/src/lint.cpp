@@ -16,9 +16,9 @@
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
 #include "hlsl_clippy/suppress.hpp"
+#include "reflection/engine.hpp"
 
 #include "parser_internal.hpp"
-#include "reflection/engine.hpp"
 
 namespace hlsl_clippy {
 
@@ -116,8 +116,7 @@ namespace {
 
     // ----- AST stage --------------------------------------------------------
     // Declarative pass: every rule's `on_tree` runs once with the whole tree.
-    const AstTree tree_view{
-        parsed->tree.get(), parsed->language, parsed->bytes, parsed->source};
+    const AstTree tree_view{parsed->tree.get(), parsed->language, parsed->bytes, parsed->source};
     for (const auto& rule : rules) {
         if (rule->stage() == Stage::Ast) {
             rule->on_tree(tree_view, ctx);
