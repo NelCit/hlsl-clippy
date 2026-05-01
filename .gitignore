@@ -14,3 +14,7 @@ compile_commands.json
 node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
+
+# Local build logs from tools/dev-shell.ps1 sessions
+build*.log
+tmp_*.hlsl
