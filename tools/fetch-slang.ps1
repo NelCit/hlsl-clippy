@@ -138,7 +138,9 @@ if (-not ($magic[0] -eq 0x50 -and $magic[1] -eq 0x4B -and $magic[2] -eq 0x03 -an
 # `HLSL_CLIPPY_SLANG_SHA256_WINDOWS_X86_64`) is set, the downloaded zip's
 # hash MUST match exactly. Mismatch → abort, leaving the cache untouched.
 # Unset → warn-and-continue (the zip-magic check above is the only gate).
-$TripleVarName = 'HLSL_CLIPPY_SLANG_SHA256_' + ($Triple.ToUpper() -replace '-', '_')
+# fetch-slang.ps1 is Windows-only and hardcodes the windows-x86_64 triple
+# in the URL above. The matching env var name therefore stays fixed too.
+$TripleVarName = 'HLSL_CLIPPY_SLANG_SHA256_WINDOWS_X86_64'
 $ExpectedSha256 = [System.Environment]::GetEnvironmentVariable($TripleVarName)
 if (-not $ExpectedSha256) {
     $ExpectedSha256 = $env:HLSL_CLIPPY_SLANG_SHA256

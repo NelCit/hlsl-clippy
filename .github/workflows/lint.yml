@@ -47,8 +47,19 @@ jobs:
       - name: Install clang-format-18 and clang-tidy-18
         run: |
           wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
+          # libc++-18 needed because the cmake configure step below uses
+          # `-stdlib=libc++` (matching ci.yml + release.yml).
+          sudo apt-get install -y libc++-18-dev libc++abi-18-dev
           clang-format-18 --version
           clang-tidy-18 --version
+
+      # ── 2.6 Slang prebuilt cache ──────────────────────────────────────────
+      # `cmake/UseSlang.cmake` FATAL_ERRORs if neither `Slang_ROOT` nor the
+      # per-user prebuilt cache is populated (commit 73c0322 retired the
+      # from-source submodule fallback). Mirror what ci.yml and release.yml
+      # do: invoke `tools/fetch-slang.sh` before `cmake configure`.
+      - name: Fetch Slang prebuilt
+        run: bash tools/fetch-slang.sh
 
       # ── 2.5 Forbid <slang.h> in public headers + rule TUs ─────────────────
       # ADR 0001 / ADR 0012: <slang.h> may only appear inside
@@ -104,6 +115,10 @@ jobs:
         env:
           CC: clang-18
           CXX: clang++-18
+          # Match ci.yml + release.yml: link libc++ instead of libstdc++ 13
+          # to dodge Ubuntu 24.04's <expected> symbol-visibility quirks.
+          CXXFLAGS: "-stdlib=libc++"
+          LDFLAGS: "-stdlib=libc++"
         run: |
           cmake -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
