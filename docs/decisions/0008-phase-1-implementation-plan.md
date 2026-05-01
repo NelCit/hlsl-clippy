@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 date: 2026-04-30
 deciders: NelCit
 tags: [phase-1, rule-engine, quick-fix, suppression, config, planning]

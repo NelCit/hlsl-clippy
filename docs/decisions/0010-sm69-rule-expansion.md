@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 date: 2026-04-30
 deciders: NelCit
 tags: [rules, sm-6.9, sm-6.8, sm-6.7, ser, work-graphs, cooperative-vectors]

@@ -1,69 +1,133 @@
-# CI Integration
+---
+title: CI integration
+outline: deep
+---
 
-> **Status:** pre-v0 — CI gate mode lands in Phase 6. See [ROADMAP](../ROADMAP.md). The YAML and schema below are design-stage sketches; exact flags and field names may change before the v0.5 release.
+# CI integration
+
+`hlsl-clippy` is designed to drop into a CI pipeline as a gate. Two
+output formats are tuned for CI:
+
+- `--format=github-annotations` — emits GitHub Actions workflow
+  command lines (`::warning file=...,line=...,col=...::msg`) so
+  diagnostics show up inline on the pull request diff.
+- `--format=json` — emits a flat JSON array on stdout for any CI
+  provider that wants to parse and post-process. Stable schema since
+  v0.5.
+
+When `$GITHUB_ACTIONS=true` and `--format` is unset,
+`github-annotations` is selected automatically.
 
 ## GitHub Actions example
 
+A copy-paste-able starter workflow lives at
+[`docs/ci/lint-hlsl-example.yml`](https://github.com/NelCit/hlsl-clippy/blob/main/docs/ci/lint-hlsl-example.yml).
+Drop it at `.github/workflows/lint-hlsl.yml` in your repo and adjust
+the path glob + version pin:
+
 ```yaml
-# .github/workflows/hlsl-lint.yml  (pre-v0 design — not functional yet)
 name: HLSL lint
 
-on: [push, pull_request]
+on:
+  push:
+    branches: ["**"]
+    paths: ["**/*.hlsl", "**/*.hlsli", "**/.hlsl-clippy.toml"]
+  pull_request:
+    paths: ["**/*.hlsl", "**/*.hlsli", "**/.hlsl-clippy.toml"]
 
 jobs:
-  hlsl-clippy:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Download hlsl-clippy
+        env:
+          HLSL_CLIPPY_TAG: v0.5.3
         run: |
-          curl -sSfL https://github.com/NelCit/hlsl-clippy/releases/latest/download/hlsl-clippy-linux-x86_64.tar.gz | tar xz
+          set -euo pipefail
+          asset="hlsl-clippy-${HLSL_CLIPPY_TAG#v}-linux-x86_64.tar.gz"
+          curl -sSL -o /tmp/hlsl-clippy.tar.gz \
+            "https://github.com/NelCit/hlsl-clippy/releases/download/${HLSL_CLIPPY_TAG}/${asset}"
+          mkdir -p /tmp/hlsl-clippy
+          tar -xzf /tmp/hlsl-clippy.tar.gz -C /tmp/hlsl-clippy --strip-components=1
       - name: Lint shaders
-        run: ./hlsl-clippy lint --format=github shaders/
+        run: |
+          set -euo pipefail
+          shopt -s globstar nullglob
+          fail=0
+          for shader in shaders/**/*.hlsl; do
+            /tmp/hlsl-clippy/hlsl-clippy lint "$shader" \
+              --format=github-annotations \
+              || fail=$?
+          done
+          exit "$fail"
 ```
-
-`--format=github` emits GitHub Actions workflow command annotations (`::warning file=...` / `::error file=...`) so diagnostics appear inline in the pull request diff view.
 
 ## Exit codes
 
 | Code | Meaning |
 |------|---------|
-| `0`  | No diagnostics at or above `warn` severity. |
-| `1`  | One or more `warn`-level diagnostics; no `deny`-level diagnostics. |
-| `2`  | One or more `deny`-level (error) diagnostics. |
-| `3`  | Configuration error (malformed `.hlsl-clippy.toml`, unknown rule ID, etc.). |
-| `4`  | Internal error (parse failure, Slang crash, unexpected exception). |
+| `0`  | No diagnostics emitted. |
+| `1`  | At least one `warning`-level (or `note`-level) diagnostic. |
+| `2`  | At least one `error`-level diagnostic, OR the linter itself failed (file not found, malformed `.hlsl-clippy.toml`, etc.). |
 
-Exit code `2` is intended to fail CI unconditionally. Exit code `1` can be tolerated on feature branches and treated as hard-fail only on `main`, depending on repo policy.
+Today exit code `2` is overloaded: a malformed config and a
+rule-emitted error both surface as `2`. Distinguishing the two cases
+requires inspecting stderr. A dedicated config-error exit code is on
+the v0.6 backlog.
+
+## Promoting warnings to errors
+
+If your repo policy wants `pow-const-squared` to fail CI rather than
+just warn, override its severity in `.hlsl-clippy.toml`:
+
+```toml
+[rules]
+pow-const-squared = "error"
+```
+
+The CLI will then exit with `2` whenever the rule fires.
 
 ## JSON output schema
 
-Pass `--format=json` to get a JSON array on stdout. Each element is a diagnostic object:
+Pass `--format=json` for a single JSON array on stdout:
 
 ```json
 [
   {
-    "code":     "pow-to-mul",
-    "severity": "warn",
-    "file":     "shaders/pbr.hlsl",
-    "span":     [412, 425],
-    "message":  "pow(x, 2.0) can be simplified to x*x",
-    "fixes": [
-      {
-        "applicability": "machine-applicable",
-        "edits": [
-          { "start": 412, "end": 425, "replacement": "x * x" }
-        ]
-      }
-    ]
+    "file":                   "shader.hlsl",
+    "line":                   42,
+    "column":                 14,
+    "byte_offset":            1036,
+    "byte_end":               1051,
+    "severity":               "warning",
+    "rule":                   "pow-const-squared",
+    "message":                "pow(x, 2.0) is equivalent to x*x",
+    "machine_applicable_fix": true
   }
 ]
 ```
 
 Field notes:
 
-- `span` — `[start, end)` byte offsets into the file (UTF-8, zero-indexed). Convert to line/column via the `SourceManager` tables or an external UTF-8 offset tool.
-- `severity` — one of `"info"`, `"warn"`, `"error"`.
-- `fixes` — empty array when `applicability` is `none`. Multiple edits in one fix are applied atomically.
+- `line` / `column` — 1-based, UTF-8 codepoint indexed.
+- `byte_offset` / `byte_end` — `[start, end)` byte offsets into
+  the file.
+- `severity` — one of `"error"`, `"warning"`, `"note"`.
+- `rule` — rule slug as documented in the
+  [rules catalog](/rules/).
+- `machine_applicable_fix` — `true` when `--fix` would apply a
+  rewrite for this diagnostic.
 
-The JSON schema will be versioned and stabilised at v0.5. Until then, treat the field names as provisional.
+The schema is stable from v0.5 onwards; new fields may be added,
+existing fields will not be renamed or repurposed without a major
+version bump.
+
+## Other CI providers
+
+The `github-annotations` format is GitHub-specific. Other providers
+(GitLab, Azure Pipelines, Buildkite, Jenkins, etc.) typically parse
+log output line-by-line — `--format=json` works everywhere.
+
+A SARIF output format is on the v0.6+ backlog for native integration
+with security-scanning dashboards.
