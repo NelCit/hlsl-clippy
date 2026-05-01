@@ -1,150 +1,133 @@
 # hlsl-clippy
 
-**A static linter for HLSL — performance and correctness rules beyond what `dxc` catches.**
+> Performance + correctness rules for HLSL -- beyond what `dxc` catches.
 
-[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Build Status](https://img.shields.io/badge/build-placeholder-lightgrey.svg)](#)
-[![Latest Release](https://img.shields.io/badge/release-pre--v0-lightgrey.svg)](#)
+[![CI](https://github.com/NelCit/hlsl-clippy/actions/workflows/ci.yml/badge.svg)](https://github.com/NelCit/hlsl-clippy/actions/workflows/ci.yml)
+[![Lint](https://github.com/NelCit/hlsl-clippy/actions/workflows/lint.yml/badge.svg)](https://github.com/NelCit/hlsl-clippy/actions/workflows/lint.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Docs (CC-BY-4.0)](https://img.shields.io/badge/Docs-CC--BY--4.0-orange)](LICENSE)
 
-> **Status:** pre-v0 — scaffold only. No working rules yet. See [ROADMAP.md](ROADMAP.md) for the full plan.
+<!-- TODO: demo gif -->
 
-`dxc` reports compiler errors. Vendor analyzers (AMD RGA, Intel Shader Analyzer, NVIDIA Nsight) report per-architecture instruction costs. Neither catches the portable anti-patterns that silently degrade GPU performance across every target: `pow(x, 2.0)` spending multiple clock cycles on a transcendental, derivatives sampled inside divergent control flow, or dynamic resource indices missing `NonUniformResourceIndex`. `hlsl-clippy` is that missing layer.
+## What it is
 
-<!-- TODO: terminal cast -->
+Static linter for HLSL. AST via tree-sitter-hlsl, compile + reflection via
+Slang. **154 rules** across math, bindings, texture, workgroup, control-flow,
+mesh, DXR, work-graphs, SER, cooperative-vector, long-vectors, opacity-
+micromaps, sampler-feedback, VRS, and wave-helper-lane. Surfaces portable
+anti-patterns that `dxc` and vendor analyzers don't flag -- patterns rooted
+in the GPU hardware (RDNA, NVIDIA, Xe-HPG).
 
----
-
-## Why hlsl-clippy
-
-### Problem 1 — Unnecessary transcendental functions
-
-`dxc` compiles `pow(x, 2.0)` without complaint. On every GPU target, this costs the same as `pow(x, Pi)`: a transcendental. The fix is trivial.
+## Quick demo
 
 ```hlsl
-// Before — dxc accepts this silently
+// Bad: pow(x, 2.0) lowers to a transcendental on every IHV.
 float attenuation = pow(distance, 2.0);
 
-// After — same result, far cheaper
+// Good: same result, free.
 float attenuation = distance * distance;
 ```
 
-### Problem 2 — Derivatives in divergent control flow
-
-`ddx`, `ddy`, and implicit-LOD texture samples require quad-group uniformity. Inside non-uniform `if` branches, results are undefined and differ per driver. `dxc` issues no diagnostic. hlsl-clippy (Phase 4) will flag every call site.
-
-```hlsl
-// Before — undefined behavior, silent
-if (material_id != 0) {
-    color = albedo.Sample(s, uv);  // derivative across a non-uniform branch
-}
-
-// After — hoist the sample
-float4 sampled = albedo.Sample(s, uv);
-if (material_id != 0) {
-    color = sampled;
-}
+```sh
+$ hlsl-clippy lint shader.hlsl
+shader.hlsl:42:14: warning: pow(x, 2.0) is equivalent to x*x [pow-const-squared]
+  42 |     float attenuation = pow(distance, 2.0);
+                  ^^^^^^^^^^^^^^^^^^^^^^^^
+$ hlsl-clippy lint --fix shader.hlsl
+hlsl-clippy: applied 1 fix to shader.hlsl
 ```
 
-### Problem 3 — Missing NonUniformResourceIndex
+## Why it exists
 
-Dynamic descriptor indexing without `NonUniformResourceIndex` is legal HLSL but undefined behavior on D3D12 if the index is not wave-uniform. The validator does not catch it; the bug appears only on some hardware under some drivers.
+Vendor analyzers (RGA, Nsight) have ground truth on their ISA but only see
+one IHV. `dxc` catches syntax errors, not perf footguns. `hlsl-clippy` is
+the missing portable middle layer -- and every rule's doc page explains the
+GPU mechanism so the warning doubles as a teaching tool.
 
-```hlsl
-// Before — UB on non-uniform index
-Texture2D textures[64];
-float4 sample_tex(uint id, float2 uv, SamplerState s) {
-    return textures[id].Sample(s, uv);
-}
+## Install
 
-// After — correct
-float4 sample_tex(uint id, float2 uv, SamplerState s) {
-    return textures[NonUniformResourceIndex(id)].Sample(s, uv);
-}
-```
+### From source
 
----
-
-## Quick start
-
-> **Note:** packaging is planned for Phase 6. Until then, build from source.
-
-**Prerequisites:** CMake 3.20+, a C++23 compiler — MSVC 19.44+ (VS 17.14 / Build Tools 14.44 / VS 18 2026), Clang 18+ with libc++ 17+ or libstdc++ 13+, or GCC 14+. Locally validated against MSVC 19.50 (VS 18 Community) + Linux Clang 18 in CI.
+**Prerequisites:** CMake 3.20+, C++23 compiler (MSVC 19.44+, Clang 18+,
+GCC 14+).
 
 ```sh
-git clone https://github.com/NelCit/hlsl-clippy.git
+git clone --recurse-submodules https://github.com/NelCit/hlsl-clippy.git
 cd hlsl-clippy
-cmake -B build
-cmake --build build
+cmake -B build && cmake --build build
+./build/cli/hlsl-clippy lint shader.hlsl
 ```
 
-**Basic usage** (lint subcommand is a stub until Phase 1):
+On Windows, `tools\dev-shell.ps1` sets up MSVC + the Slang prebuilt cache
+in one shot.
+
+### VS Code extension
+
+Coming with v0.5 (sub-phase 5e). Until then: clone, build, and point your
+editor at `./build/lsp/hlsl-clippy-lsp[.exe]`.
+
+### Marketplace
+
+Available once the v0.5 release tag ships (gates on
+`.github/workflows/release-vscode.yml`).
+
+## CLI usage
 
 ```sh
-./build/hlsl-clippy --help
-./build/hlsl-clippy --version
-./build/hlsl-clippy lint shader.hlsl   # prints "not yet implemented"
+hlsl-clippy lint shader.hlsl                          # warn-and-report
+hlsl-clippy lint --fix shader.hlsl                    # apply machine-applicable fixes
+hlsl-clippy lint --target-profile sm_6_8 shader.hlsl  # override Slang profile
+hlsl-clippy lint --config path/.hlsl-clippy.toml shader.hlsl
 ```
 
-**Planned output format** (as of Phase 1):
+Exit codes: `0` clean, `1` warnings, `2` errors or invocation failure.
 
+## Configuration (`.hlsl-clippy.toml`)
+
+Drop a `.hlsl-clippy.toml` next to your shader tree. The CLI walks up from
+each file's parent until it hits one (bounded by `.git/`).
+
+```toml
+[rules]
+pow-const-squared    = "warn"
+redundant-saturate   = "warn"
+clamp01-to-saturate  = "off"
+
+includes = ["shaders/**/*.hlsl"]
+excludes = ["shaders/third_party/**"]
+
+[[overrides]]
+paths = ["shaders/experimental/**"]
+[overrides.rules]
+pow-const-squared = "off"
 ```
-shader.hlsl:14:21: warning[pow-const-squared]: pow(x, 2.0) is equivalent to x*x
-  |
-14|     float d = pow(dist, 2.0);
-  |               ^^^^^^^^^^^^^^
-  = help: replace with `dist * dist`
-```
 
----
+Full schema: [docs/configuration.md](docs/configuration.md).
 
-## Comparison
+## Browse rules
 
-| | hlsl-clippy | dxc warnings | AMD RGA / Intel SA | NVIDIA Nsight |
-|---|---|---|---|---|
-| Portable anti-patterns | Planned | No | No | No |
-| Correctness (NURI, divergent CF) | Planned | Partial | No | Partial |
-| Per-ISA instruction cost | No | No | Yes | Yes |
-| Register pressure | Planned (Phase 4) | No | Yes | Yes |
-| CI gate / JSON output | Planned (Phase 6) | Flags only | No | No |
-| LSP / editor integration | Planned (Phase 5) | Via extension | No | Yes |
-| Machine-applicable fixes | Planned | No | No | No |
-| Cross-platform binary | Planned | Windows/Linux | Per-vendor | Windows |
+<!-- TODO: enable docs site link once sub-phase 5e ships and the docs-site agent lands -->
+Per-rule pages with GPU rationale, examples, and fix availability live
+under [docs/rules/](docs/rules/) (catalog: [docs/rules/index.md](docs/rules/index.md)).
+A hosted docs site at `https://nelcit.github.io/hlsl-clippy/` lands with v0.5.
 
-hlsl-clippy is not a replacement for vendor analyzers. They have ground truth on their own ISA. hlsl-clippy surfaces portable patterns that affect every target and that no existing tool flags.
+## Companion blog series
 
----
+Every rule ships with a long-form blog post explaining the GPU mechanism --
+cycle counts, occupancy impact, microarchitecture details. See
+[docs/blog/](docs/blog/) (CC-BY-4.0).
 
-## Current status
+## Contributing
 
-| Phase | Description | State |
-|---|---|---|
-| 0 | Scaffolding: CMake, CLI stub, CI, governance | In progress |
-| 1 | AST + rule engine, first rule (`pow-const-squared`) | Planned |
-| 2 | AST-only rule pack (5 rules) | Planned |
-| 3 | Data-flow rules (3 rules) | Planned |
-| 4 | DXIL-level analysis (3 rules) | Planned |
-| 5 | LSP server + VS Code extension | Planned |
-| 6 | Launch: CI gate, docs site, rule pages | Planned |
+- DCO sign-off on every commit: `git commit -s`.
+- Conventional Commits 1.0 (`feat:`, `fix:`, `docs:`, ...).
+- Run `tools/install-hooks.sh` (or `tools\install-hooks.ps1` on Windows)
+  before your first PR.
 
-See [ROADMAP.md](ROADMAP.md) for per-phase detail and open questions.
-
----
-
-## Links
-
-- [ROADMAP.md](ROADMAP.md) — phased development plan
-- [docs/](docs/README.md) — documentation site seed (VitePress scaffold)
-- [docs/rules/index.md](docs/rules/index.md) — rule catalog
-- [CONTRIBUTING.md](CONTRIBUTING.md) — dev setup, rule authoring, PR process
-- Blog series: "Why your HLSL is slower than it has to be" — planned for Phase 6
-
----
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the rule-authoring guide.
 
 ## License
 
-Licensed under the [Apache License, Version 2.0](LICENSE).
-
-Copyright 2026 NelCit and contributors.
-
-Vendored dependencies retain their own licenses; see [NOTICE](NOTICE) and
-[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for details.
+Code is [Apache-2.0](LICENSE). Documentation, blog posts, and rule pages
+are [CC-BY-4.0](LICENSE). Vendored dependencies retain their own licenses
+(see [NOTICE](NOTICE) and [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)).
