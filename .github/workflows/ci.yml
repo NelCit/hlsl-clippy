@@ -1,4 +1,4 @@
-# CI — build hlsl-clippy on Linux (Clang) and Windows (MSVC/Ninja)
+# CI — build hlsl-clippy on Linux (Clang), Windows (MSVC/Ninja), macOS (Clang/Ninja)
 #
 # Third-party action SHAs pinned for supply-chain safety.
 # Update them with: gh api /repos/<owner>/<repo>/git/ref/tags/<tag>
@@ -10,6 +10,11 @@
 #   ilammy/msvc-dev-cmd@v1.13.0        → 0b201ec74fa43914dc39ae48a89fd1d8cb592756
 #     (ilammy SHA is the underlying commit; the tag is annotated — GHA resolves
 #      annotated tags to their commit object automatically)
+#
+# macOS runner: macos-14 is Apple Silicon (ARM64). Homebrew prefix is
+# /opt/homebrew (Intel runners use /usr/local). Per ADR 0014 §"Sub-phase 5d",
+# we ship Apple-Silicon-only on v0.5; revisit Intel coverage if user demand
+# materialises.
 
 name: CI
 
@@ -34,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-14]
 
     steps:
       # ── 1. Checkout ────────────────────────────────────────────────────────
@@ -78,6 +83,21 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
 
+      # ── 4c. (macOS) Install Clang 18 from Homebrew ────────────────────────
+      # macos-14 (Apple Silicon) ships Apple Clang as the default toolchain;
+      # we install Homebrew's llvm@18 to keep the C++23 floor consistent
+      # with the Linux runner (ADR 0004 — same compiler floor across CI
+      # runners). The /opt/homebrew prefix is Apple-Silicon-only; on Intel
+      # runners the path would be /usr/local/opt/llvm@18/bin (not used here).
+      - name: Install Clang 18 (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          brew install llvm@18
+          echo "/opt/homebrew/opt/llvm@18/bin" >> "$GITHUB_PATH"
+          /opt/homebrew/opt/llvm@18/bin/clang-18 --version
+          /opt/homebrew/opt/llvm@18/bin/clang++-18 --version
+
       # ── 5. CMake configure ────────────────────────────────────────────────
       - name: CMake configure (Linux)
         if: runner.os == 'Linux'
@@ -88,6 +108,13 @@ jobs:
 
       - name: CMake configure (Windows)
         if: runner.os == 'Windows'
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: CMake configure (macOS)
+        if: runner.os == 'macOS'
+        env:
+          CC: clang-18
+          CXX: clang++-18
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       # ── 6. Build ──────────────────────────────────────────────────────────
@@ -160,3 +187,29 @@ jobs:
             exit 1
           }
           Write-Host "Smoke test passed."
+
+      - name: Smoke test (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          BIN=""
+          for candidate in \
+              "./build/cli/hlsl-clippy" \
+              "./build/hlsl-clippy"; do
+            if [ -x "$candidate" ]; then
+              BIN="$candidate"
+              break
+            fi
+          done
+          if [ -z "$BIN" ]; then
+            echo "ERROR: could not locate hlsl-clippy binary" >&2
+            exit 1
+          fi
+          echo "Using binary: $BIN"
+          OUTPUT=$("$BIN" --version)
+          echo "Output: $OUTPUT"
+          if [ "$OUTPUT" != "0.0.0" ]; then
+            echo "ERROR: expected '0.0.0', got '$OUTPUT'" >&2
+            exit 1
+          fi
+          echo "Smoke test passed."
