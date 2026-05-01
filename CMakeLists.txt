@@ -84,10 +84,10 @@ add_subdirectory(core)
 add_subdirectory(cli)
 add_subdirectory(lsp)
 
-# Smoke tools require their respective vendored libraries (Slang, tree-sitter).
-# They are useful for diagnosing third-party integration but optional for
-# day-to-day rule-engine work, so default-on but allow opt-out for environments
-# where the heavyweight Slang submodule is not initialised.
+# Smoke tools exercise the third-party integrations (Slang via the prebuilt
+# resolved by cmake/UseSlang.cmake, tree-sitter via its submodule). Useful
+# for diagnosing the third-party surface but optional for day-to-day rule-
+# engine work — default-on with an opt-out flag.
 option(HLSL_CLIPPY_BUILD_SLANG_SMOKE "Build the Slang smoke-test tool" ON)
 option(HLSL_CLIPPY_BUILD_TREESITTER_SMOKE "Build the tree-sitter smoke-test tool" ON)
 if(HLSL_CLIPPY_BUILD_SLANG_SMOKE)

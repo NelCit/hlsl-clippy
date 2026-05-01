@@ -1,4 +1,4 @@
-# Slang vendor pin
+# Slang prebuilt pin
 
 ## Tag
 
@@ -6,46 +6,61 @@
 
 GitHub release page: <https://github.com/shader-slang/slang/releases/tag/v2026.7.1>
 
-## Build flags set in `cmake/UseSlang.cmake`
+This version is pinned in `cmake/SlangVersion.cmake`:
 
-| Flag | Value | Reason |
-|------|-------|--------|
-| `SLANG_ENABLE_TESTS` | `OFF` | Saves many minutes of compile time and avoids heavy test deps |
-| `SLANG_ENABLE_EXAMPLES` | `OFF` | Examples require `slang-rhi` / Vulkan / DX12 etc. |
-| `SLANG_ENABLE_GFX` | `OFF` | Graphics layer not needed for CLI tooling |
-| `SLANG_ENABLE_SLANGD` | `OFF` | Language server not needed |
-| `SLANG_ENABLE_SLANGRT` | `OFF` | Runtime test harness not needed |
-| `SLANG_ENABLE_REPLAYER` | `OFF` | Replay tool not needed |
-| `SLANG_ENABLE_SLANGI` | `OFF` | Interpreter not needed |
+```cmake
+set(HLSL_CLIPPY_SLANG_VERSION "2026.7.1" ...)
+```
 
-These flags reduce the build to only the compiler library (`slang` / `slang-compiler`)
-and its mandatory dependencies (miniz, lz4, unordered_dense, glslang, spirv-headers,
-spirv-tools).
+## How Slang reaches the build
 
-## Slang-specific build prerequisites
+The `external/slang` git submodule was retired in 2026-05; from-source
+Slang builds were costing every CI job and every fresh worktree ~20
+minutes of cold compile, with no measurable upside over the upstream
+prebuilt tarballs that Shader-Slang ships for the same tagged release.
 
-| Prerequisite | Version | Notes |
-|---|---|---|
-| CMake | ≥ 3.22 | Slang's `CMakeLists.txt` sets `cmake_minimum_required(VERSION 3.22)` |
-| C++ compiler | MSVC 19.3+, Clang 13+, or GCC 11+ | C++17 required by Slang itself |
-| Python | ≥ 3.x | Required by Slang's build scripts for embedding the core module |
-| Ninja (recommended) | any | `cmake -G Ninja` gives much faster incremental builds |
+Resolution order in `cmake/UseSlang.cmake`:
 
-### Windows notes
+1. `Slang_ROOT` — explicit prefix (escape hatch for power users who
+   need a custom Slang build).
+2. **Per-user prebuilt cache** — populated by
+   `tools/fetch-slang.{sh,ps1}`. Cache root:
+   - Windows: `%LOCALAPPDATA%/hlsl-clippy/slang/<version>/`
+   - Linux/macOS: `$HOME/.cache/hlsl-clippy/slang/<version>/`
 
-- Slang ships a `WindowsToolchain` submodule (MSVC runtime re-distribution); it is
-  checked out by `git submodule update --init --recursive`.
-- On Windows the library is built as a DLL (`slang-compiler.dll`) plus a thin
-  forwarding proxy (`slang.dll` for backwards compatibility).  Both must be on
-  `PATH` (or next to the executable) at runtime.
-- The first configure is slow because Slang embeds the core Slang standard library
-  as a binary blob; subsequent incremental builds are fast.
+If neither resolves, the configure step fails with a `FATAL_ERROR`
+that prints the exact `tools/fetch-slang.{sh,ps1}` command to run.
 
-### Full-build size warning
+## Bumping the Slang version
 
-Slang's *full* build (with tests, examples, GFX, LLVM back-end, etc.) can consume
-multiple gigabytes of disk space and take 30+ minutes on a single-core machine.
-With the flags above the partial build is substantially smaller (~200–400 MB object
-files + output DLLs), but still non-trivial.  A pre-built binary release is an
-alternative if build time is a concern; see
-<https://github.com/shader-slang/slang/releases/tag/v2026.7.1> for release artifacts.
+1. Edit `HLSL_CLIPPY_SLANG_VERSION` in `cmake/SlangVersion.cmake`.
+   The fetch scripts parse this line with a regex; keep it on one
+   line and quoted.
+2. Run `tools/fetch-slang.{sh,ps1}` locally to populate the new
+   cache entry and verify the build passes.
+3. CI will fetch the new version on its next run automatically; the
+   cache is keyed by version so the old entry is bypassed without
+   manual cleanup.
+
+## Power user: from-source / custom builds
+
+If you ever need a Slang version that has no prebuilt tarball (e.g.
+an unreleased commit with a critical fix, or a custom fork), build
+Slang yourself against the upstream repo and point at the install
+prefix:
+
+```sh
+cmake -B build -DSlang_ROOT=/path/to/your/slang/install
+```
+
+The `cmake/UseSlang.cmake` `Slang_ROOT` path is unchanged from the
+submodule era — only the in-tree `external/slang` submodule was
+removed, not the underlying integration capability. Upstream's
+build prerequisites are documented at
+<https://github.com/shader-slang/slang/blob/master/docs/building.md>.
+
+The previous build flags that were forced when we built Slang in-tree
+(`SLANG_ENABLE_TESTS=OFF`, `SLANG_ENABLE_GFX=OFF`, etc.) live with
+your local Slang build now if you go this route — pass the same
+`-DSLANG_ENABLE_*=OFF` flags when configuring upstream Slang to keep
+the build narrow.

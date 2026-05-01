@@ -4,26 +4,30 @@
 #
 # Resolution order (highest priority first):
 #   (a) Explicit Slang_ROOT (CMake var or env var) pointing at a complete
-#       install prefix (include/slang.h + lib/ + bin/). Used as-is; the
-#       submodule is NOT configured.
+#       install prefix (include/slang.h + lib/ + bin/). Power-user escape
+#       hatch — point this at a custom Slang build (from-source on a fork,
+#       a CI artifact, etc.) when the prebuilt does not fit.
 #   (b) Per-user prebuilt cache (HLSL_CLIPPY_SLANG_CACHE / env var). The
-#       cache is keyed by HLSL_CLIPPY_SLANG_VERSION (see SlangVersion.cmake),
-#       so a submodule SHA bump invalidates stale cache entries on its own.
-#       Default cache root:
+#       cache is keyed by HLSL_CLIPPY_SLANG_VERSION (see SlangVersion.cmake);
+#       bumping the version forces a fresh download and ignores stale cache
+#       entries. Default cache root:
 #         Windows: %LOCALAPPDATA%/hlsl-clippy/slang/<version>/
 #         Linux  : $HOME/.cache/hlsl-clippy/slang/<version>/
+#         macOS  : $HOME/.cache/hlsl-clippy/slang/<version>/
 #       Populate via tools/fetch-slang.ps1 (Windows) or tools/fetch-slang.sh
-#       (Linux); both download the upstream GitHub release tarball.
-#   (c) Fallback: build the vendored submodule from source (the historical
-#       behaviour). No environment changes required — this remains the
-#       default when neither (a) nor (b) is present.
+#       (POSIX); both download the upstream GitHub release tarball
+#       (https://github.com/shader-slang/slang/releases/v<version>).
 #
-# All three paths produce the SAME public alias target: `slang::slang`.
-# Downstream targets (e.g. tools/slang-smoke) link to `slang::slang`
+# Both paths produce the SAME public alias target: `slang::slang`. Downstream
+# targets (e.g. tools/slang-smoke, core, lsp) link to `slang::slang`
 # regardless of which path was selected.
 #
-# Prerequisites for the from-source path documented in
-# external/slang-version.md.
+# Note: this file used to fall back to a from-source submodule build at
+# `external/slang`. The submodule was retired (see commit history + ADR
+# 0001 addendum) because every CI run + every fresh worktree paid the
+# ~20-minute cold compile, while the upstream prebuilt tarball matches the
+# pinned `HLSL_CLIPPY_SLANG_VERSION` exactly. Power users still have the
+# Slang_ROOT escape hatch above for custom builds.
 
 cmake_minimum_required(VERSION 3.20)
 
@@ -243,40 +247,36 @@ if(NOT "${_slang_cache_root}" STREQUAL "")
 endif()
 
 # ---------------------------------------------------------------------------
-# (c) Fallback: vendored submodule build (historical behaviour)
+# Neither Slang_ROOT nor the prebuilt cache resolved a usable Slang. The
+# from-source fallback was retired with the `external/slang` submodule —
+# fail hard with a concrete remediation.
 # ---------------------------------------------------------------------------
-message(STATUS
-    "hlsl-clippy: building Slang ${HLSL_CLIPPY_SLANG_VERSION} from vendored "
-    "submodule (no Slang_ROOT and no cache hit at "
-    "${_slang_cache_root}/${HLSL_CLIPPY_SLANG_VERSION}). "
-    "Run tools/fetch-slang.ps1 (Windows) or tools/fetch-slang.sh (Linux) to "
-    "populate the cache and avoid this rebuild on subsequent worktrees."
-)
-
-# ---- Slang build knobs ---------------------------------------------------
-# Disable everything we don't need.
-set(SLANG_ENABLE_TESTS     OFF CACHE BOOL "" FORCE)
-set(SLANG_ENABLE_EXAMPLES  OFF CACHE BOOL "" FORCE)
-set(SLANG_ENABLE_GFX       OFF CACHE BOOL "" FORCE)
-set(SLANG_ENABLE_SLANGD    OFF CACHE BOOL "" FORCE)
-set(SLANG_ENABLE_SLANGRT   OFF CACHE BOOL "" FORCE)
-set(SLANG_ENABLE_REPLAYER  OFF CACHE BOOL "" FORCE)
-set(SLANG_ENABLE_SLANGI    OFF CACHE BOOL "" FORCE)
-
-# ---- Bring in Slang -------------------------------------------------------
-add_subdirectory(
-    "${CMAKE_SOURCE_DIR}/external/slang"
-    "${CMAKE_BINARY_DIR}/external/slang"
-    EXCLUDE_FROM_ALL
-)
-
-# ---- Re-export as slang::slang --------------------------------------------
-# Slang's CMake creates a target named `slang`. If it ever starts producing
-# the alias itself this add_library call is a no-op; if not, we create it.
-if(NOT TARGET slang::slang)
-    add_library(slang::slang ALIAS slang)
+if(WIN32)
+    set(_fetch_cmd "pwsh tools/fetch-slang.ps1")
+    set(_default_cache "%LOCALAPPDATA%/hlsl-clippy/slang/${HLSL_CLIPPY_SLANG_VERSION}/")
+else()
+    set(_fetch_cmd "bash tools/fetch-slang.sh")
+    set(_default_cache "$HOME/.cache/hlsl-clippy/slang/${HLSL_CLIPPY_SLANG_VERSION}/")
 endif()
 
+message(FATAL_ERROR
+    "hlsl-clippy: could not locate Slang ${HLSL_CLIPPY_SLANG_VERSION}.\n"
+    "\n"
+    "  No `Slang_ROOT` is set, and the per-user prebuilt cache at\n"
+    "    ${_default_cache}\n"
+    "  is empty (or HLSL_CLIPPY_SLANG_CACHE / Slang_ROOT point at an\n"
+    "  invalid prefix).\n"
+    "\n"
+    "  Fix: from the repo root, run\n"
+    "    ${_fetch_cmd}\n"
+    "  to download the matching prebuilt tarball into the cache, then\n"
+    "  re-run cmake.\n"
+    "\n"
+    "  (Power users: pass `-DSlang_ROOT=<path>` or set the env var to a\n"
+    "   custom Slang install prefix to bypass the cache entirely.)"
+)
+
 # `hlsl_clippy_deploy_slang_dlls(<target>)` is defined at the top of this
-# file (see comment there); the resolution paths above all eventually leave
-# `slang::slang` defined for the helper to consume at call time.
+# file. It is unreachable from this branch (FATAL_ERROR aborts), but the
+# definition stays valid for the (a) Slang_ROOT and (b) cache paths which
+# both `return()` before reaching this fall-through.
