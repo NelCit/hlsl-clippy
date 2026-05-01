@@ -18,6 +18,7 @@ std::vector<std::unique_ptr<Rule>> make_default_rules() {
     rules.push_back(rules::make_mul_identity());
     rules.push_back(rules::make_sin_cos_pair());
     rules.push_back(rules::make_manual_reflect());
+    rules.push_back(rules::make_manual_refract());
     rules.push_back(rules::make_manual_step());
     rules.push_back(rules::make_manual_smoothstep());
     // Phase 2 — saturate-redundancy + bit-manipulation rules.

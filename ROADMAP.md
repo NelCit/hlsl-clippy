@@ -120,7 +120,7 @@ Rules expressible as clang AST patterns — no flow analysis. Group by category 
 - [x] `mul-identity`: `x*1`, `x+0`, `x*0`
 - [x] `sin-cos-pair`: separate `sin(x)`/`cos(x)` on the same `x` → `sincos`
 - [x] `manual-reflect`: hand-rolled formula → built-in `reflect()`
-- [ ] `manual-refract`: hand-rolled formula → built-in `refract()` (sibling of `manual-reflect`; not yet implemented)
+- [x] `manual-refract`: hand-rolled formula → built-in `refract()` (sibling of `manual-reflect`; not yet implemented)
 - [x] `manual-distance`: `length(a-b)` → `distance(a,b)`
 - [x] `manual-step`: `x > a ? 1 : 0` → `step(a, x)`
 - [x] `manual-smoothstep`: hand-rolled cubic Hermite → `smoothstep`

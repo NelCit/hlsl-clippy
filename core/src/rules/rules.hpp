@@ -19,6 +19,7 @@ namespace hlsl_clippy::rules {
 [[nodiscard]] std::unique_ptr<Rule> make_mul_identity();
 [[nodiscard]] std::unique_ptr<Rule> make_sin_cos_pair();
 [[nodiscard]] std::unique_ptr<Rule> make_manual_reflect();
+[[nodiscard]] std::unique_ptr<Rule> make_manual_refract();
 [[nodiscard]] std::unique_ptr<Rule> make_manual_step();
 [[nodiscard]] std::unique_ptr<Rule> make_manual_smoothstep();
 
