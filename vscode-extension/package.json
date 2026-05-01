@@ -1,0 +1,117 @@
+{
+  "name": "hlsl-clippy",
+  "displayName": "HLSL Clippy",
+  "description": "Linter for HLSL — performance + correctness rules beyond what dxc catches.",
+  "publisher": "nelcit",
+  "version": "0.5.0",
+  "license": "Apache-2.0",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters"
+  ],
+  "keywords": [
+    "hlsl",
+    "shader",
+    "linter",
+    "directx",
+    "slang"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:hlsl"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "hlsl",
+        "aliases": [
+          "HLSL",
+          "hlsl"
+        ],
+        "extensions": [
+          ".hlsl",
+          ".hlsli",
+          ".fx",
+          ".fxh",
+          ".vsh",
+          ".psh",
+          ".csh",
+          ".gsh",
+          ".hsh",
+          ".dsh"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "hlslClippy.restart",
+        "title": "Restart Server",
+        "category": "HLSL Clippy"
+      },
+      {
+        "command": "hlslClippy.showOutput",
+        "title": "Show Output Channel",
+        "category": "HLSL Clippy"
+      }
+    ],
+    "configuration": {
+      "title": "HLSL Clippy",
+      "properties": {
+        "hlslClippy.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Explicit path to hlsl-clippy-lsp binary (overrides auto-discovery)."
+        },
+        "hlslClippy.targetProfile": {
+          "type": "string",
+          "default": "",
+          "description": "Slang target profile (e.g., sm_6_6, vs_6_7, ps_6_8). Empty = server default."
+        },
+        "hlslClippy.enableReflection": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Phase 3 reflection-aware rules (requires Slang compile)."
+        },
+        "hlslClippy.enableControlFlow": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Phase 4 CFG-aware rules."
+        },
+        "hlslClippy.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the hlsl-clippy LSP server."
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.4.0"
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NelCit/hlsl-clippy"
+  },
+  "bugs": {
+    "url": "https://github.com/NelCit/hlsl-clippy/issues"
+  },
+  "homepage": "https://github.com/NelCit/hlsl-clippy#readme"
+}

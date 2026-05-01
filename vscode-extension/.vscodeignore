@@ -1,0 +1,16 @@
+.vscode/**
+.vscode-test/**
+src/**
+.gitignore
+.eslintrc*
+**/tsconfig.json
+**/*.map
+**/*.ts
+node_modules/**
+!node_modules/vscode-languageclient/**
+!node_modules/vscode-jsonrpc/**
+!node_modules/vscode-languageserver-protocol/**
+!node_modules/vscode-languageserver-types/**
+!node_modules/semver/**
+!node_modules/lru-cache/**
+!node_modules/yallist/**
