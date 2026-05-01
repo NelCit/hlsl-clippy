@@ -34,6 +34,19 @@ struct LintOptions {
     /// Pool size for `ISession` workers in the reflection engine. Default 4;
     /// LSP / batch CI may want more. Ignored when reflection is not invoked.
     std::uint32_t reflection_pool_size = 4;
+
+    /// When false, the control-flow stage is skipped entirely even if
+    /// control-flow-stage rules are enabled (ADR 0013). Useful for fast
+    /// iteration / AST-only smoke runs / tests that want to isolate AST and
+    /// reflection behaviour from the CFG engine. Ignored when no enabled
+    /// rule has `stage() == Stage::ControlFlow`.
+    bool enable_control_flow = true;
+
+    /// Maximum inter-procedural inlining depth for the uniformity analyzer
+    /// (ADR 0013). Default 3. Higher values produce more precise uniformity
+    /// facts at higher build-time cost; rules that need deeper reasoning are
+    /// explicitly Phase 7. Ignored when CFG construction is not invoked.
+    std::uint32_t cfg_inlining_depth = 3;
 };
 
 /// Run every rule against the source and return the accumulated diagnostics

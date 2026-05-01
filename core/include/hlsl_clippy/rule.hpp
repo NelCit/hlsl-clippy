@@ -11,11 +11,14 @@ class SuppressionSet;
 
 /// Pipeline stage at which a rule's hook fires. Phase 0/1/2 ships `Ast`;
 /// Phase 3 (ADR 0012) introduces `Reflection` for rules that need Slang
-/// reflection data (resource bindings, cbuffer layouts, entry-point shape).
+/// reflection data (resource bindings, cbuffer layouts, entry-point shape);
+/// Phase 4 (ADR 0013) introduces `ControlFlow` for rules that need the
+/// per-source CFG + uniformity oracle.
 enum class Stage {
-    Ast,         ///< AST-only (default; Phase 0/1/2).
-    Reflection,  ///< Needs `ReflectionInfo` (Phase 3).
-    // future: ControlFlow (Phase 4), Ir (Phase 7).
+    Ast,          ///< AST-only (default; Phase 0/1/2).
+    Reflection,   ///< Needs `ReflectionInfo` (Phase 3).
+    ControlFlow,  ///< Needs `ControlFlowInfo` (Phase 4).
+    // future: Ir (Phase 7).
 };
 
 /// Forward declaration of the tree-sitter node wrapper. The full definition
@@ -32,6 +35,12 @@ class AstTree;
 /// reference so this header does not need to pull the (heavier) reflection
 /// header into every rule TU.
 struct ReflectionInfo;
+
+/// Forward declaration of the public control-flow aggregate. The full
+/// definition lives in `hlsl_clippy/control_flow.hpp`; `Rule::on_cfg` takes a
+/// const reference so this header does not need to pull the (heavier)
+/// control-flow header into every rule TU.
+struct ControlFlowInfo;
 
 /// Context passed to rule hooks. Owns the diagnostic sink for the in-progress
 /// lint pass and exposes the source under analysis.
@@ -114,6 +123,15 @@ public:
     virtual void on_reflection(const AstTree& tree,
                                const ReflectionInfo& reflection,
                                RuleContext& ctx);
+
+    /// Control-flow-stage hook called once per parsed source for rules with
+    /// `stage() == Stage::ControlFlow` (ADR 0013). The orchestrator builds
+    /// the per-source CFG + uniformity oracle at most once per lint run and
+    /// dispatches the cached `ControlFlowInfo` to every control-flow-stage
+    /// rule. Rules retain access to the `AstTree` because most of them want
+    /// both sides: the CFG tells them "what path", the AST tells them "what
+    /// syntactic shape". Default implementation does nothing.
+    virtual void on_cfg(const AstTree& tree, const ControlFlowInfo& cfg, RuleContext& ctx);
 };
 
 }  // namespace hlsl_clippy
