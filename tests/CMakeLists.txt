@@ -282,3 +282,6 @@ hlsl_clippy_deploy_slang_dlls(hlsl_clippy_unit_tests)
 # Discover Catch2 test cases as individual ctest entries.
 include(Catch)
 catch_discover_tests(hlsl_clippy_unit_tests)
+
+# Performance benchmark target (Release / RelWithDebInfo only).
+add_subdirectory(bench)
