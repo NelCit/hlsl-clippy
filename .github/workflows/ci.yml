@@ -192,8 +192,8 @@ jobs:
           echo "Using binary: $BIN"
           OUTPUT=$("$BIN" --version)
           echo "Output: $OUTPUT"
-          if [ "$OUTPUT" != "0.5.0" ]; then
-            echo "ERROR: expected '0.5.0', got '$OUTPUT'" >&2
+          if [ "$OUTPUT" != "0.5.1" ]; then
+            echo "ERROR: expected '0.5.1', got '$OUTPUT'" >&2
             exit 1
           fi
           echo "Smoke test passed."
@@ -221,8 +221,8 @@ jobs:
           Write-Host "Using binary: $bin"
           $output = & $bin --version
           Write-Host "Output: $output"
-          if ($output -ne "0.5.0") {
-            Write-Error "ERROR: expected '0.5.0', got '$output'"
+          if ($output -ne "0.5.1") {
+            Write-Error "ERROR: expected '0.5.1', got '$output'"
             exit 1
           }
           Write-Host "Smoke test passed."
@@ -247,8 +247,8 @@ jobs:
           echo "Using binary: $BIN"
           OUTPUT=$("$BIN" --version)
           echo "Output: $OUTPUT"
-          if [ "$OUTPUT" != "0.5.0" ]; then
-            echo "ERROR: expected '0.5.0', got '$OUTPUT'" >&2
+          if [ "$OUTPUT" != "0.5.1" ]; then
+            echo "ERROR: expected '0.5.1', got '$OUTPUT'" >&2
             exit 1
           fi
           echo "Smoke test passed."

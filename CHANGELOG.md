@@ -5,6 +5,65 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.1] — 2026-05-01
+
+Same-day post-launch hardening. v0.5.0 shipped the .vsix Marketplace
+artifact correctly but the binary `Release` workflow failed on Linux
++ macOS at the from-source Slang build step. v0.5.1 repairs the
+release pipeline and ships the CLI/LSP archives that v0.5.0 missed.
+
+### Changed
+
+- **Slang now resolves via a per-user prebuilt cache, not a from-source
+  submodule build.** The `external/slang` git submodule was retired;
+  `cmake/UseSlang.cmake` resolves Slang via `Slang_ROOT` (escape
+  hatch) → `~/.cache/hlsl-clippy/slang/<version>/` (the cache
+  populated by `tools/fetch-slang.{sh,ps1}`). CI runs that previously
+  spent ~20 minutes compiling Slang now spend ~10 seconds downloading
+  the matching prebuilt tarball. `git clone` is meaningfully smaller
+  too.
+
+### Fixed
+
+- `release.yml` Linux: now installs `libc++-18-dev` and sets
+  `CXXFLAGS=-stdlib=libc++` / `LDFLAGS=-stdlib=libc++`. Without these
+  the build hit "no template named 'expected' in namespace 'std'"
+  under Ubuntu 24.04's libstdc++ 13. (`ci.yml` already had this fix;
+  `release.yml` had drifted.)
+- `release.yml` macOS: switched to unversioned `clang` / `clang++`
+  invocations (Homebrew's `llvm@18` is keg-only and ships unversioned
+  binaries — the previous `clang-18` / `clang++-18` calls failed with
+  "No such file or directory").
+- `release-vscode.yml`: skip-on-prerelease-tag gate added so future
+  `-rc1` / `-beta` tag tests do not hard-fail on the VS Marketplace's
+  rejection of SemVer prerelease suffixes.
+- `softprops/action-gh-release@v2` pinned to commit SHA in both
+  release workflows (the `@v2` tag-pin was flagged as an
+  orchestrator follow-up in the workflow headers).
+
+### Added
+
+- **Phase 6 launch blog series** at <https://nelcit.github.io/hlsl-clippy/blog/>:
+  the `Why your HLSL is slower than it has to be` preface plus eight
+  category overviews (math, workgroup, control-flow, bindings,
+  texture, mesh+DXR, wave+helper-lane, SM 6.9 / SER+coop-vec). Each
+  overview deep-dives the GPU mechanism behind that rule pack and
+  links to the per-rule pages.
+- `--format=json` and `--format=github-annotations` flags on the
+  CLI (sub-phase 6a). The latter auto-selects when `$GITHUB_ACTIONS=true`.
+  `docs/ci/lint-hlsl-example.yml` is a copy-paste-able starter
+  workflow.
+- `package-lock.json` at repo root for reproducible `npm ci` in
+  `docs.yml` + `release-vscode.yml`.
+
+### Documentation
+
+- 2026-05-01 audit-driven sweep of `ROADMAP.md` + `CLAUDE.md`: 92
+  shipped rules previously listed as `- [ ]` are now `- [x]`;
+  CLAUDE.md "current status" block rewritten to match the actual
+  Phase 0 → 5 done state instead of the stale "Phase 2 queued"
+  text. ADR count corrected from 10 to 15.
+
 ## [0.5.0] — 2026-05-01
 
 Initial public release. **154 rules** ship across math, bindings, texture,
@@ -89,4 +148,5 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.5.1]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/NelCit/hlsl-clippy/releases/tag/v0.5.0
