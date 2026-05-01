@@ -56,7 +56,6 @@ void cs(uint3 tid : SV_DispatchThreadID) {
     // not crash.
     const auto diags = lint_buffer(hlsl, sources);
     (void)diags;
-    (void)has_rule;
     SUCCEED("barrier-in-divergent-cf ran without crashing");
 }
 
