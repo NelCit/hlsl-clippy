@@ -18,6 +18,25 @@ set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(Catch2)
 
+# Mark Catch2 headers as SYSTEM includes so hlsl_clippy_warnings's -Werror +
+# -Wnon-virtual-dtor (and friends) don't trigger on Catch2's internals.
+# macOS Clang 18 surfaces `-Wnon-virtual-dtor` inside catch_decomposer.hpp
+# even though the warning is correct (Catch2 designs around it for its
+# decomposer template). System-include attribution suppresses the warnings
+# without disabling them on first-party code.
+get_target_property(_catch2_include_dirs Catch2 INTERFACE_INCLUDE_DIRECTORIES)
+if(_catch2_include_dirs)
+    set_target_properties(Catch2 PROPERTIES
+        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_catch2_include_dirs}"
+    )
+endif()
+get_target_property(_catch2_main_include_dirs Catch2WithMain INTERFACE_INCLUDE_DIRECTORIES)
+if(_catch2_main_include_dirs)
+    set_target_properties(Catch2WithMain PROPERTIES
+        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_catch2_main_include_dirs}"
+    )
+endif()
+
 # Path to the fixtures directory, embedded into the test binary so it can find
 # the source files regardless of cwd at run-time.
 set(HLSL_CLIPPY_FIXTURES_DIR "${CMAKE_SOURCE_DIR}/tests/fixtures")

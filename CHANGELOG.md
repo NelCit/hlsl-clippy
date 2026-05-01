@@ -5,6 +5,33 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.6] — 2026-05-01
+
+Same-day continuation. v0.5.5 binary Release failed on Windows due to a
+`$Triple` reference in `tools/fetch-slang.ps1` (script is Windows-only,
+no `$Triple` parameter — leftover from a copy-paste of the bash variant).
+This release fixes that plus three more CI workflow regressions surfaced
+during the audit-driven cleanup chain.
+
+### Fixed
+
+- `tools/fetch-slang.ps1` — replace `$Triple.ToUpper()` (variable doesn't
+  exist on the Windows-only script) with the hardcoded
+  `WINDOWS_X86_64` triple in the env-var name. Linux/macOS bash variant
+  was unaffected.
+- `.github/workflows/lint.yml` — add `tools/fetch-slang.sh` step before
+  `cmake configure`. Since commit 73c0322 retired the from-source
+  submodule fallback, lint's compile_commands.json generation hit a
+  hard FATAL_ERROR on every push. Also installs `libc++-18-dev` /
+  `libc++abi-18-dev` and sets `CXXFLAGS=-stdlib=libc++` to match the
+  ci.yml + release.yml toolchain shape.
+- `tests/CMakeLists.txt` — mark Catch2's interface include directories
+  as SYSTEM via `INTERFACE_SYSTEM_INCLUDE_DIRECTORIES` so
+  `hlsl_clippy_warnings`'s `-Werror -Wnon-virtual-dtor` doesn't
+  trigger on Catch2's `BinaryExpr<>` template internals. macOS Clang 18
+  surfaces this warning where Linux Clang 18 doesn't (different libc++
+  version); SYSTEM-include attribution suppresses it consistently.
+
 ## [0.5.5] — 2026-05-01
 
 Same-day continuation. v0.5.4 binary Release failed on the
@@ -390,6 +417,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.5.6]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.5...v0.5.6
 [0.5.5]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.2...v0.5.3
