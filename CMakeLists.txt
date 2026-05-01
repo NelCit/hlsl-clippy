@@ -63,7 +63,11 @@ if(MSVC)
         /WX
         /permissive-
         /Zc:__cplusplus
-        /Zc:preprocessor
+        # /Zc:preprocessor is MSVC cl.exe-only; clang-cl accepts the flag
+        # but treats it as a no-op + raises -Wunused-command-line-argument.
+        # Gate on `MSVC AND NOT Clang` so we keep the conformant preprocessor
+        # on cl.exe and don't break the clang-cl build.
+        $<$<NOT:$<CXX_COMPILER_ID:Clang>>:/Zc:preprocessor>
         /utf-8
         /EHsc
     )
