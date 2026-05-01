@@ -65,6 +65,10 @@ include(cmake/UseTreeSitter.cmake)
 # included this; promote to unconditional so `core` always sees `slang::slang`.
 include(cmake/UseSlang.cmake)
 
+# nlohmann/json — JSON-RPC dispatcher dependency for the LSP frontend
+# (Phase 5, ADR 0014). Header-only; only `lsp/` consumes it.
+include(cmake/UseNlohmannJson.cmake)
+
 # toml++ for `.hlsl-clippy.toml` parsing (per ADR 0008 §5). Header-only;
 # fetched in single-include mode so only `core/src/config.cpp` pays the
 # compile cost.
@@ -78,6 +82,7 @@ FetchContent_MakeAvailable(tomlplusplus)
 
 add_subdirectory(core)
 add_subdirectory(cli)
+add_subdirectory(lsp)
 
 # Smoke tools require their respective vendored libraries (Slang, tree-sitter).
 # They are useful for diagnosing third-party integration but optional for
