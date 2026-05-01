@@ -22,6 +22,7 @@
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
+#include "rules/util/ast_helpers.hpp"
 #include "rules/util/light_dataflow.hpp"
 
 #include "parser_internal.hpp"
@@ -30,12 +31,10 @@
 namespace hlsl_clippy::rules {
 namespace {
 
+using util::is_id_char;
+
 constexpr std::string_view k_rule_id = "groupshared-uninitialized-read";
 constexpr std::string_view k_category = "workgroup";
-
-[[nodiscard]] bool is_id_char(char c) noexcept {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
-}
 
 /// Locate every `groupshared <name>` declaration's name span in the source
 /// text.

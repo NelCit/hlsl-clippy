@@ -144,6 +144,10 @@ add_library(hlsl_clippy_core STATIC
     src/reflection/engine.cpp
     src/reflection/slang_bridge.cpp
 
+    # Shared AST helpers used by every tree-sitter-driven rule TU
+    # (factored out of ~95 anonymous-namespace duplicates).
+    src/rules/util/ast_helpers.cpp
+
     # Phase 3 — shared utilities for reflection-aware rules (ADR 0012 sub-phase 3b).
     src/rules/util/reflect_resource.cpp
     src/rules/util/reflect_sampler.cpp

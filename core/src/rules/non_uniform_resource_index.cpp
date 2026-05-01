@@ -25,6 +25,7 @@
 #include "hlsl_clippy/reflection.hpp"
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
+#include "rules/util/ast_helpers.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
@@ -32,13 +33,11 @@
 namespace hlsl_clippy::rules {
 namespace {
 
+using util::is_id_char;
+
 constexpr std::string_view k_rule_id = "non-uniform-resource-index";
 constexpr std::string_view k_category = "bindings";
 constexpr std::string_view k_marker = "NonUniformResourceIndex";
-
-[[nodiscard]] bool is_id_char(char c) noexcept {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
-}
 
 [[nodiscard]] std::string_view trim(std::string_view s) noexcept {
     while (!s.empty() &&

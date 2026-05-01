@@ -5,6 +5,21 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- **Factor `node_kind`, `node_text`, `is_id_char` into shared
+  `core/src/rules/util/ast_helpers.{hpp,cpp}`.** These three tree-sitter
+  helper functions were previously copy-pasted into every rule TU's
+  anonymous namespace; with 95+ rule files the duplicates dominated
+  post-PCH compile time and any tweak (e.g. an out-of-range guard) had
+  to be applied 95 times. New header centralises the canonical
+  definition under `hlsl_clippy::rules::util`; rule TUs now do
+  `#include "rules/util/ast_helpers.hpp"` plus
+  `using util::node_kind;` etc. Net: 119 rule files modified, 1422 LOC
+  removed (1886 deletions vs 464 insertions). Behaviour-preserving —
+  662 / 662 non-golden Catch2 tests still pass on Windows clang-cl. The
+  one-shot sweeper that drove the refactor lives at
+  `tools/refactor-ast-helpers.ps1` for posterity.
+
 ## [0.5.6] — 2026-05-01
 
 Same-day continuation. v0.5.5 binary Release failed on Windows due to a

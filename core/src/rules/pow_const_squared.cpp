@@ -21,12 +21,15 @@
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
+#include "rules/util/ast_helpers.hpp"
 
 #include "rules.hpp"
 
 namespace hlsl_clippy::rules {
 
 namespace {
+
+using util::node_text;
 
 constexpr std::string_view k_rule_id = "pow-const-squared";
 constexpr std::string_view k_category = "math";
@@ -130,15 +133,6 @@ constexpr std::string_view k_pow_name = "pow";
 
 /// Slice the source bytes covered by `node`. Returns an empty view if the
 /// node's reported byte range is outside the buffer.
-[[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    const auto lo = static_cast<std::uint32_t>(ts_node_start_byte(node));
-    const auto hi = static_cast<std::uint32_t>(ts_node_end_byte(node));
-    if (hi > bytes.size() || hi < lo) {
-        return {};
-    }
-    return bytes.substr(lo, hi - lo);
-}
-
 /// True if `node` exists and matches the named-node type `expected`.
 [[nodiscard]] bool node_kind_is(::TSNode node, std::string_view expected) noexcept {
     if (ts_node_is_null(node)) {

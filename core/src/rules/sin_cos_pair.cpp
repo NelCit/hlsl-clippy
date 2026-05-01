@@ -30,6 +30,7 @@
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
+#include "rules/util/ast_helpers.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
@@ -37,6 +38,8 @@
 namespace hlsl_clippy::rules {
 
 namespace {
+
+using util::node_text;
 
 constexpr std::string_view k_rule_id = "sin-cos-pair";
 constexpr std::string_view k_category = "math";
@@ -65,16 +68,6 @@ constexpr std::string_view k_category = "math";
 }
 
 /// Return the text of a TSNode as a string_view into `bytes`.
-[[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node))
-        return {};
-    const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
-    const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
-        return {};
-    return bytes.substr(lo, hi - lo);
-}
-
 /// True if `node` is a call_expression to `fn_name` with exactly one argument.
 /// Returns the (sole) argument node via out-param if so.
 [[nodiscard]] bool is_unary_call_to(::TSNode node,

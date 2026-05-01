@@ -43,6 +43,7 @@
 #include "hlsl_clippy/reflection.hpp"
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
+#include "rules/util/ast_helpers.hpp"
 #include "rules/util/reflect_resource.hpp"
 
 #include "parser_internal.hpp"
@@ -51,25 +52,11 @@
 namespace hlsl_clippy::rules {
 namespace {
 
+using util::node_kind;
+using util::node_text;
+
 constexpr std::string_view k_rule_id = "byteaddressbuffer-load-misaligned";
 constexpr std::string_view k_category = "bindings";
-
-[[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node))
-        return {};
-    const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
-    const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
-        return {};
-    return bytes.substr(lo, hi - lo);
-}
-
-[[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node))
-        return {};
-    const char* t = ::ts_node_type(node);
-    return t != nullptr ? std::string_view{t} : std::string_view{};
-}
 
 /// Return the natural alignment (in bytes) for a `LoadN` method name. Returns
 /// 0 when the name is not one of the targeted methods.

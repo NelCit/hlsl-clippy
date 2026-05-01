@@ -35,6 +35,7 @@
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
+#include "rules/util/ast_helpers.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
@@ -42,16 +43,11 @@
 namespace hlsl_clippy::rules {
 namespace {
 
+using util::node_kind;
+
 constexpr std::string_view k_rule_id = "loop-attribute-conflict";
 constexpr std::string_view k_category = "control-flow";
 constexpr std::uint32_t k_unroll_threshold = 32;
-
-[[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node))
-        return {};
-    const char* t = ::ts_node_type(node);
-    return t != nullptr ? std::string_view{t} : std::string_view{};
-}
 
 /// Walk back from `start` to the closest preceding `;`, `}`, `{`, or
 /// start-of-file. Returns the byte offset of the position just after that
