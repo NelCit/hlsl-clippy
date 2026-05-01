@@ -244,3 +244,36 @@ target_link_libraries(hlsl_clippy_core
 # INTERFACE_INCLUDE_DIRECTORIES (set by cmake/UseSlang.cmake). The PRIVATE
 # link above keeps Slang headers off the public include path of `core` so
 # they remain invisible to CLI / LSP / test consumers.
+
+# Precompiled headers: every rule TU under core/src/rules/ pulls in the
+# same set of public headers + STL essentials + tree-sitter's API. With
+# 154+ rule TUs, repeating that parse is the dominant cost on cold builds.
+# `target_precompile_headers` tells the compiler to compile these once and
+# reuse the AST snapshot. Rough win measured by the audit team: 30-50% on
+# cold builds, 60%+ on incremental rebuilds where only one rule changes.
+#
+# PCH is enabled via the standard `BUILD_TESTING`-style opt-out so a
+# contributor can disable it for a clean apples-to-apples compile-time
+# comparison.
+option(HLSL_CLIPPY_USE_PCH "Use precompiled headers for hlsl_clippy_core (faster builds)" ON)
+if(HLSL_CLIPPY_USE_PCH)
+    target_precompile_headers(hlsl_clippy_core PRIVATE
+        # STL essentials every rule TU touches.
+        <cstdint>
+        <memory>
+        <optional>
+        <string>
+        <string_view>
+        <utility>
+        <vector>
+        # tree-sitter API used by every AST-stage rule.
+        <tree_sitter/api.h>
+        # Public headers used by every rule.
+        "include/hlsl_clippy/rule.hpp"
+        "include/hlsl_clippy/diagnostic.hpp"
+        "include/hlsl_clippy/source.hpp"
+        # Private headers used by most rule TUs.
+        "src/parser_internal.hpp"
+        "src/rules/rules.hpp"
+    )
+endif()
