@@ -1,0 +1,150 @@
+#!/bin/sh
+# hlsl-clippy pre-commit hook — clang-format gate on staged C++ files.
+#
+# Source of truth: tools/git-hooks/pre-commit. Installed into .git/hooks/
+# via tools/install-hooks.sh (POSIX) or tools/install-hooks.ps1 (Windows).
+# Do NOT edit .git/hooks/pre-commit directly — it is overwritten on
+# re-install.
+#
+# Behaviour:
+#   1. Collect staged files matching cli/, core/, tools/, lsp/ trees with
+#      a .cpp / .hpp / .h extension. Excludes external/.
+#   2. Locate clang-format (CLANG_FORMAT env var > clang-format-18 >
+#      clang-format on PATH).
+#   3. Reject clang-format majors != 18 unless
+#      HLSL_CLIPPY_HOOK_ALLOW_ANY_CLANG_FORMAT=1 is set.
+#   4. Run --dry-run --Werror. Clean → allow commit.
+#   5. Dirty → either auto-fix + restage (HLSL_CLIPPY_HOOK_FIX=1) or
+#      print the offending files and refuse the commit.
+#
+# Override env vars (also documented in tools/git-hooks/README.md):
+#   CLANG_FORMAT                              explicit path to clang-format
+#   HLSL_CLIPPY_HOOK_ALLOW_ANY_CLANG_FORMAT   skip the v18 check
+#   HLSL_CLIPPY_HOOK_FIX                      auto-fix (clang-format -i + git add)
+
+set -eu
+
+# ----------------------------------------------------------------------------
+# 1. Collect staged C++ files under tracked first-party trees.
+# ----------------------------------------------------------------------------
+# `git diff --cached --name-only --diff-filter=ACMR` lists Added / Copied /
+# Modified / Renamed entries — same set the commit will record. Deletions
+# are excluded so we do not try to format a file that no longer exists.
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR -z \
+    -- 'cli/*.cpp' 'cli/*.hpp' 'cli/*.h' \
+       'core/*.cpp' 'core/*.hpp' 'core/*.h' \
+       'tools/*.cpp' 'tools/*.hpp' 'tools/*.h' \
+       'lsp/*.cpp' 'lsp/*.hpp' 'lsp/*.h' \
+       'cli/**/*.cpp' 'cli/**/*.hpp' 'cli/**/*.h' \
+       'core/**/*.cpp' 'core/**/*.hpp' 'core/**/*.h' \
+       'tools/**/*.cpp' 'tools/**/*.hpp' 'tools/**/*.h' \
+       'lsp/**/*.cpp' 'lsp/**/*.hpp' 'lsp/**/*.h' \
+       ':(exclude)external/' \
+    | tr '\0' '\n')
+
+if [ -z "$STAGED" ]; then
+    # Nothing for us to check — commit may proceed.
+    exit 0
+fi
+
+# ----------------------------------------------------------------------------
+# 2. Locate clang-format.
+# ----------------------------------------------------------------------------
+CF=""
+if [ -n "${CLANG_FORMAT:-}" ]; then
+    CF="$CLANG_FORMAT"
+elif command -v clang-format-18 >/dev/null 2>&1; then
+    CF=$(command -v clang-format-18)
+elif command -v clang-format >/dev/null 2>&1; then
+    CF=$(command -v clang-format)
+fi
+
+if [ -z "$CF" ] || ! command -v "$CF" >/dev/null 2>&1; then
+    echo "hlsl-clippy pre-commit: clang-format not found." >&2
+    echo "" >&2
+    echo "Install clang-format 18, then re-run the installer:" >&2
+    echo "  Windows:       pwsh tools/install-hooks.ps1" >&2
+    echo "  Linux / macOS: bash tools/install-hooks.sh" >&2
+    echo "" >&2
+    echo "Or set CLANG_FORMAT=/path/to/clang-format-18 in your environment." >&2
+    exit 1
+fi
+
+# ----------------------------------------------------------------------------
+# 3. Verify clang-format major version == 18 (CI baseline).
+# ----------------------------------------------------------------------------
+if [ "${HLSL_CLIPPY_HOOK_ALLOW_ANY_CLANG_FORMAT:-0}" != "1" ]; then
+    # Pull first integer out of the version banner, e.g.
+    #   "Ubuntu clang-format version 18.1.8 (...)"  → 18
+    CF_MAJOR=$("$CF" --version 2>/dev/null \
+        | tr -c '0-9' ' ' \
+        | awk '{ for (i = 1; i <= NF; i++) if ($i != "") { print $i; exit } }')
+    if [ -z "$CF_MAJOR" ] || [ "$CF_MAJOR" != "18" ]; then
+        echo "hlsl-clippy pre-commit: clang-format major version is" \
+             "'${CF_MAJOR:-unknown}', expected 18 (CI baseline)." >&2
+        echo "  Resolved binary: $CF" >&2
+        "$CF" --version >&2 || true
+        echo "" >&2
+        echo "Install clang-format 18 OR set" \
+             "HLSL_CLIPPY_HOOK_ALLOW_ANY_CLANG_FORMAT=1 to bypass" >&2
+        echo "(at the risk of CI drift)." >&2
+        exit 1
+    fi
+fi
+
+# ----------------------------------------------------------------------------
+# 4. Auto-fix path (HLSL_CLIPPY_HOOK_FIX=1).
+# ----------------------------------------------------------------------------
+if [ "${HLSL_CLIPPY_HOOK_FIX:-0}" = "1" ]; then
+    echo "hlsl-clippy pre-commit: HLSL_CLIPPY_HOOK_FIX=1 — auto-fixing" \
+         "staged files."
+    # shellcheck disable=SC2086
+    echo "$STAGED" | xargs "$CF" -i
+    # Re-stage the rewritten files so the commit reflects the formatted
+    # content.
+    # shellcheck disable=SC2086
+    echo "$STAGED" | xargs git add
+    exit 0
+fi
+
+# ----------------------------------------------------------------------------
+# 5. Dry-run. Clean → exit 0; dirty → print offending files and refuse.
+# ----------------------------------------------------------------------------
+# `--dry-run --Werror` exits non-zero per offending file and writes one
+# warning per delta to stderr in the form:
+#   <path>:<line>:<col>: warning: code should be clang-formatted [-Wclang-format-violations]
+# We capture stderr, surface a deduplicated path list, and forward exit
+# status from clang-format.
+TMP_ERR=$(mktemp 2>/dev/null || mktemp -t hlsl_clippy_hook)
+trap 'rm -f "$TMP_ERR"' EXIT INT TERM
+
+set +e
+# shellcheck disable=SC2086
+echo "$STAGED" | xargs "$CF" --dry-run --Werror 2>"$TMP_ERR"
+STATUS=$?
+set -e
+
+if [ "$STATUS" -eq 0 ]; then
+    exit 0
+fi
+
+echo "hlsl-clippy pre-commit: clang-format reported violations." >&2
+echo "" >&2
+echo "Offending files:" >&2
+# Extract the path prefix (everything before the first ':') from each
+# warning line, deduplicate while preserving order.
+awk -F: '/warning: code should be clang-formatted/ { print $1 }' \
+    "$TMP_ERR" \
+    | awk '!seen[$0]++' \
+    | sed 's/^/  /' >&2 || true
+
+echo "" >&2
+echo "Fix locally with:" >&2
+# Render the file list space-separated so the suggestion is copy/pasteable.
+FILES_ONELINE=$(echo "$STAGED" | tr '\n' ' ' | sed 's/ *$//')
+echo "  $CF -i $FILES_ONELINE" >&2
+echo "  git add $FILES_ONELINE" >&2
+echo "  git commit  # re-run" >&2
+echo "" >&2
+echo "Or set HLSL_CLIPPY_HOOK_FIX=1 and re-commit to auto-fix + re-stage." >&2
+exit 1

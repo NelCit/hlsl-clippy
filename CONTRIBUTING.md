@@ -54,6 +54,33 @@ git clone https://github.com/NelCit/hlsl-clippy.git
 cd hlsl-clippy
 ```
 
+### Setting up locally
+
+After cloning, install the project pre-commit hook so `clang-format`
+catches format issues before commit (CI's clang-format gate then becomes
+a backstop, not the primary check):
+
+```sh
+# Windows
+pwsh tools\install-hooks.ps1
+
+# Linux / macOS
+bash tools/install-hooks.sh
+```
+
+The hook runs `clang-format --dry-run --Werror` against staged C++ files
+under `cli/`, `core/`, `tools/`, `lsp/`. It requires `clang-format` 18
+(matching the CI baseline). Useful overrides:
+
+| Variable                                  | Purpose                                                         |
+|-------------------------------------------|-----------------------------------------------------------------|
+| `CLANG_FORMAT`                            | Explicit path to `clang-format` (overrides PATH lookup)         |
+| `HLSL_CLIPPY_HOOK_ALLOW_ANY_CLANG_FORMAT` | Set to `1` to skip the major-version-18 check                   |
+| `HLSL_CLIPPY_HOOK_FIX`                    | Set to `1` to auto-run `clang-format -i` and re-stage instead of rejecting the commit |
+
+See [tools/git-hooks/README.md](tools/git-hooks/README.md) for full
+details.
+
 ---
 
 ## Build commands
