@@ -18,18 +18,17 @@ using hlsl_clippy::lint;
 using hlsl_clippy::make_default_rules;
 using hlsl_clippy::SourceManager;
 
-[[nodiscard]] std::vector<Diagnostic> lint_buffer(const std::string& hlsl,
-                                                  SourceManager& sources) {
+[[nodiscard]] std::vector<Diagnostic> lint_buffer(const std::string& hlsl, SourceManager& sources) {
     const auto src = sources.add_buffer("synthetic.hlsl", hlsl);
     REQUIRE(src.valid());
     auto rules = make_default_rules();
     return lint(sources, src, rules);
 }
 
-[[nodiscard]] bool has_rule(const std::vector<Diagnostic>& diags,
-                            std::string_view code) {
+[[nodiscard]] bool has_rule(const std::vector<Diagnostic>& diags, std::string_view code) {
     for (const auto& d : diags) {
-        if (d.code == code) return true;
+        if (d.code == code)
+            return true;
     }
     return false;
 }
@@ -47,8 +46,7 @@ float f(float x) { return (float)((float)x); }
     CHECK(has_rule(lint_buffer(hlsl, sources), "redundant-precision-cast"));
 }
 
-TEST_CASE("redundant-precision-cast fires on (int)((int)y)",
-          "[rules][redundant-precision-cast]") {
+TEST_CASE("redundant-precision-cast fires on (int)((int)y)", "[rules][redundant-precision-cast]") {
     SourceManager sources;
     const std::string hlsl = R"hlsl(
 int f(int y) { return (int)((int)y); }
@@ -58,9 +56,16 @@ int f(int y) { return (int)((int)y); }
 
 TEST_CASE("redundant-precision-cast fires on (uint)((uint)z)",
           "[rules][redundant-precision-cast]") {
+    // Tree-sitter-cpp (the parent of tree-sitter-hlsl) only treats
+    // C-built-ins (`int`, `float`, `double`, `char`, ...) as primitive types
+    // for cast-expression disambiguation. `uint` is not in that set, so
+    // `(uint)((uint)z)` parses as a `call_expression` (`(uint)` "calling"
+    // `((uint)z)`) rather than a nested `cast_expression`. Substitute the
+    // canonical `unsigned int` spelling so the grammar sees a real cast
+    // pair. See external/treesitter-version.md.
     SourceManager sources;
     const std::string hlsl = R"hlsl(
-uint f(uint z) { return (uint)((uint)z); }
+unsigned int f(unsigned int z) { return (unsigned int)((unsigned int)z); }
 )hlsl";
     CHECK(has_rule(lint_buffer(hlsl, sources), "redundant-precision-cast"));
 }
@@ -116,7 +121,10 @@ float f(float x) { return (float)((float)x); }
     const auto diags = lint_buffer(hlsl, sources);
     const Diagnostic* hit = nullptr;
     for (const auto& d : diags) {
-        if (d.code == "redundant-precision-cast") { hit = &d; break; }
+        if (d.code == "redundant-precision-cast") {
+            hit = &d;
+            break;
+        }
     }
     REQUIRE(hit != nullptr);
     REQUIRE_FALSE(hit->fixes.empty());

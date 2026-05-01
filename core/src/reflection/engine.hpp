@@ -16,6 +16,7 @@
 #include <shared_mutex>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
 
 // std::flat_map is C++23 (P0429) but landed in libstdc++ only at GCC 15.1
@@ -71,7 +72,11 @@ public:
     ~ReflectionEngine();
 
 private:
-    using CacheKey = std::pair<std::uint32_t, std::string>;
+    // Cache key includes a content fingerprint so that two sources with the
+    // same numeric `SourceId.value` (e.g. two unit tests each constructing a
+    // fresh SourceManager whose first add_buffer returns id `1`) but
+    // different contents do not collide on the process-singleton cache.
+    using CacheKey = std::tuple<std::uint32_t, std::string, std::uint64_t>;
 
     std::unique_ptr<SlangBridge> bridge_;
     mutable std::shared_mutex cache_mu_;

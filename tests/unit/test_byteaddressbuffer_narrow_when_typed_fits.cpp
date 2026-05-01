@@ -72,6 +72,10 @@ void cs_main(uint3 tid : SV_DispatchThreadID)
 
 TEST_CASE("byteaddressbuffer-narrow-when-typed-fits fires on asfloat4(buf.Load4)",
           "[rules][byteaddressbuffer-narrow-when-typed-fits]") {
+    // `asfloat4` is not a real HLSL intrinsic (the parametric overload of
+    // `asfloat` covers 1/2/3/4 element vectors); using `asfloat` here keeps
+    // the receiver-and-method shape under test while letting Slang accept the
+    // source so reflection can confirm `raw_buf` is a ByteAddressBuffer.
     SourceManager sources;
     const std::string hlsl = R"hlsl(
 ByteAddressBuffer raw_buf;
@@ -80,7 +84,7 @@ ByteAddressBuffer raw_buf;
 [numthreads(64, 1, 1)]
 void cs_main(uint3 tid : SV_DispatchThreadID)
 {
-    float4 v = asfloat4(raw_buf.Load4(16));
+    float4 v = asfloat(raw_buf.Load4(16));
     (void)v;
 }
 )hlsl";

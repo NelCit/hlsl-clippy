@@ -126,6 +126,42 @@ namespace {
     if (from_local == to_local) {
         return false;  // No path needs a barrier when source == sink.
     }
+    // Per the public contract on `CfgInfo::barrier_between`, return false when
+    // the sink is not reachable from the source at all. Run an unconstrained
+    // reachability check first; if `to_local` cannot be reached via any path,
+    // there is no path to barrier-separate and the helper must return false.
+    {
+        std::vector<bool> seen(fn.blocks.size(), false);
+        std::vector<std::uint32_t> stack;
+        stack.push_back(from_local);
+        seen[from_local] = true;
+        bool reachable = false;
+        while (!stack.empty()) {
+            const auto cur = stack.back();
+            stack.pop_back();
+            if (cur == to_local) {
+                reachable = true;
+                break;
+            }
+            for (const auto succ : fn.blocks[cur].successors) {
+                if (succ >= fn.blocks.size() || seen[succ]) {
+                    continue;
+                }
+                if (succ == to_local) {
+                    reachable = true;
+                    break;
+                }
+                seen[succ] = true;
+                stack.push_back(succ);
+            }
+            if (reachable) {
+                break;
+            }
+        }
+        if (!reachable) {
+            return false;
+        }
+    }
     if (fn.blocks[to_local].contains_barrier) {
         // Sink block itself is a barrier: trivially "passed through".
         return true;

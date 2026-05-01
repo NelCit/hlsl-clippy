@@ -260,7 +260,10 @@ TEST_CASE("Dispatcher routes requests and notifications", "[lsp][dispatcher]") {
     d.on_request(
         "ping",
         [](const nlohmann::json& /*p*/) -> std::expected<nlohmann::json, lsp_rpc::ErrorObject> {
-            return nlohmann::json{"pong"};
+            // Use the parenthesised constructor so the JSON value is the
+            // string "pong" rather than the single-element array `["pong"]`
+            // that the brace-init form would produce.
+            return nlohmann::json(std::string{"pong"});
         });
     d.on_notification("buzz", [&notify_count](const nlohmann::json& /*p*/) { ++notify_count; });
 

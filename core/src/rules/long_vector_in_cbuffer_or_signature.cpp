@@ -135,11 +135,15 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
         return;
     }
     const auto kind = node_kind(node);
-    // tree-sitter-hlsl emits `cbuffer_declaration` for `cbuffer X { ... }`;
-    // grammar variants may use other names. Match anything that begins with
-    // the `cbuffer` keyword in the node text for resilience.
-    if (kind == "cbuffer_declaration" || kind == "buffer_declaration" ||
-        (kind == "declaration" || kind == "global_variable_declaration")) {
+    // tree-sitter-hlsl emits `cbuffer_declaration` for `cbuffer X { ... }` in
+    // some shapes, but tree-sitter-cpp commonly mis-parses
+    // `cbuffer Frame { ... }` as a `function_definition` (cbuffer is the
+    // return type). Also tolerate `declaration` / `global_variable_declaration`
+    // and `function_definition` so the textual `cbuffer` / `ConstantBuffer<`
+    // check covers every grammar shape we have observed in the wild. See
+    // external/treesitter-version.md for the cbuffer-related gaps.
+    if (kind == "cbuffer_declaration" || kind == "buffer_declaration" || kind == "declaration" ||
+        kind == "global_variable_declaration" || kind == "function_definition") {
         const auto text = node_text(node, bytes);
         const bool is_cbuffer_decl = text.find("cbuffer") != std::string_view::npos ||
                                      text.find("ConstantBuffer<") != std::string_view::npos;

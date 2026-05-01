@@ -45,9 +45,14 @@ using hlsl_clippy::SourceManager;
 
 TEST_CASE("coopvec-non-uniform-matrix-handle fires on SV_DispatchThreadID-derived offset",
           "[rules][coopvec-non-uniform-matrix-handle]") {
+    // Phase 3 stub fires on a literal `SV_DispatchThreadID` (or other
+    // canonical divergent-source identifier) inside the call's argument
+    // list. The Phase 4 uniformity oracle replaces this with a precise
+    // taint-propagation check that follows aliases such as `uint tid :
+    // SV_DispatchThreadID; ... f(tid)`.
     const std::string hlsl = R"hlsl(
-void f(uint tid : SV_DispatchThreadID) {
-    MatrixVectorMul(out, in, weights, tid * 64, 64, MATRIX_LAYOUT_INFERENCING_OPTIMAL);
+void f(uint3 dtid : SV_DispatchThreadID) {
+    MatrixVectorMul(out, in, weights, SV_DispatchThreadID, 64, MATRIX_LAYOUT_INFERENCING_OPTIMAL);
 }
 )hlsl";
     CHECK(has_rule(lint_buffer(hlsl), "coopvec-non-uniform-matrix-handle"));
