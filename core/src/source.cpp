@@ -37,7 +37,8 @@ namespace {
 constexpr std::uintmax_t k_default_max_file_bytes = 8U * 1024U * 1024U;
 
 [[nodiscard]] std::uintmax_t max_file_bytes() noexcept {
-    if (const char* env = std::getenv("HLSL_CLIPPY_MAX_FILE_BYTES");  // NOLINT(concurrency-mt-unsafe)
+    if (const char* env =
+            std::getenv("HLSL_CLIPPY_MAX_FILE_BYTES");  // NOLINT(concurrency-mt-unsafe)
         env != nullptr && env[0] != '\0') {
         char* end = nullptr;
         const auto parsed = std::strtoull(env, &end, 10);  // NOLINT(cert-err34-c)

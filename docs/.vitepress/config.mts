@@ -19,6 +19,27 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
 
+  // Sitemap: lets crawlers discover every page without spidering. Hostname
+  // matches the GitHub Pages project page (must include the `/hlsl-clippy/`
+  // base path; sitemap URLs auto-derive from `base`).
+  sitemap: {
+    hostname: 'https://nelcit.github.io/hlsl-clippy/',
+  },
+
+  // Social-card meta for HN / Reddit / Twitter / Discord previews. The
+  // tagline mirrors the README's pitch; leaving og:image unset for now —
+  // VitePress will fall back to the favicon.
+  head: [
+    ['meta', { name: 'description', content: 'Linter for HLSL — 154 portable performance + correctness rules beyond what dxc catches.' }],
+    ['meta', { property: 'og:title', content: 'hlsl-clippy' }],
+    ['meta', { property: 'og:description', content: 'Linter for HLSL — 154 portable performance + correctness rules beyond what dxc catches.' }],
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:url', content: 'https://nelcit.github.io/hlsl-clippy/' }],
+    ['meta', { name: 'twitter:card', content: 'summary' }],
+    ['meta', { name: 'twitter:title', content: 'hlsl-clippy' }],
+    ['meta', { name: 'twitter:description', content: 'Linter for HLSL — 154 portable performance + correctness rules beyond what dxc catches.' }],
+  ],
+
   // Skip the ADR brainstorm scratch folder — those notes contain unescaped
   // `<T>` / `<expected>` angle-bracket text that Vue's SFC parser misreads as
   // unclosed HTML tags. Not intended for the public docs site anyway.
@@ -109,6 +130,7 @@ export default defineConfig({
             { text: 'Architecture', link: '/architecture' },
             { text: 'CI integration', link: '/ci' },
             { text: 'LSP / IDE', link: '/lsp' },
+            { text: 'Troubleshooting', link: '/troubleshooting' },
             { text: 'Contributing', link: '/contributing' },
           ],
         },
