@@ -1,6 +1,8 @@
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -26,18 +28,31 @@
 
 namespace {
 
+enum class OutputFormat : std::uint8_t {
+    Human,              ///< rustc-style spans + caret line. Default for TTY.
+    Json,               ///< Flat array of diagnostic objects. Stable schema for CI.
+    GithubAnnotations,  ///< `::warning file=...,line=...::msg [rule]` workflow commands.
+};
+
 void print_usage() {
     std::cout << "hlsl-clippy " << hlsl_clippy::version() << "\n"
               << "Usage: hlsl-clippy <command> [args]\n"
               << "\n"
               << "Commands:\n"
               << "  lint <file> [--fix] [--config <path>] [--target-profile <p>]\n"
+              << "             [--format=<human|json|github-annotations>]\n"
               << "                Lint an HLSL source file. With --fix, apply\n"
               << "                machine-applicable rewrites in place. With\n"
               << "                --config, use the given .hlsl-clippy.toml\n"
               << "                instead of walking up from the file's parent.\n"
               << "                With --target-profile, override the Slang\n"
               << "                reflection profile (default: per-stage sm_6_6).\n"
+              << "                With --format, control output rendering:\n"
+              << "                  human (default)        rustc-style with carets\n"
+              << "                  json                   flat array, stable schema\n"
+              << "                  github-annotations     ::warning file=...:: lines\n"
+              << "                When $GITHUB_ACTIONS=true and --format is unset,\n"
+              << "                github-annotations is selected automatically.\n"
               << "  --help        Print this help\n"
               << "  --version     Print version\n";
 }
@@ -93,11 +108,172 @@ void render_diagnostic(const hlsl_clippy::Diagnostic& diag,
     }
 }
 
+// JSON string escaper. Hand-rolled to keep CLI link surface narrow (no
+// nlohmann/json pull-in for the binary that does not need JSON-RPC framing).
+// Handles the seven mandatory escapes plus `\uXXXX` for control bytes.
+void json_escape(std::string_view s, std::ostream& out) {
+    out << '"';
+    for (const char raw : s) {
+        const auto c = static_cast<unsigned char>(raw);
+        switch (c) {
+            case '"':
+                out << "\\\"";
+                break;
+            case '\\':
+                out << "\\\\";
+                break;
+            case '\b':
+                out << "\\b";
+                break;
+            case '\f':
+                out << "\\f";
+                break;
+            case '\n':
+                out << "\\n";
+                break;
+            case '\r':
+                out << "\\r";
+                break;
+            case '\t':
+                out << "\\t";
+                break;
+            default:
+                if (c < 0x20U) {
+                    constexpr std::array<char, 16> k_hex = {'0',
+                                                            '1',
+                                                            '2',
+                                                            '3',
+                                                            '4',
+                                                            '5',
+                                                            '6',
+                                                            '7',
+                                                            '8',
+                                                            '9',
+                                                            'a',
+                                                            'b',
+                                                            'c',
+                                                            'd',
+                                                            'e',
+                                                            'f'};
+                    out << "\\u00" << k_hex.at((c >> 4U) & 0x0FU) << k_hex.at(c & 0x0FU);
+                } else {
+                    out << raw;
+                }
+                break;
+        }
+    }
+    out << '"';
+}
+
+void render_json_diagnostic(const hlsl_clippy::Diagnostic& diag,
+                            const hlsl_clippy::SourceManager& sources,
+                            std::ostream& out) {
+    const hlsl_clippy::SourceFile* file = sources.get(diag.primary_span.source);
+    const auto lo = diag.primary_span.bytes.lo;
+    const auto hi = diag.primary_span.bytes.hi;
+    const auto loc = sources.resolve(diag.primary_span.source, lo);
+    const std::string path = file != nullptr ? file->path().string() : std::string{"<unknown>"};
+
+    out << "{\"file\":";
+    json_escape(path, out);
+    out << ",\"line\":" << loc.line << ",\"column\":" << loc.column << ",\"byte_offset\":" << lo
+        << ",\"byte_end\":" << hi << ",\"severity\":";
+    json_escape(severity_label(diag.severity), out);
+    out << ",\"rule\":";
+    json_escape(diag.code, out);
+    out << ",\"message\":";
+    json_escape(diag.message, out);
+    out << ",\"machine_applicable_fix\":";
+    bool has_machine_fix = false;
+    for (const auto& f : diag.fixes) {
+        if (f.machine_applicable) {
+            has_machine_fix = true;
+            break;
+        }
+    }
+    out << (has_machine_fix ? "true" : "false");
+    out << '}';
+}
+
+// GitHub Actions workflow-command escape: `%`, `\r`, `\n` MUST be encoded
+// in the message field so a multi-line rule message doesn't terminate the
+// command early. See:
+//   https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#example-setting-an-error-message
+void github_escape(std::string_view s, std::ostream& out) {
+    for (const char c : s) {
+        switch (c) {
+            case '%':
+                out << "%25";
+                break;
+            case '\r':
+                out << "%0D";
+                break;
+            case '\n':
+                out << "%0A";
+                break;
+            default:
+                out << c;
+                break;
+        }
+    }
+}
+
+void render_github_annotation(const hlsl_clippy::Diagnostic& diag,
+                              const hlsl_clippy::SourceManager& sources,
+                              std::ostream& out) {
+    const hlsl_clippy::SourceFile* file = sources.get(diag.primary_span.source);
+    const auto lo = diag.primary_span.bytes.lo;
+    const auto loc = sources.resolve(diag.primary_span.source, lo);
+    const std::string path = file != nullptr ? file->path().string() : std::string{"<unknown>"};
+
+    // Severity → workflow command. GH supports `error`, `warning`, `notice`.
+    std::string_view command = "warning";
+    if (diag.severity == hlsl_clippy::Severity::Error) {
+        command = "error";
+    } else if (diag.severity == hlsl_clippy::Severity::Note) {
+        command = "notice";
+    }
+
+    out << "::" << command << " file=";
+    github_escape(path, out);
+    out << ",line=" << loc.line << ",col=" << loc.column << ",title=";
+    github_escape(diag.code, out);
+    out << "::";
+    github_escape(diag.message, out);
+    out << " [" << diag.code << "]\n";
+}
+
+[[nodiscard]] std::optional<OutputFormat> parse_format(std::string_view value) noexcept {
+    if (value == "human") {
+        return OutputFormat::Human;
+    }
+    if (value == "json") {
+        return OutputFormat::Json;
+    }
+    if (value == "github-annotations") {
+        return OutputFormat::GithubAnnotations;
+    }
+    return std::nullopt;
+}
+
+// Auto-detect: if the user did not pass `--format`, default to
+// `github-annotations` when running inside a GitHub Actions runner so
+// `hlsl-clippy lint shader.hlsl` Just Works as a CI step. Outside Actions,
+// keep `human` for interactive shell use.
+[[nodiscard]] OutputFormat detect_default_format() noexcept {
+    const char* gh = std::getenv("GITHUB_ACTIONS");  // NOLINT(concurrency-mt-unsafe)
+    if (gh != nullptr && std::string_view{gh} == "true") {
+        return OutputFormat::GithubAnnotations;
+    }
+    return OutputFormat::Human;
+}
+
 struct LintOptions {
     std::string path;
     bool apply_fix = false;
-    std::string config_path;     ///< Empty means walk-up resolution.
-    std::string target_profile;  ///< Empty means per-stage default profile.
+    std::string config_path;             ///< Empty means walk-up resolution.
+    std::string target_profile;          ///< Empty means per-stage default profile.
+    std::optional<OutputFormat> format;  ///< std::nullopt → resolve via env at runtime.
 };
 
 [[nodiscard]] std::string read_file(const std::filesystem::path& path) {
@@ -182,21 +358,49 @@ bool write_file(const std::filesystem::path& path, std::string_view contents) {
         config.has_value() ? hlsl_clippy::lint(sources, src_id, rules, *config, path, lint_options)
                            : hlsl_clippy::lint(sources, src_id, rules, lint_options);
 
+    const OutputFormat format = opts.format.value_or(detect_default_format());
+
     bool any_warning = false;
     bool any_error = false;
-    for (const auto& diag : diagnostics) {
-        render_diagnostic(diag, sources, std::cout);
-        if (diag.severity == hlsl_clippy::Severity::Error) {
-            any_error = true;
-        } else if (diag.severity == hlsl_clippy::Severity::Warning) {
-            any_warning = true;
-        }
-    }
 
-    if (!diagnostics.empty()) {
-        std::cout << '\n'
-                  << "hlsl-clippy: " << diagnostics.size() << " diagnostic"
-                  << (diagnostics.size() == 1U ? "" : "s") << " emitted\n";
+    if (format == OutputFormat::Json) {
+        std::cout << '[';
+        for (std::size_t i = 0; i < diagnostics.size(); ++i) {
+            if (i > 0) {
+                std::cout << ',';
+            }
+            render_json_diagnostic(diagnostics[i], sources, std::cout);
+        }
+        std::cout << "]\n";
+        for (const auto& diag : diagnostics) {
+            if (diag.severity == hlsl_clippy::Severity::Error) {
+                any_error = true;
+            } else if (diag.severity == hlsl_clippy::Severity::Warning) {
+                any_warning = true;
+            }
+        }
+    } else {
+        for (const auto& diag : diagnostics) {
+            if (format == OutputFormat::GithubAnnotations) {
+                render_github_annotation(diag, sources, std::cout);
+            } else {
+                render_diagnostic(diag, sources, std::cout);
+            }
+            if (diag.severity == hlsl_clippy::Severity::Error) {
+                any_error = true;
+            } else if (diag.severity == hlsl_clippy::Severity::Warning) {
+                any_warning = true;
+            }
+        }
+
+        // Human format closes with a count line; JSON consumers parse the
+        // array length themselves; GH annotations are one line per
+        // diagnostic with no summary so the GH log doesn't get cluttered.
+        if (format == OutputFormat::Human && !diagnostics.empty()) {
+            std::cout << '\n'
+                      << "hlsl-clippy: " << diagnostics.size() << " diagnostic"
+                      << (diagnostics.size() == 1U ? "" : "s") << " emitted\n";
+        }
     }
 
     // Apply fixes after rendering diagnostics so users see what the rewrite
@@ -267,6 +471,35 @@ bool write_file(const std::filesystem::path& path, std::string_view contents) {
                 return 2;
             }
             opts.target_profile = std::string{args[i + 1U]};
+            ++i;
+            continue;
+        }
+        // `--format=value` (single-token form, conventional for CI).
+        if (a.starts_with("--format=")) {
+            const auto value = a.substr(std::string_view{"--format="}.size());
+            const auto parsed = parse_format(value);
+            if (!parsed) {
+                std::cerr << "hlsl-clippy: unknown --format value: " << value
+                          << " (expected human|json|github-annotations)\n";
+                return 2;
+            }
+            opts.format = parsed;
+            continue;
+        }
+        // `--format value` (two-token form, also supported).
+        if (a == "--format") {
+            if (i + 1U >= args.size()) {
+                std::cerr
+                    << "hlsl-clippy: --format requires a value (human|json|github-annotations)\n";
+                return 2;
+            }
+            const auto parsed = parse_format(args[i + 1U]);
+            if (!parsed) {
+                std::cerr << "hlsl-clippy: unknown --format value: " << args[i + 1U]
+                          << " (expected human|json|github-annotations)\n";
+                return 2;
+            }
+            opts.format = parsed;
             ++i;
             continue;
         }
