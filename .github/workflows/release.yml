@@ -1,0 +1,380 @@
+# Release — binary artifact pipeline (Phase 5 sub-phase 5e per ADR 0014).
+#
+# Trigger: push of a tag matching `v*.*.*`. Per OS, builds Release-config
+# `hlsl-clippy[.exe]` (CLI) and `hlsl-clippy-lsp[.exe]` (LSP), bundles them
+# into a per-platform archive, and attaches them to the matching GitHub
+# Release via softprops/action-gh-release@v2.
+#
+# Platform identifiers (artifact filenames):
+#   - windows-x86_64  → hlsl-clippy-<version>-windows-x86_64.zip
+#   - linux-x86_64    → hlsl-clippy-<version>-linux-x86_64.tar.gz
+#   - macos-aarch64   → hlsl-clippy-<version>-macos-aarch64.tar.gz
+#
+# (No macos-x86_64 slot — macos-14 is Apple Silicon, per ADR 0014 §"5d".)
+#
+# Third-party action SHAs pinned for supply-chain safety. Update with:
+#   gh api /repos/<owner>/<repo>/git/ref/tags/<tag>
+#
+# Pinned SHAs (carried over from .github/workflows/ci.yml as of 2026-04-30):
+#   actions/checkout@v4.2.2            → 11bd71901bbe5b1630ceea73d27597364c9af683
+#   actions/cache@v4.2.3               → 5a3ec84eff668545956fd18022155c47e93e2684
+#   seanmiddleditch/gha-setup-ninja@v5 → 96bed6edff20d1dd61ecff9b75cc519d516e6401
+#   ilammy/msvc-dev-cmd@v1.13.0        → 0b201ec74fa43914dc39ae48a89fd1d8cb592756
+#
+# softprops/action-gh-release: pinned to the v2 floating tag below — orchestrator
+# follow-up: replace with a SHA pin via `gh api repos/softprops/action-gh-release/
+# git/ref/tags/v2` once a stable v2.x tag is selected for the v0.5 release.
+#
+# ── Optional signing & notarization ───────────────────────────────────────────
+# Both signing tracks are conditional on a secret being present so contributor
+# forks (which do not have these secrets) do not see hard failures.
+#
+#   macOS notarization: requires Apple Developer ID + APPLE_NOTARY_KEY,
+#       APPLE_NOTARY_KEY_ID, APPLE_NOTARY_ISSUER_ID secrets, plus an
+#       APPLE_DEVELOPER_ID_CERT (base64 .p12) + APPLE_DEVELOPER_ID_CERT_PASSWORD.
+#       Pre-work (manual; does not block 5e workflow shipping):
+#         1. Enrol in Apple Developer Program ($99/yr).
+#         2. Create a "Developer ID Application" certificate via Xcode or
+#            developer.apple.com. Export to .p12; base64-encode; store as
+#            APPLE_DEVELOPER_ID_CERT secret.
+#         3. Create an App Store Connect API key with the "Developer" role,
+#            download the .p8 file; base64-encode; store as APPLE_NOTARY_KEY.
+#            Store the Key ID + Issuer ID as APPLE_NOTARY_KEY_ID / _ISSUER_ID.
+#         4. Notarization step below auto-runs once secrets are populated.
+#       Until then, the macos-aarch64 binary ships unsigned (Gatekeeper still
+#       allows execution after right-click > Open). Tracked as a v0.6 hardening
+#       follow-up in ADR 0014 §"Risks & mitigations".
+#
+#   Windows code signing: requires WINDOWS_CERT (base64 .pfx) and
+#       WINDOWS_CERT_PASSWORD. Pre-work:
+#         1. Acquire an EV (or OV, cheaper but with SmartScreen reputation
+#            warmup) code-signing certificate.
+#         2. Export to .pfx; base64-encode; store as WINDOWS_CERT secret.
+#       Until then, the windows-x86_64 binary ships unsigned (SmartScreen will
+#       warn on first run; user clicks "More info" > "Run anyway"). ADR 0014
+#       documents this as deliberately deferred to v0.6.
+#
+# Linux: no code signing. SHA-256 sums file (hlsl-clippy-<version>-SHA256SUMS.txt)
+# is generated and uploaded as a release asset for verification.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write   # required to attach release assets
+
+jobs:
+  build:
+    name: Build release artifact (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x86_64
+            archive_ext: tar.gz
+            exe_suffix: ""
+          - os: windows-latest
+            platform: windows-x86_64
+            archive_ext: zip
+            exe_suffix: ".exe"
+          - os: macos-14
+            platform: macos-aarch64
+            archive_ext: tar.gz
+            exe_suffix: ""
+
+    steps:
+      # ── 1. Checkout (with submodules — Slang, tree-sitter, tomlplusplus,
+      #              nlohmann_json all live as submodules) ───────────────────
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
+
+      - name: Derive version from tag
+        id: version
+        shell: bash
+        run: |
+          # GITHUB_REF is e.g. refs/tags/v0.5.0 — strip the prefix, keep "0.5.0".
+          tag="${GITHUB_REF##*/}"
+          version="${tag#v}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Building artifact for tag=$tag version=$version"
+
+      # ── 2. Toolchain setup (mirrors ci.yml exactly so we cache-share) ─────
+      - name: Set up Ninja
+        uses: seanmiddleditch/gha-setup-ninja@96bed6edff20d1dd61ecff9b75cc519d516e6401 # v5
+
+      - name: Install Clang 18 (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
+          clang-18 --version
+          clang++-18 --version
+
+      - name: Set up MSVC dev environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+
+      - name: Install Clang 18 (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          brew install llvm@18
+          echo "/opt/homebrew/opt/llvm@18/bin" >> "$GITHUB_PATH"
+          /opt/homebrew/opt/llvm@18/bin/clang-18 --version
+          /opt/homebrew/opt/llvm@18/bin/clang++-18 --version
+
+      # ── 3. Build cache (per-tag, mirrors ci.yml's structure) ──────────────
+      - name: Cache build directory
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: build
+          key: release-build-${{ matrix.platform }}-${{ steps.version.outputs.tag }}-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt', '.gitmodules') }}
+          restore-keys: |
+            release-build-${{ matrix.platform }}-
+
+      # ── 4. Configure + build (Release) ────────────────────────────────────
+      - name: CMake configure (Linux)
+        if: runner.os == 'Linux'
+        env:
+          CC: clang-18
+          CXX: clang++-18
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: CMake configure (Windows)
+        if: runner.os == 'Windows'
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: CMake configure (macOS)
+        if: runner.os == 'macOS'
+        env:
+          CC: clang-18
+          CXX: clang++-18
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build (CLI + LSP)
+        run: |
+          cmake --build build --target hlsl-clippy --config Release
+          cmake --build build --target hlsl_clippy_lsp --config Release
+
+      # ── 5. Locate built binaries (probe candidate paths) ─────────────────
+      - name: Locate binaries (POSIX)
+        if: runner.os != 'Windows'
+        id: locate_posix
+        shell: bash
+        run: |
+          set -euo pipefail
+          cli=""
+          lsp=""
+          for c in ./build/cli/hlsl-clippy ./build/hlsl-clippy; do
+            if [ -x "$c" ]; then cli="$c"; break; fi
+          done
+          for c in ./build/lsp/hlsl-clippy-lsp ./build/hlsl-clippy-lsp; do
+            if [ -x "$c" ]; then lsp="$c"; break; fi
+          done
+          if [ -z "$cli" ]; then echo "::error::CLI binary not found"; exit 1; fi
+          if [ -z "$lsp" ]; then echo "::error::LSP binary not found"; exit 1; fi
+          echo "cli=$cli" >> "$GITHUB_OUTPUT"
+          echo "lsp=$lsp" >> "$GITHUB_OUTPUT"
+
+      - name: Locate binaries (Windows)
+        if: runner.os == 'Windows'
+        id: locate_win
+        shell: pwsh
+        run: |
+          $cli = $null
+          foreach ($c in @(".\build\cli\hlsl-clippy.exe", ".\build\cli\Release\hlsl-clippy.exe", ".\build\hlsl-clippy.exe")) {
+            if (Test-Path $c) { $cli = $c; break }
+          }
+          $lsp = $null
+          foreach ($c in @(".\build\lsp\hlsl-clippy-lsp.exe", ".\build\lsp\Release\hlsl-clippy-lsp.exe", ".\build\hlsl-clippy-lsp.exe")) {
+            if (Test-Path $c) { $lsp = $c; break }
+          }
+          if (-not $cli) { Write-Error "CLI binary not found"; exit 1 }
+          if (-not $lsp) { Write-Error "LSP binary not found"; exit 1 }
+          "cli=$cli" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "lsp=$lsp" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      # ── 6. Stage + package ────────────────────────────────────────────────
+      - name: Stage artifact tree
+        shell: bash
+        env:
+          CLI_PATH: ${{ steps.locate_posix.outputs.cli || steps.locate_win.outputs.cli }}
+          LSP_PATH: ${{ steps.locate_posix.outputs.lsp || steps.locate_win.outputs.lsp }}
+          STAGE_NAME: hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+          rm -rf "dist/$STAGE_NAME"
+          mkdir -p "dist/$STAGE_NAME"
+          cp "$CLI_PATH" "dist/$STAGE_NAME/hlsl-clippy${{ matrix.exe_suffix }}"
+          cp "$LSP_PATH" "dist/$STAGE_NAME/hlsl-clippy-lsp${{ matrix.exe_suffix }}"
+          # Bundle license + notice + third-party attributions per ADR 0006.
+          cp LICENSE "dist/$STAGE_NAME/LICENSE"
+          cp NOTICE "dist/$STAGE_NAME/NOTICE" || true
+          cp THIRD_PARTY_LICENSES.md "dist/$STAGE_NAME/THIRD_PARTY_LICENSES.md" || true
+          # Windows: also bundle slang.dll so the binary runs out of the box
+          # without forcing the user to mutate PATH (matches the build-tree
+          # POST_BUILD copy in cli/CMakeLists.txt).
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cli_dir=$(dirname "$CLI_PATH")
+            for dll in "$cli_dir"/*.dll; do
+              [ -f "$dll" ] && cp "$dll" "dist/$STAGE_NAME/" || true
+            done
+          fi
+          ls -la "dist/$STAGE_NAME/"
+
+      - name: Package archive (tar.gz, POSIX)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          STAGE_NAME: hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+          cd dist
+          tar -czf "${STAGE_NAME}.tar.gz" "$STAGE_NAME"
+          ls -la
+
+      - name: Package archive (zip, Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          STAGE_NAME: hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
+        run: |
+          $stage = $env:STAGE_NAME
+          Compress-Archive -Path "dist/$stage" -DestinationPath "dist/$stage.zip" -Force
+          Get-ChildItem dist
+
+      # ── 7. SHA-256 sum (per-archive) ──────────────────────────────────────
+      - name: SHA-256 sum (POSIX)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          STAGE_NAME: hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
+          ARCHIVE_EXT: ${{ matrix.archive_ext }}
+        run: |
+          set -euo pipefail
+          cd dist
+          archive="${STAGE_NAME}.${ARCHIVE_EXT}"
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "$archive" > "${archive}.sha256"
+          else
+            shasum -a 256 "$archive" > "${archive}.sha256"
+          fi
+          cat "${archive}.sha256"
+
+      - name: SHA-256 sum (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          STAGE_NAME: hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
+          ARCHIVE_EXT: ${{ matrix.archive_ext }}
+        run: |
+          $archive = "dist/$env:STAGE_NAME.$env:ARCHIVE_EXT"
+          $hash = (Get-FileHash -Algorithm SHA256 $archive).Hash.ToLower()
+          $line = "$hash *$env:STAGE_NAME.$env:ARCHIVE_EXT"
+          $line | Out-File -FilePath "$archive.sha256" -Encoding ascii -NoNewline
+          Write-Host $line
+
+      # ── 8. Optional macOS notarization (gated on APPLE_NOTARY_KEY) ────────
+      - name: Notarize (macOS, optional)
+        if: runner.os == 'macOS' && env.APPLE_NOTARY_KEY != ''
+        env:
+          APPLE_NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY }}
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+          APPLE_DEVELOPER_ID_CERT: ${{ secrets.APPLE_DEVELOPER_ID_CERT }}
+          APPLE_DEVELOPER_ID_CERT_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERT_PASSWORD }}
+          STAGE_NAME: hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # 1. Import the Developer ID cert into a keychain.
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          echo "$APPLE_DEVELOPER_ID_CERT" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN_PATH" \
+            -P "$APPLE_DEVELOPER_ID_CERT_PASSWORD" -T /usr/bin/codesign
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          # 2. Codesign each Mach-O.
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" \
+            | awk -F'"' '/Developer ID Application/ {print $2; exit}')
+          for f in "dist/$STAGE_NAME/hlsl-clippy" "dist/$STAGE_NAME/hlsl-clippy-lsp"; do
+            codesign --force --options runtime --timestamp \
+              --sign "$IDENTITY" "$f"
+          done
+          # 3. Re-pack and submit the archive for notarization.
+          cd dist
+          tar -czf "${STAGE_NAME}.tar.gz" "$STAGE_NAME"
+          # Persist the notary key to a temp file (notarytool wants a path).
+          echo "$APPLE_NOTARY_KEY" | base64 --decode > "$RUNNER_TEMP/notary.p8"
+          xcrun notarytool submit "${STAGE_NAME}.tar.gz" \
+            --key "$RUNNER_TEMP/notary.p8" \
+            --key-id "$APPLE_NOTARY_KEY_ID" \
+            --issuer "$APPLE_NOTARY_ISSUER_ID" \
+            --wait
+          # Re-hash since the binaries were re-signed.
+          shasum -a 256 "${STAGE_NAME}.tar.gz" > "${STAGE_NAME}.tar.gz.sha256"
+
+      - name: Skip notarization (no APPLE_NOTARY_KEY secret)
+        if: runner.os == 'macOS' && env.APPLE_NOTARY_KEY == ''
+        env:
+          APPLE_NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY }}
+        run: echo "APPLE_NOTARY_KEY not set — shipping unsigned macOS binary (Gatekeeper allows after right-click Open)."
+
+      # ── 9. Optional Windows code signing (gated on WINDOWS_CERT) ──────────
+      - name: Sign Windows binaries (optional)
+        if: runner.os == 'Windows' && env.WINDOWS_CERT != ''
+        env:
+          WINDOWS_CERT: ${{ secrets.WINDOWS_CERT }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+          STAGE_NAME: hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
+        shell: pwsh
+        run: |
+          $certPath = "$env:RUNNER_TEMP\windows-cert.pfx"
+          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:WINDOWS_CERT))
+          $signtool = Get-Command signtool.exe -ErrorAction SilentlyContinue
+          if (-not $signtool) {
+            Write-Warning "signtool.exe not on PATH; skipping signing."
+            exit 0
+          }
+          foreach ($exe in @("dist\$env:STAGE_NAME\hlsl-clippy.exe", "dist\$env:STAGE_NAME\hlsl-clippy-lsp.exe")) {
+            & signtool.exe sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 `
+              /f $certPath /p $env:WINDOWS_CERT_PASSWORD $exe
+          }
+          # Re-pack and re-hash.
+          Compress-Archive -Path "dist/$env:STAGE_NAME" -DestinationPath "dist/$env:STAGE_NAME.zip" -Force
+          $hash = (Get-FileHash -Algorithm SHA256 "dist/$env:STAGE_NAME.zip").Hash.ToLower()
+          "$hash *$env:STAGE_NAME.zip" | Out-File -FilePath "dist/$env:STAGE_NAME.zip.sha256" -Encoding ascii -NoNewline
+
+      - name: Skip Windows signing (no WINDOWS_CERT secret)
+        if: runner.os == 'Windows' && env.WINDOWS_CERT == ''
+        env:
+          WINDOWS_CERT: ${{ secrets.WINDOWS_CERT }}
+        shell: pwsh
+        run: Write-Host "WINDOWS_CERT not set — shipping unsigned Windows binary (SmartScreen will warn on first run)."
+
+      # ── 10. Upload artifacts to GitHub Release ────────────────────────────
+      - name: Attach to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          fail_on_unmatched_files: true
+          files: |
+            dist/hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}.${{ matrix.archive_ext }}
+            dist/hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}.${{ matrix.archive_ext }}.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

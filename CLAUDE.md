@@ -261,6 +261,10 @@ the ADR first.
   `// SHOULD-NOT-HIT(rule-id)` annotations, and a doc page in
   `docs/rules/<rule-id>.md` using `docs/rules/_template.md`. PRs that add a
   rule without a doc page are not merged.
+- **Release checklist**: see [tools/release-checklist.md](tools/release-checklist.md)
+  for the canonical pre-tag steps (version bumps across `core/src/version.cpp`,
+  `vscode-extension/package.json`, and `CHANGELOG.md`; local clean build;
+  tag push triggers `.github/workflows/release.yml` + `release-vscode.yml`).
 
 ---
 
