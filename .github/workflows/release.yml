@@ -21,9 +21,7 @@
 #   seanmiddleditch/gha-setup-ninja@v5 → 96bed6edff20d1dd61ecff9b75cc519d516e6401
 #   ilammy/msvc-dev-cmd@v1.13.0        → 0b201ec74fa43914dc39ae48a89fd1d8cb592756
 #
-# softprops/action-gh-release: pinned to the v2 floating tag below — orchestrator
-# follow-up: replace with a SHA pin via `gh api repos/softprops/action-gh-release/
-# git/ref/tags/v2` once a stable v2.x tag is selected for the v0.5 release.
+#   softprops/action-gh-release@v2.3.4 → 3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
 #
 # ── Optional signing & notarization ───────────────────────────────────────────
 # Both signing tracks are conditional on a secret being present so contributor
@@ -369,7 +367,7 @@ jobs:
 
       # ── 10. Upload artifacts to GitHub Release ────────────────────────────
       - name: Attach to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.3.4
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           fail_on_unmatched_files: true
