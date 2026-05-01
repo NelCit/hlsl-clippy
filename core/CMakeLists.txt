@@ -16,6 +16,7 @@ add_library(hlsl_clippy_core STATIC
     src/rules/mul_identity.cpp
     src/rules/sin_cos_pair.cpp
     src/rules/manual_reflect.cpp
+    src/rules/manual_refract.cpp
     src/rules/manual_step.cpp
     src/rules/manual_smoothstep.cpp
 

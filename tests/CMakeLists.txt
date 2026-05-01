@@ -39,6 +39,7 @@ add_executable(hlsl_clippy_unit_tests
     unit/test_mul_identity.cpp
     unit/test_sin_cos_pair.cpp
     unit/test_manual_reflect.cpp
+    unit/test_manual_refract.cpp
     unit/test_manual_step.cpp
     unit/test_manual_smoothstep.cpp
 
