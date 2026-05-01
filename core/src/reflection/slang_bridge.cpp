@@ -16,6 +16,7 @@
 #include "reflection/slang_bridge.hpp"
 
 #include <array>
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <expected>
@@ -438,12 +439,31 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManag
     [[maybe_unused]] Releaser releaser{impl_.get(), std::addressof(session)};
 
     // Load the source as a module.
+    //
+    // Slang's `ISession` caches modules by name AND by virtual path:
+    // `loadModuleFromSourceString` with the same `module_name` or the same
+    // virtual `path` (used as the file-system key) returns the previously-
+    // loaded module's reflection regardless of the new source contents -- and
+    // re-loading the same name + path with different contents triggers a
+    // "key already exists in Dictionary" assert inside Slang. To prevent
+    // stale reflection bleeding between unrelated lint calls (e.g. multiple
+    // unit tests in the same process, each using `synthetic.hlsl`), every
+    // reflect call gets a process-unique module name AND virtual-path suffix.
+    // This is essential for correctness, not just hygiene -- without it a
+    // `RWStructuredBuffer`-bound shader will inherit a previous shader's
+    // `ByteAddressBuffer` reflection.
+    static std::atomic<std::uint64_t> s_call_counter{0U};
+    const std::uint64_t call_id = s_call_counter.fetch_add(1U, std::memory_order_relaxed);
+    const std::string call_suffix = std::string{"__"} + std::to_string(call_id);
+
     const std::string contents{file->contents()};
-    const std::string module_name = file->path().stem().string().empty()
-                                        ? std::string{"hlsl_clippy_module"}
-                                        : file->path().stem().string();
-    const std::string virtual_path =
+    const std::string base_module_name = file->path().stem().string().empty()
+                                             ? std::string{"hlsl_clippy_module"}
+                                             : file->path().stem().string();
+    const std::string module_name = base_module_name + call_suffix;
+    const std::string base_virtual_path =
         file->path().string().empty() ? std::string{"<buffer>"} : file->path().string();
+    const std::string virtual_path = base_virtual_path + call_suffix;
 
     Slang::ComPtr<slang::IBlob> load_diag;
     slang::IModule* raw_module = session->loadModuleFromSourceString(
