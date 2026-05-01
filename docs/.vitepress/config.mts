@@ -48,6 +48,12 @@ export default defineConfig({
     // Sibling rules referenced in cross-link sections that haven't been
     // authored yet — listed in ROADMAP.md and tracked for a later pack.
     /(samplecmp-without-comparison-sampler|shadow-bias-too-small|unused-vs-output|discard-after-heavy-work|redundant-rcp-mul)$/,
+    // Category-overview blog posts referenced as forward links from the
+    // v0.5.0 preface ("why-your-hlsl-is-slower-than-it-has-to-be"). Each
+    // overview is being authored by a parallel agent during launch; the
+    // forward links resolve as those posts land. Tighten this regex to a
+    // shorter list (or remove it entirely) once all eight overviews ship.
+    /^\/blog\/(math|workgroup|control-flow|bindings|texture|mesh-dxr|wave-helper-lane|ser-coop-vector)-overview$/,
   ],
 
   themeConfig: {
