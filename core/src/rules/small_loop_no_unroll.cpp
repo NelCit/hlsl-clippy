@@ -94,15 +94,28 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
         // text for `<` operator.
         const auto cond = ::ts_node_child_by_field_name(node, "condition", 9);
         std::string_view cond_text = node_text(cond, bytes);
+        const auto stmt_text = node_text(node, bytes);
         if (cond_text.empty()) {
-            cond_text = node_text(node, bytes);
+            cond_text = stmt_text;
         }
         const std::uint32_t bound = parse_const_bound(cond_text);
         if (bound > 0U && bound <= k_small_threshold) {
+            // The grammar attaches `hlsl_attribute` to the `for_statement`
+            // node itself, so the `[unroll]` / `[loop]` annotation lives
+            // inside the node's text (before the `for` keyword), not in
+            // the bytes preceding the node's start offset. Inspect both
+            // sources for robustness against future grammar shifts.
+            std::string_view attr_prefix = stmt_text;
+            const auto for_pos = stmt_text.find("for");
+            if (for_pos != std::string_view::npos) {
+                attr_prefix = stmt_text.substr(0, for_pos);
+            }
             const auto stmt_lo = static_cast<std::size_t>(::ts_node_start_byte(node));
             const auto prefix = prefix_text(bytes, stmt_lo);
-            const bool has_unroll = prefix.find("[unroll") != std::string_view::npos;
-            const bool has_loop_attr = prefix.find("[loop]") != std::string_view::npos;
+            const bool has_unroll = attr_prefix.find("[unroll") != std::string_view::npos ||
+                                    prefix.find("[unroll") != std::string_view::npos;
+            const bool has_loop_attr = attr_prefix.find("[loop]") != std::string_view::npos ||
+                                       prefix.find("[loop]") != std::string_view::npos;
             if (!has_unroll && !has_loop_attr) {
                 Diagnostic diag;
                 diag.code = std::string{k_rule_id};

@@ -45,6 +45,50 @@ constexpr std::array<std::string_view, 7> k_divergent_seeds{
     "SV_SampleIndex",
 };
 
+/// Thread-id-like identifier seeds. When a branch condition references one
+/// of these, treat the branch as inherently divergent (the parameter is
+/// almost certainly bound to an SV_* semantic that we can't see textually
+/// without a full parameter-declarator walk). Conservative on naming
+/// conventions used across the corpus.
+constexpr std::array<std::string_view, 13> k_thread_id_seeds{
+    "tid",
+    "gid",
+    "gi",
+    "dtid",
+    "gtid",
+    "DTid",
+    "GTid",
+    "GI",
+    "groupIndex",
+    "GroupIndex",
+    "WaveGetLane",
+    "lane",
+    "laneIndex",
+};
+
+[[nodiscard]] bool is_id_boundary(char c) noexcept {
+    return !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+             c == '_');
+}
+
+[[nodiscard]] bool has_keyword(std::string_view text, std::string_view keyword) noexcept {
+    std::size_t pos = 0;
+    while (pos <= text.size()) {
+        const auto found = text.find(keyword, pos);
+        if (found == std::string_view::npos) {
+            return false;
+        }
+        const bool ok_left = (found == 0U) || is_id_boundary(text[found - 1U]);
+        const std::size_t end = found + keyword.size();
+        const bool ok_right = (end >= text.size()) || is_id_boundary(text[end]);
+        if (ok_left && ok_right) {
+            return true;
+        }
+        pos = found + 1U;
+    }
+    return false;
+}
+
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
     if (::ts_node_is_null(node))
         return {};
@@ -91,15 +135,46 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                 break;
             }
         }
+        // Also skip if the condition references a thread-id-like local
+        // (`tid.x`, `gi`, `dtid`, ...). The function parameter is almost
+        // certainly bound to a divergent SV_* semantic that we cannot see
+        // without a full parameter-declarator walk; the branch is divergent
+        // and `[branch]` is the wrong hint.
+        if (!seems_divergent) {
+            for (const auto seed : k_thread_id_seeds) {
+                if (has_keyword(cond_text, seed)) {
+                    seems_divergent = true;
+                    break;
+                }
+            }
+        }
         // Heuristic uniform signal: condition contains `.` (likely struct
-        // field access on a cbuffer) and no SV_-divergent reference.
+        // field access on a cbuffer) and no divergent reference.
         const bool has_field_access = cond_text.find('.') != std::string_view::npos;
         if (!seems_divergent && has_field_access) {
+            // The grammar attaches `hlsl_attribute` to the `if_statement`
+            // node itself, so the if-statement's own text already covers
+            // any `[branch]` / `[flatten]` prefix the author wrote.
+            // (Previously this rule walked the bytes BEFORE the
+            // if-statement's start offset, which always misses the
+            // attribute.) Inspect the leading bytes of the node up to the
+            // `if` keyword.
+            const auto stmt_text = node_text(node, bytes);
+            std::string_view attr_prefix = stmt_text;
+            const auto if_pos = stmt_text.find("if");
+            if (if_pos != std::string_view::npos) {
+                attr_prefix = stmt_text.substr(0, if_pos);
+            }
+            const bool has_branch_attr = attr_prefix.find("[branch]") != std::string_view::npos;
+            const bool has_flatten_attr = attr_prefix.find("[flatten]") != std::string_view::npos;
+            // Also defensively check the bytes immediately before the node
+            // (in case a future grammar revision moves attributes outside).
             const auto stmt_lo = static_cast<std::size_t>(::ts_node_start_byte(node));
             const auto prefix = prefix_text(bytes, stmt_lo);
-            const bool has_branch_attr = prefix.find("[branch]") != std::string_view::npos;
-            const bool has_flatten_attr = prefix.find("[flatten]") != std::string_view::npos;
-            if (!has_branch_attr && !has_flatten_attr) {
+            const bool prefix_has_branch = prefix.find("[branch]") != std::string_view::npos;
+            const bool prefix_has_flatten = prefix.find("[flatten]") != std::string_view::npos;
+            if (!has_branch_attr && !has_flatten_attr && !prefix_has_branch &&
+                !prefix_has_flatten) {
                 Diagnostic diag;
                 diag.code = std::string{k_rule_id};
                 diag.severity = Severity::Note;

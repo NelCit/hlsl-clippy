@@ -20,13 +20,12 @@
 // modes; this rule covers the latter exactly and the former is left to a
 // future tightening once the engine grows per-path call-graph queries.
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <string_view>
 #include <utility>
-
-#include <tree_sitter/api.h>
 
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/rule.hpp"
@@ -42,26 +41,6 @@ constexpr std::string_view k_rule_id = "dispatchmesh-not-called";
 constexpr std::string_view k_category = "mesh";
 constexpr std::string_view k_amplification_tag = "\"amplification\"";
 constexpr std::string_view k_dispatch_mesh = "DispatchMesh";
-
-[[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) {
-        return {};
-    }
-    const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
-    const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) {
-        return {};
-    }
-    return bytes.substr(lo, hi - lo);
-}
-
-[[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) {
-        return {};
-    }
-    const char* t = ::ts_node_type(node);
-    return t != nullptr ? std::string_view{t} : std::string_view{};
-}
 
 [[nodiscard]] bool is_id_char(char c) noexcept {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
@@ -88,30 +67,81 @@ constexpr std::string_view k_dispatch_mesh = "DispatchMesh";
     return false;
 }
 
-/// True when the function-declaration text begins with an attribute list that
-/// names the amplification shader stage.
-[[nodiscard]] bool is_amplification_function(std::string_view fn_text) noexcept {
-    // The grammar attaches `[shader("amplification")]` (or
-    // `[numthreads(...)]` siblings) to the same function_definition node, so
-    // a substring check on the leading section of the function text is
-    // sufficient. We confirm the literal token to avoid accidental matches
-    // on a `// "amplification"` comment in the body.
-    return fn_text.find(k_amplification_tag) != std::string_view::npos &&
-           fn_text.find("shader") != std::string_view::npos;
+/// Find the byte offset of the brace-balanced compound statement starting at
+/// or after `from`. Returns a pair of [body-start, body-end-exclusive], with
+/// body-end-exclusive pointing one past the matching `}`. If no balanced
+/// block is found, both fields equal `std::string_view::npos`.
+struct BraceRange {
+    std::size_t lo = std::string_view::npos;
+    std::size_t hi = std::string_view::npos;
+};
+[[nodiscard]] BraceRange find_braced_body(std::string_view text, std::size_t from) noexcept {
+    BraceRange out;
+    std::size_t i = from;
+    while (i < text.size() && text[i] != '{') {
+        ++i;
+    }
+    if (i >= text.size()) {
+        return out;
+    }
+    out.lo = i;
+    int depth = 0;
+    for (; i < text.size(); ++i) {
+        const char c = text[i];
+        if (c == '{') {
+            ++depth;
+        } else if (c == '}') {
+            --depth;
+            if (depth == 0) {
+                out.hi = i + 1U;
+                return out;
+            }
+        }
+    }
+    out = BraceRange{};
+    return out;
 }
 
-void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
-    if (::ts_node_is_null(node)) {
-        return;
-    }
-    const auto kind = node_kind(node);
-    if (kind == "function_definition") {
-        const auto fn_text = node_text(node, bytes);
-        if (is_amplification_function(fn_text) && !body_calls_dispatch_mesh(fn_text)) {
+/// Textual scan: find every `[shader("amplification")]` occurrence in the
+/// source, then locate the brace-balanced function body that follows and
+/// check it for a `DispatchMesh` call. Resilient to the tree-sitter-hlsl
+/// gap on multi-attribute function definitions (`[shader] [numthreads]`
+/// combos) where the AST may not surface a clean `function_definition`
+/// node. See `external/treesitter-version.md`.
+void scan_textually(std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
+    const std::string_view shader_attr_pattern{"[shader("};
+    std::size_t pos = 0;
+    while (pos < bytes.size()) {
+        const auto found = bytes.find(shader_attr_pattern, pos);
+        if (found == std::string_view::npos) {
+            return;
+        }
+        // Find the closing `)]` of the attribute.
+        const auto close_paren = bytes.find(')', found);
+        if (close_paren == std::string_view::npos) {
+            return;
+        }
+        const auto attr_text = bytes.substr(found, (close_paren + 1U) - found);
+        if (attr_text.find(k_amplification_tag) == std::string_view::npos) {
+            pos = close_paren + 1U;
+            continue;
+        }
+        // Locate the function body that follows.
+        const BraceRange body = find_braced_body(bytes, close_paren);
+        if (body.lo == std::string_view::npos) {
+            pos = close_paren + 1U;
+            continue;
+        }
+        const auto body_text = bytes.substr(body.lo, body.hi - body.lo);
+        if (!body_calls_dispatch_mesh(body_text)) {
             Diagnostic diag;
             diag.code = std::string{k_rule_id};
             diag.severity = Severity::Error;
-            diag.primary_span = Span{.source = tree.source_id(), .bytes = tree.byte_range(node)};
+            diag.primary_span = Span{
+                .source = tree.source_id(),
+                .bytes = ByteSpan{.lo = static_cast<std::uint32_t>(found),
+                                  .hi = static_cast<std::uint32_t>(body.hi)},
+            };
             diag.message = std::string{
                 "amplification-shader entry point must call `DispatchMesh(...)` exactly once "
                 "before returning -- the contract is required by the D3D12 mesh pipeline; "
@@ -119,11 +149,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                 "Xe-HPG)"};
             ctx.emit(std::move(diag));
         }
-        return;  // do not descend; nested function_definition unlikely.
-    }
-    const std::uint32_t count = ::ts_node_child_count(node);
-    for (std::uint32_t i = 0; i < count; ++i) {
-        walk(::ts_node_child(node, i), bytes, tree, ctx);
+        pos = body.hi;
     }
 }
 
@@ -140,7 +166,11 @@ public:
     }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
-        walk(::ts_tree_root_node(tree.raw_tree()), tree.source_bytes(), tree, ctx);
+        // Tree-sitter-hlsl v0.2.0 has a known gap on multi-attribute function
+        // definitions (`[shader("amplification")] [numthreads(...)]` combos).
+        // Use a textual scan over the source so the rule fires regardless of
+        // whether the AST surfaces a clean `function_definition` node.
+        scan_textually(tree.source_bytes(), tree, ctx);
     }
 };
 

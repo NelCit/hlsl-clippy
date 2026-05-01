@@ -313,23 +313,27 @@ void scan_subscripts(::TSNode node,
         return;
     }
     if (node_kind(node) == "subscript_expression") {
-        // Tree-sitter-hlsl typically exposes "argument" / "index" fields. Try
-        // both positional fallback if fields are absent.
+        // Tree-sitter-hlsl exposes "argument" / "indices" fields on
+        // subscript_expression. The "indices" field is a
+        // subscript_argument_list wrapper around the actual index expression
+        // (between `[` and `]`). Use named-child positional fallback for
+        // robustness against partial-grammar paths.
         ::TSNode receiver = ::ts_node_child_by_field_name(node, "argument", 8);
         if (::ts_node_is_null(receiver)) {
-            receiver = ::ts_node_child(node, 0U);
+            receiver = ::ts_node_named_child(node, 0);
         }
-        ::TSNode index = ::ts_node_child_by_field_name(node, "index", 5);
-        if (::ts_node_is_null(index)) {
-            // Fallback: second-to-last meaningful child.
-            const std::uint32_t cnt = ::ts_node_child_count(node);
-            for (std::uint32_t i = cnt; i-- > 0U;) {
-                const ::TSNode c = ::ts_node_child(node, i);
-                const auto kind = node_kind(c);
-                if (kind != "[" && kind != "]") {
-                    index = c;
-                    break;
-                }
+        ::TSNode indices = ::ts_node_child_by_field_name(node, "indices", 7);
+        if (::ts_node_is_null(indices)) {
+            indices = ::ts_node_named_child(node, 1);
+        }
+        // Descend into subscript_argument_list to get the actual index
+        // expression (its first named child).
+        ::TSNode index{};
+        if (!::ts_node_is_null(indices)) {
+            if (node_kind(indices) == "subscript_argument_list") {
+                index = ::ts_node_named_child(indices, 0);
+            } else {
+                index = indices;
             }
         }
         const auto receiver_text = node_text(receiver, bytes);
