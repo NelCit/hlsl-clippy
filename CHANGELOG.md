@@ -5,6 +5,117 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.4] — 2026-05-01
+
+Audit-driven cleanup pass. The 2026-05-01 multi-domain audit chain
+(11 parallel agents covering legal, VS Code UX, CI/CD, C++ arch+build
+perf, runtime perf, misc, security, error handling, onboarding,
+user-facing docs, rule docs+tests) flagged a cluster of pre-launch
+blockers; this release closes the 18 highest-severity items.
+
+### Changed
+
+- **Documentation truth pass.** Every narrative `docs/*.md` page
+  (`getting-started.md`, `configuration.md`, `ci.md`, `lsp.md`)
+  rewritten against v0.5.x reality — the stale `> Status: pre-v0`
+  banners are gone, install instructions are real, severity vocabulary
+  in the configuration reference matches the loader (`error|warning|note|off`),
+  CI page documents the shipped `--format=github-annotations` flag (was
+  `--format=github`), LSP page documents Marketplace install + per-platform
+  `.vsix` bundling + Neovim/Helix/Emacs recipes.
+- **README install section** rewritten — adds prebuilt-from-Releases as
+  the primary path, `tools/fetch-slang.{sh,ps1}` bootstrap step
+  (without it, the previous quickstart `cmake -B build` failed at
+  configure time per the onboarding audit), per-platform first-time
+  toolchain install hints (apt llvm.sh + libc++-18-dev, brew llvm@18 +
+  PATH note for macOS, VS 2022 17.14+).
+- **CLAUDE.md** "Current status" + "What this project is" + "Locked
+  technical decisions" blocks resynced to v0.5.3 reality. Inline
+  `**Proposed**` markers flipped to `**Accepted**` for the ADRs that
+  shipped (0008/0010/0011/0012/0013/0014/0015). ADR 0003
+  (apps/libs/include layout) alone stays Proposed — the architecture
+  audit found "no concrete harm" of staying with the current cli/core/
+  lsp/ split.
+- **Code-action title in LSP** dropped the redundant "Apply quick-fix:"
+  prefix. VS Code already groups code actions by `kind: quickfix`;
+  the title now reads as a sentence (e.g. "Replace pow(x, 2.0) with
+  x * x" instead of "Apply quick-fix: Replace pow(x, 2.0) with x * x").
+- **VS Code Marketplace metadata** — `package.json` gains a
+  `galleryBanner` (`#1e1e1e` dark theme) and an additional category
+  (`"Programming Languages"` alongside `"Linters"`); keyword list
+  expanded (`shader-lint`, `d3d12`, `performance`, `clippy` added);
+  redundant `activationEvents: ["onLanguage:hlsl"]` removed (VS Code
+  ≥ 1.74 auto-activates on any language declared in
+  `contributes.languages`, and our `engines.vscode` floor is `^1.85.0`).
+- **GSL claim resolution.** ADR 0006 + CLAUDE.md + ROADMAP.md
+  referenced Microsoft GSL as a project code standard, but the legal
+  audit caught that it was never actually linked into the build (no
+  `<gsl/...>` includes anywhere). Replaced the GSL bullet with the
+  C++23 stdlib equivalents we actually use (`std::span`, references
+  / asserted bare pointers, `static_cast` with explicit asserts);
+  `THIRD_PARTY_LICENSES.md` no longer needs a GSL section.
+
+### Security
+
+- **LSP `Content-Length` body capped at 16 MiB**
+  (`lsp/src/rpc/framing.cpp`). Previously accepted up to 4 GiB → trivial
+  OOM via stdin from a hostile peer. Now fails with `HeaderError` so
+  the dispatcher's read loop continues with the next message.
+- **Input file size capped at 8 MiB** (`core/src/source.cpp`).
+  Overridable via `HLSL_CLIPPY_MAX_FILE_BYTES` env var. Bounds memory
+  cost on attacker-controlled shaders.
+- **Slang prebuilt download SHA-256 verification.**
+  `tools/fetch-slang.{sh,ps1}` now optionally verifies the downloaded
+  tarball against `HLSL_CLIPPY_SLANG_SHA256_<UPPER_TRIPLE>` (or the
+  generic `HLSL_CLIPPY_SLANG_SHA256`) env var. Mismatch refuses to
+  populate the cache. Set the per-triple var in CI for hardened
+  supply-chain; bumping `cmake/SlangVersion.cmake` should rotate the
+  per-triple hashes from the Slang release-notes SHA-256 sums.
+- **`tomlplusplus` `FetchContent` pinned to commit SHA**
+  (`30172438cee64926dc41fdd9c11fb3ba5b2ba9de`, v3.4.0). Git tags are
+  mutable; SHA pin defends against an upstream maintainer (or attacker
+  with a stolen token) re-pointing v3.4.0 to a tampered tree.
+- **CI submodule checkout switched from `recursive` to `true`**.
+  `external/tree-sitter-hlsl/.gitmodules` references the `kajiya`
+  renderer (Embark Studios) as a transitive submodule for grammar
+  test fixtures — recursive checkout pulled hundreds of MB of code
+  we never read at build time. Direct submodules only now.
+
+### Added
+
+- `SECURITY.md` rewrite — real disclosure channels (GitHub private
+  vulnerability advisory link + maintainer email backup),
+  90-day disclosure policy detail, supported-version table updated to
+  v0.5.x, threat model section noting v0.5 hardening items
+  (file-size cap, Slang download SHA-verify, no fuzz harness),
+  and a hardening backlog section.
+- `NOTICE` lists toml++, nlohmann/json, vscode-languageclient with
+  one-liners (legal audit caught these as missing).
+- `THIRD_PARTY_LICENSES.md` gains a full `## toml++ (MIT)` section
+  reproducing the upstream MIT text.
+
+### Fixed
+
+- `[TODO: maintainer contact]` placeholders in `CONTRIBUTING.md` and
+  `CODE_OF_CONDUCT.md` replaced with the maintainer email + a pointer
+  to `SECURITY.md` for security-sensitive concerns.
+- `[TODO: security contact]` placeholder in `SECURITY.md` replaced
+  with the GitHub private-advisory channel.
+- `vscode-extension/README.md` Requirements + Installation rewrite
+  — drops the outdated "5c status note" warning + "(planned for v0.5
+  launch)" headers; documents v0.5.3+ per-platform `.vsix` bundling.
+- `vscode-extension/src/server-binary.ts` module-level comment
+  refreshed: step 3 (bundled binary) is the primary hit since v0.5.3,
+  steps 4+5 (cache + download) survive only as fallbacks.
+
+### Removed
+
+- `left_works/` directory (committed). Audit caught that the 7
+  markdown files leaked absolute paths from a different machine
+  (`c:/Users/vinle/...`), exposing the maintainer's other-machine
+  username — internal-process detritus from the v0.5 handoff that's
+  irrelevant post-launch.
+
 ## [0.5.3] — 2026-05-01
 
 Two threads bundled into one tag: (1) finish off the same-day
@@ -213,6 +324,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.5.4]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.0...v0.5.1
