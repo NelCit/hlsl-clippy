@@ -2,12 +2,173 @@
 #
 # Brings in the Slang compiler library as an imported target `slang::slang`.
 #
-# Slang's own CMakeLists.txt creates a target called `slang` (shared library on
-# all platforms).  We disable every optional sub-project we don't need so that
-# the build stays as lightweight as possible, then re-export the target under
-# the conventional `slang::slang` alias.
+# Resolution order (highest priority first):
+#   (a) Explicit Slang_ROOT (CMake var or env var) pointing at a complete
+#       install prefix (include/slang.h + lib/ + bin/). Used as-is; the
+#       submodule is NOT configured.
+#   (b) Per-user prebuilt cache (HLSL_CLIPPY_SLANG_CACHE / env var). The
+#       cache is keyed by HLSL_CLIPPY_SLANG_VERSION (see SlangVersion.cmake),
+#       so a submodule SHA bump invalidates stale cache entries on its own.
+#       Default cache root:
+#         Windows: %LOCALAPPDATA%/hlsl-clippy/slang/<version>/
+#         Linux  : $HOME/.cache/hlsl-clippy/slang/<version>/
+#       Populate via tools/fetch-slang.ps1 (Windows) or tools/fetch-slang.sh
+#       (Linux); both download the upstream GitHub release tarball.
+#   (c) Fallback: build the vendored submodule from source (the historical
+#       behaviour). No environment changes required — this remains the
+#       default when neither (a) nor (b) is present.
 #
-# Prerequisites documented in external/slang-version.md.
+# All three paths produce the SAME public alias target: `slang::slang`.
+# Downstream targets (e.g. tools/slang-smoke) link to `slang::slang`
+# regardless of which path was selected.
+#
+# Prerequisites for the from-source path documented in
+# external/slang-version.md.
+
+cmake_minimum_required(VERSION 3.20)
+
+include("${CMAKE_CURRENT_LIST_DIR}/SlangVersion.cmake")
+
+# Re-entrancy guard: tools/slang-smoke/CMakeLists.txt may include this file
+# in addition to (a future) top-level include. Bail out cleanly if the
+# `slang::slang` target is already defined.
+if(TARGET slang::slang)
+    return()
+endif()
+
+# ---------------------------------------------------------------------------
+# Helper: validate that <dir> looks like a Slang install prefix.
+#
+# Sets <out_var> to TRUE when:
+#   <dir>/include/slang.h exists, AND
+#   at least one of <dir>/lib/slang.lib, <dir>/lib/libslang.so,
+#   <dir>/lib/libslang.dylib exists.
+# ---------------------------------------------------------------------------
+function(_hlsl_clippy_slang_validate_prefix dir out_var)
+    set(${out_var} FALSE PARENT_SCOPE)
+    if(NOT IS_DIRECTORY "${dir}")
+        return()
+    endif()
+    if(NOT EXISTS "${dir}/include/slang.h")
+        return()
+    endif()
+
+    set(_lib_candidates
+        "${dir}/lib/slang.lib"
+        "${dir}/lib/libslang.so"
+        "${dir}/lib/libslang.dylib"
+        "${dir}/lib/slang.dll"
+        "${dir}/bin/slang.dll"
+    )
+    foreach(_cand IN LISTS _lib_candidates)
+        if(EXISTS "${_cand}")
+            set(${out_var} TRUE PARENT_SCOPE)
+            return()
+        endif()
+    endforeach()
+endfunction()
+
+# ---------------------------------------------------------------------------
+# Helper: import a prebuilt prefix as a SHARED IMPORTED `slang` target with
+# its `slang::slang` alias. Mirrors what Slang's own CMakeLists.txt exposes.
+# ---------------------------------------------------------------------------
+function(_hlsl_clippy_slang_import_prefix dir)
+    add_library(slang SHARED IMPORTED GLOBAL)
+
+    set_target_properties(slang PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${dir}/include"
+    )
+
+    if(WIN32)
+        # On Windows, IMPORTED_LOCATION points at the DLL and IMPORTED_IMPLIB
+        # points at the import library. Slang ships both `slang.dll`
+        # (forwarder) and `slang-compiler.dll`; we link against `slang.lib`.
+        set(_dll "${dir}/bin/slang.dll")
+        if(NOT EXISTS "${_dll}")
+            set(_dll "${dir}/lib/slang.dll")
+        endif()
+        set_target_properties(slang PROPERTIES
+            IMPORTED_LOCATION "${_dll}"
+            IMPORTED_IMPLIB   "${dir}/lib/slang.lib"
+        )
+    elseif(APPLE)
+        set_target_properties(slang PROPERTIES
+            IMPORTED_LOCATION "${dir}/lib/libslang.dylib"
+        )
+    else()
+        set_target_properties(slang PROPERTIES
+            IMPORTED_LOCATION "${dir}/lib/libslang.so"
+        )
+    endif()
+
+    add_library(slang::slang ALIAS slang)
+endfunction()
+
+# ---------------------------------------------------------------------------
+# (a) Explicit Slang_ROOT
+# ---------------------------------------------------------------------------
+set(_slang_root "")
+if(DEFINED Slang_ROOT AND NOT "${Slang_ROOT}" STREQUAL "")
+    set(_slang_root "${Slang_ROOT}")
+elseif(DEFINED ENV{Slang_ROOT} AND NOT "$ENV{Slang_ROOT}" STREQUAL "")
+    set(_slang_root "$ENV{Slang_ROOT}")
+endif()
+
+if(NOT "${_slang_root}" STREQUAL "")
+    _hlsl_clippy_slang_validate_prefix("${_slang_root}" _is_valid)
+    if(_is_valid)
+        message(STATUS "hlsl-clippy: using Slang from explicit Slang_ROOT=${_slang_root}")
+        _hlsl_clippy_slang_import_prefix("${_slang_root}")
+        return()
+    else()
+        message(WARNING
+            "hlsl-clippy: Slang_ROOT='${_slang_root}' does not contain a valid "
+            "Slang install (missing include/slang.h or lib/{slang.lib|libslang.so|"
+            "libslang.dylib}). Falling through to cache / submodule build."
+        )
+    endif()
+endif()
+
+# ---------------------------------------------------------------------------
+# (b) Per-user prebuilt cache
+# ---------------------------------------------------------------------------
+set(_slang_cache_root "")
+if(DEFINED HLSL_CLIPPY_SLANG_CACHE AND NOT "${HLSL_CLIPPY_SLANG_CACHE}" STREQUAL "")
+    set(_slang_cache_root "${HLSL_CLIPPY_SLANG_CACHE}")
+elseif(DEFINED ENV{HLSL_CLIPPY_SLANG_CACHE} AND NOT "$ENV{HLSL_CLIPPY_SLANG_CACHE}" STREQUAL "")
+    set(_slang_cache_root "$ENV{HLSL_CLIPPY_SLANG_CACHE}")
+else()
+    if(WIN32)
+        if(DEFINED ENV{LOCALAPPDATA} AND NOT "$ENV{LOCALAPPDATA}" STREQUAL "")
+            set(_slang_cache_root "$ENV{LOCALAPPDATA}/hlsl-clippy/slang")
+        endif()
+    else()
+        if(DEFINED ENV{HOME} AND NOT "$ENV{HOME}" STREQUAL "")
+            set(_slang_cache_root "$ENV{HOME}/.cache/hlsl-clippy/slang")
+        endif()
+    endif()
+endif()
+
+if(NOT "${_slang_cache_root}" STREQUAL "")
+    set(_slang_cache_dir "${_slang_cache_root}/${HLSL_CLIPPY_SLANG_VERSION}")
+    _hlsl_clippy_slang_validate_prefix("${_slang_cache_dir}" _is_valid)
+    if(_is_valid)
+        message(STATUS "hlsl-clippy: using cached Slang from ${_slang_cache_dir}")
+        _hlsl_clippy_slang_import_prefix("${_slang_cache_dir}")
+        return()
+    endif()
+endif()
+
+# ---------------------------------------------------------------------------
+# (c) Fallback: vendored submodule build (historical behaviour)
+# ---------------------------------------------------------------------------
+message(STATUS
+    "hlsl-clippy: building Slang ${HLSL_CLIPPY_SLANG_VERSION} from vendored "
+    "submodule (no Slang_ROOT and no cache hit at "
+    "${_slang_cache_root}/${HLSL_CLIPPY_SLANG_VERSION}). "
+    "Run tools/fetch-slang.ps1 (Windows) or tools/fetch-slang.sh (Linux) to "
+    "populate the cache and avoid this rebuild on subsequent worktrees."
+)
 
 # ---- Slang build knobs ---------------------------------------------------
 # Disable everything we don't need.
@@ -27,7 +188,7 @@ add_subdirectory(
 )
 
 # ---- Re-export as slang::slang --------------------------------------------
-# Slang's CMake creates a target named `slang`.  If it ever starts producing
+# Slang's CMake creates a target named `slang`. If it ever starts producing
 # the alias itself this add_library call is a no-op; if not, we create it.
 if(NOT TARGET slang::slang)
     add_library(slang::slang ALIAS slang)
