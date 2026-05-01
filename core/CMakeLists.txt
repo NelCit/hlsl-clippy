@@ -56,6 +56,11 @@ add_library(hlsl_clippy_core STATIC
     src/reflection/reflection.cpp
     src/reflection/engine.cpp
     src/reflection/slang_bridge.cpp
+
+    # Phase 3 — shared utilities for reflection-aware rules (ADR 0012 sub-phase 3b).
+    src/rules/util/reflect_resource.cpp
+    src/rules/util/reflect_sampler.cpp
+    src/rules/util/reflect_stage.cpp
 )
 
 target_include_directories(hlsl_clippy_core PUBLIC
