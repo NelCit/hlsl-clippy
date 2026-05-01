@@ -13,6 +13,7 @@ add_executable(hlsl_clippy_lsp
     src/document/uri.cpp
     src/server/handlers.cpp
     src/server/diagnostic_convert.cpp
+    src/server/code_actions.cpp
     src/config_resolver.cpp
 )
 

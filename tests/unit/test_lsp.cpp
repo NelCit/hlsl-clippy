@@ -29,6 +29,7 @@
 #include "hlsl_clippy/source.hpp"
 #include "rpc/dispatcher.hpp"
 #include "rpc/framing.hpp"
+#include "server/code_actions.hpp"
 #include "server/diagnostic_convert.hpp"
 #include "server/handlers.hpp"
 
@@ -125,9 +126,9 @@ TEST_CASE("initialize returns ServerCapabilities with the expected shape", "[lsp
     REQUIRE(caps.contains("diagnosticProvider"));
     REQUIRE(caps["diagnosticProvider"].is_object());
 
-    // Sub-phase 5b stubs — must be advertised as off / null today.
-    REQUIRE(caps["codeActionProvider"].get<bool>() == false);
-    REQUIRE(caps["hoverProvider"].get<bool>() == false);
+    // Sub-phase 5b — codeAction + hover are now advertised as on.
+    REQUIRE(caps["codeActionProvider"].get<bool>() == true);
+    REQUIRE(caps["hoverProvider"].get<bool>() == true);
 }
 
 TEST_CASE("textDocument/didOpen triggers a publishDiagnostics notification", "[lsp][handlers]") {
@@ -289,4 +290,166 @@ TEST_CASE("Dispatcher routes requests and notifications", "[lsp][dispatcher]") {
     note["method"] = "buzz";
     REQUIRE(d.dispatch(note).empty());
     REQUIRE(notify_count == 1);
+}
+
+// ─── Sub-phase 5b code-action / hover tests (appended) ───────────────────────
+
+namespace {
+
+/// Build a synthetic Diagnostic + Fix at byte range [lo, hi) with the
+/// given replacement. Helper for the 5b tests below.
+[[nodiscard]] hlsl_clippy::Diagnostic make_diag_with_fix(
+    hlsl_clippy::SourceId src,
+    std::uint32_t lo,
+    std::uint32_t hi,
+    const std::string& replacement,
+    bool machine_applicable,
+    const std::string& code = "test-rule",
+    const std::string& description = "Replace span") {
+    hlsl_clippy::Diagnostic d;
+    d.code = code;
+    d.severity = hlsl_clippy::Severity::Warning;
+    d.message = "synthetic diagnostic";
+    d.primary_span.source = src;
+    d.primary_span.bytes.lo = lo;
+    d.primary_span.bytes.hi = hi;
+    hlsl_clippy::Fix fix;
+    fix.description = description;
+    fix.machine_applicable = machine_applicable;
+    hlsl_clippy::TextEdit edit;
+    edit.span.source = src;
+    edit.span.bytes.lo = lo;
+    edit.span.bytes.hi = hi;
+    edit.replacement = replacement;
+    fix.edits.push_back(std::move(edit));
+    d.fixes.push_back(std::move(fix));
+    return d;
+}
+
+}  // namespace
+
+TEST_CASE("code-action: machine-applicable Fix produces quickfix with isPreferred=true",
+          "[lsp][code_action]") {
+    hlsl_clippy::SourceManager sources;
+    const std::string buf = "float4 f(float x) { return pow(x, 2.0); }\n";
+    const auto src = sources.add_buffer("test.hlsl", buf);
+    REQUIRE(src.valid());
+
+    // "pow(x, 2.0)" starts at byte 27, length 11 → ends at byte 38.
+    const auto lo = static_cast<std::uint32_t>(buf.find("pow"));
+    const auto hi = lo + 11U;
+    const auto d = make_diag_with_fix(
+        src, lo, hi, "(x*x)", /*machine_applicable=*/true, "pow-const-squared", "Replace with x*x");
+    std::vector<hlsl_clippy::Diagnostic> diags{d};
+
+    constexpr const char* k_uri = "file:///tmp/test.hlsl";
+    const auto actions = lsp_server::code_actions_for_range(diags,
+                                                            sources,
+                                                            k_uri,
+                                                            /*line_start=*/0,
+                                                            /*char_start=*/0,
+                                                            /*line_end=*/0,
+                                                            /*char_end=*/100);
+    REQUIRE(actions.is_array());
+    REQUIRE(actions.size() == 1);
+    const auto& a = actions[0];
+    REQUIRE(a["kind"].get<std::string>() == "quickfix");
+    REQUIRE(a["title"].get<std::string>() == "Apply quick-fix: Replace with x*x");
+    REQUIRE(a["isPreferred"].get<bool>() == true);
+
+    // diagnostics array carries the LSP-shaped diagnostic.
+    REQUIRE(a["diagnostics"].is_array());
+    REQUIRE(a["diagnostics"].size() == 1);
+    REQUIRE(a["diagnostics"][0]["code"].get<std::string>() == "pow-const-squared");
+
+    // edit.changes[uri] is a TextEdit array matching the Fix's edits
+    // byte-for-byte.
+    REQUIRE(a["edit"].is_object());
+    REQUIRE(a["edit"]["changes"].is_object());
+    REQUIRE(a["edit"]["changes"].contains(k_uri));
+    const auto& text_edits = a["edit"]["changes"][k_uri];
+    REQUIRE(text_edits.is_array());
+    REQUIRE(text_edits.size() == 1);
+    REQUIRE(text_edits[0]["newText"].get<std::string>() == "(x*x)");
+    REQUIRE(text_edits[0]["range"]["start"]["line"].get<int>() == 0);
+    REQUIRE(text_edits[0]["range"]["start"]["character"].get<int>() == static_cast<int>(lo));
+    REQUIRE(text_edits[0]["range"]["end"]["character"].get<int>() == static_cast<int>(hi));
+}
+
+TEST_CASE("code-action: suggestion-only Fix produces quickfix with isPreferred=false",
+          "[lsp][code_action]") {
+    hlsl_clippy::SourceManager sources;
+    const std::string buf = "float4 f(float x) { return pow(x, 2.0); }\n";
+    const auto src = sources.add_buffer("test.hlsl", buf);
+    REQUIRE(src.valid());
+
+    const auto lo = static_cast<std::uint32_t>(buf.find("pow"));
+    const auto hi = lo + 11U;
+    const auto d = make_diag_with_fix(src, lo, hi, "(x*x)", /*machine_applicable=*/false);
+    std::vector<hlsl_clippy::Diagnostic> diags{d};
+
+    const auto actions =
+        lsp_server::code_actions_for_range(diags, sources, "file:///tmp/x.hlsl", 0, 0, 0, 200);
+    REQUIRE(actions.size() == 1);
+    REQUIRE(actions[0]["kind"].get<std::string>() == "quickfix");
+    REQUIRE(actions[0]["isPreferred"].get<bool>() == false);
+}
+
+TEST_CASE("code-action: diagnostic outside the requested range is excluded", "[lsp][code_action]") {
+    hlsl_clippy::SourceManager sources;
+    // Two-line buffer; diagnostic on line 1, request range on line 0.
+    const std::string buf = std::string{"float a = 1.0;\n"} + "float b = pow(c, 2.0);\n";
+    const auto src = sources.add_buffer("test.hlsl", buf);
+    REQUIRE(src.valid());
+
+    // "pow(c, 2.0)" lives at byte offset (15 + "float b = ".len) on line 1.
+    const auto pow_off = static_cast<std::uint32_t>(buf.find("pow"));
+    const auto d = make_diag_with_fix(src, pow_off, pow_off + 11U, "(c*c)", true);
+    std::vector<hlsl_clippy::Diagnostic> diags{d};
+
+    // Request only line 0 (the `float a = 1.0;` line). The diagnostic on
+    // line 1 must be excluded.
+    const auto actions =
+        lsp_server::code_actions_for_range(diags, sources, "file:///tmp/x.hlsl", 0, 0, 0, 14);
+    REQUIRE(actions.is_array());
+    REQUIRE(actions.empty());
+
+    // Sanity: requesting a range that covers line 1 produces the action.
+    const auto actions_hit =
+        lsp_server::code_actions_for_range(diags, sources, "file:///tmp/x.hlsl", 1, 0, 1, 200);
+    REQUIRE(actions_hit.size() == 1);
+}
+
+TEST_CASE("hover: diagnostic at cursor returns markdown with rule-id link", "[lsp][hover]") {
+    hlsl_clippy::SourceManager sources;
+    const std::string buf = "float4 f(float x) { return pow(x, 2.0); }\n";
+    const auto src = sources.add_buffer("test.hlsl", buf);
+    REQUIRE(src.valid());
+
+    const auto lo = static_cast<std::uint32_t>(buf.find("pow"));
+    const auto hi = lo + 11U;
+    auto d =
+        make_diag_with_fix(src, lo, hi, "(x*x)", true, "pow-const-squared", "Replace with x*x");
+    d.message = "use x*x instead of pow(x, 2.0)";
+    std::vector<hlsl_clippy::Diagnostic> diags{d};
+
+    // Cursor inside the `pow` token (line 0, character lo+1).
+    const auto hover =
+        lsp_server::hover_for_position(diags, sources, 0, static_cast<std::int32_t>(lo + 1));
+    REQUIRE(hover.is_object());
+    REQUIRE(hover["contents"]["kind"].get<std::string>() == "markdown");
+    const auto value = hover["contents"]["value"].get<std::string>();
+    REQUIRE(value.find("pow-const-squared") != std::string::npos);
+    REQUIRE(value.find("use x*x instead of pow(x, 2.0)") != std::string::npos);
+    REQUIRE(value.find("https://github.com/NelCit/hlsl-clippy/blob/main/docs/rules/"
+                       "pow-const-squared.md") != std::string::npos);
+
+    // Cursor outside any diagnostic span returns null (no hover content).
+    const auto miss = lsp_server::hover_for_position(diags, sources, 0, 0);
+    REQUIRE(miss.is_null());
+}
+
+TEST_CASE("docs_url_for_rule produces the canonical pre-Phase-6 URL", "[lsp][hover]") {
+    REQUIRE(lsp_server::docs_url_for_rule("pow-const-squared") ==
+            "https://github.com/NelCit/hlsl-clippy/blob/main/docs/rules/pow-const-squared.md");
 }

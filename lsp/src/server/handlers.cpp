@@ -19,6 +19,7 @@
 #include "hlsl_clippy/version.hpp"
 #include "rpc/dispatcher.hpp"
 #include "rpc/message.hpp"
+#include "server/code_actions.hpp"
 #include "server/diagnostic_convert.hpp"
 
 #include "config_resolver.hpp"
@@ -121,11 +122,12 @@ nlohmann::json build_server_capabilities() {
     sync["save"] = std::move(save);
     caps["textDocumentSync"] = std::move(sync);
 
-    // Capabilities scaffolded as stubs for sub-phase 5b. They are advertised
-    // here so the dispatcher does not have to dynamically register them
-    // later, but the handlers either return empty results or are absent.
-    caps["codeActionProvider"] = false;       // sub-phase 5b will flip to true
-    caps["hoverProvider"] = false;            // sub-phase 5b
+    // Capabilities advertised by sub-phase 5b. `codeActionProvider` is the
+    // boolean form (we accept any kind/range and return only what we have);
+    // `hoverProvider` is unconditional — we only return content when the
+    // cursor sits on a diagnostic span.
+    caps["codeActionProvider"] = true;        // sub-phase 5b
+    caps["hoverProvider"] = true;             // sub-phase 5b
     caps["completionProvider"] = nullptr;     // out of scope per ADR 0014 §5
     caps["signatureHelpProvider"] = nullptr;  // out of scope
     caps["definitionProvider"] = false;       // out of scope
@@ -167,13 +169,11 @@ void Server::register_handlers() {
                             [this](const nlohmann::json& p) { return on_initialize(p); });
     dispatcher_->on_request("shutdown", [this](const nlohmann::json& p) { return on_shutdown(p); });
 
-    // Stubs for capabilities advertised as off for 5a.
-    dispatcher_->on_request("textDocument/codeAction", [this](const nlohmann::json& p) {
-        return on_unimplemented_request(p);
-    });
-    dispatcher_->on_request("textDocument/hover", [this](const nlohmann::json& p) {
-        return on_unimplemented_request(p);
-    });
+    // Sub-phase 5b request handlers.
+    dispatcher_->on_request("textDocument/codeAction",
+                            [this](const nlohmann::json& p) { return on_code_action(p); });
+    dispatcher_->on_request("textDocument/hover",
+                            [this](const nlohmann::json& p) { return on_hover(p); });
 
     dispatcher_->on_notification("initialized",
                                  [this](const nlohmann::json& p) { on_initialized(p); });
@@ -217,6 +217,112 @@ std::expected<nlohmann::json, rpc::ErrorObject> Server::on_unimplemented_request
     // so a misbehaving client that asks anyway gets a clean reply rather
     // than a method-not-found error.
     return nlohmann::json{};
+}
+
+namespace {
+
+/// Read a `{"line": int, "character": int}` LSP Position from `obj`. Returns
+/// `(0, 0)` when the field is missing or malformed — that is the safest
+/// fallback because LSP positions are always non-negative.
+[[nodiscard]] std::pair<std::int32_t, std::int32_t> extract_position(const nlohmann::json& obj) {
+    std::int32_t line = 0;
+    std::int32_t character = 0;
+    if (obj.is_object()) {
+        const auto l = obj.find("line");
+        const auto c = obj.find("character");
+        if (l != obj.end() && l->is_number_integer()) {
+            line = l->get<std::int32_t>();
+        }
+        if (c != obj.end() && c->is_number_integer()) {
+            character = c->get<std::int32_t>();
+        }
+    }
+    return {line, character};
+}
+
+/// Re-run the lint pipeline against the open document and return the
+/// (sources, diagnostics) pair. Both pieces are returned by value so the
+/// caller's SourceManager outlives any SourceId lookups against it. Returns
+/// `std::nullopt` if the document is unknown.
+struct LintSnapshot {
+    hlsl_clippy::SourceManager sources;
+    std::vector<hlsl_clippy::Diagnostic> diagnostics;
+    hlsl_clippy::SourceId src_id;
+};
+
+[[nodiscard]] std::optional<LintSnapshot> run_lint_for(document::DocumentManager& docs,
+                                                       const std::string& uri) {
+    auto* doc = docs.find(uri);
+    if (doc == nullptr) {
+        return std::nullopt;
+    }
+    LintSnapshot snap;
+    snap.src_id = snap.sources.add_buffer(doc->path.string(), doc->contents);
+    if (!snap.src_id.valid()) {
+        return std::nullopt;
+    }
+    auto rules = hlsl_clippy::make_default_rules();
+    auto config = lsp::resolve_config_for(doc->path);
+    hlsl_clippy::LintOptions options;
+    if (config.has_value()) {
+        snap.diagnostics =
+            hlsl_clippy::lint(snap.sources, snap.src_id, rules, *config, doc->path, options);
+    } else {
+        snap.diagnostics = hlsl_clippy::lint(snap.sources, snap.src_id, rules, options);
+    }
+    return snap;
+}
+
+}  // namespace
+
+std::expected<nlohmann::json, rpc::ErrorObject> Server::on_code_action(
+    const nlohmann::json& params) {
+    const auto uri = extract_text_document_uri(params);
+    if (uri.empty()) {
+        return nlohmann::json::array();
+    }
+    if (!params.is_object()) {
+        return nlohmann::json::array();
+    }
+    const auto range_it = params.find("range");
+    if (range_it == params.end() || !range_it->is_object()) {
+        return nlohmann::json::array();
+    }
+    const auto start_it = range_it->find("start");
+    const auto end_it = range_it->find("end");
+    if (start_it == range_it->end() || end_it == range_it->end()) {
+        return nlohmann::json::array();
+    }
+    const auto [s_line, s_char] = extract_position(*start_it);
+    const auto [e_line, e_char] = extract_position(*end_it);
+
+    auto snap = run_lint_for(*docs_, uri);
+    if (!snap.has_value()) {
+        return nlohmann::json::array();
+    }
+    return code_actions_for_range(
+        snap->diagnostics, snap->sources, uri, s_line, s_char, e_line, e_char);
+}
+
+std::expected<nlohmann::json, rpc::ErrorObject> Server::on_hover(const nlohmann::json& params) {
+    const auto uri = extract_text_document_uri(params);
+    if (uri.empty()) {
+        return nlohmann::json{};
+    }
+    if (!params.is_object()) {
+        return nlohmann::json{};
+    }
+    const auto pos_it = params.find("position");
+    if (pos_it == params.end() || !pos_it->is_object()) {
+        return nlohmann::json{};
+    }
+    const auto [line, character] = extract_position(*pos_it);
+
+    auto snap = run_lint_for(*docs_, uri);
+    if (!snap.has_value()) {
+        return nlohmann::json{};
+    }
+    return hover_for_position(snap->diagnostics, snap->sources, line, character);
 }
 
 void Server::on_initialized(const nlohmann::json& /*params*/) {

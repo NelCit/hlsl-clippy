@@ -70,6 +70,10 @@ private:
         const nlohmann::json& params);
     [[nodiscard]] std::expected<nlohmann::json, rpc::ErrorObject> on_unimplemented_request(
         const nlohmann::json& params);
+    [[nodiscard]] std::expected<nlohmann::json, rpc::ErrorObject> on_code_action(
+        const nlohmann::json& params);
+    [[nodiscard]] std::expected<nlohmann::json, rpc::ErrorObject> on_hover(
+        const nlohmann::json& params);
 
     // ── notification handlers ─────────────────────────────────────────────
     void on_initialized(const nlohmann::json& params);
