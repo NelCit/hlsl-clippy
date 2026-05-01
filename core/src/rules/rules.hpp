@@ -55,4 +55,91 @@ namespace hlsl_clippy::rules {
 [[nodiscard]] std::unique_ptr<Rule> make_wavereadlaneat_constant_zero_to_readfirst();
 [[nodiscard]] std::unique_ptr<Rule> make_loop_attribute_conflict();
 
+// Phase 3 — Pack A (ADR 0011 buffers + groupshared-typed).
+[[nodiscard]] std::unique_ptr<Rule> make_byteaddressbuffer_load_misaligned();
+[[nodiscard]] std::unique_ptr<Rule> make_byteaddressbuffer_narrow_when_typed_fits();
+[[nodiscard]] std::unique_ptr<Rule> make_groupshared_16bit_unpacked();
+[[nodiscard]] std::unique_ptr<Rule> make_groupshared_union_aliased();
+[[nodiscard]] std::unique_ptr<Rule> make_structured_buffer_stride_not_cache_aligned();
+
+// Phase 3 — Pack B (ADR 0011 samplers + texture-format).
+[[nodiscard]] std::unique_ptr<Rule> make_anisotropy_without_anisotropic_filter();
+[[nodiscard]] std::unique_ptr<Rule> make_bgra_rgba_swizzle_mismatch();
+[[nodiscard]] std::unique_ptr<Rule> make_comparison_sampler_without_comparison_op();
+[[nodiscard]] std::unique_ptr<Rule> make_manual_srgb_conversion();
+[[nodiscard]] std::unique_ptr<Rule> make_mip_clamp_zero_on_mipped_texture();
+[[nodiscard]] std::unique_ptr<Rule> make_sampler_feedback_without_streaming_flag();
+[[nodiscard]] std::unique_ptr<Rule> make_static_sampler_when_dynamic_used();
+
+// Phase 3 — Pack C (ADR 0011 root-sig + compute + wave + state).
+[[nodiscard]] std::unique_ptr<Rule> make_cbuffer_large_fits_rootcbv_not_table();
+[[nodiscard]] std::unique_ptr<Rule> make_compute_dispatch_grid_shape_vs_quad();
+[[nodiscard]] std::unique_ptr<Rule> make_uav_srv_implicit_transition_assumed();
+[[nodiscard]] std::unique_ptr<Rule> make_wavereadlaneat_constant_non_zero_portability();
+[[nodiscard]] std::unique_ptr<Rule> make_wavesize_attribute_missing();
+
+// Phase 3 — Pack D (ADR 0007 §Phase 3 — bindings/texture/workgroup/etc).
+[[nodiscard]] std::unique_ptr<Rule> make_all_resources_bound_not_set();
+[[nodiscard]] std::unique_ptr<Rule> make_as_payload_over_16k();
+[[nodiscard]] std::unique_ptr<Rule> make_bool_straddles_16b();
+[[nodiscard]] std::unique_ptr<Rule> make_cbuffer_fits_rootconstants();
+[[nodiscard]] std::unique_ptr<Rule> make_cbuffer_padding_hole();
+[[nodiscard]] std::unique_ptr<Rule> make_dead_store_sv_target();
+[[nodiscard]] std::unique_ptr<Rule> make_descriptor_heap_no_non_uniform_marker();
+[[nodiscard]] std::unique_ptr<Rule> make_descriptor_heap_type_confusion();
+[[nodiscard]] std::unique_ptr<Rule> make_excess_interpolators();
+[[nodiscard]] std::unique_ptr<Rule> make_feedback_write_wrong_stage();
+[[nodiscard]] std::unique_ptr<Rule> make_gather_channel_narrowing();
+[[nodiscard]] std::unique_ptr<Rule> make_gather_cmp_vs_manual_pcf();
+[[nodiscard]] std::unique_ptr<Rule> make_groupshared_too_large();
+[[nodiscard]] std::unique_ptr<Rule> make_mesh_numthreads_over_128();
+[[nodiscard]] std::unique_ptr<Rule> make_mesh_output_decl_exceeds_256();
+[[nodiscard]] std::unique_ptr<Rule> make_min16float_in_cbuffer_roundtrip();
+[[nodiscard]] std::unique_ptr<Rule> make_missing_precise_on_pcf();
+[[nodiscard]] std::unique_ptr<Rule> make_missing_ray_flag_cull_non_opaque();
+[[nodiscard]] std::unique_ptr<Rule> make_nodeid_implicit_mismatch();
+[[nodiscard]] std::unique_ptr<Rule> make_nointerpolation_mismatch();
+[[nodiscard]] std::unique_ptr<Rule> make_non_uniform_resource_index();
+[[nodiscard]] std::unique_ptr<Rule> make_numthreads_not_wave_aligned();
+[[nodiscard]] std::unique_ptr<Rule> make_numthreads_too_small();
+[[nodiscard]] std::unique_ptr<Rule> make_oversized_cbuffer();
+[[nodiscard]] std::unique_ptr<Rule> make_pack_clamp_on_prove_bounded();
+[[nodiscard]] std::unique_ptr<Rule> make_rov_without_earlydepthstencil();
+[[nodiscard]] std::unique_ptr<Rule> make_rwresource_read_only_usage();
+[[nodiscard]] std::unique_ptr<Rule> make_samplecmp_vs_manual_compare();
+[[nodiscard]] std::unique_ptr<Rule> make_samplegrad_with_constant_grads();
+[[nodiscard]] std::unique_ptr<Rule> make_samplelevel_with_zero_on_mipped_tex();
+[[nodiscard]] std::unique_ptr<Rule> make_structured_buffer_stride_mismatch();
+[[nodiscard]] std::unique_ptr<Rule> make_sv_depth_vs_conservative_depth();
+[[nodiscard]] std::unique_ptr<Rule> make_texture_array_known_slice_uniform();
+[[nodiscard]] std::unique_ptr<Rule> make_texture_as_buffer();
+[[nodiscard]] std::unique_ptr<Rule> make_texture_lod_bias_without_grad();
+[[nodiscard]] std::unique_ptr<Rule> make_unused_cbuffer_field();
+[[nodiscard]] std::unique_ptr<Rule> make_vrs_incompatible_output();
+
+// Phase 3 — Pack E (ADR 0010 §Phase 3 — SM 6.9 SER / CoopVec / Long Vectors / OMM / Mesh Nodes).
+[[nodiscard]] std::unique_ptr<Rule> make_coopvec_base_offset_misaligned();
+[[nodiscard]] std::unique_ptr<Rule> make_coopvec_fp8_with_non_optimal_layout();
+[[nodiscard]] std::unique_ptr<Rule> make_coopvec_non_optimal_matrix_layout();
+[[nodiscard]] std::unique_ptr<Rule> make_coopvec_non_uniform_matrix_handle();
+[[nodiscard]] std::unique_ptr<Rule> make_coopvec_stride_mismatch();
+[[nodiscard]] std::unique_ptr<Rule> make_coopvec_transpose_without_feature_check();
+[[nodiscard]] std::unique_ptr<Rule> make_fromrayquery_invoke_without_shader_table();
+[[nodiscard]] std::unique_ptr<Rule> make_hitobject_construct_outside_allowed_stages();
+[[nodiscard]] std::unique_ptr<Rule> make_hitobject_invoke_after_recursion_cap();
+[[nodiscard]] std::unique_ptr<Rule> make_hitobject_passed_to_non_inlined_fn();
+[[nodiscard]] std::unique_ptr<Rule> make_hitobject_stored_in_memory();
+[[nodiscard]] std::unique_ptr<Rule> make_long_vector_bytebuf_load_misaligned();
+[[nodiscard]] std::unique_ptr<Rule> make_long_vector_in_cbuffer_or_signature();
+[[nodiscard]] std::unique_ptr<Rule> make_long_vector_non_elementwise_intrinsic();
+[[nodiscard]] std::unique_ptr<Rule> make_long_vector_typed_buffer_load();
+[[nodiscard]] std::unique_ptr<Rule> make_maybereorderthread_outside_raygen();
+[[nodiscard]] std::unique_ptr<Rule> make_mesh_node_missing_output_topology();
+[[nodiscard]] std::unique_ptr<Rule> make_mesh_node_not_leaf();
+[[nodiscard]] std::unique_ptr<Rule> make_mesh_node_uses_vertex_shader_pipeline();
+[[nodiscard]] std::unique_ptr<Rule> make_omm_allocaterayquery2_non_const_flags();
+[[nodiscard]] std::unique_ptr<Rule> make_omm_rayquery_force_2state_without_allow_flag();
+[[nodiscard]] std::unique_ptr<Rule> make_omm_traceray_force_omm_2state_without_pipeline_flag();
+[[nodiscard]] std::unique_ptr<Rule> make_ser_trace_then_invoke_without_reorder();
+
 }  // namespace hlsl_clippy::rules
