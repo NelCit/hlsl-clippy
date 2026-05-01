@@ -26,11 +26,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ── 1. Checkout (no submodules; lint only needs source files) ──────────
+      # ── 1. Checkout (with submodules — clang-tidy needs vendored headers) ─
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        # Intentionally no `submodules:` — Slang/tree-sitter are not needed
-        # for format/tidy checks and omitting them keeps this job fast.
+        with:
+          submodules: recursive
+        # Submodules ARE needed post-ADR 0012/0014: cmake configure now
+        # unconditionally includes UseSlang.cmake + UseNlohmannJson.cmake at
+        # top level (so `core` always sees `slang::slang`), and clang-tidy
+        # follows the compile_commands.json -I flags into vendored
+        # Slang / tree-sitter / nlohmann-json headers when tidying
+        # core/src/reflection/slang_bridge.cpp et al. Pre-3a the lint job
+        # could skip submodules — that fast-path no longer applies.
+        # Future optimisation: download prebuilt Slang via
+        # tools/fetch-slang.sh into $HOME/.cache/hlsl-clippy/slang/<version>/
+        # so UseSlang.cmake hits the cache tier instead of the submodule
+        # build fallback (per ADR 0012 Slang-cache resolution order).
 
       # ── 2. Install clang-format-18 and clang-tidy-18 ──────────────────────
       - name: Install clang-format-18 and clang-tidy-18
