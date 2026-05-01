@@ -138,6 +138,17 @@ the ADR first.
   → 4c (5 parallel rule packs). See
   [ADR 0013](docs/decisions/0013-phase-4-control-flow-infrastructure.md).
 
+- **Phase 5 LSP + IDE architecture**: separate `lsp/` C++ binary
+  (`hlsl_clippy_lsp`) thin-wrapping `core` over JSON-RPC (nlohmann/json
+  vendored, in-tree dispatcher); TypeScript VS Code extension
+  (`vscode-extension/`, Apache-2.0, `nelcit` publisher) thin-wrapping
+  the LSP; quick-fixes surfaced as `quickfix` code actions; per-document
+  `.hlsl-clippy.toml` walk-up reused; macOS CI matrix added in the same
+  phase. **Proposed**; lands as 5a (server scaffolding) → 5b (code
+  actions) → 5c (extension, parallel-after-5a) → 5d (macOS CI,
+  parallel-after-5a) → 5e (distribution). See
+  [ADR 0014](docs/decisions/0014-phase-5-lsp-architecture.md).
+
 ---
 
 ## Code standards (enforced by CI)
@@ -370,7 +381,7 @@ to source build by clearing the cache. macOS path not implemented (Phase 5).
 
 ## ADR index
 
-All 13 ADRs are in MADR 4.0 format under `docs/decisions/`. Each ADR's
+All 14 ADRs are in MADR 4.0 format under `docs/decisions/`. Each ADR's
 `status` field is the canonical authority — read it before assuming a
 decision is settled.
 
@@ -389,6 +400,7 @@ decision is settled.
 | [0011](docs/decisions/0011-candidate-rule-adoption.md) | Candidate rule adoption — underexplored portable surfaces (per-phase plan) | Proposed |
 | [0012](docs/decisions/0012-phase-3-reflection-infrastructure.md) | Phase 3 reflection infrastructure — Slang reflection plumbed into RuleContext | Proposed |
 | [0013](docs/decisions/0013-phase-4-control-flow-infrastructure.md) | Phase 4 control-flow / data-flow infrastructure — CFG + uniformity oracle | Proposed |
+| [0014](docs/decisions/0014-phase-5-lsp-architecture.md) | Phase 5 LSP + IDE architecture — JSON-RPC server + VS Code extension | Proposed |
 
 "Proposed" ADRs represent plans that are approved in principle but not yet
 fully implemented. "Accepted" ADRs represent shipped decisions. Do not

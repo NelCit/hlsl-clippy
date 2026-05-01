@@ -306,6 +306,8 @@ Build a CFG over the tree-sitter AST. Add basic uniformity / loop-invariance ana
 
 ### Phase 5 — Ergonomics: LSP + IDE (2-3 weeks)
 
+**Gating dependency:** [ADR 0014](docs/decisions/0014-phase-5-lsp-architecture.md) (Proposed) — the JSON-RPC LSP-server + VS Code extension architecture (separate `lsp/` C++ binary thin-wrapping `core` via nlohmann/json, TypeScript extension under `vscode-extension/`, macOS CI bringup) must land first. See ADR 0014 §"Implementation sub-phases" for the 5a (server scaffolding) → 5b (code actions) → 5c (VS Code extension, parallel-after-5a) → 5d (macOS CI, parallel-after-5a) → 5e (distribution) sequence.
+
 - [ ] LSP server (small JSON-RPC layer; reuse the diagnostic + fix engine)
 - [ ] VS Code extension (thin wrapper around LSP)
 - [ ] Quick-fix surfaced as VS Code code actions
