@@ -41,6 +41,29 @@ add_executable(hlsl_clippy_unit_tests
     unit/test_manual_reflect.cpp
     unit/test_manual_step.cpp
     unit/test_manual_smoothstep.cpp
+
+    # Phase 2 — saturate-redundancy + bit-manipulation rules.
+    unit/test_redundant_normalize.cpp
+    unit/test_redundant_transpose.cpp
+    unit/test_redundant_abs.cpp
+    unit/test_countbits_vs_manual_popcount.cpp
+    unit/test_firstbit_vs_log2_trick.cpp
+    unit/test_manual_mad_decomposition.cpp
+
+    # Phase 2 — pow + vec/length rules.
+    unit/test_pow_to_mul.cpp
+    unit/test_pow_base_two_to_exp2.cpp
+    unit/test_pow_integer_decomposition.cpp
+    unit/test_inv_sqrt_to_rsqrt.cpp
+    unit/test_manual_distance.cpp
+    unit/test_length_comparison.cpp
+    unit/test_length_then_divide.cpp
+    unit/test_dot_on_axis_aligned_vector.cpp
+
+    # Phase 2 — misc / numerical safety rules.
+    unit/test_compare_equal_float.cpp
+    unit/test_comparison_with_nan_literal.cpp
+    unit/test_redundant_precision_cast.cpp
 )
 
 target_include_directories(hlsl_clippy_unit_tests PRIVATE
