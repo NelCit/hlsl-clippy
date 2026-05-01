@@ -77,6 +77,23 @@ add_executable(hlsl_clippy_unit_tests
 
     # Phase 3 — reflection infrastructure (ADR 0012)
     unit/test_reflection.cpp
+
+    # Phase 3 — shared utilities for reflection-aware rules (ADR 0012 sub-phase 3b).
+    unit/test_reflect_util.cpp
+
+    # Phase 5 sub-phase 5a — LSP server scaffolding (ADR 0014).
+    unit/test_lsp.cpp
+
+    # LSP source files compiled directly into the test target so the unit
+    # tests can call into the dispatcher / handlers / framing without
+    # depending on the hlsl_clippy_lsp executable.
+    "${CMAKE_SOURCE_DIR}/lsp/src/rpc/framing.cpp"
+    "${CMAKE_SOURCE_DIR}/lsp/src/rpc/dispatcher.cpp"
+    "${CMAKE_SOURCE_DIR}/lsp/src/document/manager.cpp"
+    "${CMAKE_SOURCE_DIR}/lsp/src/document/uri.cpp"
+    "${CMAKE_SOURCE_DIR}/lsp/src/server/handlers.cpp"
+    "${CMAKE_SOURCE_DIR}/lsp/src/server/diagnostic_convert.cpp"
+    "${CMAKE_SOURCE_DIR}/lsp/src/config_resolver.cpp"
 )
 
 target_include_directories(hlsl_clippy_unit_tests PRIVATE
@@ -86,6 +103,9 @@ target_include_directories(hlsl_clippy_unit_tests PRIVATE
     # core/include and are picked up via the hlsl_clippy_core target's
     # PUBLIC include directory.
     "${CMAKE_SOURCE_DIR}/core/src"
+    # LSP private headers — test_lsp.cpp pokes at the dispatcher / handlers
+    # / framing without going through the executable target.
+    "${CMAKE_SOURCE_DIR}/lsp/src"
 )
 
 target_link_libraries(hlsl_clippy_unit_tests
@@ -95,6 +115,7 @@ target_link_libraries(hlsl_clippy_unit_tests
         Catch2::Catch2WithMain
         tree_sitter::tree_sitter
         tree_sitter::hlsl
+        nlohmann_json::nlohmann_json
 )
 
 set_target_properties(hlsl_clippy_unit_tests PROPERTIES
