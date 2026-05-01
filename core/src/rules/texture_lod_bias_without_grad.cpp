@@ -33,10 +33,6 @@ namespace {
 constexpr std::string_view k_rule_id = "texture-lod-bias-without-grad";
 constexpr std::string_view k_category = "texture";
 
-[[nodiscard]] bool is_id_char(char c) noexcept {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
-}
-
 class TextureLodBiasWithoutGrad : public Rule {
 public:
     [[nodiscard]] std::string_view id() const noexcept override {

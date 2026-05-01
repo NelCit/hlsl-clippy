@@ -47,10 +47,6 @@ constexpr std::string_view k_category = "control-flow";
 constexpr std::string_view k_clip = "clip";
 constexpr std::string_view k_earlyz = "[earlydepthstencil]";
 
-[[nodiscard]] bool is_id_char(char c) noexcept {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
-}
-
 [[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
     if (::ts_node_is_null(node)) {
         return {};

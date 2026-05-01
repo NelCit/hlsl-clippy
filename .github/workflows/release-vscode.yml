@@ -1,30 +1,43 @@
-# Release — VS Code Marketplace publish (Phase 5 sub-phase 5e per ADR 0014).
+# Release — VS Code Marketplace publish (per-platform .vsix bundling, ADR
+# 0014 sub-phase 5e + Phase 6 v0.5.3 polish).
 #
-# Trigger: push of a tag matching `v*.*.*` (same trigger as release.yml, but a
-# separate workflow file so a Marketplace failure does not block the binary
-# GitHub Release path — see ADR 0014 §"Sub-phase 5e — Distribution").
+# Trigger: push of a tag matching `v*.*.*` (same trigger as release.yml, but
+# a separate workflow file so a Marketplace failure does not block the
+# binary GitHub Release path — see ADR 0014 §"Sub-phase 5e — Distribution").
 #
 # Pre-work (manual, one-time, out of CI scope):
 #   1. Register the `nelcit` publisher namespace on the VS Code Marketplace
 #      via https://marketplace.visualstudio.com/manage. Verification can take
-#      several days; do this well before the v0.5 tag fires.
+#      several days.
 #   2. Create an Azure DevOps Personal Access Token with the Marketplace
 #      "Manage" scope, store it as the `VSCE_PAT` repository secret.
 #   3. Optional: register the same publisher on Open VSX (Eclipse Foundation)
-#      and store an `OVSX_PAT` secret for the deferred Open-VSX track. ADR
-#      0014 §"Sub-phase 5e — Distribution" defers Open VSX to v0.6 — leave
-#      the stub commented for now.
+#      and store an `OVSX_PAT` secret. Open VSX is deferred to v0.6.
 #
 # Conditional on secret behaviour:
-#   - If VSCE_PAT is empty (e.g. fork CI without secrets), the publish step
-#     is skipped — the .vsix is still built, attached to the GitHub Release
-#     for manual sideload, and the workflow exits successfully.
-#   - If VSCE_PAT is set, vsce publishes to the Marketplace.
+#   - If VSCE_PAT is empty (e.g. fork CI without secrets), the publish job
+#     is skipped — the per-platform .vsix files are still attached to the
+#     GitHub Release for manual sideload.
+#   - If VSCE_PAT is set, vsce publishes one .vsix per platform target.
+#
+# Per-platform bundling (v0.5.3+):
+#   The `package` matrix builds the LSP server binary natively on each
+#   target OS, drops it into `vscode-extension/server/<platform>/`, and runs
+#   `vsce package --target <vscode-target>`. Each .vsix contains exactly
+#   one platform's binary. Marketplace serves users the .vsix matching
+#   their OS+arch automatically. The `vscode-extension/src/server-binary.ts`
+#   `findBundled()` resolver looks at `<ext>/server/<currentPlatform()>/<bin>`
+#   and finds the bundled binary on first activation — no network download.
 #
 # Third-party action SHAs pinned for supply-chain safety:
-#   actions/checkout@v4.2.2  → 11bd71901bbe5b1630ceea73d27597364c9af683
-#   actions/setup-node@v4.0.4 → 0a44ba7841725637a19e28fa30b79a866c81b0a6
-#   softprops/action-gh-release@v2.3.4 → 3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
+#   actions/checkout@v4.2.2                 → 11bd71901bbe5b1630ceea73d27597364c9af683
+#   actions/setup-node@v4.0.4               → 0a44ba7841725637a19e28fa30b79a866c81b0a6
+#   actions/cache@v4.2.3                    → 5a3ec84eff668545956fd18022155c47e93e2684
+#   actions/upload-artifact@v4              → ea165f8d65b6e75b540449e92b4886f43607fa02
+#   actions/download-artifact@v4            → d3f86a106a0bac45b974a628896c90dbdf5c8093
+#   seanmiddleditch/gha-setup-ninja@v5      → 96bed6edff20d1dd61ecff9b75cc519d516e6401
+#   ilammy/msvc-dev-cmd@v1.13.0             → 0b201ec74fa43914dc39ae48a89fd1d8cb592756
+#   softprops/action-gh-release@v2.3.4      → 3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
 
 name: Release VS Code Extension
 
@@ -37,21 +50,35 @@ permissions:
   contents: write   # required to attach .vsix to the GitHub Release
 
 jobs:
-  publish:
-    name: Build & publish .vsix
-    runs-on: ubuntu-latest
-    # The VS Code Marketplace + `vsce package` reject SemVer prerelease
-    # suffixes (anything after `-`, e.g. `0.5.0-rc1`). For prerelease tags
-    # we skip this workflow entirely — there is no Marketplace artifact to
-    # ship for an internal pipeline-validation tag. The binary release
-    # (`release.yml`) still runs and produces the CLI/LSP archives for
-    # smoke-testing. Real (non-prerelease) tags like `v0.5.0` proceed
-    # normally.
+  package:
+    name: Package .vsix (${{ matrix.vscode_target }})
+    runs-on: ${{ matrix.os }}
+    # Skip prerelease tags entirely — VS Code Marketplace + `vsce package`
+    # reject SemVer prerelease suffixes (anything after `-`, e.g. v0.5.0-rc1).
     if: ${{ !contains(github.ref_name, '-') }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            vscode_target: linux-x64
+            binary_platform: linux-x86_64
+            binary_suffix: ""
+          - os: windows-latest
+            vscode_target: win32-x64
+            binary_platform: windows-x86_64
+            binary_suffix: ".exe"
+          - os: macos-14
+            vscode_target: darwin-arm64
+            binary_platform: macos-aarch64
+            binary_suffix: ""
 
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
 
       - name: Derive version from tag
         id: version
@@ -62,24 +89,142 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      # ── Toolchain (mirrors release.yml) ──────────────────────────────────
+      - name: Set up Ninja
+        uses: seanmiddleditch/gha-setup-ninja@96bed6edff20d1dd61ecff9b75cc519d516e6401 # v5
+
+      - name: Install Clang 18 (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
+          sudo apt-get install -y libc++-18-dev libc++abi-18-dev
+
+      - name: Set up MSVC dev environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+
+      - name: Install Clang 18 (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          brew install llvm@18
+          echo "/opt/homebrew/opt/llvm@18/bin" >> "$GITHUB_PATH"
+
+      # ── Slang prebuilt cache ──────────────────────────────────────────────
+      - name: Fetch Slang prebuilt (Linux + macOS)
+        if: runner.os != 'Windows'
+        run: bash tools/fetch-slang.sh
+
+      - name: Fetch Slang prebuilt (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pwsh tools/fetch-slang.ps1
+
+      # ── Build cache (per-tag) ─────────────────────────────────────────────
+      - name: Cache build directory
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: build
+          key: vsix-build-${{ matrix.binary_platform }}-${{ steps.version.outputs.tag }}-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt', '.gitmodules') }}
+          restore-keys: |
+            vsix-build-${{ matrix.binary_platform }}-
+
+      # ── Build LSP only (we don't need CLI here) ──────────────────────────
+      - name: CMake configure (Linux)
+        if: runner.os == 'Linux'
+        env:
+          CC: clang-18
+          CXX: clang++-18
+          CXXFLAGS: "-stdlib=libc++"
+          LDFLAGS: "-stdlib=libc++"
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: CMake configure (Windows)
+        if: runner.os == 'Windows'
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: CMake configure (macOS)
+        if: runner.os == 'macOS'
+        env:
+          CC: clang
+          CXX: clang++
+          CXXFLAGS: "-stdlib=libc++"
+          LDFLAGS: "-stdlib=libc++"
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build LSP server
+        run: cmake --build build --target hlsl_clippy_lsp --config Release
+
+      # ── Stage binary into vscode-extension/server/<platform>/ ───────────
+      # The TS-side `findBundled()` resolver looks at
+      # `<extensionPath>/server/<currentPlatform()>/<binary>` where
+      # `currentPlatform()` returns `linux-x86_64` / `windows-x86_64` /
+      # `macos-aarch64`. Match the path exactly so first-activation finds
+      # the bundled binary without network access.
+      - name: Stage LSP binary (POSIX)
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          PLATFORM: ${{ matrix.binary_platform }}
+          SUFFIX: ${{ matrix.binary_suffix }}
+        run: |
+          set -euo pipefail
+          dest="vscode-extension/server/${PLATFORM}"
+          mkdir -p "$dest"
+          for c in \
+              "./build/lsp/hlsl-clippy-lsp${SUFFIX}" \
+              "./build/hlsl-clippy-lsp${SUFFIX}"; do
+            if [ -f "$c" ]; then
+              cp "$c" "${dest}/hlsl-clippy-lsp${SUFFIX}"
+              chmod +x "${dest}/hlsl-clippy-lsp${SUFFIX}"
+              echo "Staged $c → ${dest}/"
+              ls -la "$dest"
+              exit 0
+            fi
+          done
+          echo "::error::could not locate built hlsl-clippy-lsp binary"
+          exit 1
+
+      - name: Stage LSP binary (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          PLATFORM: ${{ matrix.binary_platform }}
+        run: |
+          $dest = "vscode-extension/server/$env:PLATFORM"
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          $candidates = @(
+            ".\build\lsp\hlsl-clippy-lsp.exe",
+            ".\build\lsp\Release\hlsl-clippy-lsp.exe",
+            ".\build\hlsl-clippy-lsp.exe"
+          )
+          foreach ($c in $candidates) {
+            if (Test-Path $c) {
+              Copy-Item $c "$dest/hlsl-clippy-lsp.exe"
+              Write-Host "Staged $c -> $dest/"
+              Get-ChildItem $dest
+              exit 0
+            }
+          }
+          Write-Error "could not locate built hlsl-clippy-lsp.exe"
+          exit 1
+
+      # ── Bundle the .vsix ─────────────────────────────────────────────────
       - name: Set up Node 20
         uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
         with:
           node-version: "20"
 
-      - name: Install dependencies
+      - name: Install npm dependencies
         working-directory: vscode-extension
-        # NOTE: `npm ci` requires a committed `package-lock.json`. We don't
-        # ship one yet (parallel with `docs.yml`); fall back to `npm install`
-        # in its absence so the workflow doesn't hard-fail on tag. Switch
-        # back to `npm ci` once the lockfile is committed.
+        shell: bash
         run: |
           if [ -f package-lock.json ]; then
             npm ci
           else
             npm install --no-audit --no-fund
           fi
-        shell: bash
 
       - name: Compile TypeScript
         working-directory: vscode-extension
@@ -100,30 +245,76 @@ jobs:
           fi
           echo "Version match: $actual"
 
-      - name: Package .vsix
+      - name: Package per-platform .vsix
         id: package
         working-directory: vscode-extension
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          VSCE_TARGET: ${{ matrix.vscode_target }}
         shell: bash
         run: |
           set -euo pipefail
-          out="hlsl-clippy-${VERSION}.vsix"
-          npx --yes @vscode/vsce package --out "$out"
+          out="hlsl-clippy-${VERSION}-${VSCE_TARGET}.vsix"
+          npx --yes @vscode/vsce package --target "$VSCE_TARGET" --out "$out"
           echo "vsix=vscode-extension/$out" >> "$GITHUB_OUTPUT"
+          echo "vsix_name=$out" >> "$GITHUB_OUTPUT"
           ls -la "$out"
 
-      - name: Publish to VS Code Marketplace (if VSCE_PAT set)
-        if: env.VSCE_PAT != ''
-        working-directory: vscode-extension
+      # ── Attach to GitHub Release + upload as workflow artifact ───────────
+      - name: Attach .vsix to GitHub Release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.3.4
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          fail_on_unmatched_files: true
+          files: ${{ steps.package.outputs.vsix }}
         env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-          VERSION: ${{ steps.version.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload .vsix as workflow artifact (for publish job)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: vsix-${{ matrix.vscode_target }}
+          path: ${{ steps.package.outputs.vsix }}
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish to VS Code Marketplace
+    runs-on: ubuntu-latest
+    needs: package
+    if: ${{ !contains(github.ref_name, '-') }}
+
+    steps:
+      - name: Set up Node 20
+        uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+
+      - name: Download all platform .vsix artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: vsix
+          merge-multiple: true
+
+      - name: List downloaded .vsix files
         shell: bash
         run: |
           set -euo pipefail
-          out="hlsl-clippy-${VERSION}.vsix"
-          npx --yes @vscode/vsce publish --packagePath "$out" --pat "$VSCE_PAT"
+          ls -la vsix/
+          echo "Total .vsix files: $(ls vsix/*.vsix | wc -l)"
+
+      - name: Publish each platform .vsix to Marketplace (if VSCE_PAT set)
+        if: env.VSCE_PAT != ''
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for v in vsix/*.vsix; do
+            echo "::group::Publishing $v"
+            npx --yes @vscode/vsce publish --packagePath "$v" --pat "$VSCE_PAT"
+            echo "::endgroup::"
+          done
 
       - name: Skip Marketplace publish (no VSCE_PAT secret)
         if: env.VSCE_PAT == ''
@@ -132,29 +323,21 @@ jobs:
         shell: bash
         run: |
           echo "VSCE_PAT not set — skipping Marketplace publish."
-          echo "The .vsix is still attached to the GitHub Release for manual sideload."
+          echo "Per-platform .vsix files are attached to the GitHub Release"
+          echo "for manual sideload via:"
+          echo "  code --install-extension hlsl-clippy-<version>-<target>.vsix"
 
       # ── Open VSX deferred to v0.6 (ADR 0014 §"Sub-phase 5e") ──────────────
-      # Uncomment when the v0.6 release rolls and the OVSX_PAT secret is set:
+      # Uncomment when the v0.6 release rolls and the OVSX_PAT secret is set.
+      # ovsx publishes a single multi-target .vsix or per-target like vsce.
       #
       # - name: Publish to Open VSX (if OVSX_PAT set)
       #   if: env.OVSX_PAT != ''
-      #   working-directory: vscode-extension
       #   env:
       #     OVSX_PAT: ${{ secrets.OVSX_PAT }}
-      #     VERSION: ${{ steps.version.outputs.version }}
       #   shell: bash
       #   run: |
       #     set -euo pipefail
-      #     out="hlsl-clippy-${VERSION}.vsix"
-      #     npx --yes ovsx publish "$out" --pat "$OVSX_PAT"
-
-      - name: Attach .vsix to GitHub Release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.3.4
-        with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          fail_on_unmatched_files: true
-          files: |
-            ${{ steps.package.outputs.vsix }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     for v in vsix/*.vsix; do
+      #       npx --yes ovsx publish "$v" --pat "$OVSX_PAT"
+      #     done

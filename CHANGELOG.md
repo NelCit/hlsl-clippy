@@ -5,6 +5,54 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.3] — 2026-05-01
+
+Two threads bundled into one tag: (1) finish off the same-day
+release-pipeline triage chain, (2) ship per-platform .vsix bundling
+so VS Code Marketplace users get a working extension without a
+network download on first activation.
+
+### Changed
+
+- **VS Code extension now ships with the LSP binary bundled.**
+  `release-vscode.yml` is now a 3-platform matrix
+  (`ubuntu-latest` / `windows-latest` / `macos-14`) that builds the
+  LSP server on each runner, drops it into
+  `vscode-extension/server/<platform>/`, and packages a
+  per-platform `.vsix` via `vsce package --target <vscode-target>`.
+  Three `.vsix` files ship per release:
+  - `hlsl-clippy-0.5.3-linux-x64.vsix`
+  - `hlsl-clippy-0.5.3-win32-x64.vsix`
+  - `hlsl-clippy-0.5.3-darwin-arm64.vsix`
+
+  The Marketplace serves each user the matching `.vsix` for their
+  OS+arch automatically. The TS-side `findBundled()` resolver
+  (`vscode-extension/src/server-binary.ts`) already looked at
+  `<extension>/server/<currentPlatform()>/<binary>` for the
+  bundled path; with these per-platform `.vsix` files that path
+  now resolves on first activation, no GitHub-Releases download
+  required (firewall-friendly).
+
+  A separate `publish` job depends on the matrix and runs
+  `vsce publish --packagePath <vsix>` for each per-platform
+  artifact when `VSCE_PAT` is set.
+
+### Fixed
+
+- Three more dead static helpers killed by Clang
+  `-Wunused-function -Werror` on Linux + macOS, all lurking from
+  template-style copy-paste in earlier rule packs:
+  - `core/src/rules/clip_from_non_uniform_cf.cpp`: `is_id_char()`
+  - `core/src/rules/groupshared_uninitialized_read.cpp`:
+    `node_kind()` and `node_text()`
+  - `core/src/rules/texture_lod_bias_without_grad.cpp`:
+    `is_id_char()`
+
+  Same MSVC-vs-Clang asymmetry as the v0.5.2 `trim()` fix — Windows
+  CI never tripped on these. Sweep ran across every
+  `core/src/rules/*.cpp` to catch the rest in one pass; sweep is
+  clean post-fix.
+
 ## [0.5.2] — 2026-05-01
 
 Same-day continuation. v0.5.1's CI fixes worked: the Slang prebuilt
@@ -165,6 +213,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.5.3]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/NelCit/hlsl-clippy/releases/tag/v0.5.0
