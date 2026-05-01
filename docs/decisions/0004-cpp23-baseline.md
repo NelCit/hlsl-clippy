@@ -75,6 +75,7 @@ Bad:
 - libc++ 17 / libstdc++ 13 floors — Ubuntu 22.04's stock libstdc++ (12) is below the floor. Pin to Ubuntu 24.04 in CI (already required by ADR 0005).
 - Slang's C++17 build expectations + `_HAS_CXX23` macros: per-target `cxx_std_23` keeps Slang on its own standard. Mitigation: opaque-handle boundary across `libs/semantic/` (ADR 0003).
 - MSVC 19.44 is the floor; the `std::print` console-encoding bug that affected 19.40 is resolved at this version. `/utf-8` remains set.
+- **Validated against MSVC 19.50.35730 (VS 18 / 2026 Community)** as of 2026-05-01: CMake configure detects the compiler correctly (`-- The CXX compiler identification is MSVC 19.50.35730.0`), the Slang prebuilt cache loads, `cxx_std_23` resolves to `/std:c++latest`, and the full `core/`/`cli/`/`lsp/` build is clean. No 19.50-specific code changes needed beyond the existing `__cpp_lib_flat_map` feature-test guard added for cross-toolchain stdlib coverage. The 19.44 floor remains; 19.50 is just the most recent verified upper data point.
 
 ### Confirmation
 

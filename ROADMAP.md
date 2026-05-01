@@ -51,7 +51,7 @@ Why this split: Slang's public API exposes compilation + reflection but not AST 
 
 ## Code standards
 
-- **C++23 baseline** (planned bump from C++20; CMakeLists.txt edit is a separate task). Compiler floors: MSVC 19.40+ (VS 17.10), Clang 18+ with libc++ 17+ or libstdc++ 13+, GCC 14+. Per-target `target_compile_features(... PRIVATE cxx_std_23)` so vendored Slang/tree-sitter keep their own standard.
+- **C++23 baseline** (uplifted from C++20 in sub-phase 3a, commit `1ea2aaa`). Compiler floors: MSVC 19.44+ (VS 17.14), Clang 18+ with libc++ 17+ or libstdc++ 13+, GCC 14+. Per-target `target_compile_features(... PUBLIC cxx_std_23)` so vendored Slang/tree-sitter keep their own standard. Validated locally against MSVC 19.50.35730 (VS 18 / 2026 Community).
 - **C++23 wins to lean into**: `std::expected<T, Diagnostic>` as the canonical return type across rule and parser stages; `std::print` / `std::println` for diagnostic rendering; deducing `this` for AST visitor bases (no CRTP); `if consteval` for span/range utilities; `[[assume]]` narrowly applied on hot loops; `std::flat_map` / `std::flat_set` for small rule registries and per-file suppression sets.
 - **Selective C++26 adoption** — adopt now, gated by feature-test macros: `std::inplace_vector` (`__cpp_lib_inplace_vector`), pack indexing (P2662), `=delete("reason")` (P2573). Defer: static reflection, contracts, `std::execution`.
 - Build under MSVC `/W4 /WX /permissive-` and Clang/GCC `-Wall -Wextra -Wpedantic -Werror`. CI fails on any warning.
