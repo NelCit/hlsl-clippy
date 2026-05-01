@@ -291,6 +291,33 @@ On Windows with MSVC, use `--preset ci-msvc` or configure without a preset
 and let CMake pick MSVC. The `hlsl-clippy_warnings` INTERFACE library
 applies `/W4 /WX /permissive-` automatically to first-party targets.
 
+### Slang prebuilt cache (local dev)
+
+Building Slang from source takes ~20 minutes cold; every fresh worktree
+(see "Worktree-from-main" above) would re-pay that cost. `cmake/UseSlang.cmake`
+resolves Slang in this priority order:
+
+1. **`Slang_ROOT`** (CMake var or env var) — install prefix with
+   `include/slang.h`, `lib/`, `bin/`.
+2. **Per-user prebuilt cache** at `%LOCALAPPDATA%/hlsl-clippy/slang/<version>/`
+   (Windows) or `$HOME/.cache/hlsl-clippy/slang/<version>/` (Linux).
+   Override root with `HLSL_CLIPPY_SLANG_CACHE`.
+3. **Submodule from-source build** — historical default; runs when neither
+   above hits. CI is unaffected (opt-in only).
+
+Populate the cache once per machine:
+
+```sh
+pwsh tools/fetch-slang.ps1   # Windows
+bash tools/fetch-slang.sh    # Linux
+```
+
+The cache is keyed by `HLSL_CLIPPY_SLANG_VERSION` in `cmake/SlangVersion.cmake`
+(currently `2026.7.1`); bumping the submodule SHA invalidates the cache by
+design — re-run the fetch script after a bump. ABI caveat: prebuilt must
+match the submodule version exactly; mismatch fails at link time, fall back
+to source build by clearing the cache. macOS path not implemented (Phase 5).
+
 ---
 
 ## Phase status
