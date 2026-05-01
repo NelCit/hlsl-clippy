@@ -39,10 +39,6 @@ namespace lsp_server = hlsl_clippy::lsp::server;
 
 namespace {
 
-[[nodiscard]] std::string make_framed(std::string_view body) {
-    return lsp_rpc::frame_message(body);
-}
-
 }  // namespace
 
 TEST_CASE("LSP framing parses a Content-Length-prefixed message", "[lsp][framing]") {
