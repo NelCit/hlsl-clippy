@@ -40,6 +40,14 @@ jobs:
   publish:
     name: Build & publish .vsix
     runs-on: ubuntu-latest
+    # The VS Code Marketplace + `vsce package` reject SemVer prerelease
+    # suffixes (anything after `-`, e.g. `0.5.0-rc1`). For prerelease tags
+    # we skip this workflow entirely — there is no Marketplace artifact to
+    # ship for an internal pipeline-validation tag. The binary release
+    # (`release.yml`) still runs and produces the CLI/LSP archives for
+    # smoke-testing. Real (non-prerelease) tags like `v0.5.0` proceed
+    # normally.
+    if: ${{ !contains(github.ref_name, '-') }}
 
     steps:
       - name: Checkout
