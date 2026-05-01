@@ -265,6 +265,16 @@ the ADR first.
   for the canonical pre-tag steps (version bumps across `core/src/version.cpp`,
   `vscode-extension/package.json`, and `CHANGELOG.md`; local clean build;
   tag push triggers `.github/workflows/release.yml` + `release-vscode.yml`).
+- **Docs site:** `docs/` is built by VitePress; pushed to `gh-pages` branch
+  via `.github/workflows/docs.yml` on every main commit touching `docs/**`.
+  Live at https://nelcit.github.io/hlsl-clippy/.
+- **Pre-commit hook**: install the project clang-format gate via
+  `pwsh tools/install-hooks.ps1` (Windows) or `bash tools/install-hooks.sh`
+  (Linux / macOS) — runs `clang-format --dry-run --Werror` on staged
+  `cli/` / `core/` / `tools/` / `lsp/` C++ files, matching the
+  `.github/workflows/lint.yml` glob. See
+  [tools/git-hooks/README.md](tools/git-hooks/README.md) for env-var
+  overrides (`HLSL_CLIPPY_HOOK_FIX=1` to auto-fix + re-stage).
 
 ---
 
