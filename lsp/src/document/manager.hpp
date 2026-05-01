@@ -45,8 +45,8 @@ struct OpenDocument {
     std::string contents;
     std::int32_t version = 0;
     std::vector<hlsl_clippy::Diagnostic> latest_diagnostics;
-    std::chrono::steady_clock::time_point last_change_time{};
-    std::chrono::steady_clock::time_point last_lint_time{};
+    std::chrono::steady_clock::time_point last_change_time;
+    std::chrono::steady_clock::time_point last_lint_time;
 };
 
 /// Registry of currently-open documents.

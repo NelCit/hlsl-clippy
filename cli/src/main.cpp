@@ -28,11 +28,17 @@
 
 namespace {
 
+// NOLINTBEGIN(readability-identifier-naming)
+// CamelCase enum-class members match the rest of the codebase
+// (Severity::Error/Warning/Note, Stage::Ast, etc.) per CLAUDE.md
+// "Code standards — Naming conventions" — `CamelCase` for enums.
+// clang-tidy's k_-prefix-on-constant rule misfires on enum-class members.
 enum class OutputFormat : std::uint8_t {
     Human,              ///< rustc-style spans + caret line. Default for TTY.
     Json,               ///< Flat array of diagnostic objects. Stable schema for CI.
     GithubAnnotations,  ///< `::warning file=...,line=...::msg [rule]` workflow commands.
 };
+// NOLINTEND(readability-identifier-naming)
 
 void print_usage() {
     std::cout << "hlsl-clippy " << hlsl_clippy::version() << "\n"
@@ -327,6 +333,7 @@ struct PerFileResult {
 /// SourceManager + Config are per-file. JSON-format callers pass
 /// `json_state` so the streaming `[..., {}, {}]` array is built across
 /// all files in one go (one outer array, comma-separated).
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 [[nodiscard]] PerFileResult run_lint_one(const LintOptions& opts,
                                          const std::filesystem::path& path,
                                          OutputFormat format,
@@ -500,6 +507,7 @@ struct PerFileResult {
     return 0;
 }
 
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 [[nodiscard]] int parse_lint_args(std::span<const std::string_view> args, LintOptions& opts) {
     // args here is the tail after the `lint` subcommand.
     if (args.empty()) {

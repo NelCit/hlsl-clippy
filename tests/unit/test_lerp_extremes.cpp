@@ -1,6 +1,7 @@
 // End-to-end tests for the lerp-extremes rule.
 // lerp(a, b, 0) -> a and lerp(a, b, 1) -> b, machine-applicable.
 
+#include <algorithm>
 #include <filesystem>
 #include <ranges>
 #include <string>
