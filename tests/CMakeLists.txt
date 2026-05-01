@@ -84,6 +84,9 @@ add_executable(hlsl_clippy_unit_tests
     # Phase 5 sub-phase 5a — LSP server scaffolding (ADR 0014).
     unit/test_lsp.cpp
 
+    # Phase 4 sub-phase 4a — control-flow / data-flow infrastructure (ADR 0013).
+    unit/test_cfg.cpp
+
     # LSP source files compiled directly into the test target so the unit
     # tests can call into the dispatcher / handlers / framing without
     # depending on the hlsl_clippy_lsp executable.

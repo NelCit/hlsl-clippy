@@ -1,0 +1,120 @@
+// CfgEngine implementation -- glues the builder + dominator pass +
+// uniformity analyzer together behind a single `build()` entry point.
+// Caches the result per `SourceId` so multiple control-flow-stage rules
+// against the same source pay one walk per source per lint run.
+
+#include "control_flow/engine.hpp"
+
+#include <cstdint>
+#include <expected>
+#include <memory>
+#include <mutex>
+#include <shared_mutex>
+#include <utility>
+#include <vector>
+
+#include <tree_sitter/api.h>
+
+#include "control_flow/cfg_builder.hpp"
+#include "control_flow/cfg_storage.hpp"
+#include "control_flow/dominators.hpp"
+#include "control_flow/uniformity_analyzer.hpp"
+#include "hlsl_clippy/control_flow.hpp"
+#include "hlsl_clippy/diagnostic.hpp"
+#include "hlsl_clippy/reflection.hpp"
+#include "hlsl_clippy/source.hpp"
+
+#include "parser_internal.hpp"
+
+namespace hlsl_clippy::control_flow {
+
+CfgEngine& CfgEngine::instance() noexcept {
+    static CfgEngine engine;
+    return engine;
+}
+
+std::expected<ControlFlowInfo, Diagnostic> CfgEngine::build(
+    const SourceManager& sources,
+    SourceId source,
+    const ReflectionInfo* reflection_or_null,
+    std::uint32_t cfg_inlining_depth) {
+    {
+        std::shared_lock<std::shared_mutex> read_lock(cache_mu_);
+        const auto it = cache_.find(source.value);
+        if (it != cache_.end()) {
+            return it->second->info;
+        }
+    }
+
+    auto parsed = parser::parse(sources, source);
+    if (!parsed) {
+        Diagnostic diag;
+        diag.code = std::string{"clippy::cfg"};
+        diag.severity = Severity::Error;
+        diag.primary_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
+        diag.message = std::string{"failed to parse source for CFG construction"};
+        return std::unexpected{std::move(diag)};
+    }
+
+    const ::TSNode root = ::ts_tree_root_node(parsed->tree.get());
+    auto build_result = build_cfg(root, source, parsed->bytes);
+    if (build_result.storage == nullptr) {
+        Diagnostic diag;
+        diag.code = std::string{"clippy::cfg"};
+        diag.severity = Severity::Error;
+        diag.primary_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
+        diag.message = std::string{"CFG builder returned no storage"};
+        return std::unexpected{std::move(diag)};
+    }
+
+    compute_all_dominators(*build_result.storage);
+
+    // Project storage into the public `CfgInfo`.
+    auto cfg_impl = std::make_shared<CfgImpl>();
+    cfg_impl->data.storage = build_result.storage;
+
+    ControlFlowInfo info;
+    info.cfg.impl = cfg_impl;
+    info.cfg.blocks.reserve(build_result.storage->block_to_function.size());
+    for (std::size_t i = 0; i < build_result.storage->block_to_function.size(); ++i) {
+        info.cfg.blocks.emplace_back(static_cast<std::uint32_t>(i + 1U));
+    }
+    if (build_result.storage->functions.size() > 1U) {
+        info.cfg.entry_span = build_result.storage->functions[1].declaration_span;
+    } else {
+        info.cfg.entry_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
+    }
+
+    // Run uniformity over the same root.
+    auto uni_impl = std::make_shared<UniformityImpl>();
+    uni_impl->data.storage = build_result.storage;
+    analyse_uniformity(
+        root, source, parsed->bytes, reflection_or_null, cfg_inlining_depth, uni_impl->data);
+    info.uniformity.impl = uni_impl;
+
+    auto entry = std::make_shared<Entry>();
+    entry->info = info;
+    entry->diagnostics = std::move(build_result.diagnostics);
+
+    {
+        std::unique_lock<std::shared_mutex> write_lock(cache_mu_);
+        const auto inserted = cache_.try_emplace(source.value, entry);
+        return inserted.first->second->info;
+    }
+}
+
+void CfgEngine::clear_cache() {
+    std::unique_lock<std::shared_mutex> write_lock(cache_mu_);
+    cache_.clear();
+}
+
+std::vector<Diagnostic> CfgEngine::take_diagnostics(SourceId source) {
+    std::shared_lock<std::shared_mutex> read_lock(cache_mu_);
+    const auto it = cache_.find(source.value);
+    if (it == cache_.end()) {
+        return {};
+    }
+    return it->second->diagnostics;
+}
+
+}  // namespace hlsl_clippy::control_flow

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <utility>
@@ -10,7 +11,9 @@
 
 #include <tree_sitter/api.h>
 
+#include "control_flow/engine.hpp"
 #include "hlsl_clippy/config.hpp"
+#include "hlsl_clippy/control_flow.hpp"
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/reflection.hpp"
 #include "hlsl_clippy/rule.hpp"
@@ -95,6 +98,18 @@ void walk(::TSNode root,
     return false;
 }
 
+/// True when at least one rule in `rules` has `stage() == Stage::ControlFlow`.
+/// Used by the orchestrator to short-circuit CFG-engine construction for
+/// AST-only / reflection-only rule packs (ADR 0013).
+[[nodiscard]] bool any_control_flow_rule(std::span<const std::unique_ptr<Rule>> rules) noexcept {
+    for (const auto& rule : rules) {
+        if (rule && rule->stage() == Stage::ControlFlow) {
+            return true;
+        }
+    }
+    return false;
+}
+
 }  // namespace
 
 namespace {
@@ -132,6 +147,7 @@ namespace {
     // Construct the engine only if at least one rule asked for reflection AND
     // the caller didn't disable reflection via options. Per ADR 0012, an
     // AST-only rule pack pays zero Slang cost.
+    std::optional<ReflectionInfo> reflection_for_cfg;
     if (options.enable_reflection && any_reflection_rule(rules)) {
         const std::string profile =
             options.target_profile.has_value() ? *options.target_profile : std::string{};
@@ -147,6 +163,36 @@ namespace {
                 if (rule->stage() == Stage::Reflection) {
                     rule->on_reflection(tree_view, reflection, ctx);
                 }
+            }
+            reflection_for_cfg = reflection;
+        }
+    }
+
+    // ----- Control-flow stage -----------------------------------------------
+    // Construct the CFG engine only if at least one rule asked for control
+    // flow AND the caller didn't disable it via options (ADR 0013). The
+    // engine reuses the reflection result from the same lint run when one
+    // is available, so the uniformity analyzer can see resource bindings.
+    if (options.enable_control_flow && any_control_flow_rule(rules)) {
+        auto& cfg_engine = control_flow::CfgEngine::instance();
+        const ReflectionInfo* reflection_ptr =
+            reflection_for_cfg.has_value() ? &reflection_for_cfg.value() : nullptr;
+        auto cfg_or_error =
+            cfg_engine.build(sources, source, reflection_ptr, options.cfg_inlining_depth);
+        if (!cfg_or_error.has_value()) {
+            ctx.emit(std::move(cfg_or_error.error()));
+        } else {
+            const ControlFlowInfo& cfg_info = cfg_or_error.value();
+            for (const auto& rule : rules) {
+                if (rule->stage() == Stage::ControlFlow) {
+                    rule->on_cfg(tree_view, cfg_info, ctx);
+                }
+            }
+            // Surface any per-function `clippy::cfg-skip` warnings the
+            // builder collected (ERROR-tolerance path; see ADR 0013
+            // §"Risks & mitigations").
+            for (auto& diag : cfg_engine.take_diagnostics(source)) {
+                ctx.emit(std::move(diag));
             }
         }
     }

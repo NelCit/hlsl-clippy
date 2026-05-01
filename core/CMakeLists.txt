@@ -61,6 +61,13 @@ add_library(hlsl_clippy_core STATIC
     src/rules/util/reflect_resource.cpp
     src/rules/util/reflect_sampler.cpp
     src/rules/util/reflect_stage.cpp
+
+    # Phase 4 — control-flow / data-flow infrastructure (ADR 0013 sub-phase 4a)
+    src/control_flow/cfg_storage.cpp
+    src/control_flow/cfg_builder.cpp
+    src/control_flow/dominators.cpp
+    src/control_flow/uniformity_analyzer.cpp
+    src/control_flow/engine.cpp
 )
 
 target_include_directories(hlsl_clippy_core PUBLIC

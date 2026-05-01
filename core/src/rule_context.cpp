@@ -3,6 +3,7 @@
 
 #include <tree_sitter/api.h>
 
+#include "hlsl_clippy/control_flow.hpp"
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/reflection.hpp"
 #include "hlsl_clippy/rule.hpp"
@@ -39,6 +40,11 @@ void Rule::on_tree(const AstTree& /*tree*/, RuleContext& /*ctx*/) {}
 void Rule::on_reflection(const AstTree& /*tree*/,
                          const ReflectionInfo& /*reflection*/,
                          RuleContext& /*ctx*/) {}
+
+// Default `on_cfg` is a no-op; AST-only and reflection-only rules never see
+// it called (the orchestrator only dispatches `on_cfg` for
+// `Stage::ControlFlow` rules), and control-flow rules override this hook.
+void Rule::on_cfg(const AstTree& /*tree*/, const ControlFlowInfo& /*cfg*/, RuleContext& /*ctx*/) {}
 
 std::string_view AstTree::text(::TSNode node) const noexcept {
     if (::ts_node_is_null(node)) {
