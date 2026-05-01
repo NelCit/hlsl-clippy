@@ -186,6 +186,7 @@ add_executable(hlsl_clippy_unit_tests
     "${CMAKE_SOURCE_DIR}/lsp/src/document/uri.cpp"
     "${CMAKE_SOURCE_DIR}/lsp/src/server/handlers.cpp"
     "${CMAKE_SOURCE_DIR}/lsp/src/server/diagnostic_convert.cpp"
+    "${CMAKE_SOURCE_DIR}/lsp/src/server/code_actions.cpp"
     "${CMAKE_SOURCE_DIR}/lsp/src/config_resolver.cpp"
 )
 
@@ -216,6 +217,20 @@ set_target_properties(hlsl_clippy_unit_tests PROPERTIES
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
 )
+
+# Windows: deploy runtime DLLs (slang.dll etc.) next to the test exe so
+# Catch2's catch_discover_tests step (which runs the exe to enumerate
+# test cases) and the eventual ctest runs can resolve dependencies
+# without polluting the system PATH. No-op on Linux/macOS where the RPATH
+# handles this.
+if(WIN32)
+    add_custom_command(TARGET hlsl_clippy_unit_tests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_RUNTIME_DLLS:hlsl_clippy_unit_tests>
+            $<TARGET_FILE_DIR:hlsl_clippy_unit_tests>
+        COMMAND_EXPAND_LISTS
+    )
+endif()
 
 # Discover Catch2 test cases as individual ctest entries.
 include(Catch)

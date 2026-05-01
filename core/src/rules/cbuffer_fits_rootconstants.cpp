@@ -43,7 +43,7 @@ public:
         return Stage::Reflection;
     }
 
-    void on_reflection(const AstTree& tree,
+    void on_reflection([[maybe_unused]] const AstTree& tree,
                        const ReflectionInfo& reflection,
                        RuleContext& ctx) override {
         for (const auto& cb : reflection.cbuffers) {
