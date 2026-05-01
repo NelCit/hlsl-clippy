@@ -1,0 +1,8 @@
+out/
+node_modules/
+*.vsix
+
+# CI drops the per-platform LSP binary into server/<platform>/ during the
+# .vsix package step (see .github/workflows/release-vscode.yml). The
+# directory is recreated on every workflow run; keep it out of the repo.
+server/
