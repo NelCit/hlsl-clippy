@@ -40,6 +40,14 @@ std::vector<std::unique_ptr<Rule>> make_default_rules() {
     rules.push_back(rules::make_compare_equal_float());
     rules.push_back(rules::make_comparison_with_nan_literal());
     rules.push_back(rules::make_redundant_precision_cast());
+    // Phase 2 — finalize pack (cross-with-up-vector + ADR 0011 Phase 2 candidates).
+    rules.push_back(rules::make_cross_with_up_vector());
+    rules.push_back(rules::make_groupshared_volatile());
+    rules.push_back(rules::make_lerp_on_bool_cond());
+    rules.push_back(rules::make_select_vs_lerp_of_constant());
+    rules.push_back(rules::make_redundant_unorm_snorm_conversion());
+    rules.push_back(rules::make_wavereadlaneat_constant_zero_to_readfirst());
+    rules.push_back(rules::make_loop_attribute_conflict());
     return rules;
 }
 

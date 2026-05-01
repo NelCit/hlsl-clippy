@@ -64,6 +64,15 @@ add_executable(hlsl_clippy_unit_tests
     unit/test_compare_equal_float.cpp
     unit/test_comparison_with_nan_literal.cpp
     unit/test_redundant_precision_cast.cpp
+
+    # Phase 2 — finalize pack (cross-with-up-vector + ADR 0011 Phase 2 candidates).
+    unit/test_cross_with_up_vector.cpp
+    unit/test_groupshared_volatile.cpp
+    unit/test_lerp_on_bool_cond.cpp
+    unit/test_select_vs_lerp_of_constant.cpp
+    unit/test_redundant_unorm_snorm_conversion.cpp
+    unit/test_wavereadlaneat_constant_zero_to_readfirst.cpp
+    unit/test_loop_attribute_conflict.cpp
 )
 
 target_include_directories(hlsl_clippy_unit_tests PRIVATE
