@@ -1,0 +1,73 @@
+# Dependabot — weekly dependency-bump PRs.
+#
+# Per the 2026-05-01 CI/CD audit, none of the project's dep ecosystems
+# were covered. This config enrolls four:
+#
+#   - GitHub Actions: bumps SHA pins in `.github/workflows/*.yml` so
+#     the supply-chain pinning policy from ADR 0005 + the audit's
+#     "supply-chain hardening" track stays current automatically.
+#   - npm at repo root: VitePress + @types/node for the docs site.
+#   - npm under vscode-extension/: vscode-languageclient + dev deps
+#     (tsc, etc.).
+#   - git submodules: tree-sitter, tree-sitter-hlsl, nlohmann_json.
+#
+# Slang is NOT in this config. Slang lives outside the submodule tree
+# (consumed via prebuilt cache populated by tools/fetch-slang.{sh,ps1});
+# version is pinned in cmake/SlangVersion.cmake. Bumping Slang is a
+# manual maintainer step that includes rotating the per-triple SHA-256
+# hashes from the upstream release notes.
+#
+# tomlplusplus is also NOT covered (FetchContent-pinned to a commit
+# SHA in CMakeLists.txt). Bumping it is a deliberate two-line edit.
+
+version: 2
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "npm"
+      - "docs-site"
+    commit-message:
+      prefix: "build"
+      include: "scope"
+
+  - package-ecosystem: "npm"
+    directory: "/vscode-extension"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "npm"
+      - "vscode-extension"
+    commit-message:
+      prefix: "build"
+      include: "scope"
+
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "submodules"
+    commit-message:
+      prefix: "build"
+      include: "scope"
