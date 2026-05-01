@@ -127,12 +127,12 @@ Rules expressible as clang AST patterns — no flow analysis. Group by category 
 - [x] `manual-mad-decomposition`: `(a*b)+c` split across statements losing FMA fold
 - [x] `dot-on-axis-aligned-vector`: `dot(v, float3(1,0,0))` → `v.x`
 - [x] `length-then-divide`: `v / length(v)` → `normalize(v)` (rsqrt+mul vs sqrt+div)
-- [ ] `cross-with-up-vector`: `cross(v, float3(0,1,0))` → negations + moves
+- [x] `cross-with-up-vector`: `cross(v, float3(0,1,0))` → negations + moves
 - [x] `countbits-vs-manual-popcount`: hand-rolled popcount → `countbits()`
 - [x] `firstbit-vs-log2-trick`: `log2((float)x)` MSB lookup → `firstbithigh`
-- [ ] `lerp-on-bool-cond`: `lerp(a, b, (float)cond)` where `cond` is bool — portable form is `cond ? b : a` or explicit `select`  *(via ADR 0011)*
-- [ ] `select-vs-lerp-of-constant`: `lerp(K1, K2, t)` with K1/K2 both constants → explicit `mad(t, K2-K1, K1)`  *(via ADR 0011)*
-- [ ] `redundant-unorm-snorm-conversion`: explicit `* (1.0/255.0)` after sampling a UNORM texture → drop the dead divide  *(via ADR 0011)*
+- [x] `lerp-on-bool-cond`: `lerp(a, b, (float)cond)` where `cond` is bool — portable form is `cond ? b : a` or explicit `select`  *(via ADR 0011)*
+- [x] `select-vs-lerp-of-constant`: `lerp(K1, K2, t)` with K1/K2 both constants → explicit `mad(t, K2-K1, K1)`  *(via ADR 0011)*
+- [x] `redundant-unorm-snorm-conversion`: explicit `* (1.0/255.0)` after sampling a UNORM texture → drop the dead divide  *(via ADR 0011)*
 
 **Saturate / clamp / redundancy:**
 - [ ] `redundant-saturate`: `saturate(saturate(x))`
@@ -147,9 +147,9 @@ Rules expressible as clang AST patterns — no flow analysis. Group by category 
 - [x] `redundant-precision-cast`: `(float)((int)x)` round-trips
 
 **ADR 0011 additions:**
-- [ ] `groupshared-volatile`: `volatile` qualifier on a `groupshared` declaration — meaningless under the HLSL memory model and pessimises LDS scheduling  *(via ADR 0011)*
-- [ ] `wavereadlaneat-constant-zero-to-readfirst`: `WaveReadLaneAt(x, 0)` → `WaveReadLaneFirst(x)` (skips the lane-index broadcast)  *(via ADR 0011)*
-- [ ] `loop-attribute-conflict`: both `[unroll]` and `[loop]` on the same loop, or `[unroll(N)]` with N > configurable threshold (default 32)  *(via ADR 0011)*
+- [x] `groupshared-volatile`: `volatile` qualifier on a `groupshared` declaration — meaningless under the HLSL memory model and pessimises LDS scheduling  *(via ADR 0011)*
+- [x] `wavereadlaneat-constant-zero-to-readfirst`: `WaveReadLaneAt(x, 0)` → `WaveReadLaneFirst(x)` (skips the lane-index broadcast)  *(via ADR 0011)*
+- [x] `loop-attribute-conflict`: both `[unroll]` and `[loop]` on the same loop, or `[unroll(N)]` with N > configurable threshold (default 32)  *(via ADR 0011)*
 
 ### Phase 3 — Type / reflection-aware rules (3-4 weeks)
 
@@ -357,7 +357,7 @@ The rules listed below are **candidates** sourced from a research pass dated 202
 - [ ] `groupshared-atomic-replaceable-by-wave`: `InterlockedAdd(gs[0], 1)` / `InterlockedOr(gs[0], mask)` where the operands are wave-derivable and a `WaveActiveSum` / `WaveActiveBitOr` + a single representative-lane `InterlockedAdd` would replace 32-64 LDS atomics with one — *workgroup, target Phase 4* — distinct from the existing `interlocked-bin-without-wave-prereduce` (small fixed-bin set); this targets single-counter accumulation patterns that drop to one atomic per wave. *(LOCKED → Phase 4 per ADR 0011)*
 - [ ] `groupshared-when-registers-suffice`: groupshared backing for a per-thread temporary array of size ≤ N (configurable, default 8) that the compiler can keep in registers — *workgroup, target Phase 4* — every byte spent in LDS comes out of the occupancy budget; on RDNA 32 KB / NVIDIA 100 KB shared per CU/SM the marginal occupancy cliff is steep. *(LOCKED → Phase 7 per ADR 0011 — needs IR-level register-pressure estimation)*
 - [ ] `groupshared-non-pow2-size`: groupshared array sized to a non-power-of-two byte count that pushes the workgroup over an occupancy threshold (configurable target architecture: RDNA / NVIDIA / Xe-HPG) — *workgroup, target Phase 4* — RDNA's 32 KB LDS partitions in fixed steps; a 5 KB allocation rounds the same as 8 KB and silently pessimises occupancy. *(DEFERRED per ADR 0011 — needs per-arch occupancy table)*
-- [ ] `groupshared-volatile`: `volatile` qualifier on a `groupshared` declaration — *workgroup, target Phase 2* — `volatile` on groupshared is meaningless under the HLSL memory model (use `GroupMemoryBarrier*` or `globallycoherent` on UAVs instead) and confuses the optimiser into pessimising LDS scheduling. *(LOCKED → Phase 2 per ADR 0011)*
+- [x] `groupshared-volatile`: `volatile` qualifier on a `groupshared` declaration — *workgroup, target Phase 2* — `volatile` on groupshared is meaningless under the HLSL memory model (use `GroupMemoryBarrier*` or `globallycoherent` on UAVs instead) and confuses the optimiser into pessimising LDS scheduling. *(LOCKED → Phase 2 per ADR 0011)*
 - [ ] `groupshared-first-read-without-barrier`: read of `gs[expr]` before the first `GroupMemoryBarrierWithGroupSync` on any path where `expr` may resolve to a cell another thread writes — *workgroup, target Phase 4* — distinct from `groupshared-uninitialized-read` (any-thread); this targets the cross-lane race that occurs even when *some* thread has written, just not before the barrier. *(LOCKED → Phase 4 per ADR 0011 — distinct from `groupshared-uninitialized-read`)*
 - [ ] `groupshared-union-aliased`: groupshared declaration of two distinct typed views over the same offset (manually packed via `asuint` round-trips or a struct hack) — *workgroup, target Phase 3* — the optimiser cannot reason about aliasing in LDS and falls back to round-tripping every access through memory; surfaces accidental aliasing across reuse phases. *(LOCKED → Phase 3 per ADR 0011)*
 - [ ] `groupshared-16bit-unpacked`: `groupshared min16float`/`groupshared uint16_t` arrays where every access widens to 32 bits before use — *workgroup, target Phase 3* — RDNA 2/3 packs 16-bit LDS lanes 2-per-bank only when consumed via packed-math intrinsics; widening at the load site collapses the saving. *(LOCKED → Phase 3 per ADR 0011)*
@@ -411,8 +411,8 @@ The rules listed below are **candidates** sourced from a research pass dated 202
 
 - [ ] `min16float-subnormal-flush-mismatch`: arithmetic on `min16float` whose result enters a subnormal range that the target IHV flushes-to-zero by default — *math (proposed category: `precision`), target Phase 3* — RDNA and Ada flush fp16 subnormals by default; Xe-HPG preserves them — silently changes the result.  *(DEFERRED per ADR 0011 — IHV-default-flush behaviour varies; needs IHV-target gate and flush-mode reflection accessor)*
 - [ ] `clip-from-non-uniform-cf`: `clip(x)` reachable from non-uniform CF in PS without `[earlydepthstencil]` — *control-flow, target Phase 4* — close to the locked `early-z-disabled-by-conditional-discard` but `clip()` has its own semantics distinct from `discard`; surfaces explicitly so the suppression scope is independent.  *(LOCKED → Phase 4 per ADR 0011)*
-- [ ] `lerp-on-bool-cond`: `lerp(a, b, (float)cond)` where `cond` is a bool — *math, target Phase 2* — produces a `select` codegen on most IHVs but a true `lerp` (mul + mad) on others; portable form is `cond ? b : a` or explicit `select`.  *(LOCKED → Phase 2 per ADR 0011)*
-- [ ] `select-vs-lerp-of-constant`: `lerp(K1, K2, t)` with both K1/K2 constants — *math, target Phase 2* — the compiler may not fold to `K1 + (K2-K1)*t` on every IHV; explicit `mad(t, K2-K1, K1)` makes the intent compile-portable.  *(LOCKED → Phase 2 per ADR 0011)*
+- [x] `lerp-on-bool-cond`: `lerp(a, b, (float)cond)` where `cond` is a bool — *math, target Phase 2* — produces a `select` codegen on most IHVs but a true `lerp` (mul + mad) on others; portable form is `cond ? b : a` or explicit `select`.  *(LOCKED → Phase 2 per ADR 0011)*
+- [x] `select-vs-lerp-of-constant`: `lerp(K1, K2, t)` with both K1/K2 constants — *math, target Phase 2* — the compiler may not fold to `K1 + (K2-K1)*t` on every IHV; explicit `mad(t, K2-K1, K1)` makes the intent compile-portable.  *(LOCKED → Phase 2 per ADR 0011)*
 - [ ] `saturate-then-multiply-by-one`: `saturate(x) * 1.0` and similar `*1` combinators — *math, target Phase 2* — companion to the locked `mul-identity` rule but specifically targets the `saturate(...) * 1.0` idiom that survives template / macro expansion.  *(DROPPED per ADR 0011 — strict subset of the locked `mul-identity` rule; macro-expansion concern is a refinement of that rule, not a new one)*
 - [ ] `precise-missing-on-iterative-refine`: a Newton-Raphson / Halley iteration that lacks `precise` qualifiers on the residual — *math (`precision`), target Phase 4* — fast-math reordering on Ada / RDNA / Xe-HPG can collapse the iteration to a no-op; surfaces a footgun for analytic-derivative SDF / collision code.  *(LOCKED → Phase 4 per ADR 0011)*
 
@@ -423,7 +423,7 @@ The rules listed below are **candidates** sourced from a research pass dated 202
 
 ### Wave / lane intrinsics (extras)
 
-- [ ] `wavereadlaneat-constant-zero-to-readfirst`: `WaveReadLaneAt(x, 0)` with constant zero — *control-flow (proposed category: `wave-quad-extras`), target Phase 2* — `WaveReadLaneFirst(x)` is the idiomatic spelling and lets the compiler skip the lane-index broadcast on RDNA / Ada.  *(LOCKED → Phase 2 per ADR 0011)*
+- [x] `wavereadlaneat-constant-zero-to-readfirst`: `WaveReadLaneAt(x, 0)` with constant zero — *control-flow (proposed category: `wave-quad-extras`), target Phase 2* — `WaveReadLaneFirst(x)` is the idiomatic spelling and lets the compiler skip the lane-index broadcast on RDNA / Ada.  *(LOCKED → Phase 2 per ADR 0011)*
 - [ ] `wavereadlaneat-constant-non-zero-portability`: `WaveReadLaneAt(x, K)` with constant K when the wave size is not pinned via `[WaveSize]` — *control-flow (`wave-quad-extras`), target Phase 3* — K may be out of range on wave32 vs wave64; surfaces a portability bug between RDNA wave64 and Ada wave32.  *(LOCKED → Phase 3 per ADR 0011)*
 - [ ] `manual-wave-reduction-pattern`: explicit `for`/`InterlockedAdd`/atomics that reproduce a `WaveActiveSum` / `WavePrefixSum` — *control-flow (`wave-quad-extras`), target Phase 4* — saves 32-64 ALU ops + the LDS / atomic round-trip on every modern IHV.  *(LOCKED → Phase 4 per ADR 0011)*
 - [ ] `quadany-quadall-opportunity`: `if (cond)` in PS where `cond` is per-lane and the branch body only executes derivative-bearing ops; could become `if (QuadAny(cond))` to keep helper-lane participation — *control-flow (`wave-quad-extras`), target Phase 4* — companion (not duplicate) of the locked `quadany-replaceable-with-derivative-uniform-branch` which detects the *opposite* direction (replace `QuadAny` with derivative-uniform branch).  *(LOCKED → Phase 4 per ADR 0011)*
@@ -432,7 +432,7 @@ The rules listed below are **candidates** sourced from a research pass dated 202
 ### Texture format
 
 - [ ] `bgra-rgba-swizzle-mismatch`: shader reads `.rgba` from a `Texture2D<float4>` whose binding maps a `DXGI_FORMAT_B8G8R8A8_UNORM` resource without a corresponding `.bgra` swizzle in the sample-site code — *texture (proposed category: `texture-format`), target Phase 3* — silently inverts red and blue channels; surfaces a real bug for IMGUI / UI pipelines that mix swap-chain BGRA with R8G8B8A8 SRGB sampling.  *(LOCKED → Phase 3 per ADR 0011)*
-- [ ] `redundant-unorm-snorm-conversion`: explicit `* (1.0/255.0)` after sampling a UNORM texture — *math, target Phase 2* — UNORM sampling already returns `[0,1]`; the divide is dead arithmetic on every IHV.  *(LOCKED → Phase 2 per ADR 0011)*
+- [x] `redundant-unorm-snorm-conversion`: explicit `* (1.0/255.0)` after sampling a UNORM texture — *math, target Phase 2* — UNORM sampling already returns `[0,1]`; the divide is dead arithmetic on every IHV.  *(LOCKED → Phase 2 per ADR 0011)*
 - [ ] `manual-srgb-conversion`: hand-rolled gamma 2.2 / sRGB transfer in shader code where the resource format already carries the sRGB conversion — *texture (`texture-format`), target Phase 3* — double-applies the curve; common when a pipeline migrates from `R8G8B8A8_UNORM` to `R8G8B8A8_UNORM_SRGB`.  *(LOCKED → Phase 3 per ADR 0011)*
 - [ ] `format-bit-width-mismatch-on-load`: `Buffer<float4>` viewing a 16-bit-per-channel resource without explicit conversion intent — *texture (`texture-format`), target Phase 3* — driver inserts a per-load convert that masks bandwidth wins from the narrower format.  *(DEFERRED per ADR 0011 — without explicit conversion intent surface, the rule conflicts with valid format-narrowing patterns; awaits intent-annotation surface)*
 
@@ -441,7 +441,7 @@ The rules listed below are **candidates** sourced from a research pass dated 202
 - [ ] `flatten-on-uniform-branch`: `[flatten]` attribute on an `if` whose condition is dynamically uniform — *control-flow (proposed category: `divergence-hints`), target Phase 4* — `[flatten]` forces both arms to execute even on the cheap path; on uniform branches `[branch]` is the right choice (and on RDNA/Ada/Xe-HPG `[branch]` lets the compiler skip the inactive arm entirely).  *(LOCKED → Phase 4 per ADR 0011)*
 - [ ] `branch-on-trivially-constant-cond`: `[branch]` on an `if` whose condition is provably constant after Slang reflection of cbuffer specialisation constants — *control-flow (`divergence-hints`), target Phase 4* — the attribute is dead; the compiler removes the branch but the attribute may suppress later optimisation passes.  *(DEFERRED per ADR 0011 — needs cbuffer specialisation-constant analysis; awaits specialisation-aware fold)*
 - [ ] `forcecase-missing-on-ps-switch`: `switch` in PS whose cases each contain texture sampling and that lacks `[forcecase]` — *control-flow (`divergence-hints`), target Phase 4* — without `[forcecase]` the compiler may unroll the switch into chained `if`s, breaking quad-uniform sampling on RDNA / Ada.  *(LOCKED → Phase 4 per ADR 0011)*
-- [ ] `loop-attribute-conflict`: both `[unroll]` and `[loop]` on the same loop, or `[unroll(N)]` with N exceeding a configurable threshold (default 32) — *control-flow (`divergence-hints`), target Phase 2* — silently picks one; explicit conflict is almost always a refactor leftover.  *(LOCKED → Phase 2 per ADR 0011)*
+- [x] `loop-attribute-conflict`: both `[unroll]` and `[loop]` on the same loop, or `[unroll(N)]` with N exceeding a configurable threshold (default 32) — *control-flow (`divergence-hints`), target Phase 2* — silently picks one; explicit conflict is almost always a refactor leftover.  *(LOCKED → Phase 2 per ADR 0011)*
 
 ## Non-goals
 
