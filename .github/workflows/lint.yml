@@ -39,6 +39,20 @@ jobs:
           clang-format-18 --version
           clang-tidy-18 --version
 
+      # ── 2.5 Forbid <slang.h> in public headers + rule TUs ─────────────────
+      # ADR 0001 / ADR 0012: <slang.h> may only appear inside
+      # core/src/reflection/. Public headers (core/include/hlsl_clippy/) and
+      # rule TUs (core/src/rules/) must go through the opaque reflection.hpp
+      # types instead.
+      - name: Forbid <slang.h> in public headers and rule TUs
+        run: |
+          set -e
+          if grep -RE '#\s*include\s*<slang\.h>' core/include/hlsl_clippy/ core/src/rules/; then
+            echo "ERROR: <slang.h> must not appear in core/include/hlsl_clippy/ or core/src/rules/"
+            exit 1
+          fi
+          echo "Slang header confinement check passed."
+
       # ── 3. clang-format dry-run ────────────────────────────────────────────
       # Scope: cli/, core/, tools/ — tracked .cpp/.hpp/.h files only.
       # Uses `git ls-files` so untracked or generated files are never checked.

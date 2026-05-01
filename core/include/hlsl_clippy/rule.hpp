@@ -9,10 +9,13 @@ namespace hlsl_clippy {
 
 class SuppressionSet;
 
-/// Pipeline stage at which a rule's hook fires. Phase 0 only ships `Ast`;
-/// reflection-aware rules will introduce additional stages later.
+/// Pipeline stage at which a rule's hook fires. Phase 0/1/2 ships `Ast`;
+/// Phase 3 (ADR 0012) introduces `Reflection` for rules that need Slang
+/// reflection data (resource bindings, cbuffer layouts, entry-point shape).
 enum class Stage {
-    Ast,
+    Ast,         ///< AST-only (default; Phase 0/1/2).
+    Reflection,  ///< Needs `ReflectionInfo` (Phase 3).
+    // future: ControlFlow (Phase 4), Ir (Phase 7).
 };
 
 /// Forward declaration of the tree-sitter node wrapper. The full definition
@@ -23,6 +26,12 @@ class AstCursor;
 /// Forward declaration of the tree-sitter tree wrapper. Used by rules that
 /// drive a TSQuery match loop (the declarative path).
 class AstTree;
+
+/// Forward declaration of the public reflection aggregate. The full definition
+/// lives in `hlsl_clippy/reflection.hpp`; `Rule::on_reflection` takes a const
+/// reference so this header does not need to pull the (heavier) reflection
+/// header into every rule TU.
+struct ReflectionInfo;
 
 /// Context passed to rule hooks. Owns the diagnostic sink for the in-progress
 /// lint pass and exposes the source under analysis.
@@ -93,6 +102,18 @@ public:
     /// this to drive a TSQuery match loop in one shot rather than walking
     /// every named node imperatively. Default implementation does nothing.
     virtual void on_tree(const AstTree& tree, RuleContext& ctx);
+
+    /// Reflection-stage hook called once per parsed source for rules with
+    /// `stage() == Stage::Reflection` (ADR 0012). The orchestrator runs the
+    /// reflection engine at most once per `(SourceId, target_profile)` tuple
+    /// per lint run and dispatches the cached `ReflectionInfo` to every
+    /// reflection-stage rule. Rules retain access to the `AstTree` because
+    /// most of them want both sides: reflection answers "what" the resource
+    /// is, the AST answers "where" in source it was used. Default
+    /// implementation does nothing.
+    virtual void on_reflection(const AstTree& tree,
+                               const ReflectionInfo& reflection,
+                               RuleContext& ctx);
 };
 
 }  // namespace hlsl_clippy

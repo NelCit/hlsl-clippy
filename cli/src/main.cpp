@@ -31,11 +31,13 @@ void print_usage() {
               << "Usage: hlsl-clippy <command> [args]\n"
               << "\n"
               << "Commands:\n"
-              << "  lint <file> [--fix] [--config <path>]\n"
+              << "  lint <file> [--fix] [--config <path>] [--target-profile <p>]\n"
               << "                Lint an HLSL source file. With --fix, apply\n"
               << "                machine-applicable rewrites in place. With\n"
               << "                --config, use the given .hlsl-clippy.toml\n"
               << "                instead of walking up from the file's parent.\n"
+              << "                With --target-profile, override the Slang\n"
+              << "                reflection profile (default: per-stage sm_6_6).\n"
               << "  --help        Print this help\n"
               << "  --version     Print version\n";
 }
@@ -94,7 +96,8 @@ void render_diagnostic(const hlsl_clippy::Diagnostic& diag,
 struct LintOptions {
     std::string path;
     bool apply_fix = false;
-    std::string config_path;  ///< Empty means walk-up resolution.
+    std::string config_path;     ///< Empty means walk-up resolution.
+    std::string target_profile;  ///< Empty means per-stage default profile.
 };
 
 [[nodiscard]] std::string read_file(const std::filesystem::path& path) {
@@ -166,9 +169,19 @@ bool write_file(const std::filesystem::path& path, std::string_view contents) {
         config = std::move(result).value();
     }
 
-    const auto diagnostics = config.has_value()
-                                 ? hlsl_clippy::lint(sources, src_id, rules, *config, path)
-                                 : hlsl_clippy::lint(sources, src_id, rules);
+    // Build a LintOptions for the reflection-aware overload. Per ADR 0012,
+    // when no Reflection-stage rule is enabled the reflection engine is
+    // never constructed, so passing options here is free for the AST-only
+    // default rule pack.
+    hlsl_clippy::LintOptions lint_options;
+    if (!opts.target_profile.empty()) {
+        lint_options.target_profile = opts.target_profile;
+    }
+
+    const auto diagnostics =
+        config.has_value()
+            ? hlsl_clippy::lint(sources, src_id, rules, *config, path, lint_options)
+            : hlsl_clippy::lint(sources, src_id, rules, lint_options);
 
     bool any_warning = false;
     bool any_error = false;
@@ -246,6 +259,15 @@ bool write_file(const std::filesystem::path& path, std::string_view contents) {
                 return 2;
             }
             opts.config_path = std::string{args[i + 1U]};
+            ++i;
+            continue;
+        }
+        if (a == "--target-profile") {
+            if (i + 1U >= args.size()) {
+                std::cerr << "hlsl-clippy: --target-profile requires a profile argument\n";
+                return 2;
+            }
+            opts.target_profile = std::string{args[i + 1U]};
             ++i;
             continue;
         }

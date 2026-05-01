@@ -4,6 +4,7 @@
 #include <tree_sitter/api.h>
 
 #include "hlsl_clippy/diagnostic.hpp"
+#include "hlsl_clippy/reflection.hpp"
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
 #include "hlsl_clippy/suppress.hpp"
@@ -31,6 +32,13 @@ void Rule::on_node(const AstCursor& /*cursor*/, RuleContext& /*ctx*/) {}
 
 // Default `on_tree` is a no-op; imperative rules ignore it entirely.
 void Rule::on_tree(const AstTree& /*tree*/, RuleContext& /*ctx*/) {}
+
+// Default `on_reflection` is a no-op; AST-only rules never see it called
+// (the orchestrator only dispatches `on_reflection` for `Stage::Reflection`
+// rules), and reflection rules override this hook.
+void Rule::on_reflection(const AstTree& /*tree*/,
+                         const ReflectionInfo& /*reflection*/,
+                         RuleContext& /*ctx*/) {}
 
 std::string_view AstTree::text(::TSNode node) const noexcept {
     if (::ts_node_is_null(node)) {
