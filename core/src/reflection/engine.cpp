@@ -12,7 +12,6 @@
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/reflection.hpp"
 #include "hlsl_clippy/source.hpp"
-
 #include "reflection/slang_bridge.hpp"
 
 namespace hlsl_clippy::reflection {

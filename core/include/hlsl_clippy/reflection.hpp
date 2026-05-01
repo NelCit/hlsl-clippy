@@ -136,8 +136,7 @@ struct ReflectionInfo {
     /// default).
     std::string target_profile;
 
-    [[nodiscard]] const ResourceBinding* find_binding_by_name(
-        std::string_view name) const noexcept;
+    [[nodiscard]] const ResourceBinding* find_binding_by_name(std::string_view name) const noexcept;
     [[nodiscard]] const CBufferLayout* find_cbuffer_by_name(std::string_view name) const noexcept;
     [[nodiscard]] const EntryPointInfo* find_entry_point_by_name(
         std::string_view name) const noexcept;

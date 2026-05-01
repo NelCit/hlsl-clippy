@@ -7,3 +7,7 @@
 [submodule "external/tree-sitter-hlsl"]
 	path = external/tree-sitter-hlsl
 	url = https://github.com/tree-sitter-grammars/tree-sitter-hlsl
+[submodule "external/nlohmann_json"]
+	path = external/nlohmann_json
+	url = https://github.com/nlohmann/json.git
+	branch = master

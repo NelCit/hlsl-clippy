@@ -39,9 +39,7 @@ public:
     /// Cache misses construct (or re-use) a pooled `ISession`, run Slang, and
     /// store a shared pointer to the result.
     [[nodiscard]] std::expected<ReflectionInfo, Diagnostic> reflect(
-        const SourceManager& sources,
-        SourceId source,
-        std::string_view target_profile);
+        const SourceManager& sources, SourceId source, std::string_view target_profile);
 
     /// Drop every cached `ReflectionInfo`. Intended for tests that want to
     /// force a fresh compile in the second of two consecutive calls.

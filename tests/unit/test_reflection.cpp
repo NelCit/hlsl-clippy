@@ -23,7 +23,6 @@
 #include "hlsl_clippy/reflection.hpp"
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
-
 #include "reflection/engine.hpp"
 
 namespace {
@@ -129,8 +128,7 @@ float4 ps_bad(float2 uv : TEXCOORD0) : SV_Target
 
 }  // namespace
 
-TEST_CASE("ReflectionEngine reflects a simple cbuffer plus one binding",
-          "[reflection][engine]") {
+TEST_CASE("ReflectionEngine reflects a simple cbuffer plus one binding", "[reflection][engine]") {
     auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
     engine.clear_cache();
 
@@ -157,8 +155,7 @@ TEST_CASE("ReflectionEngine cache hit on repeated reflect call", "[reflection][e
     engine.clear_cache();
 
     SourceManager sources;
-    const auto src =
-        sources.add_buffer("cache_smoke.hlsl", std::string{k_one_cbuffer_one_binding});
+    const auto src = sources.add_buffer("cache_smoke.hlsl", std::string{k_one_cbuffer_one_binding});
     REQUIRE(src.valid());
 
     const auto first = engine.reflect(sources, src, std::string_view{"sm_6_6"});
@@ -192,8 +189,7 @@ TEST_CASE("ReflectionEngine produces multiple EntryPointInfo entries for multi-e
     engine.clear_cache();
 
     SourceManager sources;
-    const auto src =
-        sources.add_buffer("multi_entry.hlsl", std::string{k_multi_entry_point});
+    const auto src = sources.add_buffer("multi_entry.hlsl", std::string{k_multi_entry_point});
     REQUIRE(src.valid());
 
     const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"});
@@ -210,8 +206,7 @@ TEST_CASE("ReflectionEngine produces multiple EntryPointInfo entries for multi-e
 TEST_CASE("LintOptions::enable_reflection = false skips on_reflection dispatch",
           "[reflection][orchestrator]") {
     SourceManager sources;
-    const auto src =
-        sources.add_buffer("opt_off.hlsl", std::string{k_one_cbuffer_one_binding});
+    const auto src = sources.add_buffer("opt_off.hlsl", std::string{k_one_cbuffer_one_binding});
     REQUIRE(src.valid());
 
     auto spy = std::make_unique<ReflectionSpyRule>();
@@ -235,8 +230,7 @@ TEST_CASE("LintOptions::enable_reflection = true dispatches on_reflection once",
     engine.clear_cache();
 
     SourceManager sources;
-    const auto src =
-        sources.add_buffer("opt_on.hlsl", std::string{k_one_cbuffer_one_binding});
+    const auto src = sources.add_buffer("opt_on.hlsl", std::string{k_one_cbuffer_one_binding});
     REQUIRE(src.valid());
 
     auto spy = std::make_unique<ReflectionSpyRule>();

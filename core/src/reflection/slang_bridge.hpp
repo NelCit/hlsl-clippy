@@ -38,9 +38,7 @@ public:
     /// reflection failure; the diagnostic carries `code = "clippy::reflection"`
     /// and `severity = Severity::Error`.
     [[nodiscard]] std::expected<ReflectionInfo, Diagnostic> reflect(
-        const SourceManager& sources,
-        SourceId source,
-        std::string_view target_profile);
+        const SourceManager& sources, SourceId source, std::string_view target_profile);
 
 private:
     struct Impl;
