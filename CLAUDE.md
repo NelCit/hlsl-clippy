@@ -219,8 +219,14 @@ the ADR first.
 - **Slang not thread-safe at `IGlobalSession` level.** Maintain one global
   session and a per-worker `ISession` pool.
 
-- **macOS CI deferred to Phase 5.** Linux + Windows CI is stable. macOS
-  Slang/Metal paths have been historically rocky.
+- **macOS CI added in Phase 5 (sub-phase 5d, ADR 0014).** Tested on
+  `macos-14` (Apple Silicon). Linux + Windows CI remain stable. Known
+  limitation: the Slang macOS prebuilt may have format differences vs a
+  source build (Slang/Metal paths have historically been rocky) — track
+  here if surfaces change. Stop-gap path per ADR 0014's
+  "Risks & mitigations": ship a no-reflection macOS build for v0.5 if the
+  Slang/macOS surface is broken on the pinned version, then roll the full
+  path into v0.6.
 
 - **CMakeLists.txt still sets `CMAKE_CXX_STANDARD 20`.** ADR 0004 locks
   C++23; the build-system edit is a tracked follow-up before Phase 2.
@@ -363,7 +369,11 @@ The cache is keyed by `HLSL_CLIPPY_SLANG_VERSION` in `cmake/SlangVersion.cmake`
 (currently `2026.7.1`); bumping the submodule SHA invalidates the cache by
 design — re-run the fetch script after a bump. ABI caveat: prebuilt must
 match the submodule version exactly; mismatch fails at link time, fall back
-to source build by clearing the cache. macOS path not implemented (Phase 5).
+to source build by clearing the cache. macOS support landed in Phase 5
+(sub-phase 5d, ADR 0014): `tools/fetch-slang.sh` auto-detects Darwin via
+`uname -s` and downloads `slang-<version>-macos-aarch64.tar.gz` (Apple
+Silicon) or `slang-<version>-macos-x86_64.tar.gz` (Intel) into the same
+`$HOME/.cache/hlsl-clippy/slang/<version>/` root that Linux uses.
 
 ---
 
@@ -416,6 +426,7 @@ amend an Accepted ADR to change a decision — add an addendum ADR instead.
 ```
 cli/                    hlsl-clippy executable (src/main.cpp)
 lsp/                    hlsl-clippy-lsp executable (LSP server, ADR 0014)
+vscode-extension/       VS Code extension wrapping the LSP server (TypeScript, ADR 0014)
 core/                   static lib
   include/hlsl_clippy/  PUBLIC headers (version.hpp, diagnostic.hpp,
                           rule.hpp, rewriter.hpp, suppress.hpp, config.hpp)
