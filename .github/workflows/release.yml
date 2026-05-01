@@ -115,6 +115,11 @@ jobs:
         run: |
           set -euo pipefail
           wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
+          # Mirrors ci.yml: install libc++-18 because Ubuntu 24.04's
+          # libstdc++ 13 lacks reliable std::expected symbol visibility
+          # despite shipping <expected>. Per ADR 0004 the floor is
+          # "Clang 18+ with libc++ 17+ OR libstdc++ 13+"; we pick libc++.
+          sudo apt-get install -y libc++-18-dev libc++abi-18-dev
           clang-18 --version
           clang++-18 --version
 
@@ -127,11 +132,30 @@ jobs:
         run: |
           set -euo pipefail
           brew install llvm@18
+          # Homebrew's llvm@18 is keg-only and ships UNVERSIONED binaries
+          # (`clang`, `clang++`) — not `clang-18`/`clang++-18` like apt's
+          # llvm.sh on Linux. Prepend the keg's bin/ to PATH and use the
+          # unversioned names everywhere on macOS (mirrors ci.yml).
           echo "/opt/homebrew/opt/llvm@18/bin" >> "$GITHUB_PATH"
-          /opt/homebrew/opt/llvm@18/bin/clang-18 --version
-          /opt/homebrew/opt/llvm@18/bin/clang++-18 --version
+          /opt/homebrew/opt/llvm@18/bin/clang --version
+          /opt/homebrew/opt/llvm@18/bin/clang++ --version
 
-      # ── 3. Build cache (per-tag, mirrors ci.yml's structure) ──────────────
+      # ── 3. Slang prebuilt cache (skip the ~20-min from-source build) ──────
+      # `tools/fetch-slang.{sh,ps1}` populates the per-user prebuilt cache
+      # at `$HOME/.cache/hlsl-clippy/slang/<version>/` (Linux/macOS) or
+      # `%LOCALAPPDATA%\hlsl-clippy\slang\<version>\` (Windows). The
+      # `cmake/UseSlang.cmake` resolver picks up that cache before the
+      # submodule fallback path, so no extra Slang_ROOT export is needed.
+      - name: Fetch Slang prebuilt (Linux + macOS)
+        if: runner.os != 'Windows'
+        run: bash tools/fetch-slang.sh
+
+      - name: Fetch Slang prebuilt (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pwsh tools/fetch-slang.ps1
+
+      # ── 4. Build cache (per-tag, mirrors ci.yml's structure) ──────────────
       - name: Cache build directory
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
@@ -140,12 +164,17 @@ jobs:
           restore-keys: |
             release-build-${{ matrix.platform }}-
 
-      # ── 4. Configure + build (Release) ────────────────────────────────────
+      # ── 5. Configure + build (Release) ────────────────────────────────────
       - name: CMake configure (Linux)
         if: runner.os == 'Linux'
         env:
           CC: clang-18
           CXX: clang++-18
+          # Use Clang's bundled libc++ (full <expected>); avoids libstdc++ 13
+          # symbol-visibility quirks on Ubuntu 24.04. Per ADR 0004's floor.
+          # Mirrors ci.yml.
+          CXXFLAGS: "-stdlib=libc++"
+          LDFLAGS: "-stdlib=libc++"
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: CMake configure (Windows)
@@ -155,8 +184,15 @@ jobs:
       - name: CMake configure (macOS)
         if: runner.os == 'macOS'
         env:
-          CC: clang-18
-          CXX: clang++-18
+          # Homebrew llvm@18 ships unversioned `clang` / `clang++` (vs apt's
+          # versioned names on Linux). The PATH prepend in the install step
+          # ensures the keg's binary is found ahead of Apple Clang.
+          CC: clang
+          CXX: clang++
+          # Use Clang's bundled libc++ (matches Linux config; libc++ ships
+          # the full C++23 stdlib including std::expected).
+          CXXFLAGS: "-stdlib=libc++"
+          LDFLAGS: "-stdlib=libc++"
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: Build (CLI + LSP)
