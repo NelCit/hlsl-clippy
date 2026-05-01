@@ -65,20 +65,16 @@ branch is uniform without help, which is where attributes come in.
 
 ## Divergent branches and the [branch] / [flatten] heuristics
 
-HLSL exposes four loop / branch attributes that tell the compiler how to
-lower an `if`, `switch`, `for`, or `while`: `[branch]`, `[flatten]`,
-`[loop]`, and `[unroll]`. Each one fixes a specific lowering choice that
-the compiler would otherwise make heuristically.
-
-`[branch]` says: emit a real conditional jump and let the wave skip the
-inactive arm when the predicate is uniform. `[flatten]` says: predicate
-both arms unconditionally — every lane runs every instruction in both
-arms, and the write mask sorts out which results to keep. The two are
-inverses of each other on the cost-model axis. On a uniform predicate,
-`[branch]` skips the inactive arm; `[flatten]` does not, and burns 100% of
-the inactive arm's cycles on every wave. On a divergent predicate, both
-attributes run both arms — the difference shrinks to a code-size and
-register-pressure preference rather than a cycle delta.
+HLSL exposes four loop / branch attributes that fix the lowering choice
+the compiler would otherwise make heuristically: `[branch]`, `[flatten]`,
+`[loop]`, and `[unroll]`. `[branch]` emits a real conditional jump and
+lets the wave skip the inactive arm when the predicate is uniform.
+`[flatten]` predicates both arms — every lane runs every instruction in
+both, and the write mask sorts out which results to keep. The two are
+inverses on the cost-model axis. On a uniform predicate, `[branch]` skips
+the inactive arm; `[flatten]` burns 100% of the inactive arm's cycles on
+every wave. On a divergent predicate, both attributes run both arms — the
+difference shrinks to a code-size and register-pressure preference.
 
 The bug is asymmetric. Defaulting to `[flatten]` on a uniform predicate
 costs you the entire false arm on every dispatch — a 30-instruction
@@ -132,20 +128,19 @@ shader effectively runs at 100% cost for 50% of useful output. The
 work — multi-tap loops, expensive samples — placed after a `discard`
 guard that could have run before it.
 
-The conditional `discard` has a second cost outside helper-lane semantics:
-it disables **early-Z**. Modern depth/stencil hardware can reject hundreds
-of fragments per clock before any shader work runs, but only if the
-depth value is fixed at rasteriser output. A shader that may `discard`
-makes the depth value dependent on shading work, so the driver demotes the
-test to **late-Z** — every covered fragment gets shaded in full, then
-tested. On an opaque deferred prepass at 1080p with high overdraw, this
-flips a 5-20x cost ratio against you for every draw using the shader.
-The `early-z-disabled-by-conditional-discard` rule
+The conditional `discard` has a second cost outside helper-lane
+semantics: it disables **early-Z**. Modern depth/stencil hardware can
+reject hundreds of fragments per clock before any shader work runs, but
+only if the depth value is fixed at rasteriser output. A shader that may
+`discard` makes the depth value dependent on shading, so the driver
+demotes the test to **late-Z** — every covered fragment gets shaded in
+full, then tested. On an opaque deferred prepass with high overdraw, this
+flips a 5-20x cost ratio against you. The
+`early-z-disabled-by-conditional-discard` rule
 ([rules/early-z-disabled-by-conditional-discard](/rules/early-z-disabled-by-conditional-discard))
 catches the case where adding `[earlydepthstencil]` to the entry point
-would force early-Z back on. The annotation is safe whenever the
-`discard` only affects colour, which is the common case for alpha-tested
-materials.
+would force early-Z back on — safe whenever the `discard` only affects
+colour, which is the common case for alpha-tested materials.
 
 The helper-lane / wave-intrinsic interaction —
 `WaveActiveSum` over discarded survivors picking up stale helper-lane
@@ -157,23 +152,22 @@ is where this post's opening anecdote lives.
 
 ## Derivatives in non-uniform control flow
 
-`Texture.Sample(s, uv)` looks like a single intrinsic, but at the hardware
-level it reads `uv` from all four lanes of the quad, computes
+`Texture.Sample(s, uv)` looks like a single intrinsic, but at the
+hardware level it reads `uv` from all four quad lanes, forms
 `ddx(uv) = uv[1] - uv[0]` and `ddy(uv) = uv[2] - uv[0]`, picks a mip
-level from the gradient magnitudes, and only then issues the actual fetch.
-The first three steps require all four quad lanes to hold valid `uv`
-values — values they would have computed if they had executed the same
-code path as the active lane.
+level from the gradient magnitudes, and only then issues the fetch. The
+first three steps require all four quad lanes to hold valid `uv` values
+— the values they would have computed had they executed the same code
+path as the active lane.
 
 When a `Sample` call sits inside a divergent `if`, this contract breaks.
-The masked-off lanes did not execute the code in the branch; their
-register state for `uv` is whatever was last assigned outside the branch,
-which has no defined relationship to what `uv` should be inside it. The
-hardware does not detect this and does not raise an exception. It computes
-derivatives from those stale values, picks a wrong mip level, and returns
-data sampled from the wrong frequency band of the texture. The result is
-mip-thrash speckle, ghosting, or worse — and it is undefined behaviour
-under the DXIL spec, so different drivers and compiler versions may
+The masked-off lanes did not execute the code in the branch; their `uv`
+register state is whatever was last assigned outside the branch, with no
+defined relationship to what `uv` should be inside it. The hardware does
+not raise an exception — it computes derivatives from stale values,
+picks a wrong mip level, and returns data sampled from the wrong
+frequency band. The result is mip-thrash speckle or ghosting, and it is
+UB under the DXIL spec, so different drivers and compiler versions may
 produce different wrong outputs.
 
 The `derivative-in-divergent-cf` rule
@@ -190,22 +184,18 @@ bounds make the quad lanes leave the loop at different iterations.
 ## Barriers in divergent control flow
 
 The compute-shader equivalent of the helper-lane footgun is barrier
-placement. `GroupMemoryBarrierWithGroupSync()` tells the hardware to stall
-every thread in the group until all of them have reached this instruction.
-The hardware implements this with a check-in counter; only when the count
-matches the group size does the barrier release. If some threads never
-arrive — because they took a divergent branch and the barrier sat inside
-its true arm — the counter never saturates and the entire compute unit
-hangs. On AMD RDNA the wavefront cannot be retired and the CU stalls; on
-NVIDIA the warp deadlocks against its own convergence barrier; the
-runtime cannot detect this at API level, and it surfaces as a TDR or
-device-removed error in production.
-
-The non-syncing variants (`GroupMemoryBarrier` without `WithGroupSync`)
-are no safer. They flush caches for memory ordering, and a non-uniform
-flush gives non-uniform observability — threads that skipped the barrier
-may observe stale LDS data written by threads that took it, which is a
-data race on groupshared memory and undefined behaviour by the D3D12 spec.
+placement. `GroupMemoryBarrierWithGroupSync()` stalls every thread in the
+group until all of them reach this instruction; the hardware implements
+this with a check-in counter that only releases when the count matches
+the group size. If some threads never arrive — because they took a
+divergent branch and the barrier sat inside its true arm — the counter
+never saturates and the entire compute unit hangs. On AMD RDNA the
+wavefront cannot be retired and the CU stalls; on NVIDIA the warp
+deadlocks against its own convergence barrier. The runtime cannot detect
+this at API level; it surfaces as a TDR or device-removed error in
+production. The non-syncing variants are no safer — a non-uniform cache
+flush gives non-uniform observability, which is a data race on
+groupshared memory and UB by the D3D12 spec.
 
 The `barrier-in-divergent-cf` rule
 ([rules/barrier-in-divergent-cf](/rules/barrier-in-divergent-cf)) fires on
@@ -290,25 +280,20 @@ the rule pages explain the surface.
 
 The full list lives at
 [/rules/?category=control-flow](/rules/?category=control-flow). Twenty-one
-rules, every one with a documented GPU mechanism, examples, and a
-suppression syntax for the cases where you have profiled and disagreed
-with the diagnostic. Drop the linter into your build, narrow the run to
-the control-flow category for the first pass, and address the
+rules, every one with a documented GPU mechanism. Address the
 `error`-severity hits first — `wave-intrinsic-non-uniform`,
-`barrier-in-divergent-cf`, and `derivative-in-divergent-cf` are all
-flagged at error level because the underlying behaviour is UB, not
-just slow. The `warn`-severity rules are performance regressions you can
-schedule. Both kinds get a per-rule blog post explaining the mechanism
-once those land alongside their rule's release.
+`barrier-in-divergent-cf`, and `derivative-in-divergent-cf` are flagged
+at error level because the underlying behaviour is UB, not just slow.
+The `warn`-severity rules are performance regressions you can schedule.
 
 The pixel shader from the opening anecdote — `discard` followed by
 `WaveActiveSum` — fails the `wave-intrinsic-helper-lane-hazard` and
 `discard-then-work` rules together. The fix is to gate the wave reduction
-with `IsHelperLane()` (SM 6.6+) so helpers do not contribute their stale
-colour values, or to hoist the work before the discard so helpers were
-never in the wave reduction in the first place. Either fix is a few
-lines. The bug ate three days of artist time before someone profiled it
-on hardware. That is the gap this rule pack is designed to close.
+with `IsHelperLane()` (SM 6.6+) so helpers do not contribute stale colour
+values, or to hoist the work before the discard so helpers were never in
+the reduction. Either fix is a few lines. The bug ate three days of
+artist time before someone profiled it on hardware. That is the gap this
+rule pack is designed to close.
 
 ---
 
