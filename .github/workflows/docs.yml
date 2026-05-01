@@ -13,7 +13,7 @@
 #
 # Pinned SHAs (verified via `gh api` 2026-05-01):
 #   actions/checkout@v4.2.2                      → 11bd71901bbe5b1630ceea73d27597364c9af683
-#   actions/setup-node@v4 (resolves v4.0.4)      → 49933ea5288caeca8642d1e84afbd3f7d6820020
+#   actions/setup-node@v4.0.4                     → 0a44ba7841725637a19e28fa30b79a866c81b0a6
 #   actions/configure-pages@v5                   → 983d7736d9b0ae728b81ab479565c72886d7745b
 #   actions/upload-pages-artifact@v3             → 56afc609e74202658d3ffba0e8f6dda462b719fa
 #   actions/deploy-pages@v4                      → d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
@@ -55,14 +55,15 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Node.js 20
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.0.4
+        uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
         with:
           node-version: '20'
-          # NOTE: `cache: 'npm'` removed — setup-node's cache requires a
-          # package-lock.json to compute the cache key and hard-fails if
-          # one is missing. We don't ship a lockfile yet (the docs-site
-          # agent didn't run `npm install` to generate one). Re-enable
-          # this once `package-lock.json` is committed at the repo root.
+          # `package-lock.json` ships at the repo root since commit 25c2001,
+          # so setup-node's npm cache works correctly. Re-enabled in v0.5.4
+          # per the CI/CD audit. SHA matches release-vscode.yml (was
+          # divergent — both files claimed to pin v4.0.4 but used different
+          # SHAs; canonical 0a44ba78... resolved via gh api).
+          cache: 'npm'
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5

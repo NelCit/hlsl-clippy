@@ -1,7 +1,7 @@
 ---
 id: texture-array-known-slice-uniform
 category: texture
-severity: info
+severity: note
 applicability: suggestion
 since-version: "v0.3.0"
 phase: 3

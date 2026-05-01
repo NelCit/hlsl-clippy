@@ -1,7 +1,7 @@
 ---
 id: min16float-opportunity
 category: packed-math
-severity: info
+severity: note
 applicability: suggestion
 since-version: v0.7.0
 phase: 7
