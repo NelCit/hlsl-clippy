@@ -85,7 +85,16 @@ jobs:
           clang-18 --version
           clang++-18 --version
 
-      # ── 4b. (Windows) Activate MSVC developer environment ─────────────────
+      # ── 4b. (Windows) Activate MSVC dev environment for clang-cl ─────────
+      # We use clang-cl (Clang front-end with MSVC-compatible flag syntax +
+      # MSVC ABI) instead of cl.exe everywhere on Windows. clang-cl reuses
+      # the MSVC installation: the linker (`link.exe`), the Windows SDK
+      # headers, and the C runtime libs. We keep `msvc-dev-cmd` to wire up
+      # `INCLUDE`, `LIB`, and `PATH` to the VS install; the cmake configure
+      # step below sets `CC=clang-cl`, `CXX=clang-cl` to swap the compiler.
+      # Win: smaller / faster binaries (Clang LTO, better dead-code elim),
+      # one compiler family across all 3 platforms, better diagnostics.
+      # `windows-latest` runners ship LLVM 20+ at `C:\Program Files\LLVM\bin`.
       - name: Set up MSVC dev environment (Windows)
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
@@ -140,6 +149,9 @@ jobs:
 
       - name: CMake configure (Windows)
         if: runner.os == 'Windows'
+        env:
+          CC: clang-cl
+          CXX: clang-cl
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: CMake configure (macOS)

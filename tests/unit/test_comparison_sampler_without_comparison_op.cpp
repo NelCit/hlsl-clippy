@@ -37,14 +37,6 @@ using hlsl_clippy::SourceManager;
     return lint(sources, src, rules, options);
 }
 
-[[nodiscard]] bool has_rule(const std::vector<Diagnostic>& diags, std::string_view code) {
-    for (const auto& d : diags) {
-        if (d.code == code) {
-            return true;
-        }
-    }
-    return false;
-}
 
 }  // namespace
 

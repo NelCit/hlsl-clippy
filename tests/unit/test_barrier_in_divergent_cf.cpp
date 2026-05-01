@@ -30,14 +30,6 @@ using hlsl_clippy::SourceManager;
     return lint(sources, src, rules, opts);
 }
 
-[[nodiscard]] bool has_rule(const std::vector<Diagnostic>& diags, std::string_view code) {
-    for (const auto& d : diags) {
-        if (d.code == code)
-            return true;
-    }
-    return false;
-}
-
 }  // namespace
 
 TEST_CASE("barrier-in-divergent-cf fires on barrier inside if (tid.x > 0)",

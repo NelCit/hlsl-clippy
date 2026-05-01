@@ -13,6 +13,27 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Interprocedural / link-time optimisation for Release builds. MSVC =>
+# `/LTCG`; Clang/GCC => `-flto=thin`. Trims ~25-30% off the shipped CLI
+# / LSP binary on Windows in particular, where the rule-pack template
+# instantiations tend to bloat unmerged.
+#
+# Gated to Release (and RelWithDebInfo) so Debug builds stay fast.
+# Default-on; opt out with `-DHLSL_CLIPPY_USE_LTO=OFF` if a contributor
+# is debugging a codegen issue or hitting an MSVC LTCG ICE.
+option(HLSL_CLIPPY_USE_LTO "Enable IPO/LTO for Release / RelWithDebInfo builds" ON)
+if(HLSL_CLIPPY_USE_LTO)
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT _ipo_ok OUTPUT _ipo_msg LANGUAGES CXX)
+    if(_ipo_ok)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
+        message(STATUS "hlsl-clippy: IPO/LTO enabled for Release + RelWithDebInfo")
+    else()
+        message(STATUS "hlsl-clippy: IPO/LTO not supported by this toolchain (${_ipo_msg})")
+    endif()
+endif()
+
 # sccache / ccache compiler launcher (per ADR 0005). When sccache is on
 # PATH the configure step picks it up automatically; otherwise this is a
 # no-op. CI provisions sccache in `.github/workflows/ci.yml` + `release.yml`.
