@@ -290,7 +290,7 @@ void emit_parameter(slang::VariableLayoutReflection* param,
     // For SRVs / UAVs / Samplers Slang reports the binding via the appropriate
     // category. Probe the most specific category first; fall back to a generic
     // descriptor-table-slot category when Slang reports nothing.
-    SlangParameterCategory category = type_layout->getParameterCategory();
+    auto category = static_cast<SlangParameterCategory>(type_layout->getParameterCategory());
 
     ResourceBinding rb;
     rb.name = name;
@@ -435,7 +435,7 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManag
             impl->release(std::move(*session_slot));
         }
     };
-    [[maybe_unused]] Releaser releaser{impl_.get(), &session};
+    [[maybe_unused]] Releaser releaser{impl_.get(), std::addressof(session)};
 
     // Load the source as a module.
     const std::string contents{file->contents()};

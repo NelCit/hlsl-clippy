@@ -62,7 +62,7 @@ public:
                 Diagnostic diag;
                 diag.code = std::string{k_rule_id};
                 diag.severity = Severity::Note;
-                diag.primary_span = Span{.source = tree.source_id(), .bytes = cb.declaration_span};
+                diag.primary_span = cb.declaration_span;
                 diag.message = std::string{"cbuffer field `"} + cb.name + "." + field.name +
                                "` is `" + field.type_name +
                                "` -- without `-enable-16bit-types` the cbuffer load is promoted "

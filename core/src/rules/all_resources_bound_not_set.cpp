@@ -60,8 +60,8 @@ public:
         // available, otherwise at the start of the file.
         Span anchor{.source = tree.source_id(), .bytes = ByteSpan{0U, 0U}};
         if (!reflection.bindings.empty() &&
-            reflection.bindings.front().declaration_span.size() > 0U) {
-            anchor.bytes = reflection.bindings.front().declaration_span;
+            !reflection.bindings.front().declaration_span.bytes.empty()) {
+            anchor = reflection.bindings.front().declaration_span;
         }
         Diagnostic diag;
         diag.code = std::string{k_rule_id};
