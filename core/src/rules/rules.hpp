@@ -45,4 +45,13 @@ namespace hlsl_clippy::rules {
 [[nodiscard]] std::unique_ptr<Rule> make_comparison_with_nan_literal();
 [[nodiscard]] std::unique_ptr<Rule> make_redundant_precision_cast();
 
+// Phase 2 — finalize pack (cross-with-up-vector + ADR 0011 Phase 2 candidates).
+[[nodiscard]] std::unique_ptr<Rule> make_cross_with_up_vector();
+[[nodiscard]] std::unique_ptr<Rule> make_groupshared_volatile();
+[[nodiscard]] std::unique_ptr<Rule> make_lerp_on_bool_cond();
+[[nodiscard]] std::unique_ptr<Rule> make_select_vs_lerp_of_constant();
+[[nodiscard]] std::unique_ptr<Rule> make_redundant_unorm_snorm_conversion();
+[[nodiscard]] std::unique_ptr<Rule> make_wavereadlaneat_constant_zero_to_readfirst();
+[[nodiscard]] std::unique_ptr<Rule> make_loop_attribute_conflict();
+
 }  // namespace hlsl_clippy::rules

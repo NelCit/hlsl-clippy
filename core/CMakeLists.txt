@@ -41,6 +41,15 @@ add_library(hlsl_clippy_core STATIC
     src/rules/compare_equal_float.cpp
     src/rules/comparison_with_nan_literal.cpp
     src/rules/redundant_precision_cast.cpp
+
+    # Phase 2 — finalize pack (cross-with-up-vector + ADR 0011 Phase 2 candidates).
+    src/rules/cross_with_up_vector.cpp
+    src/rules/groupshared_volatile.cpp
+    src/rules/lerp_on_bool_cond.cpp
+    src/rules/select_vs_lerp_of_constant.cpp
+    src/rules/redundant_unorm_snorm_conversion.cpp
+    src/rules/wavereadlaneat_constant_zero_to_readfirst.cpp
+    src/rules/loop_attribute_conflict.cpp
 )
 
 target_include_directories(hlsl_clippy_core PUBLIC
