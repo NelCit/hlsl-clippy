@@ -68,7 +68,7 @@ float4 sample_tex(uint id, float2 uv, SamplerState s) {
 
 > **Note:** packaging is planned for Phase 6. Until then, build from source.
 
-**Prerequisites:** CMake 3.20+, a C++20 compiler (MSVC 2022 or Clang 16+).
+**Prerequisites:** CMake 3.20+, a C++23 compiler — MSVC 19.44+ (VS 17.14 / Build Tools 14.44 / VS 18 2026), Clang 18+ with libc++ 17+ or libstdc++ 13+, or GCC 14+. Locally validated against MSVC 19.50 (VS 18 Community) + Linux Clang 18 in CI.
 
 ```sh
 git clone https://github.com/NelCit/hlsl-clippy.git

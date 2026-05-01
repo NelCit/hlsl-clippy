@@ -67,10 +67,12 @@ the ADR first.
 
 - **C++ baseline**: C++23 + selective C++26. Compiler floors: MSVC 19.44+
   (VS 17.14 / Build Tools 14.44), Clang 18+ with libc++ 17+ or libstdc++
-  13+, GCC 14+. clang-tidy 19+. NOTE: `CMakeLists.txt` currently sets
-  `CMAKE_CXX_STANDARD 20` — uplift is a tracked follow-up before Phase 2
-  implementation kicks off. See
-  [ADR 0004](docs/decisions/0004-cpp23-baseline.md).
+  13+, GCC 14+. clang-tidy 19+. CMakeLists.txt now sets
+  `CMAKE_CXX_STANDARD 23` (uplifted in sub-phase 3a, commit `1ea2aaa`).
+  **Validated locally against MSVC 19.50.35730 (VS 18 / 2026 Community)**
+  + Slang prebuilt cache as of 2026-05-01; full `core/`/`cli/`/`lsp/`
+  build is clean. Linux Clang 18 + libstdc++ 13 also exercised in CI.
+  See [ADR 0004](docs/decisions/0004-cpp23-baseline.md).
 
 - **CI/CD**: `windows-2022` + `ubuntu-24.04` GHA matrix; sccache; 3-tier
   cache (Slang install-prefix / sccache / CMake configure); Catch2 v3;
