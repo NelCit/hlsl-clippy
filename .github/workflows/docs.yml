@@ -1,0 +1,93 @@
+# Build the VitePress docs site and deploy it to GitHub Pages.
+#
+# Live at: https://nelcit.github.io/hlsl-clippy/
+#
+# Triggers on `main` for any change under `docs/**` or to `package.json`
+# (which carries the VitePress dep + scripts). Manual runs via `workflow_dispatch`
+# are useful when bumping the action SHAs below or republishing after a
+# repo settings change.
+#
+# Third-party action SHAs pinned for supply-chain safety per ADR 0005.
+# Update them with `gh api repos/<owner>/<repo>/git/ref/tags/<tag>` and
+# refresh the trailing-comment tag annotations.
+#
+# Pinned SHAs (verified via `gh api` 2026-05-01):
+#   actions/checkout@v4.2.2                      → 11bd71901bbe5b1630ceea73d27597364c9af683
+#   actions/setup-node@v4 (resolves v4.0.4)      → 49933ea5288caeca8642d1e84afbd3f7d6820020
+#   actions/configure-pages@v5                   → 983d7736d9b0ae728b81ab479565c72886d7745b
+#   actions/upload-pages-artifact@v3             → 56afc609e74202658d3ffba0e8f6dda462b719fa
+#   actions/deploy-pages@v4                      → d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
+
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+# GitHub Pages requires these permissions on the deploy job.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One in-flight Pages deployment at a time. Cancel superseded runs so the
+# most recent push wins.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build VitePress site
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          # Docs build doesn't need Slang / tree-sitter sources.
+          submodules: false
+          fetch-depth: 0
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.0.4
+        with:
+          node-version: '20'
+          # Use npm cache when a lockfile exists; harmless no-op otherwise.
+          cache: 'npm'
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install --no-audit --no-fund
+          fi
+
+      - name: Build VitePress site
+        run: npm run docs:build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: docs/.vitepress/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
