@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Docs (CC-BY-4.0)](https://img.shields.io/badge/Docs-CC--BY--4.0-orange)](LICENSE)
 
-<!-- TODO: demo gif -->
+<!-- Demo recording: `vhs` script to (re-)generate is at docs/assets/demo.tape; hosted gif lands with v0.5.1 once the recording is captured. -->
 
 ## What it is
 
@@ -112,10 +112,11 @@ Full schema: [docs/configuration.md](docs/configuration.md).
 
 ## Browse rules
 
-<!-- TODO: enable docs site link once sub-phase 5e ships and the docs-site agent lands -->
-Per-rule pages with GPU rationale, examples, and fix availability live
-under [docs/rules/](docs/rules/) (catalog: [docs/rules/index.md](docs/rules/index.md)).
-A hosted docs site at `https://nelcit.github.io/hlsl-clippy/` lands with v0.5.
+Hosted docs site: **<https://nelcit.github.io/hlsl-clippy/>** — per-rule
+pages with GPU rationale, examples, and fix availability, plus the
+companion blog. The same content also lives in-tree under
+[docs/rules/](docs/rules/) (catalog: [docs/rules/index.md](docs/rules/index.md))
+for offline reading.
 
 ## Companion blog series
 
