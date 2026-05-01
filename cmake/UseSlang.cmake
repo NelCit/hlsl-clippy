@@ -29,6 +29,89 @@ cmake_minimum_required(VERSION 3.20)
 
 include("${CMAKE_CURRENT_LIST_DIR}/SlangVersion.cmake")
 
+# ---------------------------------------------------------------------------
+# hlsl_clippy_deploy_slang_dlls(<target>)
+#
+# Defined FIRST (before any of the resolution-path early-return blocks below)
+# so the helper stays available even when (a) Slang_ROOT hits, (b) the cache
+# tier hits, or the re-entrancy guard fires — each of which `return()`s out
+# of this file. Previously the helper was defined at the bottom; consumers
+# (cli/CMakeLists.txt) hit "Unknown CMake command" on every cache-hit
+# regeneration. The body deliberately performs all `TARGET slang::slang`
+# checks at call time, so moving the definition above the resolution paths
+# is safe.
+# ---------------------------------------------------------------------------
+function(hlsl_clippy_deploy_slang_dlls target)
+    if(NOT TARGET ${target})
+        message(FATAL_ERROR
+            "hlsl_clippy_deploy_slang_dlls: target '${target}' does not exist."
+        )
+    endif()
+
+    get_property(_already_done GLOBAL PROPERTY
+        _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target})
+    if(_already_done)
+        return()
+    endif()
+
+    if(NOT WIN32)
+        set_property(GLOBAL PROPERTY
+            _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
+        return()
+    endif()
+
+    if(NOT TARGET slang::slang)
+        message(FATAL_ERROR
+            "hlsl_clippy_deploy_slang_dlls: slang::slang target not defined; "
+            "include UseSlang.cmake before calling this helper."
+        )
+    endif()
+
+    get_target_property(_slang_dll slang IMPORTED_LOCATION)
+    if(NOT _slang_dll)
+        message(STATUS
+            "hlsl_clippy_deploy_slang_dlls(${target}): slang has no "
+            "IMPORTED_LOCATION; falling back to TARGET_RUNTIME_DLLS "
+            "(submodule build path -- only slang.dll will be copied)."
+        )
+        add_custom_command(TARGET ${target} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                $<TARGET_RUNTIME_DLLS:${target}>
+                $<TARGET_FILE_DIR:${target}>
+            COMMAND_EXPAND_LISTS
+        )
+        set_property(GLOBAL PROPERTY
+            _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
+        return()
+    endif()
+
+    get_filename_component(_slang_dll_dir "${_slang_dll}" DIRECTORY)
+
+    file(GLOB _slang_runtime_dlls "${_slang_dll_dir}/*.dll")
+    if(NOT _slang_runtime_dlls)
+        message(WARNING
+            "hlsl_clippy_deploy_slang_dlls(${target}): no DLLs found in "
+            "'${_slang_dll_dir}'. The build will succeed but the resulting "
+            "executable will fail to load Slang at runtime."
+        )
+        set_property(GLOBAL PROPERTY
+            _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
+        return()
+    endif()
+
+    foreach(_dll IN LISTS _slang_runtime_dlls)
+        add_custom_command(TARGET ${target} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_dll}"
+                "$<TARGET_FILE_DIR:${target}>"
+            VERBATIM
+        )
+    endforeach()
+
+    set_property(GLOBAL PROPERTY
+        _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
+endfunction()
+
 # Re-entrancy guard: tools/slang-smoke/CMakeLists.txt may include this file
 # in addition to (a future) top-level include. Bail out cleanly if the
 # `slang::slang` target is already defined.
@@ -194,125 +277,6 @@ if(NOT TARGET slang::slang)
     add_library(slang::slang ALIAS slang)
 endif()
 
-# ---------------------------------------------------------------------------
-# hlsl_clippy_deploy_slang_dlls(<target>)
-#
-# Attaches a POST_BUILD step to <target> that copies every Slang runtime
-# DLL into $<TARGET_FILE_DIR:${target}> on Windows. No-op on Linux/macOS
-# (RPATH handles loader resolution there).
-#
-# Why a custom helper instead of `$<TARGET_RUNTIME_DLLS:${target}>`?
-#   `$<TARGET_RUNTIME_DLLS>` only walks the *direct* IMPORTED_LOCATION of
-#   each linked SHARED IMPORTED target. Our `slang::slang` import points at
-#   `slang.dll`, but the Slang runtime is actually a constellation of seven
-#   DLLs that `slang.dll` dlopen()s at compile time:
-#       slang.dll
-#       slang-compiler.dll
-#       slang-glsl-module.dll
-#       slang-glslang.dll
-#       slang-llvm.dll
-#       slang-rt.dll
-#       gfx.dll
-#   None of those (except `slang.dll`) appear in the generator-expression
-#   walk, so the previous per-target inline `copy_if_different` blocks were
-#   silently shipping an under-populated bin/ directory. Any rule that
-#   exercised reflection / IR codegen would then fail at runtime with a
-#   "module not found" error from Slang's loader.
-#
-# Implementation: resolve the Slang import target's IMPORTED_LOCATION to its
-# containing directory, glob `*.dll` in that directory at configure time,
-# and emit one `copy_if_different` per glob hit. The cache-tier resolution
-# (path (b) above) places all seven DLLs in `<cache>/<version>/bin/`, so the
-# glob captures them in one pass.
-#
-# Idempotent — re-invocation with the same target is a no-op.
-# ---------------------------------------------------------------------------
-function(hlsl_clippy_deploy_slang_dlls target)
-    if(NOT TARGET ${target})
-        message(FATAL_ERROR
-            "hlsl_clippy_deploy_slang_dlls: target '${target}' does not exist."
-        )
-    endif()
-
-    # Idempotency guard: bail out if we've already attached the POST_BUILD
-    # step to this target. Uses a directory-scoped property so repeated
-    # includes of the calling CMakeLists don't double-attach.
-    get_property(_already_done GLOBAL PROPERTY
-        _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target})
-    if(_already_done)
-        return()
-    endif()
-
-    # No-op on non-Windows: ELF/Mach-O loaders use RPATH, which Slang's own
-    # CMake (and our cache layout) wires up correctly.
-    if(NOT WIN32)
-        set_property(GLOBAL PROPERTY
-            _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
-        return()
-    endif()
-
-    if(NOT TARGET slang::slang)
-        message(FATAL_ERROR
-            "hlsl_clippy_deploy_slang_dlls: slang::slang target not defined; "
-            "include UseSlang.cmake before calling this helper."
-        )
-    endif()
-
-    # Resolve the imported DLL location → directory. `slang::slang` is an
-    # ALIAS; query the underlying `slang` target.
-    get_target_property(_slang_dll slang IMPORTED_LOCATION)
-    if(NOT _slang_dll)
-        # Some build paths (the from-source submodule fallback) produce a
-        # non-imported `slang` target whose runtime location is only known
-        # at build time. In that case fall through with a generator-
-        # expression based copy of TARGET_RUNTIME_DLLS — which at least
-        # picks up `slang.dll` itself; the cache tier (the only path
-        # validated locally per the task spec) always populates
-        # IMPORTED_LOCATION.
-        message(STATUS
-            "hlsl_clippy_deploy_slang_dlls(${target}): slang has no "
-            "IMPORTED_LOCATION; falling back to TARGET_RUNTIME_DLLS "
-            "(submodule build path — only slang.dll will be copied)."
-        )
-        add_custom_command(TARGET ${target} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                $<TARGET_RUNTIME_DLLS:${target}>
-                $<TARGET_FILE_DIR:${target}>
-            COMMAND_EXPAND_LISTS
-        )
-        set_property(GLOBAL PROPERTY
-            _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
-        return()
-    endif()
-
-    get_filename_component(_slang_dll_dir "${_slang_dll}" DIRECTORY)
-
-    # Glob ALL DLLs in Slang's bin/ at configure time. This intentionally
-    # captures the 7 transitive runtime DLLs (slang.dll, slang-compiler.dll,
-    # slang-glsl-module.dll, slang-glslang.dll, slang-llvm.dll, slang-rt.dll,
-    # gfx.dll) plus any future siblings — `$<TARGET_RUNTIME_DLLS>` would
-    # only catch slang.dll because the rest are dlopen()ed, not linked.
-    file(GLOB _slang_runtime_dlls "${_slang_dll_dir}/*.dll")
-    if(NOT _slang_runtime_dlls)
-        message(WARNING
-            "hlsl_clippy_deploy_slang_dlls(${target}): no DLLs found in "
-            "'${_slang_dll_dir}'. The build will succeed but the resulting "
-            "executable will fail to load Slang at runtime."
-        )
-        set_property(GLOBAL PROPERTY
-            _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
-        return()
-    endif()
-
-    foreach(_dll IN LISTS _slang_runtime_dlls)
-        add_custom_command(TARGET ${target} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${_dll}"
-                "$<TARGET_FILE_DIR:${target}>"
-            VERBATIM
-        )
-    endforeach()
-
-    set_property(GLOBAL PROPERTY
-        _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
-endfunction()
+# `hlsl_clippy_deploy_slang_dlls(<target>)` is defined at the top of this
+# file (see comment there); the resolution paths above all eventually leave
+# `slang::slang` defined for the helper to consume at call time.

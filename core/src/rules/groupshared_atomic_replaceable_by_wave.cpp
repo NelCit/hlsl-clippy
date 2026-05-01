@@ -220,20 +220,25 @@ void scan_calls(::TSNode node,
                     if (node_kind(first_arg) == "subscript_expression") {
                         ::TSNode recv = ::ts_node_child_by_field_name(first_arg, "argument", 8);
                         if (::ts_node_is_null(recv)) {
-                            recv = ::ts_node_child(first_arg, 0U);
+                            recv = ::ts_node_named_child(first_arg, 0);
                         }
                         const auto recv_text = node_text(recv, bytes);
                         if (!recv_text.empty() && names.contains(std::string{recv_text})) {
-                            ::TSNode idx = ::ts_node_child_by_field_name(first_arg, "index", 5);
-                            if (::ts_node_is_null(idx)) {
-                                const std::uint32_t cnt2 = ::ts_node_child_count(first_arg);
-                                for (std::uint32_t j = cnt2; j-- > 0U;) {
-                                    const ::TSNode c = ::ts_node_child(first_arg, j);
-                                    const auto kk = node_kind(c);
-                                    if (kk != "[" && kk != "]") {
-                                        idx = c;
-                                        break;
-                                    }
+                            // Tree-sitter-hlsl wraps the index expression in a
+                            // subscript_argument_list (field name "indices",
+                            // 7 chars). Descend into its first named child to
+                            // get the actual index expression.
+                            ::TSNode indices =
+                                ::ts_node_child_by_field_name(first_arg, "indices", 7);
+                            if (::ts_node_is_null(indices)) {
+                                indices = ::ts_node_named_child(first_arg, 1);
+                            }
+                            ::TSNode idx{};
+                            if (!::ts_node_is_null(indices)) {
+                                if (node_kind(indices) == "subscript_argument_list") {
+                                    idx = ::ts_node_named_child(indices, 0);
+                                } else {
+                                    idx = indices;
                                 }
                             }
                             if (is_constant_literal_index(idx)) {
