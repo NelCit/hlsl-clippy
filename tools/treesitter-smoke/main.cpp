@@ -6,15 +6,15 @@
 // Exit 0  - tree parsed without a null result or ERROR root node.
 // Exit 1  - file not found, null tree, or root node is an ERROR.
 
-#include "config.hpp"  // smoke::k_project_root (CMake-generated)
-
 #include <tree_sitter/api.h>
+
+#include "config.hpp"  // smoke::k_project_root (CMake-generated)
 
 // Forward declaration from tree-sitter-hlsl.
 // The grammar exports a C function; we declare it here to avoid depending on
 // a grammar-specific header that may not exist in all builds.
 extern "C" {
-const TSLanguage *tree_sitter_hlsl(void);
+const TSLanguage* tree_sitter_hlsl(void);
 }  // extern "C"
 
 #include <filesystem>
@@ -32,27 +32,32 @@ namespace {
 
 // Custom deleters for opaque C handles from the tree-sitter API.
 struct TSParserDeleter {
-    void operator()(TSParser *p) const noexcept { ts_parser_delete(p); }
+    void operator()(TSParser* p) const noexcept {
+        ts_parser_delete(p);
+    }
 };
 struct TSTreeDeleter {
-    void operator()(TSTree *t) const noexcept { ts_tree_delete(t); }
+    void operator()(TSTree* t) const noexcept {
+        ts_tree_delete(t);
+    }
 };
 // ts_node_string returns a malloc'd buffer; free with std::free.
 struct TSStringDeleter {
     // NOLINTNEXTLINE(cppcoreguidelines-owning-memory,*-no-malloc)
-    void operator()(char *s) const noexcept { std::free(s); }
+    void operator()(char* s) const noexcept {
+        std::free(s);
+    }
 };
 
 using UniqueParser = std::unique_ptr<TSParser, TSParserDeleter>;
-using UniqueTree   = std::unique_ptr<TSTree,   TSTreeDeleter>;
-using UniqueString = std::unique_ptr<char,     TSStringDeleter>;
+using UniqueTree = std::unique_ptr<TSTree, TSTreeDeleter>;
+using UniqueString = std::unique_ptr<char, TSStringDeleter>;
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-std::string read_file(const std::filesystem::path &path)
-{
+std::string read_file(const std::filesystem::path& path) {
     std::ifstream ifs(path, std::ios::binary | std::ios::ate);
     if (!ifs) {
         return {};
@@ -65,8 +70,7 @@ std::string read_file(const std::filesystem::path &path)
 }
 
 // Inner run function that may throw; caught by main.
-int run()
-{
+int run() {
     // Resolve the fixture path relative to the project root embedded at
     // configure time.
     const std::filesystem::path root{smoke::k_project_root};
@@ -92,13 +96,8 @@ int run()
     }
 
     // Parse.
-    const UniqueTree tree{
-        ts_parser_parse_string(
-            parser.get(),
-            nullptr,
-            source.c_str(),
-            static_cast<uint32_t>(source.size()))
-    };
+    const UniqueTree tree{ts_parser_parse_string(
+        parser.get(), nullptr, source.c_str(), static_cast<uint32_t>(source.size()))};
     if (!tree) {
         std::cerr << "treesitter-smoke: ts_parser_parse_string() returned null\n";
         return 1;
@@ -140,11 +139,10 @@ int run()
 // ---------------------------------------------------------------------------
 
 // NOLINTNEXTLINE(bugprone-exception-escape) -- catch-all below covers all paths
-int main()
-{
+int main() {
     try {
         return run();
-    } catch (const std::exception &ex) {
+    } catch (const std::exception& ex) {
         std::cerr << "treesitter-smoke: fatal: " << ex.what() << '\n';
         return 1;
     } catch (...) {

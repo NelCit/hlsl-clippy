@@ -50,17 +50,19 @@ constexpr std::string_view k_pattern = R"(
 )";
 
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const char* t = ::ts_node_type(node);
     return t != nullptr ? std::string_view{t} : std::string_view{};
 }
 
-[[nodiscard]] std::string_view node_text(::TSNode node,
-                                         std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return {};
+[[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
+    if (::ts_node_is_null(node))
+        return {};
     const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
     const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) return {};
+    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
+        return {};
     return bytes.substr(lo, hi - lo);
 }
 
@@ -81,7 +83,8 @@ constexpr std::string_view k_pattern = R"(
 /// the common `(float)((float)x)` form where the inner cast is wrapped in
 /// parens for grouping.
 [[nodiscard]] ::TSNode unwrap_parens(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return node;
+    if (::ts_node_is_null(node))
+        return node;
     if (node_kind(node) == "parenthesized_expression") {
         const auto nc = ::ts_node_named_child_count(node);
         if (nc == 1U) {
@@ -93,86 +96,90 @@ constexpr std::string_view k_pattern = R"(
 
 class RedundantPrecisionCast : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         auto compiled = query::Query::compile(tree.language(), k_pattern);
         if (!compiled.has_value()) {
             Diagnostic diag;
-            diag.code     = std::string{"clippy::query-compile"};
+            diag.code = std::string{"clippy::query-compile"};
             diag.severity = Severity::Error;
             diag.primary_span =
                 Span{.source = tree.source_id(), .bytes = ByteSpan{.lo = 0, .hi = 0}};
-            diag.message =
-                std::string{"failed to compile redundant-precision-cast query"};
+            diag.message = std::string{"failed to compile redundant-precision-cast query"};
             ctx.emit(std::move(diag));
             return;
         }
 
         query::QueryEngine engine;
-        engine.run(
-            compiled.value(),
-            ::ts_tree_root_node(tree.raw_tree()),
-            [&](const query::QueryMatch& match) {
-                const ::TSNode outer_cast  = match.capture("outer_cast");
-                const ::TSNode outer_type  = match.capture("outer_type");
-                const ::TSNode outer_value = match.capture("outer_value");
-                if (::ts_node_is_null(outer_cast) ||
-                    ::ts_node_is_null(outer_type) ||
-                    ::ts_node_is_null(outer_value)) {
-                    return;
-                }
+        engine.run(compiled.value(),
+                   ::ts_tree_root_node(tree.raw_tree()),
+                   [&](const query::QueryMatch& match) {
+                       const ::TSNode outer_cast = match.capture("outer_cast");
+                       const ::TSNode outer_type = match.capture("outer_type");
+                       const ::TSNode outer_value = match.capture("outer_value");
+                       if (::ts_node_is_null(outer_cast) || ::ts_node_is_null(outer_type) ||
+                           ::ts_node_is_null(outer_value)) {
+                           return;
+                       }
 
-                // Peel one layer of parens around the value (the common shape
-                // `(float)((float)x)` wraps the inner cast in parens).
-                const ::TSNode inner = unwrap_parens(outer_value);
-                if (node_kind(inner) != "cast_expression") return;
+                       // Peel one layer of parens around the value (the common shape
+                       // `(float)((float)x)` wraps the inner cast in parens).
+                       const ::TSNode inner = unwrap_parens(outer_value);
+                       if (node_kind(inner) != "cast_expression")
+                           return;
 
-                const ::TSNode inner_type =
-                    ::ts_node_child_by_field_name(inner, "type", 4);
-                if (::ts_node_is_null(inner_type)) return;
+                       const ::TSNode inner_type = ::ts_node_child_by_field_name(inner, "type", 4);
+                       if (::ts_node_is_null(inner_type))
+                           return;
 
-                const auto outer_type_text = node_text(outer_type, tree.source_bytes());
-                const auto inner_type_text = node_text(inner_type, tree.source_bytes());
-                if (outer_type_text.empty() || inner_type_text.empty()) return;
+                       const auto outer_type_text = node_text(outer_type, tree.source_bytes());
+                       const auto inner_type_text = node_text(inner_type, tree.source_bytes());
+                       if (outer_type_text.empty() || inner_type_text.empty())
+                           return;
 
-                if (normalise_type(outer_type_text) !=
-                    normalise_type(inner_type_text)) {
-                    return;
-                }
+                       if (normalise_type(outer_type_text) != normalise_type(inner_type_text)) {
+                           return;
+                       }
 
-                // Replace the outer cast with the inner cast verbatim — this
-                // drops the redundant outer wrapper while preserving the
-                // textually-meaningful inner cast.
-                const auto outer_range = tree.byte_range(outer_cast);
-                const auto inner_text  = node_text(inner, tree.source_bytes());
-                if (inner_text.empty()) return;
+                       // Replace the outer cast with the inner cast verbatim — this
+                       // drops the redundant outer wrapper while preserving the
+                       // textually-meaningful inner cast.
+                       const auto outer_range = tree.byte_range(outer_cast);
+                       const auto inner_text = node_text(inner, tree.source_bytes());
+                       if (inner_text.empty())
+                           return;
 
-                Diagnostic diag;
-                diag.code     = std::string{k_rule_id};
-                diag.severity = Severity::Warning;
-                diag.primary_span =
-                    Span{.source = tree.source_id(), .bytes = outer_range};
-                diag.message =
-                    std::string{"redundant `("} + std::string{outer_type_text} +
-                    ")` cast — the inner cast already produces a value of type `" +
-                    std::string{inner_type_text} + "`; drop the outer cast";
+                       Diagnostic diag;
+                       diag.code = std::string{k_rule_id};
+                       diag.severity = Severity::Warning;
+                       diag.primary_span = Span{.source = tree.source_id(), .bytes = outer_range};
+                       diag.message =
+                           std::string{"redundant `("} + std::string{outer_type_text} +
+                           ")` cast — the inner cast already produces a value of type `" +
+                           std::string{inner_type_text} + "`; drop the outer cast";
 
-                Fix fix;
-                fix.machine_applicable = true;
-                fix.description = std::string{
-                    "drop the redundant outer cast; the inner cast already "
-                    "produces the requested type"};
-                TextEdit edit;
-                edit.span        = Span{.source = tree.source_id(), .bytes = outer_range};
-                edit.replacement = std::string{inner_text};
-                fix.edits.push_back(std::move(edit));
-                diag.fixes.push_back(std::move(fix));
+                       Fix fix;
+                       fix.machine_applicable = true;
+                       fix.description = std::string{
+                           "drop the redundant outer cast; the inner cast already "
+                           "produces the requested type"};
+                       TextEdit edit;
+                       edit.span = Span{.source = tree.source_id(), .bytes = outer_range};
+                       edit.replacement = std::string{inner_text};
+                       fix.edits.push_back(std::move(edit));
+                       diag.fixes.push_back(std::move(fix));
 
-                ctx.emit(std::move(diag));
-            });
+                       ctx.emit(std::move(diag));
+                   });
     }
 };
 

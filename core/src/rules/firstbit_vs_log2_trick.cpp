@@ -38,15 +38,18 @@ constexpr std::string_view k_rule_id = "firstbit-vs-log2-trick";
 constexpr std::string_view k_category = "math";
 
 [[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
     const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) return {};
+    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
+        return {};
     return bytes.substr(lo, hi - lo);
 }
 
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const char* t = ::ts_node_type(node);
     return t != nullptr ? std::string_view{t} : std::string_view{};
 }
@@ -54,7 +57,8 @@ constexpr std::string_view k_category = "math";
 /// True if `text` names a uint-family scalar or vector type: `uint`, `uint2`,
 /// `uint3`, `uint4`. We deliberately exclude `int`/`float`-cast lookalikes.
 [[nodiscard]] bool is_uint_type_name(std::string_view text) noexcept {
-    if (text == "uint") return true;
+    if (text == "uint")
+        return true;
     if (text.size() == 5 && text.starts_with("uint") &&
         (text[4] == '2' || text[4] == '3' || text[4] == '4')) {
         return true;
@@ -67,11 +71,14 @@ constexpr std::string_view k_category = "math";
 [[nodiscard]] bool is_log2_call(::TSNode node,
                                 std::string_view bytes,
                                 ::TSNode& inner_arg_out) noexcept {
-    if (node_kind(node) != "call_expression") return false;
+    if (node_kind(node) != "call_expression")
+        return false;
     const ::TSNode fn = ::ts_node_child_by_field_name(node, "function", 8);
-    if (node_text(fn, bytes) != "log2") return false;
+    if (node_text(fn, bytes) != "log2")
+        return false;
     const ::TSNode args = ::ts_node_child_by_field_name(node, "arguments", 9);
-    if (::ts_node_is_null(args) || ::ts_node_named_child_count(args) != 1U) return false;
+    if (::ts_node_is_null(args) || ::ts_node_named_child_count(args) != 1U)
+        return false;
     inner_arg_out = ::ts_node_named_child(args, 0);
     return !::ts_node_is_null(inner_arg_out);
 }
@@ -83,7 +90,8 @@ constexpr std::string_view k_category = "math";
     for (;;) {
         const auto kind = node_kind(node);
         if (kind == "parenthesized_expression") {
-            if (::ts_node_named_child_count(node) < 1U) break;
+            if (::ts_node_named_child_count(node) < 1U)
+                break;
             node = ::ts_node_named_child(node, 0);
             continue;
         }
@@ -91,12 +99,14 @@ constexpr std::string_view k_category = "math";
             // Only peel float-family casts; otherwise stop here.
             const ::TSNode tt = ::ts_node_child_by_field_name(node, "type", 4);
             const auto type_text = node_text(tt, bytes);
-            const bool is_float_cast =
-                type_text == "float" || type_text == "float2" || type_text == "float3" ||
-                type_text == "float4" || type_text == "double" || type_text == "half";
-            if (!is_float_cast) break;
+            const bool is_float_cast = type_text == "float" || type_text == "float2" ||
+                                       type_text == "float3" || type_text == "float4" ||
+                                       type_text == "double" || type_text == "half";
+            if (!is_float_cast)
+                break;
             const ::TSNode val = ::ts_node_child_by_field_name(node, "value", 5);
-            if (::ts_node_is_null(val)) break;
+            if (::ts_node_is_null(val))
+                break;
             node = val;
             continue;
         }
@@ -106,7 +116,8 @@ constexpr std::string_view k_category = "math";
 }
 
 void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
-    if (::ts_node_is_null(node)) return;
+    if (::ts_node_is_null(node))
+        return;
 
     if (node_kind(node) == "cast_expression") {
         const ::TSNode tt = ::ts_node_child_by_field_name(node, "type", 4);
@@ -165,9 +176,15 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
 class FirstBitVsLog2Trick : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         const auto bytes = tree.source_bytes();

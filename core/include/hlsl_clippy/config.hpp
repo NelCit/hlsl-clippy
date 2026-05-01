@@ -54,8 +54,7 @@ struct Config {
     /// Returns `std::nullopt` when the config doesn't mention the rule (the
     /// caller should fall back to the rule's built-in severity).
     [[nodiscard]] std::optional<RuleSeverity> severity_for(
-        std::string_view rule_id,
-        const std::filesystem::path& file_path) const;
+        std::string_view rule_id, const std::filesystem::path& file_path) const;
 };
 
 /// Configuration loader error. Carries enough context to render a
@@ -118,8 +117,7 @@ private:
 ///
 /// `start` may point at either a file or a directory. If it's a file, the
 /// search begins in the file's parent.
-[[nodiscard]] std::optional<std::filesystem::path> find_config(
-    const std::filesystem::path& start);
+[[nodiscard]] std::optional<std::filesystem::path> find_config(const std::filesystem::path& start);
 
 /// True if `path` matches `glob`. Supports `**` (any number of path
 /// components, including zero), `*` (anything except a path separator), and

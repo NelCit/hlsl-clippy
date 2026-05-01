@@ -48,12 +48,12 @@ constexpr std::string_view k_pattern = R"(
 
 /// Return the operator text of a binary_expression. tree-sitter-hlsl stores
 /// the operator as an anonymous child sitting between the named left/right.
-[[nodiscard]] std::string_view binary_op(::TSNode expr,
-                                         std::string_view bytes) noexcept {
+[[nodiscard]] std::string_view binary_op(::TSNode expr, std::string_view bytes) noexcept {
     const uint32_t count = ::ts_node_child_count(expr);
     for (uint32_t i = 0; i < count; ++i) {
         ::TSNode child = ::ts_node_child(expr, i);
-        if (::ts_node_is_null(child) || ::ts_node_is_named(child)) continue;
+        if (::ts_node_is_null(child) || ::ts_node_is_named(child))
+            continue;
         const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(child));
         const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(child));
         if (lo < bytes.size() && hi <= bytes.size() && hi > lo) {
@@ -65,7 +65,8 @@ constexpr std::string_view k_pattern = R"(
 
 /// True if `node` is a `number_literal`.
 [[nodiscard]] bool is_number_literal(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return false;
+    if (::ts_node_is_null(node))
+        return false;
     const char* t = ::ts_node_type(node);
     return t != nullptr && std::string_view{t} == "number_literal";
 }
@@ -74,30 +75,40 @@ constexpr std::string_view k_pattern = R"(
 /// contains a `.` or ends with an `f`/`F` suffix. The decimal-only form
 /// `42` (an integer literal) is intentionally rejected.
 [[nodiscard]] bool literal_looks_like_float(std::string_view text) noexcept {
-    if (text.empty()) return false;
+    if (text.empty())
+        return false;
     for (char c : text) {
-        if (c == '.') return true;
+        if (c == '.')
+            return true;
     }
     const char last = text.back();
-    if (last == 'f' || last == 'F') return true;
+    if (last == 'f' || last == 'F')
+        return true;
     // `1e3` style without a `.` is also a float literal in C/HLSL.
     for (char c : text) {
-        if (c == 'e' || c == 'E') return true;
+        if (c == 'e' || c == 'E')
+            return true;
     }
     return false;
 }
 
 class CompareEqualFloat : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         auto compiled = query::Query::compile(tree.language(), k_pattern);
         if (!compiled.has_value()) {
             Diagnostic diag;
-            diag.code     = std::string{"clippy::query-compile"};
+            diag.code = std::string{"clippy::query-compile"};
             diag.severity = Severity::Error;
             diag.primary_span =
                 Span{.source = tree.source_id(), .bytes = ByteSpan{.lo = 0, .hi = 0}};
@@ -107,54 +118,53 @@ public:
         }
 
         query::QueryEngine engine;
-        engine.run(
-            compiled.value(),
-            ::ts_tree_root_node(tree.raw_tree()),
-            [&](const query::QueryMatch& match) {
-                const ::TSNode left  = match.capture("left");
-                const ::TSNode right = match.capture("right");
-                const ::TSNode expr  = match.capture("expr");
-                if (::ts_node_is_null(left) || ::ts_node_is_null(right) ||
-                    ::ts_node_is_null(expr)) {
-                    return;
-                }
+        engine.run(compiled.value(),
+                   ::ts_tree_root_node(tree.raw_tree()),
+                   [&](const query::QueryMatch& match) {
+                       const ::TSNode left = match.capture("left");
+                       const ::TSNode right = match.capture("right");
+                       const ::TSNode expr = match.capture("expr");
+                       if (::ts_node_is_null(left) || ::ts_node_is_null(right) ||
+                           ::ts_node_is_null(expr)) {
+                           return;
+                       }
 
-                const auto op = binary_op(expr, tree.source_bytes());
-                if (op != "==" && op != "!=") return;
+                       const auto op = binary_op(expr, tree.source_bytes());
+                       if (op != "==" && op != "!=")
+                           return;
 
-                const auto left_text  = tree.text(left);
-                const auto right_text = tree.text(right);
+                       const auto left_text = tree.text(left);
+                       const auto right_text = tree.text(right);
 
-                const bool left_is_float_lit =
-                    is_number_literal(left) && literal_looks_like_float(left_text);
-                const bool right_is_float_lit =
-                    is_number_literal(right) && literal_looks_like_float(right_text);
+                       const bool left_is_float_lit =
+                           is_number_literal(left) && literal_looks_like_float(left_text);
+                       const bool right_is_float_lit =
+                           is_number_literal(right) && literal_looks_like_float(right_text);
 
-                if (!left_is_float_lit && !right_is_float_lit) return;
+                       if (!left_is_float_lit && !right_is_float_lit)
+                           return;
 
-                const auto expr_range = tree.byte_range(expr);
+                       const auto expr_range = tree.byte_range(expr);
 
-                Diagnostic diag;
-                diag.code     = std::string{k_rule_id};
-                diag.severity = Severity::Warning;
-                diag.primary_span =
-                    Span{.source = tree.source_id(), .bytes = expr_range};
-                diag.message =
-                    std::string{"exact `"} + std::string{op} +
-                    "` on floating-point values is unreliable — rounding error "
-                    "and NaN make the result unpredictable; use an explicit "
-                    "tolerance such as `abs(a - b) < epsilon` instead";
+                       Diagnostic diag;
+                       diag.code = std::string{k_rule_id};
+                       diag.severity = Severity::Warning;
+                       diag.primary_span = Span{.source = tree.source_id(), .bytes = expr_range};
+                       diag.message = std::string{"exact `"} + std::string{op} +
+                                      "` on floating-point values is unreliable — rounding error "
+                                      "and NaN make the result unpredictable; use an explicit "
+                                      "tolerance such as `abs(a - b) < epsilon` instead";
 
-                Fix fix;
-                fix.machine_applicable = false;
-                fix.description = std::string{
-                    "replace exact float equality with a tolerance check, "
-                    "e.g. `abs(a - b) < epsilon` (or `>= epsilon` for `!=`); "
-                    "choose epsilon based on the expected dynamic range"};
-                diag.fixes.push_back(std::move(fix));
+                       Fix fix;
+                       fix.machine_applicable = false;
+                       fix.description = std::string{
+                           "replace exact float equality with a tolerance check, "
+                           "e.g. `abs(a - b) < epsilon` (or `>= epsilon` for `!=`); "
+                           "choose epsilon based on the expected dynamic range"};
+                       diag.fixes.push_back(std::move(fix));
 
-                ctx.emit(std::move(diag));
-            });
+                       ctx.emit(std::move(diag));
+                   });
     }
 };
 

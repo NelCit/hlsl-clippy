@@ -42,15 +42,18 @@ constexpr std::string_view k_category = "math";
 constexpr std::string_view k_lerp_name = "lerp";
 
 [[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
     const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) return {};
+    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
+        return {};
     return bytes.substr(lo, hi - lo);
 }
 
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const char* t = ::ts_node_type(node);
     return t != nullptr ? std::string_view{t} : std::string_view{};
 }
@@ -60,50 +63,68 @@ constexpr std::string_view k_lerp_name = "lerp";
 }
 
 [[nodiscard]] bool literal_is_zero(std::string_view text) noexcept {
-    if (text.empty()) return false;
+    if (text.empty())
+        return false;
     std::size_t i = 0;
-    if (i < text.size() && text[i] == '+') ++i;
-    if (i >= text.size() || text[i] < '0' || text[i] > '9') return false;
-    while (i < text.size() && text[i] == '0') ++i;
-    if (i < text.size() && text[i] >= '1' && text[i] <= '9') return false;
+    if (i < text.size() && text[i] == '+')
+        ++i;
+    if (i >= text.size() || text[i] < '0' || text[i] > '9')
+        return false;
+    while (i < text.size() && text[i] == '0')
+        ++i;
+    if (i < text.size() && text[i] >= '1' && text[i] <= '9')
+        return false;
     if (i < text.size() && text[i] == '.') {
         ++i;
-        while (i < text.size() && text[i] == '0') ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9') return false;
+        while (i < text.size() && text[i] == '0')
+            ++i;
+        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
+            return false;
     }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E')) return false;
+    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
+        return false;
     while (i < text.size()) {
-        if (!is_float_suffix(text[i])) return false;
+        if (!is_float_suffix(text[i]))
+            return false;
         ++i;
     }
     return true;
 }
 
 [[nodiscard]] bool literal_is_one(std::string_view text) noexcept {
-    if (text.empty()) return false;
+    if (text.empty())
+        return false;
     std::size_t i = 0;
-    if (i < text.size() && text[i] == '+') ++i;
-    while (i < text.size() && text[i] == '0') ++i;
-    if (i >= text.size() || text[i] != '1') return false;
+    if (i < text.size() && text[i] == '+')
+        ++i;
+    while (i < text.size() && text[i] == '0')
+        ++i;
+    if (i >= text.size() || text[i] != '1')
+        return false;
     ++i;
-    if (i < text.size() && text[i] >= '0' && text[i] <= '9') return false;
+    if (i < text.size() && text[i] >= '0' && text[i] <= '9')
+        return false;
     if (i < text.size() && text[i] == '.') {
         ++i;
-        while (i < text.size() && text[i] == '0') ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9') return false;
+        while (i < text.size() && text[i] == '0')
+            ++i;
+        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
+            return false;
     }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E')) return false;
+    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
+        return false;
     while (i < text.size()) {
-        if (!is_float_suffix(text[i])) return false;
+        if (!is_float_suffix(text[i]))
+            return false;
         ++i;
     }
     return true;
 }
 
 [[nodiscard]] bool is_float_family_type(std::string_view name) noexcept {
-    return name == "float" || name == "float2" || name == "float3" ||
-           name == "float4" || name == "half" || name == "half2" ||
-           name == "half3" || name == "half4" || name == "min16float";
+    return name == "float" || name == "float2" || name == "float3" || name == "float4" ||
+           name == "half" || name == "half2" || name == "half3" || name == "half4" ||
+           name == "min16float";
 }
 
 /// Examine the third lerp argument. Returns true if it matches one of the
@@ -118,14 +139,17 @@ constexpr std::string_view k_lerp_name = "lerp";
     const auto kind = node_kind(t);
     if (kind == "cast_expression") {
         const ::TSNode tt = ::ts_node_child_by_field_name(t, "type", 4);
-        if (!is_float_family_type(node_text(tt, bytes))) return false;
+        if (!is_float_family_type(node_text(tt, bytes)))
+            return false;
         const ::TSNode val = ::ts_node_child_by_field_name(t, "value", 5);
-        if (::ts_node_is_null(val)) return false;
+        if (::ts_node_is_null(val))
+            return false;
         // Require the inner expression to be a plain identifier or
         // field_expression (e.g. `flags.x`); skip more complex forms to keep
         // the false-positive rate low.
         const auto vk = node_kind(val);
-        if (vk != "identifier" && vk != "field_expression") return false;
+        if (vk != "identifier" && vk != "field_expression")
+            return false;
         cond_text_out = std::string{node_text(val, bytes)};
         swap_out = false;
         return !cond_text_out.empty();
@@ -134,10 +158,10 @@ constexpr std::string_view k_lerp_name = "lerp";
         const ::TSNode cond = ::ts_node_child_by_field_name(t, "condition", 9);
         const ::TSNode then_n = ::ts_node_child_by_field_name(t, "consequence", 11);
         const ::TSNode else_n = ::ts_node_child_by_field_name(t, "alternative", 11);
-        if (::ts_node_is_null(cond) || ::ts_node_is_null(then_n) ||
-            ::ts_node_is_null(else_n)) return false;
-        if (node_kind(then_n) != "number_literal" ||
-            node_kind(else_n) != "number_literal") return false;
+        if (::ts_node_is_null(cond) || ::ts_node_is_null(then_n) || ::ts_node_is_null(else_n))
+            return false;
+        if (node_kind(then_n) != "number_literal" || node_kind(else_n) != "number_literal")
+            return false;
         const auto then_text = node_text(then_n, bytes);
         const auto else_text = node_text(else_n, bytes);
         if (literal_is_one(then_text) && literal_is_zero(else_text)) {
@@ -155,7 +179,8 @@ constexpr std::string_view k_lerp_name = "lerp";
 }
 
 void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
-    if (::ts_node_is_null(node)) return;
+    if (::ts_node_is_null(node))
+        return;
 
     if (node_kind(node) == "call_expression") {
         const ::TSNode fn = ::ts_node_child_by_field_name(node, "function", 8);
@@ -181,8 +206,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                         Diagnostic diag;
                         diag.code = std::string{k_rule_id};
                         diag.severity = Severity::Warning;
-                        diag.primary_span =
-                            Span{.source = tree.source_id(), .bytes = call_range};
+                        diag.primary_span = Span{.source = tree.source_id(), .bytes = call_range};
                         diag.message = std::string{
                             "`lerp(a, b, <bool>)` produces a portable-codegen mismatch "
                             "(some IHVs fold to select; others emit a real lerp) -- "
@@ -191,15 +215,12 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
                         Fix fix;
                         fix.machine_applicable = false;
-                        fix.description =
-                            std::string{"replace with `"} + cond_text + " ? " +
-                            consequence + " : " + alternative +
-                            "` for portable codegen across IHVs";
+                        fix.description = std::string{"replace with `"} + cond_text + " ? " +
+                                          consequence + " : " + alternative +
+                                          "` for portable codegen across IHVs";
                         TextEdit edit;
-                        edit.span =
-                            Span{.source = tree.source_id(), .bytes = call_range};
-                        edit.replacement = cond_text + " ? " + consequence + " : " +
-                                           alternative;
+                        edit.span = Span{.source = tree.source_id(), .bytes = call_range};
+                        edit.replacement = cond_text + " ? " + consequence + " : " + alternative;
                         fix.edits.push_back(std::move(edit));
                         diag.fixes.push_back(std::move(fix));
 
@@ -218,9 +239,15 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
 class LerpOnBoolCond : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         walk(::ts_tree_root_node(tree.raw_tree()), tree.source_bytes(), tree, ctx);

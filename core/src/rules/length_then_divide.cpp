@@ -33,15 +33,18 @@ constexpr std::string_view k_category = "math";
 constexpr std::string_view k_length_name = "length";
 
 [[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
     const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) return {};
+    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
+        return {};
     return bytes.substr(lo, hi - lo);
 }
 
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const char* t = ::ts_node_type(node);
     return t != nullptr ? std::string_view{t} : std::string_view{};
 }
@@ -50,14 +53,16 @@ constexpr std::string_view k_length_name = "length";
     const std::uint32_t count = ::ts_node_child_count(expr);
     for (std::uint32_t i = 0; i < count; ++i) {
         ::TSNode child = ::ts_node_child(expr, i);
-        if (::ts_node_is_null(child) || ::ts_node_is_named(child)) continue;
+        if (::ts_node_is_null(child) || ::ts_node_is_named(child))
+            continue;
         return node_text(child, bytes);
     }
     return {};
 }
 
 void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
-    if (::ts_node_is_null(node)) return;
+    if (::ts_node_is_null(node))
+        return;
 
     if (node_kind(node) == "binary_expression" && binary_op(node, bytes) == "/") {
         const ::TSNode lhs = ::ts_node_child_by_field_name(node, "left", 4);
@@ -65,10 +70,8 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
         if (!::ts_node_is_null(lhs) && node_kind(rhs) == "call_expression") {
             const ::TSNode fn = ::ts_node_child_by_field_name(rhs, "function", 8);
             if (node_text(fn, bytes) == k_length_name) {
-                const ::TSNode args =
-                    ::ts_node_child_by_field_name(rhs, "arguments", 9);
-                if (!::ts_node_is_null(args) &&
-                    ::ts_node_named_child_count(args) == 1U) {
+                const ::TSNode args = ::ts_node_child_by_field_name(rhs, "arguments", 9);
+                if (!::ts_node_is_null(args) && ::ts_node_named_child_count(args) == 1U) {
                     const ::TSNode inner = ::ts_node_named_child(args, 0);
                     const auto v_text = node_text(lhs, bytes);
                     const auto inner_text = node_text(inner, bytes);
@@ -79,8 +82,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                         Diagnostic diag;
                         diag.code = std::string{k_rule_id};
                         diag.severity = Severity::Warning;
-                        diag.primary_span =
-                            Span{.source = tree.source_id(), .bytes = expr_range};
+                        diag.primary_span = Span{.source = tree.source_id(), .bytes = expr_range};
                         diag.message = std::string{
                             "`v / length(v)` is the open-coded form of "
                             "`normalize(v)` -- prefer the named intrinsic, which "
@@ -88,13 +90,13 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
                         Fix fix;
                         fix.machine_applicable = is_simple;
-                        fix.description = is_simple
-                            ? std::string{"replace `v / length(v)` with `normalize(v)`"}
-                            : std::string{"replace with `normalize(v)`; verify the "
-                                          "dividend is side-effect-free before applying"};
+                        fix.description =
+                            is_simple ? std::string{"replace `v / length(v)` with `normalize(v)`"}
+                                      : std::string{
+                                            "replace with `normalize(v)`; verify the "
+                                            "dividend is side-effect-free before applying"};
                         TextEdit edit;
-                        edit.span =
-                            Span{.source = tree.source_id(), .bytes = expr_range};
+                        edit.span = Span{.source = tree.source_id(), .bytes = expr_range};
                         std::string replacement;
                         replacement.reserve(v_text.size() + 12);
                         replacement.append("normalize(");
@@ -123,9 +125,15 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
 class LengthThenDivide : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         walk(::ts_tree_root_node(tree.raw_tree()), tree.source_bytes(), tree, ctx);

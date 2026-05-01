@@ -78,8 +78,10 @@ public:
                     ::ts_node_is_null(outer_call) || ::ts_node_is_null(inner_call)) {
                     return;
                 }
-                if (tree.text(outer) != k_transpose_name) return;
-                if (tree.text(inner) != k_transpose_name) return;
+                if (tree.text(outer) != k_transpose_name)
+                    return;
+                if (tree.text(inner) != k_transpose_name)
+                    return;
 
                 const auto outer_range = tree.byte_range(outer_call);
                 const auto inner_range = tree.byte_range(inner_call);
@@ -89,10 +91,13 @@ public:
                 // call instead of using the inner call's full text.
                 const ::TSNode inner_args =
                     ::ts_node_child_by_field_name(inner_call, "arguments", 9);
-                if (::ts_node_is_null(inner_args)) return;
-                if (::ts_node_named_child_count(inner_args) != 1U) return;
+                if (::ts_node_is_null(inner_args))
+                    return;
+                if (::ts_node_named_child_count(inner_args) != 1U)
+                    return;
                 const ::TSNode m_node = ::ts_node_named_child(inner_args, 0);
-                if (::ts_node_is_null(m_node)) return;
+                if (::ts_node_is_null(m_node))
+                    return;
 
                 const auto m_text = tree.text(m_node);
 
@@ -107,8 +112,8 @@ public:
                 if (!m_text.empty() && inner_range.hi <= outer_range.hi) {
                     Fix fix;
                     fix.machine_applicable = true;
-                    fix.description = std::string{
-                        "drop both `transpose` calls -- transpose is its own inverse"};
+                    fix.description =
+                        std::string{"drop both `transpose` calls -- transpose is its own inverse"};
                     TextEdit edit;
                     edit.span = Span{.source = tree.source_id(), .bytes = outer_range};
                     edit.replacement = std::string{m_text};

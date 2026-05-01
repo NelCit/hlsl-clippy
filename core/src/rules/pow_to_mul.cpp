@@ -47,50 +47,64 @@ constexpr std::string_view k_category = "math";
 constexpr std::string_view k_pow_name = "pow";
 
 [[nodiscard]] bool is_float_suffix(char c) noexcept {
-    return c == 'f' || c == 'F' || c == 'h' || c == 'H' || c == 'l' || c == 'L' ||
-           c == 'u' || c == 'U';
+    return c == 'f' || c == 'F' || c == 'h' || c == 'H' || c == 'l' || c == 'L' || c == 'u' ||
+           c == 'U';
 }
 
 /// Parse `text` as a non-negative integer-valued numeric literal in [0, 99].
 /// Returns the integer value, or `std::nullopt` if the literal is not
 /// integer-valued (e.g. `2.5`) or uses scientific notation.
 [[nodiscard]] std::optional<int> parse_integer_literal(std::string_view text) noexcept {
-    if (text.empty()) return std::nullopt;
+    if (text.empty())
+        return std::nullopt;
     std::size_t i = 0;
-    if (text[i] == '+') ++i;
-    if (i >= text.size()) return std::nullopt;
+    if (text[i] == '+')
+        ++i;
+    if (i >= text.size())
+        return std::nullopt;
 
     const std::size_t int_start = i;
-    while (i < text.size() && text[i] >= '0' && text[i] <= '9') ++i;
-    if (i == int_start) return std::nullopt;
+    while (i < text.size() && text[i] >= '0' && text[i] <= '9')
+        ++i;
+    if (i == int_start)
+        return std::nullopt;
     const auto int_part = text.substr(int_start, i - int_start);
 
     if (i < text.size() && text[i] == '.') {
         ++i;
-        while (i < text.size() && text[i] == '0') ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9') return std::nullopt;
+        while (i < text.size() && text[i] == '0')
+            ++i;
+        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
+            return std::nullopt;
     }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E')) return std::nullopt;
+    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
+        return std::nullopt;
     while (i < text.size()) {
-        if (!is_float_suffix(text[i])) return std::nullopt;
+        if (!is_float_suffix(text[i]))
+            return std::nullopt;
         ++i;
     }
-    if (int_part.size() > 2U) return std::nullopt;
+    if (int_part.size() > 2U)
+        return std::nullopt;
     int value = 0;
-    for (const char d : int_part) value = (value * 10) + (d - '0');
+    for (const char d : int_part)
+        value = (value * 10) + (d - '0');
     return value;
 }
 
 [[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
     const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) return {};
+    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
+        return {};
     return bytes.substr(lo, hi - lo);
 }
 
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const char* t = ::ts_node_type(node);
     return t != nullptr ? std::string_view{t} : std::string_view{};
 }
@@ -159,37 +173,50 @@ constexpr std::string_view k_pow_name = "pow";
 
 class PowToMul : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_node(const AstCursor& cursor, RuleContext& ctx) override {
-        if (cursor.kind() != "call_expression") return;
+        if (cursor.kind() != "call_expression")
+            return;
         const auto bytes = cursor.source_bytes();
         const ::TSNode call = cursor.node();
 
         const ::TSNode fn = ::ts_node_child_by_field_name(call, "function", 8);
-        if (node_kind(fn) != "identifier" || node_text(fn, bytes) != k_pow_name) return;
+        if (node_kind(fn) != "identifier" || node_text(fn, bytes) != k_pow_name)
+            return;
 
         const ::TSNode args = ::ts_node_child_by_field_name(call, "arguments", 9);
-        if (::ts_node_is_null(args) || ::ts_node_named_child_count(args) != 2U) return;
+        if (::ts_node_is_null(args) || ::ts_node_named_child_count(args) != 2U)
+            return;
 
         const ::TSNode arg0 = ::ts_node_named_child(args, 0);
         const ::TSNode arg1 = ::ts_node_named_child(args, 1);
-        if (::ts_node_is_null(arg0) || node_kind(arg1) != "number_literal") return;
+        if (::ts_node_is_null(arg0) || node_kind(arg1) != "number_literal")
+            return;
 
         const auto exponent = parse_integer_literal(node_text(arg1, bytes));
-        if (!exponent || *exponent < 2 || *exponent > 4) return;
+        if (!exponent || *exponent < 2 || *exponent > 4)
+            return;
 
         // Skip pow(2.0, x) -- that's pow-base-two-to-exp2 territory and not
         // a candidate for repeated multiplication of the base.
         if (node_kind(arg0) == "number_literal") {
             const auto base_val = parse_integer_literal(node_text(arg0, bytes));
-            if (base_val && *base_val == 2) return;
+            if (base_val && *base_val == 2)
+                return;
         }
 
         const auto base_text = node_text(arg0, bytes);
-        if (base_text.empty()) return;
+        if (base_text.empty())
+            return;
 
         const bool base_is_simple_identifier = (node_kind(arg0) == "identifier");
 
@@ -202,9 +229,10 @@ public:
         Fix fix;
         fix.machine_applicable = base_is_simple_identifier;
         fix.description = base_is_simple_identifier
-            ? std::string{"replace `pow(x, N.0)` with repeated multiplication"}
-            : std::string{"replace with repeated multiplication; verify the base "
-                          "expression is side-effect-free before applying"};
+                              ? std::string{"replace `pow(x, N.0)` with repeated multiplication"}
+                              : std::string{
+                                    "replace with repeated multiplication; verify the base "
+                                    "expression is side-effect-free before applying"};
         TextEdit edit;
         edit.span = Span{.source = cursor.source_id(), .bytes = cursor.byte_range()};
         edit.replacement = make_replacement(base_text, *exponent);

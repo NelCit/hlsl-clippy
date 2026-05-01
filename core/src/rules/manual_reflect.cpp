@@ -42,36 +42,46 @@ constexpr std::string_view k_rule_id = "manual-reflect";
 constexpr std::string_view k_category = "math";
 
 [[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
     const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) return {};
+    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
+        return {};
     return bytes.substr(lo, hi - lo);
 }
 
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const char* t = ::ts_node_type(node);
     return t != nullptr ? std::string_view{t} : std::string_view{};
 }
 
 /// True if `node` is a number literal whose value is exactly 2 (or 2.0, 2.0f).
 [[nodiscard]] bool is_literal_two(::TSNode node, std::string_view bytes) noexcept {
-    if (node_kind(node) != "number_literal") return false;
+    if (node_kind(node) != "number_literal")
+        return false;
     const auto text = node_text(node, bytes);
-    if (text.empty()) return false;
+    if (text.empty())
+        return false;
     std::size_t i = 0;
-    if (i < text.size() && text[i] == '+') ++i;
-    if (i >= text.size() || text[i] != '2') return false;
+    if (i < text.size() && text[i] == '+')
+        ++i;
+    if (i >= text.size() || text[i] != '2')
+        return false;
     ++i;
     if (i < text.size() && text[i] == '.') {
         ++i;
-        while (i < text.size() && text[i] == '0') ++i;
+        while (i < text.size() && text[i] == '0')
+            ++i;
     }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E')) return false;
+    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
+        return false;
     while (i < text.size()) {
         const char c = text[i];
-        if (c != 'f' && c != 'F' && c != 'h' && c != 'H' && c != 'l' && c != 'L') return false;
+        if (c != 'f' && c != 'F' && c != 'h' && c != 'H' && c != 'l' && c != 'L')
+            return false;
         ++i;
     }
     return true;
@@ -83,11 +93,14 @@ constexpr std::string_view k_category = "math";
                                std::string_view bytes,
                                ::TSNode& arg0_out,
                                ::TSNode& arg1_out) noexcept {
-    if (node_kind(node) != "call_expression") return false;
+    if (node_kind(node) != "call_expression")
+        return false;
     const ::TSNode fn = ::ts_node_child_by_field_name(node, "function", 8);
-    if (node_text(fn, bytes) != "dot") return false;
+    if (node_text(fn, bytes) != "dot")
+        return false;
     const ::TSNode args = ::ts_node_child_by_field_name(node, "arguments", 9);
-    if (::ts_node_is_null(args) || ::ts_node_named_child_count(args) != 2U) return false;
+    if (::ts_node_is_null(args) || ::ts_node_named_child_count(args) != 2U)
+        return false;
     arg0_out = ::ts_node_named_child(args, 0);
     arg1_out = ::ts_node_named_child(args, 1);
     return !::ts_node_is_null(arg0_out) && !::ts_node_is_null(arg1_out);
@@ -98,7 +111,8 @@ constexpr std::string_view k_category = "math";
     const uint32_t count = ::ts_node_child_count(expr);
     for (uint32_t i = 0; i < count; ++i) {
         ::TSNode child = ::ts_node_child(expr, i);
-        if (::ts_node_is_null(child) || ::ts_node_is_named(child)) continue;
+        if (::ts_node_is_null(child) || ::ts_node_is_named(child))
+            continue;
         return node_text(child, bytes);
     }
     return {};
@@ -127,16 +141,19 @@ struct ReflectMatch {
     std::string n_text;
 };
 
-[[nodiscard]] std::optional<ReflectMatch> try_match_reflect_rhs(
-    ::TSNode rhs, ::TSNode v_node, std::string_view bytes) noexcept {
-
+[[nodiscard]] std::optional<ReflectMatch> try_match_reflect_rhs(::TSNode rhs,
+                                                                ::TSNode v_node,
+                                                                std::string_view bytes) noexcept {
     // RHS should be a binary_expression with operator `*`.
-    if (node_kind(rhs) != "binary_expression") return std::nullopt;
-    if (binary_op(rhs, bytes) != "*") return std::nullopt;
+    if (node_kind(rhs) != "binary_expression")
+        return std::nullopt;
+    if (binary_op(rhs, bytes) != "*")
+        return std::nullopt;
 
-    const ::TSNode rhs_left  = ::ts_node_child_by_field_name(rhs, "left",  4);
+    const ::TSNode rhs_left = ::ts_node_child_by_field_name(rhs, "left", 4);
     const ::TSNode rhs_right = ::ts_node_child_by_field_name(rhs, "right", 5);
-    if (::ts_node_is_null(rhs_left) || ::ts_node_is_null(rhs_right)) return std::nullopt;
+    if (::ts_node_is_null(rhs_left) || ::ts_node_is_null(rhs_right))
+        return std::nullopt;
 
     const auto v_text = node_text(v_node, bytes);
 
@@ -145,12 +162,15 @@ struct ReflectMatch {
     // and the trailing `* n` node matches the `v` node in `dot(n, v)`.
 
     auto try_extract = [&](::TSNode inner, ::TSNode tail_n) -> std::optional<ReflectMatch> {
-        if (node_kind(inner) != "binary_expression") return std::nullopt;
-        if (binary_op(inner, bytes) != "*") return std::nullopt;
+        if (node_kind(inner) != "binary_expression")
+            return std::nullopt;
+        if (binary_op(inner, bytes) != "*")
+            return std::nullopt;
 
-        const ::TSNode il = ::ts_node_child_by_field_name(inner, "left",  4);
+        const ::TSNode il = ::ts_node_child_by_field_name(inner, "left", 4);
         const ::TSNode ir = ::ts_node_child_by_field_name(inner, "right", 5);
-        if (::ts_node_is_null(il) || ::ts_node_is_null(ir)) return std::nullopt;
+        if (::ts_node_is_null(il) || ::ts_node_is_null(ir))
+            return std::nullopt;
 
         // Find which operand is "2" and which is "dot(n, v)".
         ::TSNode dot_node{};
@@ -163,7 +183,8 @@ struct ReflectMatch {
         }
 
         ::TSNode da{}, db{};
-        if (!is_dot_call(dot_node, bytes, da, db)) return std::nullopt;
+        if (!is_dot_call(dot_node, bytes, da, db))
+            return std::nullopt;
 
         // dot(n, v) — da and db must be {n_text, v_text} in some order.
         const auto ta = node_text(da, bytes);
@@ -173,7 +194,8 @@ struct ReflectMatch {
         // tail_n should be the normal vector (n).
         // The two dot args must be {n, v} in some order.
         // tail_n must equal one of them, and v must equal the other.
-        if (tn.empty() || v_text.empty()) return std::nullopt;
+        if (tn.empty() || v_text.empty())
+            return std::nullopt;
 
         std::string_view n_candidate;
         if (ta == v_text && tb == tn) {
@@ -189,7 +211,8 @@ struct ReflectMatch {
 
     // Pattern: (2 * dot(n,v)) * n
     auto result = try_extract(rhs_left, rhs_right);
-    if (result) return result;
+    if (result)
+        return result;
 
     // Pattern: n * (2 * dot(n,v))  — less common but commutative
     result = try_extract(rhs_right, rhs_left);
@@ -199,10 +222,11 @@ struct ReflectMatch {
 /// Walk every node in the tree looking for `v - RHS` where RHS matches the
 /// reflect formula. Emit a suggestion diagnostic when found.
 void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
-    if (::ts_node_is_null(node)) return;
+    if (::ts_node_is_null(node))
+        return;
 
     if (node_kind(node) == "binary_expression" && binary_op(node, bytes) == "-") {
-        const ::TSNode lhs = ::ts_node_child_by_field_name(node, "left",  4);
+        const ::TSNode lhs = ::ts_node_child_by_field_name(node, "left", 4);
         const ::TSNode rhs = ::ts_node_child_by_field_name(node, "right", 5);
         if (!::ts_node_is_null(lhs) && !::ts_node_is_null(rhs)) {
             const auto match = try_match_reflect_rhs(rhs, lhs, bytes);
@@ -210,25 +234,24 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                 const auto expr_range = tree.byte_range(node);
 
                 Diagnostic diag;
-                diag.code     = std::string{k_rule_id};
+                diag.code = std::string{k_rule_id};
                 diag.severity = Severity::Warning;
                 diag.primary_span = Span{.source = tree.source_id(), .bytes = expr_range};
-                diag.message =
-                    std::string{"`"} + match->v_text + " - 2 * dot(" + match->n_text +
-                    ", " + match->v_text + ") * " + match->n_text +
-                    "` is the reflect formula — use `reflect(" +
-                    match->v_text + ", " + match->n_text + ")`";
+                diag.message = std::string{"`"} + match->v_text + " - 2 * dot(" + match->n_text +
+                               ", " + match->v_text + ") * " + match->n_text +
+                               "` is the reflect formula — use `reflect(" + match->v_text + ", " +
+                               match->n_text + ")`";
 
                 Fix fix;
                 fix.machine_applicable = false;
-                fix.description =
-                    std::string{"replace with `reflect("} + match->v_text + ", " +
-                    match->n_text + ")` — verify that argument order matches your "
-                    "incident/normal convention before applying";
+                fix.description = std::string{"replace with `reflect("} + match->v_text + ", " +
+                                  match->n_text +
+                                  ")` — verify that argument order matches your "
+                                  "incident/normal convention before applying";
                 TextEdit edit;
-                edit.span        = Span{.source = tree.source_id(), .bytes = expr_range};
-                edit.replacement = std::string{"reflect("} + match->v_text + ", " +
-                                   match->n_text + ")";
+                edit.span = Span{.source = tree.source_id(), .bytes = expr_range};
+                edit.replacement =
+                    std::string{"reflect("} + match->v_text + ", " + match->n_text + ")";
                 fix.edits.push_back(std::move(edit));
                 diag.fixes.push_back(std::move(fix));
 
@@ -247,9 +270,15 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
 class ManualReflect : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         const auto bytes = tree.source_bytes();

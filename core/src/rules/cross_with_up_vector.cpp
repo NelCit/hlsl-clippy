@@ -46,15 +46,18 @@ constexpr std::string_view k_category = "math";
 constexpr std::string_view k_cross_name = "cross";
 
 [[nodiscard]] std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const auto lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
     const auto hi = static_cast<std::uint32_t>(::ts_node_end_byte(node));
-    if (lo > bytes.size() || hi > bytes.size() || hi < lo) return {};
+    if (lo > bytes.size() || hi > bytes.size() || hi < lo)
+        return {};
     return bytes.substr(lo, hi - lo);
 }
 
 [[nodiscard]] std::string_view node_kind(::TSNode node) noexcept {
-    if (::ts_node_is_null(node)) return {};
+    if (::ts_node_is_null(node))
+        return {};
     const char* t = ::ts_node_type(node);
     return t != nullptr ? std::string_view{t} : std::string_view{};
 }
@@ -65,20 +68,29 @@ constexpr std::string_view k_cross_name = "cross";
 
 /// True if `text` is a numeric literal whose value is exactly 0.
 [[nodiscard]] bool literal_is_zero(std::string_view text) noexcept {
-    if (text.empty()) return false;
+    if (text.empty())
+        return false;
     std::size_t i = 0;
-    if (i < text.size() && text[i] == '+') ++i;
-    if (i >= text.size() || text[i] < '0' || text[i] > '9') return false;
-    while (i < text.size() && text[i] == '0') ++i;
-    if (i < text.size() && text[i] >= '1' && text[i] <= '9') return false;
+    if (i < text.size() && text[i] == '+')
+        ++i;
+    if (i >= text.size() || text[i] < '0' || text[i] > '9')
+        return false;
+    while (i < text.size() && text[i] == '0')
+        ++i;
+    if (i < text.size() && text[i] >= '1' && text[i] <= '9')
+        return false;
     if (i < text.size() && text[i] == '.') {
         ++i;
-        while (i < text.size() && text[i] == '0') ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9') return false;
+        while (i < text.size() && text[i] == '0')
+            ++i;
+        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
+            return false;
     }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E')) return false;
+    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
+        return false;
     while (i < text.size()) {
-        if (!is_float_suffix(text[i])) return false;
+        if (!is_float_suffix(text[i]))
+            return false;
         ++i;
     }
     return true;
@@ -86,21 +98,30 @@ constexpr std::string_view k_cross_name = "cross";
 
 /// True if `text` is a numeric literal whose value is exactly 1.
 [[nodiscard]] bool literal_is_one(std::string_view text) noexcept {
-    if (text.empty()) return false;
+    if (text.empty())
+        return false;
     std::size_t i = 0;
-    if (i < text.size() && text[i] == '+') ++i;
-    while (i < text.size() && text[i] == '0') ++i;
-    if (i >= text.size() || text[i] != '1') return false;
+    if (i < text.size() && text[i] == '+')
+        ++i;
+    while (i < text.size() && text[i] == '0')
+        ++i;
+    if (i >= text.size() || text[i] != '1')
+        return false;
     ++i;
-    if (i < text.size() && text[i] >= '0' && text[i] <= '9') return false;
+    if (i < text.size() && text[i] >= '0' && text[i] <= '9')
+        return false;
     if (i < text.size() && text[i] == '.') {
         ++i;
-        while (i < text.size() && text[i] == '0') ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9') return false;
+        while (i < text.size() && text[i] == '0')
+            ++i;
+        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
+            return false;
     }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E')) return false;
+    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
+        return false;
     while (i < text.size()) {
-        if (!is_float_suffix(text[i])) return false;
+        if (!is_float_suffix(text[i]))
+            return false;
         ++i;
     }
     return true;
@@ -121,8 +142,10 @@ enum class ComponentKind {
     const auto kind = node_kind(node);
     if (kind == "number_literal") {
         const auto t = node_text(node, bytes);
-        if (literal_is_zero(t)) return ComponentKind::Zero;
-        if (literal_is_one(t)) return ComponentKind::Positive;
+        if (literal_is_zero(t))
+            return ComponentKind::Zero;
+        if (literal_is_one(t))
+            return ComponentKind::Positive;
         return ComponentKind::Other;
     }
     // tree-sitter-hlsl wraps a leading minus in a unary_expression node.
@@ -133,22 +156,29 @@ enum class ComponentKind {
         const std::uint32_t cnt = ::ts_node_child_count(node);
         for (std::uint32_t i = 0; i < cnt; ++i) {
             ::TSNode child = ::ts_node_child(node, i);
-            if (::ts_node_is_null(child)) continue;
+            if (::ts_node_is_null(child))
+                continue;
             if (!::ts_node_is_named(child)) {
-                if (op.empty()) op = node_text(child, bytes);
+                if (op.empty())
+                    op = node_text(child, bytes);
             } else {
-                if (::ts_node_is_null(operand)) operand = child;
+                if (::ts_node_is_null(operand))
+                    operand = child;
             }
         }
         // tree-sitter-hlsl may also expose an `argument` field; fall back to it.
         if (::ts_node_is_null(operand)) {
             operand = ::ts_node_child_by_field_name(node, "argument", 8);
         }
-        if (op != "-") return ComponentKind::Other;
-        if (node_kind(operand) != "number_literal") return ComponentKind::Other;
+        if (op != "-")
+            return ComponentKind::Other;
+        if (node_kind(operand) != "number_literal")
+            return ComponentKind::Other;
         const auto t = node_text(operand, bytes);
-        if (literal_is_zero(t)) return ComponentKind::Zero;
-        if (literal_is_one(t)) return ComponentKind::Negative;
+        if (literal_is_zero(t))
+            return ComponentKind::Zero;
+        if (literal_is_one(t))
+            return ComponentKind::Negative;
         return ComponentKind::Other;
     }
     return ComponentKind::Other;
@@ -157,8 +187,8 @@ enum class ComponentKind {
 /// Recognised 3-vector constructor names. Only float3-family is supported; the
 /// algebraic identity is the same for int3 / half3.
 [[nodiscard]] bool is_float3_ctor(std::string_view name) noexcept {
-    return name == "float3" || name == "half3" || name == "int3" ||
-           name == "uint3" || name == "min16float3";
+    return name == "float3" || name == "half3" || name == "int3" || name == "uint3" ||
+           name == "min16float3";
 }
 
 /// Inspect an argument node: if it is a `float3(c0, c1, c2)` constructor call
@@ -169,12 +199,15 @@ struct AxisInfo {
     int sign = 0;            // +1 or -1
 };
 
-[[nodiscard]] std::optional<AxisInfo> axis_of_constructor(
-    ::TSNode node, std::string_view bytes) noexcept {
-    if (node_kind(node) != "call_expression") return std::nullopt;
+[[nodiscard]] std::optional<AxisInfo> axis_of_constructor(::TSNode node,
+                                                          std::string_view bytes) noexcept {
+    if (node_kind(node) != "call_expression")
+        return std::nullopt;
     const ::TSNode fn = ::ts_node_child_by_field_name(node, "function", 8);
-    if (::ts_node_is_null(fn)) return std::nullopt;
-    if (!is_float3_ctor(node_text(fn, bytes))) return std::nullopt;
+    if (::ts_node_is_null(fn))
+        return std::nullopt;
+    if (!is_float3_ctor(node_text(fn, bytes)))
+        return std::nullopt;
 
     const ::TSNode args = ::ts_node_child_by_field_name(node, "arguments", 9);
     if (::ts_node_is_null(args) || ::ts_node_named_child_count(args) != 3U) {
@@ -190,7 +223,8 @@ struct AxisInfo {
             continue;
         }
         if (kind == ComponentKind::Positive || kind == ComponentKind::Negative) {
-            if (found) return std::nullopt;  // >1 non-zero component.
+            if (found)
+                return std::nullopt;  // >1 non-zero component.
             found = true;
             info.axis = i;
             info.sign = (kind == ComponentKind::Positive) ? +1 : -1;
@@ -198,7 +232,8 @@ struct AxisInfo {
         }
         return std::nullopt;
     }
-    if (!found) return std::nullopt;
+    if (!found)
+        return std::nullopt;
     return info;
 }
 
@@ -217,7 +252,8 @@ struct AxisInfo {
     const int s = (flip_sign ? -1 : +1) * sign;
     auto signed_swizzle = [&](int component_sign, char sw) -> std::string {
         std::string out;
-        if (component_sign < 0) out.push_back('-');
+        if (component_sign < 0)
+            out.push_back('-');
         out.append(v_text);
         out.push_back('.');
         out.push_back(sw);
@@ -263,7 +299,8 @@ struct AxisInfo {
 }
 
 void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
-    if (::ts_node_is_null(node)) return;
+    if (::ts_node_is_null(node))
+        return;
 
     if (node_kind(node) == "call_expression") {
         const ::TSNode fn = ::ts_node_child_by_field_name(node, "function", 8);
@@ -287,14 +324,15 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                     if (!v_text.empty()) {
                         const auto call_range = tree.byte_range(node);
                         const std::string replacement =
-                            build_replacement(v_text, info.axis, info.sign,
+                            build_replacement(v_text,
+                                              info.axis,
+                                              info.sign,
                                               /*flip_sign=*/!right_is_axis);
 
                         Diagnostic diag;
                         diag.code = std::string{k_rule_id};
                         diag.severity = Severity::Warning;
-                        diag.primary_span =
-                            Span{.source = tree.source_id(), .bytes = call_range};
+                        diag.primary_span = Span{.source = tree.source_id(), .bytes = call_range};
                         diag.message = std::string{
                             "`cross(v, K)` against an axis-aligned constant unit "
                             "vector collapses to a swizzle plus sign flip -- saves "
@@ -306,8 +344,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                             "replace the cross product with the algebraic closed "
                             "form (swizzle + sign)"};
                         TextEdit edit;
-                        edit.span =
-                            Span{.source = tree.source_id(), .bytes = call_range};
+                        edit.span = Span{.source = tree.source_id(), .bytes = call_range};
                         edit.replacement = replacement;
                         fix.edits.push_back(std::move(edit));
                         diag.fixes.push_back(std::move(fix));
@@ -327,9 +364,15 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
 class CrossWithUpVector : public Rule {
 public:
-    [[nodiscard]] std::string_view id() const noexcept override { return k_rule_id; }
-    [[nodiscard]] std::string_view category() const noexcept override { return k_category; }
-    [[nodiscard]] Stage stage() const noexcept override { return Stage::Ast; }
+    [[nodiscard]] std::string_view id() const noexcept override {
+        return k_rule_id;
+    }
+    [[nodiscard]] std::string_view category() const noexcept override {
+        return k_category;
+    }
+    [[nodiscard]] Stage stage() const noexcept override {
+        return Stage::Ast;
+    }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
         walk(::ts_tree_root_node(tree.raw_tree()), tree.source_bytes(), tree, ctx);
