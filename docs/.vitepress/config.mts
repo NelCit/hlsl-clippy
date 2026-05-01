@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitepress'
 import { fileURLToPath, URL } from 'node:url'
-import { build_rules_sidebar } from './sidebar'
+import { build_rules_sidebar } from './sidebar.mts'
 
 // Resolve `docs/rules/` relative to this config file so the sidebar generator
 // works regardless of the cwd VitePress is invoked from.
