@@ -116,13 +116,14 @@ Rules expressible as clang AST patterns — no flow analysis. Group by category 
 - [x] `pow-base-two-to-exp2`: `pow(2.0, x)` → `exp2(x)`
 - [x] `pow-integer-decomposition`: `pow(x, 5.0)` → `x*x*x*x*x` (or pow-by-squaring for ≥4)
 - [x] `inv-sqrt-to-rsqrt`: `1.0 / sqrt(x)` → `rsqrt(x)`
-- [ ] `lerp-extremes`: `lerp(a,b,0)` → `a`, `lerp(a,b,1)` → `b`
-- [ ] `mul-identity`: `x*1`, `x+0`, `x*0`
-- [ ] `sin-cos-pair`: separate `sin(x)`/`cos(x)` on the same `x` → `sincos`
-- [ ] `manual-reflect` / `manual-refract`: hand-rolled formula → built-in
+- [x] `lerp-extremes`: `lerp(a,b,0)` → `a`, `lerp(a,b,1)` → `b`
+- [x] `mul-identity`: `x*1`, `x+0`, `x*0`
+- [x] `sin-cos-pair`: separate `sin(x)`/`cos(x)` on the same `x` → `sincos`
+- [x] `manual-reflect`: hand-rolled formula → built-in `reflect()`
+- [ ] `manual-refract`: hand-rolled formula → built-in `refract()` (sibling of `manual-reflect`; not yet implemented)
 - [x] `manual-distance`: `length(a-b)` → `distance(a,b)`
-- [ ] `manual-step`: `x > a ? 1 : 0` → `step(a, x)`
-- [ ] `manual-smoothstep`: hand-rolled cubic Hermite → `smoothstep`
+- [x] `manual-step`: `x > a ? 1 : 0` → `step(a, x)`
+- [x] `manual-smoothstep`: hand-rolled cubic Hermite → `smoothstep`
 - [x] `length-comparison`: `length(v) < r` → `dot(v,v) < r*r`
 - [x] `manual-mad-decomposition`: `(a*b)+c` split across statements losing FMA fold
 - [x] `dot-on-axis-aligned-vector`: `dot(v, float3(1,0,0))` → `v.x`
@@ -135,8 +136,8 @@ Rules expressible as clang AST patterns — no flow analysis. Group by category 
 - [x] `redundant-unorm-snorm-conversion`: explicit `* (1.0/255.0)` after sampling a UNORM texture → drop the dead divide  *(via ADR 0011)*
 
 **Saturate / clamp / redundancy:**
-- [ ] `redundant-saturate`: `saturate(saturate(x))`
-- [ ] `clamp01-to-saturate`: `clamp(x, 0, 1)` → `saturate(x)`
+- [x] `redundant-saturate`: `saturate(saturate(x))`
+- [x] `clamp01-to-saturate`: `clamp(x, 0, 1)` → `saturate(x)`
 - [x] `redundant-normalize`: `normalize(normalize(x))`
 - [x] `redundant-transpose`: `transpose(transpose(M))`
 - [x] `redundant-abs`: `abs(x*x)`, `abs(saturate(x))`, `abs(dot(v,v))`
