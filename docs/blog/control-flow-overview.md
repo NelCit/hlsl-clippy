@@ -41,22 +41,19 @@ On AMD RDNA 2 and RDNA 3, a wave is 32 or 64 lanes (configurable via the
 SM 6.6 `[WaveSize(N)]` attribute, or driver-default 32 for compute and 64
 for some pixel paths on RDNA 2). On NVIDIA Turing, Ampere, Ada, and
 Blackwell, a warp is 32 lanes. On Intel Xe-HPG, the SIMD width is variable
-across SIMD8, SIMD16, and SIMD32 depending on register pressure and shader
-shape, and the compiler picks at link time.
+across SIMD8, SIMD16, and SIMD32 depending on register pressure.
 
 When all lanes of a wave agree on a control-flow decision, execution is
-straightforward: the program counter advances, every lane runs the same
-instruction, life is good. When lanes disagree — a divergent branch —
-the hardware serialises the arms. On AMD RDNA the `EXEC` mask register
-gates which lanes write back results; on NVIDIA the equivalent is the
-warp-wide active mask managed by the convergence barriers introduced in
-Volta and refined in Ampere; on Intel Xe-HPG the `EMASK` register tracks
-active channels per dispatch. In all three cases, lanes that took the
+straightforward. When lanes disagree — a divergent branch — the hardware
+serialises the arms. On AMD RDNA the `EXEC` mask gates writeback; on
+NVIDIA the equivalent is the warp-wide active mask managed by the
+convergence barriers introduced in Volta and refined in Ampere; on Intel
+Xe-HPG the `EMASK` register tracks active channels. Lanes that took the
 false arm sit idle while the true arm runs, then swap roles. The hardware
 costs both arms in clock cycles but only writes back results from the
-matching half of the wave. This is **predication**, and on a divergent
-branch it is the cost floor — there is no way to skip the inactive arm
-without breaking the SIMT contract.
+matching half. This is **predication**, and on a divergent branch it is
+the cost floor — there is no way to skip the inactive arm without
+breaking the SIMT contract.
 
 The corollary is that a **uniform** branch is genuinely free in a way that
 a divergent one is not. If every lane in the wave evaluates the predicate
@@ -110,34 +107,30 @@ interleaving instructions across iterations to hide texture latency. The
 
 ## Helper lanes: the invisible passengers in your pixel shader
 
-Pixel shaders are special. They do not execute in waves of arbitrary
-threads — they execute in waves composed of 2x2 quads, four pixels arranged
-in a square that share screen-space derivatives. The quad is the
-fundamental scheduling unit because `ddx`, `ddy`, and the implicit-LOD
-sampler path all read coordinate values from the four lanes of the quad
-and form differences. If any quad lane is missing, the derivative is
-garbage.
+Pixel shaders are special. They execute in waves composed of 2x2 quads
+that share screen-space derivatives. The quad is the fundamental
+scheduling unit because `ddx`, `ddy`, and the implicit-LOD sampler path
+all read coordinate values from the four lanes of the quad and form
+differences. If any quad lane is missing, the derivative is garbage.
 
-The hardware preserves the quad even when the rasteriser only covers some
-of its pixels. The non-covered pixels become **helper lanes**: they
+The hardware preserves the quad even when the rasteriser only covers
+some of its pixels. The non-covered pixels become **helper lanes**: they
 execute every instruction the active pixels execute, hold valid register
-state, participate in derivatives, and are then dropped at framebuffer
-write. They are not free — they consume VGPRs, they issue TMU requests,
-they pay every cycle of pixel-shader cost. Their only purpose is to keep
-the quad's derivatives well-defined.
+state, participate in derivatives, and are dropped at framebuffer write.
+They are not free — they consume VGPRs, issue TMU requests, and pay
+every cycle of pixel-shader cost. Their only purpose is to keep the
+quad's derivatives well-defined.
 
 When you `discard` a pixel, it does not exit the shader. It becomes a
-helper lane for the rest of the function's lifetime. Every subsequent
-texture sample, every subsequent ALU op, every subsequent UAV access runs
-on the discarded lane just as it does on the survivors — only the
-framebuffer write is suppressed. On heavily alpha-tested geometry (foliage,
-wire mesh, particle systems) where 50% or more of pixels discard, this
-means the shader effectively runs at 100% cost for 50% of useful output.
-The `discard-then-work` rule
+helper lane for the rest of the function's lifetime: every subsequent
+texture sample, ALU op, and UAV access runs on the discarded lane just
+as it does on the survivors — only the framebuffer write is suppressed.
+On heavily alpha-tested geometry where 50% or more of pixels discard, the
+shader effectively runs at 100% cost for 50% of useful output. The
+`discard-then-work` rule
 ([rules/discard-then-work](/rules/discard-then-work)) catches significant
 work — multi-tap loops, expensive samples — placed after a `discard`
-guard that could have run before it. Hoisting the work is a free win when
-the discarded pixels do not need a different code path.
+guard that could have run before it.
 
 The conditional `discard` has a second cost outside helper-lane semantics:
 it disables **early-Z**. Modern depth/stencil hardware can reject hundreds
@@ -268,35 +261,28 @@ samples, no UAV writes), the rewrite is provably semantics-preserving.
 
 ## What DXC and Slang catch, and what they do not
 
-DXC's optimisation pipeline is good at the local cases. A constant-bounded
-loop with a small body, a uniform branch with a `[branch]` already
-attached, a pure expression duplicated trivially across two arms — all of
-these survive a release-mode build with the right thing happening. The
-cases the linter exists for are the cases the compiler cannot prove.
+DXC's optimiser is good at the local cases — a constant-bounded loop with
+a small body, a uniform branch with `[branch]` already attached, a pure
+expression duplicated trivially across arms. The linter exists for the
+cases the compiler cannot prove. DXC will not insert `[branch]` when the
+predicate is uniform-by-calling-convention (a `cbuffer uint Mode` the
+engine guarantees is set identically per-draw); the uniformity is a
+runtime property, not a type-system property. DXC will not catch
+`[flatten]` on a uniform predicate, will not warn on `Sample` inside a
+non-uniform branch, will not warn on `WaveActiveSum` after a `discard`,
+and will not warn on `GroupMemoryBarrierWithGroupSync` inside a divergent
+branch — every one of these is well-typed and legal, with consequences
+that depend on data values it cannot prove. The
+`wave-intrinsic-non-uniform` rule
+([rules/wave-intrinsic-non-uniform](/rules/wave-intrinsic-non-uniform))
+catches the wave-side variant of the divergent-CF family that
+`derivative-in-divergent-cf` and `barrier-in-divergent-cf` cover for
+pixel-shader and compute paths respectively.
 
-DXC will not insert `[branch]` on your behalf when the predicate is
-uniform-by-calling-convention (a `cbuffer uint Mode` that the engine
-guarantees is set identically per-draw). The uniformity is a property of
-the runtime, not the type system. The linter's uniformity oracle reasons
-about the same property — `cbuffer` fields, `nointerpolation` interpolants
-not driven by per-pixel data, `WaveReadLaneFirst` results — and emits the
-suggestion the compiler cannot make safely. DXC will also not catch
-`[flatten]` on a uniform predicate, because syntactically the attribute is
-valid; the rule lives in the cost-model layer above.
-
-DXC will not warn on `discard` inside a non-uniform branch followed by a
-`Sample` — the call is legal, and the spec says the result is undefined,
-but no diagnostic surfaces. DXC will not warn on `WaveActiveSum` after a
-discard, because the wave intrinsic is well-typed and the helper-lane
-participation rules are not part of the type system. DXC will not warn on
-`GroupMemoryBarrierWithGroupSync` inside a divergent branch, because
-correctness depends on data values it cannot prove.
-
-The static-analysis layer that closes this gap is what the
-control-flow rule pack does. It builds a control-flow graph over the
-tree-sitter AST, runs a uniformity oracle over the CFG, and reasons about
-helper-lane state and barrier reachability path-sensitively. The
-infrastructure is documented in
+The static-analysis layer that closes this gap builds a control-flow
+graph over the tree-sitter AST, runs a uniformity oracle over the CFG,
+and reasons about helper-lane state and barrier reachability path-
+sensitively. Infrastructure is documented in
 [ADR 0013](https://github.com/NelCit/hlsl-clippy/blob/main/docs/decisions/0013-phase-4-control-flow-infrastructure.md);
 the rule pages explain the surface.
 
