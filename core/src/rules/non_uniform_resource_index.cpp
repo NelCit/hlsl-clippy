@@ -91,8 +91,8 @@ public:
             // detected by scanning the declaration text for a `[]` suffix on
             // the binding name.
             const bool is_bounded_array = binding.array_size.has_value();
-            const auto decl_lo = binding.declaration_span.lo;
-            const auto decl_hi = binding.declaration_span.hi;
+            const std::uint32_t decl_lo = binding.declaration_span.bytes.lo;
+            const std::uint32_t decl_hi = binding.declaration_span.bytes.hi;
             const auto decl_text =
                 (decl_lo < bytes.size() && decl_hi <= bytes.size() && decl_hi >= decl_lo)
                     ? bytes.substr(decl_lo, decl_hi - decl_lo)

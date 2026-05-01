@@ -59,8 +59,7 @@ public:
                     Diagnostic diag;
                     diag.code = std::string{k_rule_id};
                     diag.severity = Severity::Warning;
-                    diag.primary_span =
-                        Span{.source = tree.source_id(), .bytes = cb.declaration_span};
+                    diag.primary_span = cb.declaration_span;
                     diag.message = std::string{"cbuffer `"} + cb.name + "` has a " +
                                    std::to_string(hole_size) +
                                    "-byte padding hole between fields `" + prev.name + "` and `" +

@@ -61,7 +61,7 @@ public:
             Diagnostic diag;
             diag.code = std::string{k_rule_id};
             diag.severity = Severity::Error;
-            diag.primary_span = Span{.source = tree.source_id(), .bytes = cb.declaration_span};
+            diag.primary_span = cb.declaration_span;
             diag.message = std::string{"struct `"} + cb.name + "` is " +
                            std::to_string(cb.total_bytes) +
                            " bytes -- if used as an amplification-shader payload it exceeds the "

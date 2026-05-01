@@ -30,8 +30,11 @@ target_link_libraries(treesitter-smoke
 )
 
 # Compiler-specific warning flags (matching project standards).
+# /EHsc enables standard C++ exception unwinding semantics; without it,
+# MSVC raises C4530 from <chrono> / <ostream> templates, which /WX
+# promotes to an error.
 if(MSVC)
-    target_compile_options(treesitter-smoke PRIVATE /W4 /WX /permissive-)
+    target_compile_options(treesitter-smoke PRIVATE /W4 /WX /permissive- /EHsc)
 else()
     target_compile_options(treesitter-smoke PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()

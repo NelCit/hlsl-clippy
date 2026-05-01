@@ -155,8 +155,8 @@ public:
                 if (ok_left && ok_right) {
                     // Skip the declaration span itself.
                     const auto abs = static_cast<std::uint32_t>(found);
-                    const bool in_decl =
-                        (abs >= binding.declaration_span.lo && abs < binding.declaration_span.hi);
+                    const bool in_decl = (abs >= binding.declaration_span.bytes.lo &&
+                                          abs < binding.declaration_span.bytes.hi);
                     if (!in_decl) {
                         any_use = true;
                         if (tail_looks_like_write(bytes, end)) {
@@ -172,7 +172,7 @@ public:
             Diagnostic diag;
             diag.code = std::string{k_rule_id};
             diag.severity = Severity::Warning;
-            diag.primary_span = Span{.source = tree.source_id(), .bytes = binding.declaration_span};
+            diag.primary_span = binding.declaration_span;
             diag.message = std::string{"`"} + name +
                            "` is declared as a writable resource but is only ever read -- "
                            "demote to the matching SRV (Buffer / Texture* / StructuredBuffer / "

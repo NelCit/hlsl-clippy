@@ -79,7 +79,7 @@ public:
                 Diagnostic diag;
                 diag.code = std::string{k_rule_id};
                 diag.severity = Severity::Error;
-                diag.primary_span = Span{.source = tree.source_id(), .bytes = cb.declaration_span};
+                diag.primary_span = cb.declaration_span;
                 diag.message = std::string{"`bool` field `"} + field.name + "` in cbuffer `" +
                                cb.name + "` lands at offset " + std::to_string(field.byte_offset) +
                                " (in-slot byte " + std::to_string(off_in_slot) +

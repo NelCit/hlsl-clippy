@@ -43,7 +43,8 @@ constexpr std::uint32_t k_threshold_bytes = 16384U;
 }
 
 [[nodiscard]] std::uint32_t sizeof_scalar(std::string_view t) noexcept {
-    auto component_count = [&](std::string_view base, std::size_t prefix_len) -> std::uint32_t {
+    auto component_count = [&]([[maybe_unused]] std::string_view base,
+                               std::size_t prefix_len) -> std::uint32_t {
         if (t.size() <= prefix_len)
             return 1U;
         const char c = t[prefix_len];

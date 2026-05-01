@@ -83,13 +83,14 @@ public:
         const auto bytes = tree.source_bytes();
         for (const auto& cb : reflection.cbuffers) {
             for (const auto& field : cb.fields) {
-                const auto refs = count_id_occurrences(bytes, field.name, cb.declaration_span);
+                const auto refs =
+                    count_id_occurrences(bytes, field.name, cb.declaration_span.bytes);
                 if (refs != 0U)
                     continue;
                 Diagnostic diag;
                 diag.code = std::string{k_rule_id};
                 diag.severity = Severity::Warning;
-                diag.primary_span = Span{.source = tree.source_id(), .bytes = cb.declaration_span};
+                diag.primary_span = cb.declaration_span;
                 diag.message = std::string{"cbuffer field `"} + cb.name + "." + field.name +
                                "` is declared but never read -- remove it or move it to a "
                                "different cbuffer to recover " +

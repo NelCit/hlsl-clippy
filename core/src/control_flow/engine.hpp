@@ -16,9 +16,28 @@
 
 #include <cstdint>
 #include <expected>
-#include <flat_map>
 #include <memory>
 #include <shared_mutex>
+#include <vector>
+
+// std::flat_map is C++23 (P0429) but landed in libstdc++ only at GCC 15.1
+// and in libc++ only at libc++ 20. Ubuntu 24.04 (Linux CI) ships GCC 13's
+// libstdc++ which lacks <flat_map>; ADR 0004 §"Selective C++26 adopt-now
+// (feature-test gated)" pattern applies. Cache cardinality is small
+// (typically < 100 entries per lint run) so std::map is fine here.
+#if defined(__cpp_lib_flat_map) && __cpp_lib_flat_map >= 202207L
+#include <flat_map>
+namespace hlsl_clippy::control_flow::detail {
+template<typename K, typename V>
+using CfgCacheMap = std::flat_map<K, V>;
+}  // namespace hlsl_clippy::control_flow::detail
+#else
+#include <map>
+namespace hlsl_clippy::control_flow::detail {
+template<typename K, typename V>
+using CfgCacheMap = std::map<K, V>;
+}  // namespace hlsl_clippy::control_flow::detail
+#endif
 
 #include "hlsl_clippy/control_flow.hpp"
 #include "hlsl_clippy/diagnostic.hpp"
@@ -71,7 +90,7 @@ private:
     };
 
     mutable std::shared_mutex cache_mu_;
-    std::flat_map<std::uint32_t, std::shared_ptr<Entry>> cache_;
+    detail::CfgCacheMap<std::uint32_t, std::shared_ptr<Entry>> cache_;
 };
 
 }  // namespace hlsl_clippy::control_flow
