@@ -155,6 +155,12 @@ add_library(hlsl_clippy_core STATIC
     src/control_flow/dominators.cpp
     src/control_flow/uniformity_analyzer.cpp
     src/control_flow/engine.cpp
+
+    # Phase 4 — shared utilities for control-flow / data-flow rules (ADR 0013 sub-phase 4b).
+    src/rules/util/cfg_query.cpp
+    src/rules/util/uniformity.cpp
+    src/rules/util/light_dataflow.cpp
+    src/rules/util/helper_lane_analyzer.cpp
 )
 
 target_include_directories(hlsl_clippy_core PUBLIC

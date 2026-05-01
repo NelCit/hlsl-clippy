@@ -174,6 +174,9 @@ add_executable(hlsl_clippy_unit_tests
     # Phase 4 sub-phase 4a — control-flow / data-flow infrastructure (ADR 0013).
     unit/test_cfg.cpp
 
+    # Phase 4 sub-phase 4b — shared utilities for control-flow / data-flow rules (ADR 0013).
+    unit/test_cfg_util.cpp
+
     # LSP source files compiled directly into the test target so the unit
     # tests can call into the dispatcher / handlers / framing without
     # depending on the hlsl_clippy_lsp executable.
