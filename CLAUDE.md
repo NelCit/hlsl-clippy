@@ -151,6 +151,18 @@ the ADR first.
   parallel-after-5a) → 5e (distribution). See
   [ADR 0014](docs/decisions/0014-phase-5-lsp-architecture.md).
 
+- **Phase 6 launch plan (v0.5.0 release)**: tag directly from `main`
+  after the release-readiness audit returns green; sub-phases 6a (CI
+  gate-mode polish — `--format=github-annotations` + example workflow),
+  6b (docs site polish — README links, demo gif, dead-link cleanup),
+  6c (8 parallel category-overview blog posts in lieu of one-per-rule
+  for v0.5), 6d (optional Marketplace publisher provisioning), 6e
+  (final pre-tag audit), 6f (tag + release), 6g (staggered launch
+  posts: Discord day 0, HN day 1, r/GraphicsProgramming day 2). The
+  ~150 individual per-rule blog posts are a v0.6+ flywheel — v0.5
+  ships category overviews. **Proposed**. See
+  [ADR 0015](docs/decisions/0015-phase-6-launch-plan.md).
+
 ---
 
 ## Code standards (enforced by CI)
@@ -419,7 +431,7 @@ Silicon) or `slang-<version>-macos-x86_64.tar.gz` (Intel) into the same
 
 ## ADR index
 
-All 14 ADRs are in MADR 4.0 format under `docs/decisions/`. Each ADR's
+All 15 ADRs are in MADR 4.0 format under `docs/decisions/`. Each ADR's
 `status` field is the canonical authority — read it before assuming a
 decision is settled.
 
@@ -439,6 +451,7 @@ decision is settled.
 | [0012](docs/decisions/0012-phase-3-reflection-infrastructure.md) | Phase 3 reflection infrastructure — Slang reflection plumbed into RuleContext | Proposed |
 | [0013](docs/decisions/0013-phase-4-control-flow-infrastructure.md) | Phase 4 control-flow / data-flow infrastructure — CFG + uniformity oracle | Proposed |
 | [0014](docs/decisions/0014-phase-5-lsp-architecture.md) | Phase 5 LSP + IDE architecture — JSON-RPC server + VS Code extension | Proposed |
+| [0015](docs/decisions/0015-phase-6-launch-plan.md) | Phase 6 launch plan — v0.5.0 release | Proposed |
 
 "Proposed" ADRs represent plans that are approved in principle but not yet
 fully implemented. "Accepted" ADRs represent shipped decisions. Do not
