@@ -161,6 +161,59 @@ add_library(hlsl_clippy_core STATIC
     src/rules/util/uniformity.cpp
     src/rules/util/light_dataflow.cpp
     src/rules/util/helper_lane_analyzer.cpp
+
+    # Phase 4 — Pack A (groupshared microarch).
+    src/rules/groupshared_stride_non_32_bank_conflict.cpp
+    src/rules/groupshared_dead_store.cpp
+    src/rules/groupshared_overwrite_before_barrier.cpp
+    src/rules/groupshared_atomic_replaceable_by_wave.cpp
+    src/rules/groupshared_first_read_without_barrier.cpp
+
+    # Phase 4 — Pack B (uniformity-aware bindings + mesh + numerical).
+    src/rules/divergent_buffer_index_on_uniform_resource.cpp
+    src/rules/rwbuffer_store_without_globallycoherent.cpp
+    src/rules/primcount_overrun_in_conditional_cf.cpp
+    src/rules/dispatchmesh_not_called.cpp
+    src/rules/clip_from_non_uniform_cf.cpp
+    src/rules/precise_missing_on_iterative_refine.cpp
+
+    # Phase 4 — Pack C (wave + control-flow attributes).
+    src/rules/manual_wave_reduction_pattern.cpp
+    src/rules/quadany_quadall_opportunity.cpp
+    src/rules/wave_prefix_sum_vs_scan_with_atomics.cpp
+    src/rules/flatten_on_uniform_branch.cpp
+    src/rules/forcecase_missing_on_ps_switch.cpp
+
+    # Phase 4 — Pack D (ADR 0007 §Phase 4 — control-flow / data-flow rule set).
+    src/rules/acos_without_saturate.cpp
+    src/rules/barrier_in_divergent_cf.cpp
+    src/rules/branch_on_uniform_missing_attribute.cpp
+    src/rules/cbuffer_divergent_index.cpp
+    src/rules/cbuffer_load_in_loop.cpp
+    src/rules/derivative_in_divergent_cf.cpp
+    src/rules/discard_then_work.cpp
+    src/rules/div_without_epsilon.cpp
+    src/rules/early_z_disabled_by_conditional_discard.cpp
+    src/rules/groupshared_stride_32_bank_conflict.cpp
+    src/rules/groupshared_uninitialized_read.cpp
+    src/rules/groupshared_write_then_no_barrier_read.cpp
+    src/rules/interlocked_bin_without_wave_prereduce.cpp
+    src/rules/interlocked_float_bit_cast_trick.cpp
+    src/rules/loop_invariant_sample.cpp
+    src/rules/redundant_computation_in_branch.cpp
+    src/rules/sample_in_loop_implicit_grad.cpp
+    src/rules/small_loop_no_unroll.cpp
+    src/rules/sqrt_of_potentially_negative.cpp
+    src/rules/wave_active_all_equal_precheck.cpp
+    src/rules/wave_intrinsic_helper_lane_hazard.cpp
+    src/rules/wave_intrinsic_non_uniform.cpp
+
+    # Phase 4 — Pack E (ADR 0010 §Phase 4 — SER coherence + helper-lane).
+    src/rules/coherence_hint_redundant_bits.cpp
+    src/rules/coherence_hint_encodes_shader_type.cpp
+    src/rules/reordercoherent_uav_missing_barrier.cpp
+    src/rules/wave_reduction_pixel_without_helper_attribute.cpp
+    src/rules/quadany_replaceable_with_derivative_uniform_branch.cpp
 )
 
 target_include_directories(hlsl_clippy_core PUBLIC

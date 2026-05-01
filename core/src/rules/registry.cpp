@@ -132,6 +132,54 @@ std::vector<std::unique_ptr<Rule>> make_default_rules() {
     rules.push_back(rules::make_omm_rayquery_force_2state_without_allow_flag());
     rules.push_back(rules::make_omm_traceray_force_omm_2state_without_pipeline_flag());
     rules.push_back(rules::make_ser_trace_then_invoke_without_reorder());
+    // Phase 4 — Pack A (groupshared microarch).
+    rules.push_back(rules::make_groupshared_stride_non_32_bank_conflict());
+    rules.push_back(rules::make_groupshared_dead_store());
+    rules.push_back(rules::make_groupshared_overwrite_before_barrier());
+    rules.push_back(rules::make_groupshared_atomic_replaceable_by_wave());
+    rules.push_back(rules::make_groupshared_first_read_without_barrier());
+    // Phase 4 — Pack B (uniformity-aware bindings + mesh + numerical).
+    rules.push_back(rules::make_divergent_buffer_index_on_uniform_resource());
+    rules.push_back(rules::make_rwbuffer_store_without_globallycoherent());
+    rules.push_back(rules::make_primcount_overrun_in_conditional_cf());
+    rules.push_back(rules::make_dispatchmesh_not_called());
+    rules.push_back(rules::make_clip_from_non_uniform_cf());
+    rules.push_back(rules::make_precise_missing_on_iterative_refine());
+    // Phase 4 — Pack C (wave + control-flow attributes).
+    rules.push_back(rules::make_manual_wave_reduction_pattern());
+    rules.push_back(rules::make_quadany_quadall_opportunity());
+    rules.push_back(rules::make_wave_prefix_sum_vs_scan_with_atomics());
+    rules.push_back(rules::make_flatten_on_uniform_branch());
+    rules.push_back(rules::make_forcecase_missing_on_ps_switch());
+    // Phase 4 — Pack D (ADR 0007 §Phase 4 — control-flow / data-flow rule set).
+    rules.push_back(rules::make_acos_without_saturate());
+    rules.push_back(rules::make_barrier_in_divergent_cf());
+    rules.push_back(rules::make_branch_on_uniform_missing_attribute());
+    rules.push_back(rules::make_cbuffer_divergent_index());
+    rules.push_back(rules::make_cbuffer_load_in_loop());
+    rules.push_back(rules::make_derivative_in_divergent_cf());
+    rules.push_back(rules::make_discard_then_work());
+    rules.push_back(rules::make_div_without_epsilon());
+    rules.push_back(rules::make_early_z_disabled_by_conditional_discard());
+    rules.push_back(rules::make_groupshared_stride_32_bank_conflict());
+    rules.push_back(rules::make_groupshared_uninitialized_read());
+    rules.push_back(rules::make_groupshared_write_then_no_barrier_read());
+    rules.push_back(rules::make_interlocked_bin_without_wave_prereduce());
+    rules.push_back(rules::make_interlocked_float_bit_cast_trick());
+    rules.push_back(rules::make_loop_invariant_sample());
+    rules.push_back(rules::make_redundant_computation_in_branch());
+    rules.push_back(rules::make_sample_in_loop_implicit_grad());
+    rules.push_back(rules::make_small_loop_no_unroll());
+    rules.push_back(rules::make_sqrt_of_potentially_negative());
+    rules.push_back(rules::make_wave_active_all_equal_precheck());
+    rules.push_back(rules::make_wave_intrinsic_helper_lane_hazard());
+    rules.push_back(rules::make_wave_intrinsic_non_uniform());
+    // Phase 4 — Pack E (ADR 0010 §Phase 4 — SER coherence + helper-lane).
+    rules.push_back(rules::make_coherence_hint_redundant_bits());
+    rules.push_back(rules::make_coherence_hint_encodes_shader_type());
+    rules.push_back(rules::make_reordercoherent_uav_missing_barrier());
+    rules.push_back(rules::make_wave_reduction_pixel_without_helper_attribute());
+    rules.push_back(rules::make_quadany_replaceable_with_derivative_uniform_branch());
     return rules;
 }
 
