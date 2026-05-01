@@ -408,11 +408,11 @@ Silicon) or `slang-<version>-macos-x86_64.tar.gz` (Intel) into the same
 |---|---|---|
 | 0 — First real diagnostic | DONE | `pow-const-squared` end-to-end; smoke tools; CI; 17-shader corpus; 7 ADRs; blog stub |
 | 1 — Rule engine + quick-fix | DONE | Suppression; declarative TSQuery; `Rewriter` + `--fix`; `.hlsl-clippy.toml` + `--config`; `redundant-saturate`; `clamp01-to-saturate`; 46/46 tests; 27-shader corpus; 22 expansion fixtures; 3 ADRs |
-| 2 — AST-only rule pack | QUEUED | ADR 0009: shared-utilities PR + 3 parallel category packs (math / saturate-redundancy / misc); 24 net-new rules |
-| 3 — Reflection-aware | PLANNED | ADR 0007 Phase 3 rules (15) + ADR 0010 Phase 3 rules (23 incl. SER, Cooperative Vectors, Long Vectors, OMM, Mesh Nodes gated) |
-| 4 — Control flow + light data flow | PLANNED | ADR 0007 Phase 4 (19) + ADR 0010 Phase 4 (10 incl. SER coherence, uniformity) — 42 rules total |
-| 5 — LSP + IDE | PLANNED | JSON-RPC LSP server; VS Code extension; macOS CI added |
-| 6 — Launch (v0.5) | PLANNED | CI gate mode; docs site; one blog post per rule; release artifacts per ADR 0005 |
+| 2 — AST-only rule pack | DONE | ADR 0009 shipped: math / saturate-redundancy / misc packs; 24 net-new rules |
+| 3 — Reflection-aware | DONE | ADR 0012 reflection infra + ADR 0007/0010 rule packs landed (Pack A/B/C/D/E — 60 rules) |
+| 4 — Control flow + light data flow | DONE | ADR 0013 CFG/uniformity infra + control-flow / atomics / wave-helper-lane packs landed; 42 rules; 12 wiring failures triaged 2026-05-01 |
+| 5 — LSP + IDE | DONE | ADR 0014 sub-phases 5a→5e shipped: LSP server, code-actions, VS Code extension, macOS CI matrix, release pipeline |
+| 6 — Launch (v0.5) | IN PROGRESS | docs site at https://nelcit.github.io/hlsl-clippy/ wired (Pages enable pending); release-readiness audit running; CI gate-mode + per-rule blog stubs queued |
 | 7 — IR-level / stretch | PLANNED | Register pressure; redundant samples; packed-math precision; `live-state-across-traceray`; `maybereorderthread-without-payload-shrink` |
 
 ---
