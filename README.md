@@ -78,9 +78,15 @@ hlsl-clippy lint shader.hlsl                          # warn-and-report
 hlsl-clippy lint --fix shader.hlsl                    # apply machine-applicable fixes
 hlsl-clippy lint --target-profile sm_6_8 shader.hlsl  # override Slang profile
 hlsl-clippy lint --config path/.hlsl-clippy.toml shader.hlsl
+hlsl-clippy lint --format=json shader.hlsl            # flat JSON array, stable schema
+hlsl-clippy lint --format=github-annotations s.hlsl   # GitHub Actions ::warning lines
 ```
 
 Exit codes: `0` clean, `1` warnings, `2` errors or invocation failure.
+
+When `$GITHUB_ACTIONS=true` and `--format` is unset, `github-annotations`
+is selected automatically — drop a copy of [docs/ci/lint-hlsl-example.yml](docs/ci/lint-hlsl-example.yml)
+into `.github/workflows/` and inline annotations show up on PR diffs.
 
 ## Configuration (`.hlsl-clippy.toml`)
 
