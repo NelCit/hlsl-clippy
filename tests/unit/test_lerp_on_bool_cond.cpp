@@ -1,0 +1,106 @@
+// End-to-end tests for the lerp-on-bool-cond rule.
+// `lerp(a, b, (float)cond)` and `lerp(a, b, cond ? 1.0 : 0.0)` -> `cond ? b : a`.
+
+#include <string>
+#include <vector>
+
+#include <catch2/catch_test_macros.hpp>
+
+#include "hlsl_clippy/diagnostic.hpp"
+#include "hlsl_clippy/lint.hpp"
+#include "hlsl_clippy/rule.hpp"
+#include "hlsl_clippy/source.hpp"
+
+namespace {
+
+using hlsl_clippy::Diagnostic;
+using hlsl_clippy::lint;
+using hlsl_clippy::make_default_rules;
+using hlsl_clippy::SourceManager;
+
+[[nodiscard]] std::vector<Diagnostic> lint_buffer(const std::string& hlsl,
+                                                  SourceManager& sources) {
+    const auto src = sources.add_buffer("synthetic.hlsl", hlsl);
+    REQUIRE(src.valid());
+    auto rules = make_default_rules();
+    return lint(sources, src, rules);
+}
+
+[[nodiscard]] bool has_rule(const std::vector<Diagnostic>& diags, std::string_view code) {
+    for (const auto& d : diags) {
+        if (d.code == code) return true;
+    }
+    return false;
+}
+
+[[nodiscard]] const Diagnostic* find_rule(const std::vector<Diagnostic>& diags,
+                                          std::string_view code) {
+    for (const auto& d : diags) {
+        if (d.code == code) return &d;
+    }
+    return nullptr;
+}
+
+}  // namespace
+
+TEST_CASE("lerp-on-bool-cond fires on lerp(a, b, (float)cond)",
+          "[rules][lerp-on-bool-cond]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float f(float a, float b, bool cond) { return lerp(a, b, (float)cond); }
+)hlsl";
+    CHECK(has_rule(lint_buffer(hlsl, sources), "lerp-on-bool-cond"));
+}
+
+TEST_CASE("lerp-on-bool-cond fires on lerp(a, b, cond ? 1.0 : 0.0)",
+          "[rules][lerp-on-bool-cond]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float f(float a, float b, bool cond) { return lerp(a, b, cond ? 1.0 : 0.0); }
+)hlsl";
+    CHECK(has_rule(lint_buffer(hlsl, sources), "lerp-on-bool-cond"));
+}
+
+TEST_CASE("lerp-on-bool-cond fires on inverted ternary lerp(a, b, cond ? 0 : 1)",
+          "[rules][lerp-on-bool-cond]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float f(float a, float b, bool cond) { return lerp(a, b, cond ? 0.0 : 1.0); }
+)hlsl";
+    CHECK(has_rule(lint_buffer(hlsl, sources), "lerp-on-bool-cond"));
+}
+
+TEST_CASE("lerp-on-bool-cond does not fire on lerp(a, b, t)",
+          "[rules][lerp-on-bool-cond]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float f(float a, float b, float t) { return lerp(a, b, t); }
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    for (const auto& d : diags) CHECK(d.code != "lerp-on-bool-cond");
+}
+
+TEST_CASE("lerp-on-bool-cond does not fire on lerp(a, b, cond ? 0.5 : 0.25)",
+          "[rules][lerp-on-bool-cond]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float f(float a, float b, bool cond) { return lerp(a, b, cond ? 0.5 : 0.25); }
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    for (const auto& d : diags) CHECK(d.code != "lerp-on-bool-cond");
+}
+
+TEST_CASE("lerp-on-bool-cond fix uses cond ? b : a",
+          "[rules][lerp-on-bool-cond][fix]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float f(float a, float b, bool cond) { return lerp(a, b, (float)cond); }
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    const auto* hit = find_rule(diags, "lerp-on-bool-cond");
+    REQUIRE(hit != nullptr);
+    REQUIRE_FALSE(hit->fixes.empty());
+    CHECK_FALSE(hit->fixes[0].machine_applicable);
+    REQUIRE(hit->fixes[0].edits.size() == 1U);
+    CHECK(hit->fixes[0].edits[0].replacement == "cond ? b : a");
+}
