@@ -125,6 +125,19 @@ the ADR first.
   rule packs). See
   [ADR 0012](docs/decisions/0012-phase-3-reflection-infrastructure.md).
 
+- **Phase 4 control-flow / data-flow infrastructure**: opaque
+  `control_flow.hpp` public header + new `Stage::ControlFlow` +
+  `Rule::on_cfg` virtual + lazy per-`SourceId` cached `CfgEngine` (CFG
+  built over tree-sitter AST, Lengauer-Tarjan dominator tree, taint-
+  propagation uniformity oracle, helper-lane analyzer, bounded
+  inter-procedural inlining at `cfg_inlining_depth = 3`); ERROR-node
+  tolerance per ADR 0002. **Proposed**; gates ALL ~45 Phase 4 rules
+  across ADR 0007 §Phase 4 / ADR 0010 §Phase 4 / ADR 0011 §Phase 4.
+  Does NOT depend on ADR 0012 / Phase 3 — CFG works without
+  reflection. Lands as sub-phase 4a (infra PR) → 4b (shared utilities)
+  → 4c (5 parallel rule packs). See
+  [ADR 0013](docs/decisions/0013-phase-4-control-flow-infrastructure.md).
+
 ---
 
 ## Code standards (enforced by CI)
@@ -357,7 +370,7 @@ to source build by clearing the cache. macOS path not implemented (Phase 5).
 
 ## ADR index
 
-All 12 ADRs are in MADR 4.0 format under `docs/decisions/`. Each ADR's
+All 13 ADRs are in MADR 4.0 format under `docs/decisions/`. Each ADR's
 `status` field is the canonical authority — read it before assuming a
 decision is settled.
 
@@ -375,6 +388,7 @@ decision is settled.
 | [0010](docs/decisions/0010-sm69-rule-expansion.md) | SM 6.9 rule expansion (+36 rules) | Proposed |
 | [0011](docs/decisions/0011-candidate-rule-adoption.md) | Candidate rule adoption — underexplored portable surfaces (per-phase plan) | Proposed |
 | [0012](docs/decisions/0012-phase-3-reflection-infrastructure.md) | Phase 3 reflection infrastructure — Slang reflection plumbed into RuleContext | Proposed |
+| [0013](docs/decisions/0013-phase-4-control-flow-infrastructure.md) | Phase 4 control-flow / data-flow infrastructure — CFG + uniformity oracle | Proposed |
 
 "Proposed" ADRs represent plans that are approved in principle but not yet
 fully implemented. "Accepted" ADRs represent shipped decisions. Do not

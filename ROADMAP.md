@@ -238,6 +238,8 @@ Rules needing Slang's reflection API for binding / layout / type data, married t
 
 Build a CFG over the tree-sitter AST. Add basic uniformity / loop-invariance analysis. Type info from Slang reflection threaded through.
 
+**Gating dependency:** [ADR 0013](docs/decisions/0013-phase-4-control-flow-infrastructure.md) (Proposed) — the CFG + uniformity oracle infrastructure (`Stage::ControlFlow` + `Rule::on_cfg` + `CfgEngine` over tree-sitter spans, with bounded inter-procedural inlining and ERROR-node tolerance per ADR 0002) must land first. See ADR 0013 §"Implementation sub-phases" for the 4a (infra) → 4b (shared utilities) → 4c (5 parallel rule packs) sequence. Phase 4 does NOT depend on ADR 0012 / Phase 3 — the CFG works without reflection (with conservative fallbacks where reflection would tighten facts, e.g. helper-lane PS detection).
+
 - [ ] `loop-invariant-sample`: texture sample inside loop with loop-invariant UV
 - [ ] `cbuffer-load-in-loop`: same cbuffer field reloaded each iteration (CSE hint)
 - [ ] `redundant-computation-in-branch`: same expr in both arms of `if/else` → hoist
