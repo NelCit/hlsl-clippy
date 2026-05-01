@@ -177,6 +177,59 @@ add_executable(hlsl_clippy_unit_tests
     # Phase 4 sub-phase 4b — shared utilities for control-flow / data-flow rules (ADR 0013).
     unit/test_cfg_util.cpp
 
+    # Phase 4 — Pack A (groupshared microarch).
+    unit/test_groupshared_stride_non_32_bank_conflict.cpp
+    unit/test_groupshared_dead_store.cpp
+    unit/test_groupshared_overwrite_before_barrier.cpp
+    unit/test_groupshared_atomic_replaceable_by_wave.cpp
+    unit/test_groupshared_first_read_without_barrier.cpp
+
+    # Phase 4 — Pack B (uniformity-aware bindings + mesh + numerical).
+    unit/test_divergent_buffer_index_on_uniform_resource.cpp
+    unit/test_rwbuffer_store_without_globallycoherent.cpp
+    unit/test_primcount_overrun_in_conditional_cf.cpp
+    unit/test_dispatchmesh_not_called.cpp
+    unit/test_clip_from_non_uniform_cf.cpp
+    unit/test_precise_missing_on_iterative_refine.cpp
+
+    # Phase 4 — Pack C (wave + control-flow attributes).
+    unit/test_manual_wave_reduction_pattern.cpp
+    unit/test_quadany_quadall_opportunity.cpp
+    unit/test_wave_prefix_sum_vs_scan_with_atomics.cpp
+    unit/test_flatten_on_uniform_branch.cpp
+    unit/test_forcecase_missing_on_ps_switch.cpp
+
+    # Phase 4 — Pack D (ADR 0007 §Phase 4 — control-flow / data-flow rule set).
+    unit/test_acos_without_saturate.cpp
+    unit/test_barrier_in_divergent_cf.cpp
+    unit/test_branch_on_uniform_missing_attribute.cpp
+    unit/test_cbuffer_divergent_index.cpp
+    unit/test_cbuffer_load_in_loop.cpp
+    unit/test_derivative_in_divergent_cf.cpp
+    unit/test_discard_then_work.cpp
+    unit/test_div_without_epsilon.cpp
+    unit/test_early_z_disabled_by_conditional_discard.cpp
+    unit/test_groupshared_stride_32_bank_conflict.cpp
+    unit/test_groupshared_uninitialized_read.cpp
+    unit/test_groupshared_write_then_no_barrier_read.cpp
+    unit/test_interlocked_bin_without_wave_prereduce.cpp
+    unit/test_interlocked_float_bit_cast_trick.cpp
+    unit/test_loop_invariant_sample.cpp
+    unit/test_redundant_computation_in_branch.cpp
+    unit/test_sample_in_loop_implicit_grad.cpp
+    unit/test_small_loop_no_unroll.cpp
+    unit/test_sqrt_of_potentially_negative.cpp
+    unit/test_wave_active_all_equal_precheck.cpp
+    unit/test_wave_intrinsic_helper_lane_hazard.cpp
+    unit/test_wave_intrinsic_non_uniform.cpp
+
+    # Phase 4 — Pack E (ADR 0010 §Phase 4 — SER coherence + helper-lane).
+    unit/test_coherence_hint_redundant_bits.cpp
+    unit/test_coherence_hint_encodes_shader_type.cpp
+    unit/test_reordercoherent_uav_missing_barrier.cpp
+    unit/test_wave_reduction_pixel_without_helper_attribute.cpp
+    unit/test_quadany_replaceable_with_derivative_uniform_branch.cpp
+
     # LSP source files compiled directly into the test target so the unit
     # tests can call into the dispatcher / handlers / framing without
     # depending on the hlsl_clippy_lsp executable.
