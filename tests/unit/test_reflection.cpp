@@ -168,6 +168,53 @@ TEST_CASE("ReflectionEngine cache hit on repeated reflect call", "[reflection][e
     CHECK(second.value().target_profile == first.value().target_profile);
 }
 
+// Regression test for commit 36e7cd4 — Slang's `ISession::loadModuleFromSource\
+// String` keys its module dictionary on (name, virtual_path). The bridge
+// formerly passed `synthetic` / `synthetic.hlsl` for every call; second and
+// later calls in the same process either silently returned the first call's
+// reflection (cache hit on Slang's name dictionary) or hit Slang's internal
+// `assert: The key already exists in Dictionary`.
+//
+// Fix: process-lifetime atomic counter appended to module name + virtual
+// path on every reflect() call. This test exercises the multi-call path
+// with DISTINCT sources to lock the fix in.
+TEST_CASE("ReflectionEngine handles multiple successive reflect calls without collision",
+          "[reflection][engine][regression]") {
+    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    engine.clear_cache();
+
+    SourceManager sources;
+    const auto src_a =
+        sources.add_buffer("multi_call_a.hlsl", std::string{k_one_cbuffer_one_binding});
+    const auto src_b = sources.add_buffer("multi_call_b.hlsl", std::string{k_multi_entry_point});
+    const auto src_c =
+        sources.add_buffer("multi_call_c.hlsl", std::string{k_one_cbuffer_one_binding});
+    REQUIRE(src_a.valid());
+    REQUIRE(src_b.valid());
+    REQUIRE(src_c.valid());
+
+    // Three reflect() calls on distinct sources in one process. Pre-fix this
+    // would either crash inside Slang or return src_a's reflection for src_b.
+    const auto ra = engine.reflect(sources, src_a, std::string_view{"sm_6_6"});
+    const auto rb = engine.reflect(sources, src_b, std::string_view{"sm_6_6"});
+    const auto rc = engine.reflect(sources, src_c, std::string_view{"sm_6_6"});
+
+    REQUIRE(ra.has_value());
+    REQUIRE(rb.has_value());
+    REQUIRE(rc.has_value());
+
+    // src_a + src_c are textually identical but have different SourceIds; the
+    // engine cache keys on (SourceId, target_profile, content fingerprint),
+    // so both reflections succeed and have matching shape.
+    CHECK(ra.value().bindings.size() == rc.value().bindings.size());
+    CHECK(ra.value().cbuffers.size() == rc.value().cbuffers.size());
+
+    // src_b is a multi-entry-point shader; it has no cbuffers and at least
+    // two entry points. The pre-fix bug would have returned src_a's data.
+    CHECK(rb.value().cbuffers.empty());
+    CHECK(rb.value().entry_points.size() >= 2U);
+}
+
 TEST_CASE("ReflectionEngine surfaces bad HLSL as a clippy::reflection diagnostic",
           "[reflection][engine][error]") {
     auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();

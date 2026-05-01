@@ -1,7 +1,7 @@
 ---
 id: texture-as-buffer
 category: texture
-severity: info
+severity: note
 applicability: suggestion
 since-version: "v0.3.0"
 phase: 3
