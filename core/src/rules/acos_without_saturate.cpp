@@ -83,11 +83,23 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                                    "products can round outside [-1, 1] and produce NaN; " +
                                    "wrap the argument in clamp(x, -1.0, 1.0)";
 
+                    // Wrap the entire argument expression in clamp(..., -1.0, 1.0).
+                    // The wrap is single-span and evaluates the inner expression
+                    // exactly once, so any side effects in the original argument
+                    // are preserved unchanged. Machine-applicable.
                     Fix fix;
-                    fix.machine_applicable = false;
+                    fix.machine_applicable = true;
                     fix.description = std::string{
                         "wrap the argument in clamp(x, -1.0, 1.0); on AMD/NVIDIA "
                         "this compiles to a free SAT modifier"};
+                    if (!arg_text.empty()) {
+                        TextEdit edit;
+                        edit.span =
+                            Span{.source = tree.source_id(), .bytes = tree.byte_range(arg0)};
+                        edit.replacement =
+                            std::string{"clamp("} + std::string{arg_text} + ", -1.0, 1.0)";
+                        fix.edits.push_back(std::move(edit));
+                    }
                     diag.fixes.push_back(std::move(fix));
 
                     ctx.emit(std::move(diag));

@@ -34,6 +34,15 @@ using hlsl_clippy::SourceManager;
     return false;
 }
 
+[[nodiscard]] const Diagnostic* find_rule(const std::vector<Diagnostic>& diags,
+                                          std::string_view code) {
+    for (const auto& d : diags) {
+        if (d.code == code)
+            return &d;
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 TEST_CASE("sqrt-of-potentially-negative fires on sqrt(a - b)",
@@ -69,4 +78,23 @@ float dist_safe(float r2, float h2) {
     const auto diags = lint_buffer(hlsl, sources);
     for (const auto& d : diags)
         CHECK(d.code != "sqrt-of-potentially-negative");
+}
+
+TEST_CASE("sqrt-of-potentially-negative fix wraps the argument in max(0.0, ...)",
+          "[rules][sqrt-of-potentially-negative][fix]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float dist(float r2, float h2) {
+    return sqrt(r2 - h2);
+}
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    const auto* hit = find_rule(diags, "sqrt-of-potentially-negative");
+    REQUIRE(hit != nullptr);
+    REQUIRE(hit->fixes.size() == 1U);
+    // The wrap is single-span and evaluates the inner expression once -- no
+    // side-effect duplication, machine-applicable.
+    CHECK(hit->fixes[0].machine_applicable);
+    REQUIRE(hit->fixes[0].edits.size() == 1U);
+    CHECK(hit->fixes[0].edits[0].replacement == "max(0.0, r2 - h2)");
 }

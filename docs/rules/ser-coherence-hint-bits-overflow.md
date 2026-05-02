@@ -2,7 +2,7 @@
 id: ser-coherence-hint-bits-overflow
 category: ser
 severity: warn
-applicability: suggestion
+applicability: machine-applicable
 since-version: v0.8.0
 phase: 8
 ---

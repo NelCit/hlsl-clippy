@@ -2,7 +2,7 @@
 id: select-vs-lerp-of-constant
 category: math
 severity: warn
-applicability: suggestion
+applicability: machine-applicable
 since-version: v0.5.0
 phase: 2
 ---

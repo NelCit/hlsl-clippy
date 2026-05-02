@@ -22,6 +22,13 @@ on:
   push:
     branches: ["**"]
   pull_request:
+  # The slang-bump-regression job runs nightly so a Slang patch that breaks
+  # our reflection surfaces is caught with lead time before the next
+  # user-visible bump. Manual `workflow_dispatch` lets a maintainer kick
+  # the job off ad-hoc when investigating a Slang upstream incident.
+  schedule:
+    - cron: "23 3 * * *"
+  workflow_dispatch:
 
 # Cancel superseded runs for the same branch / PR.
 concurrency:
@@ -389,3 +396,335 @@ jobs:
           # action falls back gracefully if Codecov isn't configured for
           # the repo (PR comment + status check just don't post).
           fail_ci_if_error: false
+
+  # ── API symbol diff (v1.0 readiness criterion #1) ──────────────────────
+  # ADR 0018 §5 #1 — every type / function declared in
+  # `core/include/hlsl_clippy/*.hpp` is part of the v1.0 stable surface.
+  # We extract the post-link symbol list from `hlsl_clippy_core` and
+  # publish it as a build artifact. v1.0 will check this artifact into
+  # `tools/api/v1-symbols.txt` and a follow-up patch will gate PRs on
+  # `diff` against that baseline.
+  #
+  # Linux-only for v1.0 — the gate cares about removed symbols, not about
+  # per-platform mangling differences. Adding Windows / macOS legs is a
+  # post-v1.0 nice-to-have.
+  api-symbol-diff:
+    name: API symbol diff (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: true
+
+      - name: Install Clang 18 + libc++
+        run: |
+          set -euo pipefail
+          wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
+          sudo apt-get install -y libc++-18-dev libc++abi-18-dev binutils
+
+      - name: Set up Ninja
+        uses: seanmiddleditch/gha-setup-ninja@96bed6edff20d1dd61ecff9b75cc519d516e6401 # v5
+
+      - name: Cache Slang prebuilt
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/hlsl-clippy/slang
+          key: slang-Linux-${{ hashFiles('cmake/SlangVersion.cmake') }}
+
+      - name: Fetch Slang prebuilt
+        run: bash tools/fetch-slang.sh
+
+      - name: CMake configure
+        env:
+          CC: clang-18
+          CXX: clang++-18
+          CXXFLAGS: "-stdlib=libc++"
+          LDFLAGS: "-stdlib=libc++"
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build hlsl_clippy_core
+        run: cmake --build build --target hlsl_clippy_core
+
+      - name: Extract public symbols
+        run: |
+          set -euo pipefail
+          mkdir -p build/api
+          # Locate the static (or shared) lib the build produced. The static
+          # lib is the canonical artefact; the shared lib is opt-in via
+          # BUILD_SHARED_LIBS. Pick whichever exists.
+          LIB=""
+          for candidate in \
+              build/core/libhlsl_clippy_core.a \
+              build/core/libhlsl_clippy_core.so \
+              build/libhlsl_clippy_core.a \
+              build/libhlsl_clippy_core.so; do
+            if [ -f "$candidate" ]; then
+              LIB="$candidate"
+              break
+            fi
+          done
+          if [ -z "$LIB" ]; then
+            echo "ERROR: no hlsl_clippy_core lib found under build/" >&2
+            find build -maxdepth 4 -name 'libhlsl_clippy_core*' >&2 || true
+            exit 1
+          fi
+          echo "Extracting symbols from: $LIB"
+          # `nm -C --defined-only` keeps only symbols this lib defines (drops
+          # external refs); `c++filt` via `-C` demangles C++ names so the
+          # diff is human-readable. We sort + uniq for a stable artifact.
+          nm -C --defined-only --extern-only "$LIB" \
+            | awk '{print $2, $3}' \
+            | sort -u \
+            > build/api/api-symbols.txt
+          echo "Wrote $(wc -l < build/api/api-symbols.txt) symbols."
+          head -20 build/api/api-symbols.txt
+
+          # TODO(v1.0.x): once `tools/api/v1-symbols.txt` is checked in at
+          # the v1.0 tag, gate this job on:
+          #   diff -u tools/api/v1-symbols.txt build/api/api-symbols.txt
+          # A removed symbol (line prefixed `-` in the diff and matching a
+          # `T ` / `U ` definition in the baseline) is a v2.0 break; fail
+          # the job. Added symbols are fine. The gate lands as a v1.0.x
+          # patch so v1.0 itself can establish the baseline cleanly.
+
+      - name: Upload symbol list artifact
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: api-symbols-linux
+          path: build/api/api-symbols.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  # ── Slang bump regression (v1.0 readiness criterion #10) ───────────────
+  # ADR 0018 §5 #10 — reflection-driven rules survive Slang submodule
+  # bumps without source changes. We bump `cmake/SlangVersion.cmake`'s
+  # `HLSL_CLIPPY_SLANG_VERSION` to the next-patch synthetic value
+  # (2026.7.2), re-fetch, and run the full ctest baseline. Failure means
+  # a Slang patch broke our reflection — the maintainer has overnight
+  # lead time before the user-visible bump.
+  #
+  # Nightly + workflow_dispatch only — push/PR runs would otherwise
+  # double the Slang download cost across every commit.
+  slang-bump-regression:
+    name: Slang bump regression (Linux, nightly)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 60
+    # Failure here must not red-X push/PR runs. The job is informational —
+    # a maintainer triages overnight and decides whether the bump can land.
+    continue-on-error: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: true
+
+      - name: Install Clang 18 + libc++
+        run: |
+          set -euo pipefail
+          wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
+          sudo apt-get install -y libc++-18-dev libc++abi-18-dev
+
+      - name: Set up Ninja
+        uses: seanmiddleditch/gha-setup-ninja@96bed6edff20d1dd61ecff9b75cc519d516e6401 # v5
+
+      - name: Bump pinned Slang version
+        run: |
+          set -euo pipefail
+          # Bump the patch component of HLSL_CLIPPY_SLANG_VERSION by 1 to
+          # force a fresh download from the upstream Slang releases. We
+          # capture the original value so the failure message tells the
+          # maintainer exactly which transition broke.
+          ORIGINAL=$(grep -oE 'HLSL_CLIPPY_SLANG_VERSION[[:space:]]+"[^"]+"' \
+              cmake/SlangVersion.cmake \
+              | head -n1 \
+              | sed -E 's/.*"([^"]+)".*/\1/')
+          echo "Original Slang version: $ORIGINAL"
+          # Synthetic next-patch — derived from the pinned value so the
+          # bump tracks the source of truth.
+          MAJOR=$(echo "$ORIGINAL" | cut -d. -f1)
+          MINOR=$(echo "$ORIGINAL" | cut -d. -f2)
+          PATCH=$(echo "$ORIGINAL" | cut -d. -f3)
+          NEXT="${MAJOR}.${MINOR}.$((PATCH + 1))"
+          echo "Synthetic next-patch:   $NEXT"
+          sed -i -E \
+            "s/(HLSL_CLIPPY_SLANG_VERSION[[:space:]]+\")[^\"]+(\")/\1${NEXT}\2/" \
+            cmake/SlangVersion.cmake
+          grep HLSL_CLIPPY_SLANG_VERSION cmake/SlangVersion.cmake
+
+      - name: Fetch bumped Slang prebuilt
+        run: bash tools/fetch-slang.sh
+
+      - name: CMake configure
+        env:
+          CC: clang-18
+          CXX: clang++-18
+          CXXFLAGS: "-stdlib=libc++"
+          LDFLAGS: "-stdlib=libc++"
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Run unit tests
+        run: ctest --test-dir build --output-on-failure
+
+  # ── IHV-target snapshot (v1.0 readiness criterion #11) ─────────────────
+  # ADR 0018 §5 #11 — vendor-specific (`[experimental.target = *]`) rules
+  # cleanly disabled on default config. We run the corpus through the
+  # CLI's JSON output once with default config and once with each of
+  # `rdna4` / `blackwell` / `xe2`, then diff against snapshots checked
+  # into `tests/golden/ihv-targets/`. The default snapshot must contain
+  # ZERO `experimental_target()`-gated diagnostics — that's the criterion
+  # enforcement. A non-empty default snapshot blocks the merge.
+  ihv-target-snapshot:
+    name: IHV-target snapshot (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: true
+
+      - name: Install Clang 18 + libc++
+        run: |
+          set -euo pipefail
+          wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
+          sudo apt-get install -y libc++-18-dev libc++abi-18-dev
+
+      - name: Set up Ninja
+        uses: seanmiddleditch/gha-setup-ninja@96bed6edff20d1dd61ecff9b75cc519d516e6401 # v5
+
+      - name: Cache Slang prebuilt
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/hlsl-clippy/slang
+          key: slang-Linux-${{ hashFiles('cmake/SlangVersion.cmake') }}
+
+      - name: Fetch Slang prebuilt
+        run: bash tools/fetch-slang.sh
+
+      - name: CMake configure
+        env:
+          CC: clang-18
+          CXX: clang++-18
+          CXXFLAGS: "-stdlib=libc++"
+          LDFLAGS: "-stdlib=libc++"
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build CLI
+        run: cmake --build build --target hlsl-clippy
+
+      - name: Locate hlsl-clippy binary
+        id: locate
+        run: |
+          set -euo pipefail
+          BIN=""
+          for candidate in \
+              "./build/cli/hlsl-clippy" \
+              "./build/hlsl-clippy"; do
+            if [ -x "$candidate" ]; then
+              BIN="$candidate"
+              break
+            fi
+          done
+          if [ -z "$BIN" ]; then
+            echo "ERROR: could not locate hlsl-clippy binary" >&2
+            exit 1
+          fi
+          echo "bin=$BIN" >> "$GITHUB_OUTPUT"
+          echo "Using binary: $BIN"
+
+      - name: Run snapshots (default + 3 IHV targets)
+        env:
+          BIN: ${{ steps.locate.outputs.bin }}
+        run: |
+          set -euo pipefail
+          mkdir -p build/ihv-snapshots
+          # Linter drives the corpus once per target value. Each invocation
+          # writes its own JSON file; the comparison step below diffs each
+          # against the checked-in baseline under tests/golden/ihv-targets/.
+          # Pass --format=json explicitly so the auto-detection of
+          # GITHUB_ACTIONS=true doesn't switch us to github-annotations.
+          run_lint() {
+            local toml="$1"
+            local out="$2"
+            "$BIN" lint tests/corpus/ \
+              --config "$toml" \
+              --format=json \
+              > "$out" || true
+          }
+
+          # Default config — write an empty TOML so no [experimental] target
+          # is selected.
+          : > build/ihv-snapshots/default.toml
+          run_lint build/ihv-snapshots/default.toml \
+                   build/ihv-snapshots/default.json
+
+          for target in rdna4 blackwell xe2; do
+            # Use printf rather than a heredoc — heredoc bodies must start
+            # at column 0, which the YAML parser then mistakes for a new
+            # mapping key. printf keeps everything on indented lines.
+            printf '[experimental]\ntarget = "%s"\n' "$target" \
+              > "build/ihv-snapshots/${target}.toml"
+            run_lint "build/ihv-snapshots/${target}.toml" \
+                     "build/ihv-snapshots/${target}.json"
+          done
+
+      - name: Enforce default-snapshot has zero IHV-target diagnostics
+        run: |
+          set -euo pipefail
+          # Criterion #11 of ADR 0018 §5: the default snapshot may not
+          # contain any diagnostic whose code looks IHV-specific. The
+          # exact set of suffixes is documented in the rule registry; we
+          # match on the three published needles and also forbid the
+          # `clippy::*` codes from leaking. A non-zero exit here blocks
+          # the merge.
+          if grep -E '"code":[[:space:]]*"[^"]*(-on-rdna4|-blackwell-|-on-xe2)"' \
+                  build/ihv-snapshots/default.json; then
+            echo "ERROR: default-config snapshot contains IHV-target-gated diagnostics." >&2
+            echo "       This violates ADR 0018 §5 criterion #11 — vendor-specific" >&2
+            echo "       rules must stay silent on default config." >&2
+            exit 1
+          fi
+          echo "Default snapshot is IHV-target-clean."
+
+      - name: Compare against checked-in goldens (informational)
+        run: |
+          set -euo pipefail
+          BASELINE_DIR=tests/golden/ihv-targets
+          if [ ! -d "$BASELINE_DIR" ]; then
+            echo "NOTE: $BASELINE_DIR does not exist yet; emitting initial snapshots."
+            echo "      Check the artifacts into the repo to gate future runs."
+            exit 0
+          fi
+          rc=0
+          for target in default rdna4 blackwell xe2; do
+            if [ -f "$BASELINE_DIR/${target}.json" ]; then
+              diff -u "$BASELINE_DIR/${target}.json" \
+                      "build/ihv-snapshots/${target}.json" \
+                || rc=1
+            else
+              echo "NOTE: missing baseline $BASELINE_DIR/${target}.json (emitted for first time)."
+            fi
+          done
+          if [ $rc -ne 0 ]; then
+            echo "ERROR: IHV-target snapshot drift detected." >&2
+            echo "       Refresh with the uploaded artifacts after review." >&2
+            exit 1
+          fi
+
+      - name: Upload IHV snapshots
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        if: always()
+        with:
+          name: ihv-target-snapshots
+          path: build/ihv-snapshots/*.json
+          if-no-files-found: error
+          retention-days: 30

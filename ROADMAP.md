@@ -383,7 +383,8 @@ These are research-grade and gated on real adoption. Don't pre-build them.
 
 | Phase | State | Notes |
 |---|---|---|
-| 8 — Research-driven expansion (v0.8+) | PLANNED | See [ADR 0018](docs/decisions/0018-v08-research-direction.md) |
+| 8 — Research-driven expansion (v0.8) | DONE | 21 rules shipped at v0.8.0 per [ADR 0018](docs/decisions/0018-v08-research-direction.md); `[experimental.target = rdna4\|blackwell\|xe2]` config gate added |
+| 9 — v1.0 release | IN PROGRESS | API stability + FP-rate baseline + machine-applicable fix sweep + per-rule blog stubs per [ADR 0019](docs/decisions/0019-v1-release-plan.md) |
 
 ## Candidate rule expansion (research, adjudicated by ADR 0011)
 

@@ -312,6 +312,11 @@ add_executable(hlsl_clippy_unit_tests
     unit/test_reference_data_type_not_supported_pre_sm610.cpp
     unit/test_rga_pressure_bridge_stub.cpp
 
+    # v1.0 readiness — IHV-target snapshot test (ADR 0018 §5 criterion #11).
+    # Asserts default config emits zero IHV-target-gated diagnostics and
+    # each `[experimental] target = ...` setting surfaces ≥ 1 matching code.
+    unit/test_ihv_target_snapshot.cpp
+
     # Golden-snapshot regression net (drives `tests/golden/`).
     unit/test_golden_snapshots.cpp
 )

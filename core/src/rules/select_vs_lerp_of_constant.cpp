@@ -11,8 +11,9 @@
 //   2. first and second arguments are number_literal nodes (or unary minus
 //      on a number_literal -- handled via text inspection).
 //
-// The fix is suggestion-only: the developer may have written the lerp form
-// for clarity. The proposed rewrite is `mad(t, K2 - K1, K1)`.
+// The fix is machine-applicable: `lerp(K1, K2, t) -> mad(t, K2 - K1, K1)`
+// uses `t` exactly once (same as the original lerp), and `K1` / `K2` are
+// numeric literals so repeating them is free. No side-effect duplication.
 
 #include <cstdint>
 #include <memory>
@@ -103,7 +104,10 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                             "`mad(t, K2-K1, K1)` makes the intent portable"};
 
                         Fix fix;
-                        fix.machine_applicable = false;
+                        // K1, K2 are numeric literals (no side effects to repeat)
+                        // and `t` appears once on each side of the rewrite, so the
+                        // mechanical replacement preserves observable behaviour.
+                        fix.machine_applicable = true;
                         std::string replacement = std::string{"mad("} + std::string{t_text} + ", " +
                                                   std::string{k2_text} + " - " +
                                                   std::string{k1_text} + ", " +

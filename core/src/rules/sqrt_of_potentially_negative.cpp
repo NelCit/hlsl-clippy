@@ -96,12 +96,24 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                         "producing NaN; wrap the argument in max(0.0, ...) (or "
                         "use rsqrt + reciprocal for the unit-vector case)"};
 
+                    // Wrap the entire argument expression in max(0.0, ...). The
+                    // wrap is single-span and evaluates the inner expression
+                    // exactly once, so any side effects in the original argument
+                    // are preserved unchanged. Machine-applicable.
                     Fix fix;
-                    fix.machine_applicable = false;
+                    fix.machine_applicable = true;
                     fix.description = std::string{
                         "wrap the argument in max(0.0, ...) -- the clamp is free "
                         "on RDNA/Ada (compiles to a SAT-style modifier on the "
                         "producing instruction) and prevents NaN propagation"};
+                    if (!arg_text.empty()) {
+                        TextEdit edit;
+                        edit.span =
+                            Span{.source = tree.source_id(), .bytes = tree.byte_range(arg0)};
+                        edit.replacement =
+                            std::string{"max(0.0, "} + std::string{arg_text} + ")";
+                        fix.edits.push_back(std::move(edit));
+                    }
                     diag.fixes.push_back(std::move(fix));
 
                     ctx.emit(std::move(diag));

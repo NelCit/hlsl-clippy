@@ -91,6 +91,9 @@ float f(float t) { return lerp(0.0, 1.0, t); }
     const auto* hit = find_rule(diags, "select-vs-lerp-of-constant");
     REQUIRE(hit != nullptr);
     REQUIRE_FALSE(hit->fixes.empty());
+    // K1, K2 are numeric literals; `t` appears exactly once before and once
+    // after the rewrite -- no side-effect duplication, machine-applicable.
+    CHECK(hit->fixes[0].machine_applicable);
     REQUIRE(hit->fixes[0].edits.size() == 1U);
     CHECK(hit->fixes[0].edits[0].replacement == "mad(t, 1.0 - 0.0, 0.0)");
 }

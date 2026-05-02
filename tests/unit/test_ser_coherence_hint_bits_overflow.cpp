@@ -41,6 +41,16 @@ using hlsl_clippy::SourceManager;
     return false;
 }
 
+[[nodiscard]] const Diagnostic* find_rule(const std::vector<Diagnostic>& diags,
+                                          std::string_view code) {
+    for (const auto& d : diags) {
+        if (d.code == code) {
+            return &d;
+        }
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 TEST_CASE("ser-coherence-hint-bits-overflow fires on bits=24 (> 16)",
@@ -61,4 +71,22 @@ void f(uint hint) {
 }
 )hlsl";
     CHECK_FALSE(has_rule(lint_buffer(hlsl), "ser-coherence-hint-bits-overflow"));
+}
+
+TEST_CASE("ser-coherence-hint-bits-overflow fix clamps the literal to the cap",
+          "[rules][ser-coherence-hint-bits-overflow][fix]") {
+    const std::string hlsl = R"hlsl(
+void f(uint hint) {
+    MaybeReorderThread(hint, 24);
+}
+)hlsl";
+    const auto diags = lint_buffer(hlsl);
+    const auto* hit = find_rule(diags, "ser-coherence-hint-bits-overflow");
+    REQUIRE(hit != nullptr);
+    REQUIRE(hit->fixes.size() == 1U);
+    // The arg is already a literal -- no side effects to repeat. SER masks
+    // values above the cap at runtime, so the rewrite is bit-identical.
+    CHECK(hit->fixes[0].machine_applicable);
+    REQUIRE(hit->fixes[0].edits.size() == 1U);
+    CHECK(hit->fixes[0].edits[0].replacement == "16");
 }

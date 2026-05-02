@@ -105,11 +105,13 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
             if (count >= 2U) {
                 // Find the LAST argument that is a number_literal.
                 std::uint32_t last_value = 0U;
+                ::TSNode last_literal_node{};
                 bool found = false;
                 for (std::uint32_t k = count; k > 0U; --k) {
                     const auto a = ::ts_node_named_child(args, k - 1U);
                     if (node_kind(a) == "number_literal") {
                         if (parse_uint_literal(node_text(a, bytes), last_value)) {
+                            last_literal_node = a;
                             found = true;
                             break;
                         }
@@ -130,6 +132,25 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                                        std::to_string(cap) +
                                        " -- the SER scheduler silently truncates the value, "
                                        "producing incoherent reorder";
+
+                        // Clamp the literal to the spec cap. The arg is already a
+                        // number_literal (the only shape the rule fires on), so
+                        // the rewrite has no side effects to repeat. The SER
+                        // scheduler already masks the value to `min(value, cap)`
+                        // bits at runtime, so dropping the literal from `>cap` to
+                        // `cap` is semantics-preserving.
+                        Fix fix;
+                        fix.machine_applicable = true;
+                        fix.description =
+                            std::string{"clamp the bits literal to the SER spec cap ("} +
+                            std::to_string(cap) + ")";
+                        TextEdit edit;
+                        edit.span = Span{.source = tree.source_id(),
+                                         .bytes = tree.byte_range(last_literal_node)};
+                        edit.replacement = std::to_string(cap);
+                        fix.edits.push_back(std::move(edit));
+                        diag.fixes.push_back(std::move(fix));
+
                         ctx.emit(std::move(diag));
                     }
                 }

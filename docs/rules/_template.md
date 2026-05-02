@@ -9,6 +9,17 @@ applicability: machine-applicable
 # the v0.5 line is closed.
 since-version: v0.6.0
 phase: 7
+# `references` is REQUIRED for rules landing from v0.8 onward (ADR 0018
+# §5 criterion #4). At least 2 entries — primary sources for the GPU
+# mechanism the rule detects: IHV architecture guides, HLSL specs,
+# DirectX-Specs documents, GDC talks, peer-reviewed microbenchmark
+# papers. Existing rules predating v0.8 carry a one-time grandfather
+# clause; new rules must clear the bar at PR-review time.
+references:
+  - title: "Title of primary source #1"
+    url: "https://example.invalid/source-1"
+  - title: "Title of primary source #2"
+    url: "https://example.invalid/source-2"
 ---
 
 # rule-id-here
@@ -24,6 +35,29 @@ phase: 7
 > **Status:** shipped (Phase N) — see [CHANGELOG](../../CHANGELOG.md).
 -->
 
+
+## References (REQUIRED for v0.8+ rules)
+
+<!-- Per ADR 0018 §5 criterion #4: every rule shipping from v0.8 onward
+     MUST carry at least 2 primary-source citations in the front-matter
+     `references:` field. Acceptable sources include:
+
+       * Two of {RDNA / Blackwell / Xe2 / Hopper / Ada} architecture
+         guides citing the GPU mechanism the rule detects.
+       * One IHV architecture doc + one GDC talk slide.
+       * One IHV architecture doc + one peer-reviewed microbenchmark
+         paper (e.g. arxiv.org/abs/2512.02189).
+       * The HLSL Specs Working Draft / DirectX-Specs document
+         counts as one citation when the rule is purely spec-driven.
+
+     "We believe X" is not acceptable. Hand-waved heuristics block at
+     PR review.
+
+     Pre-v0.8 rules carry a one-time grandfather clause: existing
+     pages may keep `references:` empty or omitted. PRs that *modify*
+     a pre-v0.8 rule's mechanism explanation should opportunistically
+     add citations.
+-->
 
 ## What it detects
 
