@@ -9,9 +9,7 @@ phase: 7
 
 # live-state-across-traceray
 
-> **Pre-v0 status:** this rule is documented ahead of implementation. Detection
-> requires dataflow analysis across the TraceRay call site in the compiled
-> DXIL or via Slang's IR; it is not yet wired into the linter pipeline.
+> **Status:** shipped (Phase 7) -- see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 

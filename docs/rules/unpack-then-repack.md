@@ -9,9 +9,7 @@ phase: 7
 
 # unpack-then-repack
 
-> **Pre-v0 status:** this rule is documented ahead of implementation. Pattern
-> detection is feasible at the AST or early-IR level once the SM 6.6 packing
-> intrinsics are modelled in the linter's rule engine.
+> **Status:** shipped (Phase 7) -- see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 

@@ -22,6 +22,7 @@ cbuffer MinMaxCB {
 // --- pack-then-unpack-roundtrip ---
 
 // HIT(pack-then-unpack-roundtrip): unpack_u8u32 immediately followed by pack_u8
+// HIT(unpack-then-repack): same pair detected by the Phase 7 rule (ADR 0017).
 // with no modification — the pair is a dead round-trip; the original PackedInput
 // is unchanged after both operations.
 uint pack_unpack_roundtrip(uint packed) {
@@ -30,6 +31,7 @@ uint pack_unpack_roundtrip(uint packed) {
 }
 
 // HIT(pack-then-unpack-roundtrip): f32tof16 followed by f16tof32 with no ALU
+// HIT(unpack-then-repack): same pair detected by the Phase 7 rule (ADR 0017).
 // between them — conversion pair is dead; use the original float.
 float f16_roundtrip(float x) {
     uint h = f32tof16(x);
@@ -37,6 +39,7 @@ float f16_roundtrip(float x) {
 }
 
 // SHOULD-NOT-HIT(pack-then-unpack-roundtrip): intermediate modification breaks the
+// SHOULD-NOT-HIT(unpack-then-repack): same — intermediate modification.
 // round-trip — the unpacked channels are individually scaled before repacking.
 uint pack_with_modify(uint packed) {
     uint4 channels = unpack_u8u32(packed);
@@ -70,6 +73,20 @@ uint pack_unbounded(float4 col) {
 // use a half-precision buffer to avoid repeated conversion overhead).
 min16float get_as_half() {
     return (min16float)FloatField;
+}
+
+// HIT(min16float-opportunity): chain widens a `half` value to 32-bit and then
+// multiplies by a 16-bit-representable constant; the chain could stay at
+// `min16float` and double packed-fp16 throughput on every IHV (ADR 0017).
+float min16_opportunity_pattern(half h_in) {
+    return (float)h_in * 0.5;
+}
+
+// HIT(manual-f32tof16): hand-rolled FP32 -> FP16 lowering matching the
+// canonical `(asuint(x) >> 13) & 0x7FFF` form (ADR 0017).
+uint manual_f32tof16_pattern(float x) {
+    uint h = (asuint(x) >> 13) & 0x7FFF;
+    return h;
 }
 
 // SHOULD-NOT-HIT(min16float-in-cbuffer-roundtrip): single explicit cast at use

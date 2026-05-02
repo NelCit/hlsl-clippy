@@ -9,10 +9,7 @@ phase: 7
 
 # redundant-texture-sample
 
-> **Pre-v0 status:** this rule is documented ahead of implementation. It
-> operates on compiled DXIL after the IR CSE pass; the HIT annotation in the
-> fixture marks the source pattern that correlates with a duplicate sample
-> instruction surviving into the final IR.
+> **Status:** shipped (Phase 7) -- see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 

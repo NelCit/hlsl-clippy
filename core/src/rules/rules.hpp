@@ -195,4 +195,21 @@ namespace hlsl_clippy::rules {
 [[nodiscard]] std::unique_ptr<Rule> make_wave_reduction_pixel_without_helper_attribute();
 [[nodiscard]] std::unique_ptr<Rule> make_quadany_replaceable_with_derivative_uniform_branch();
 
+// Phase 7 — Pack DXR / Mesh / Precision / Pressure (ADR 0017).
+[[nodiscard]] std::unique_ptr<Rule> make_oversized_ray_payload();
+[[nodiscard]] std::unique_ptr<Rule> make_missing_accept_first_hit();
+[[nodiscard]] std::unique_ptr<Rule> make_recursion_depth_not_declared();
+[[nodiscard]] std::unique_ptr<Rule> make_live_state_across_traceray();
+[[nodiscard]] std::unique_ptr<Rule> make_maybereorderthread_without_payload_shrink();
+[[nodiscard]] std::unique_ptr<Rule> make_meshlet_vertex_count_bad();
+[[nodiscard]] std::unique_ptr<Rule> make_output_count_overrun();
+[[nodiscard]] std::unique_ptr<Rule> make_min16float_opportunity();
+[[nodiscard]] std::unique_ptr<Rule> make_unpack_then_repack();
+[[nodiscard]] std::unique_ptr<Rule> make_manual_f32tof16();
+[[nodiscard]] std::unique_ptr<Rule> make_vgpr_pressure_warning();
+[[nodiscard]] std::unique_ptr<Rule> make_scratch_from_dynamic_indexing();
+[[nodiscard]] std::unique_ptr<Rule> make_redundant_texture_sample();
+[[nodiscard]] std::unique_ptr<Rule> make_groupshared_when_registers_suffice();
+[[nodiscard]] std::unique_ptr<Rule> make_buffer_load_width_vs_cache_line();
+
 }  // namespace hlsl_clippy::rules

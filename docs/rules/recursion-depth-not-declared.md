@@ -9,7 +9,7 @@ phase: 7
 
 # recursion-depth-not-declared
 
-> **Pre-v0 status:** this rule page is published ahead of the implementation. Behaviour described here reflects the design intent; the rule is not yet enforced by the tool.
+> **Status:** shipped (Phase 7) -- see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 

@@ -97,3 +97,27 @@ float4 ps_two_different_samples(float4 pos : SV_Position, float2 uv : TEXCOORD0)
     float4 s1 = TexA.Sample(SS, UV1);
     return lerp(s0, s1, Blend) * Exposure;
 }
+
+// --- groupshared-when-registers-suffice ---
+//
+// HIT(groupshared-when-registers-suffice): tiny per-thread array; would fit
+// in registers if unrolled (ADR 0017).
+groupshared float gs_tiny[4];
+
+[numthreads(4, 1, 1)]
+void cs_tiny_groupshared(uint gi : SV_GroupIndex) {
+    gs_tiny[gi] = (float)gi;
+}
+
+// --- buffer-load-width-vs-cache-line ---
+//
+// HIT(buffer-load-width-vs-cache-line): four scalar Loads in a 16-byte
+// window can coalesce into a `Load4` (ADR 0017).
+ByteAddressBuffer Bab : register(t8);
+uint4 cs_buffer_loads() {
+    uint a = Bab.Load(0);
+    uint b = Bab.Load(4);
+    uint c = Bab.Load(8);
+    uint d = Bab.Load(12);
+    return uint4(a, b, c, d);
+}

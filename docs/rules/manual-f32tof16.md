@@ -9,9 +9,7 @@ phase: 7
 
 # manual-f32tof16
 
-> **Pre-v0 status:** this rule is documented ahead of implementation. The
-> bit-pattern matching is feasible at AST level once the rule engine supports
-> bitwise-arithmetic pattern templates.
+> **Status:** shipped (Phase 7) -- see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 

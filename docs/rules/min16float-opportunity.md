@@ -9,9 +9,7 @@ phase: 7
 
 # min16float-opportunity
 
-> **Pre-v0 status:** this rule is documented ahead of implementation. Identifying
-> ALU-bound regions and proving that 16-bit precision is sufficient requires
-> IR-level data-flow analysis and is not yet wired into the linter pipeline.
+> **Status:** shipped (Phase 7) -- see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 

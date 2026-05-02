@@ -9,10 +9,7 @@ phase: 7
 
 # scratch-from-dynamic-indexing
 
-> **Pre-v0 status:** this rule is documented ahead of implementation. The
-> syntactic detection (local array + non-uniform index) is partially
-> feasible at the AST level; the authoritative signal comes from compiled
-> DXIL, where the indexable-temp array appears as a distinct IR construct.
+> **Status:** shipped (Phase 7) -- see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 

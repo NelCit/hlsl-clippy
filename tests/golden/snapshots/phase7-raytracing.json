@@ -23,6 +23,20 @@
       "message": "sampler `LinearSS` is referenced from a single entry point and never varies across draws -- consider promoting it to a D3D12 static sampler in the root signature (saves a descriptor heap slot, pre-resident on every IHV)"
     },
     {
+      "rule": "oversized-ray-payload",
+      "line": 26,
+      "col": 1,
+      "severity": "warning",
+      "message": "struct used as a DXR ray payload is 152 bytes (> 32-byte register-only ceiling) -- payload spills to the on-chip ray stack on every `TraceRay`, costing latency on every leaf-traversal step"
+    },
+    {
+      "rule": "missing-accept-first-hit",
+      "line": 62,
+      "col": 5,
+      "severity": "warning",
+      "message": "`TraceRay` in shadow / occlusion-style function omits `RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH` -- BVH traversal continues past the first hit even though only the occlusion bit is needed; the flag short-circuits and saves a full BVH walk per ray"
+    },
+    {
       "rule": "branch-on-uniform-missing-attribute",
       "line": 85,
       "col": 5,

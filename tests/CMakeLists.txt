@@ -256,6 +256,29 @@ add_executable(hlsl_clippy_unit_tests
     unit/test_wave_reduction_pixel_without_helper_attribute.cpp
     unit/test_quadany_replaceable_with_derivative_uniform_branch.cpp
 
+    # Phase 7 — Pack DXR (ADR 0017).
+    unit/test_oversized_ray_payload.cpp
+    unit/test_missing_accept_first_hit.cpp
+    unit/test_recursion_depth_not_declared.cpp
+    unit/test_live_state_across_traceray.cpp
+    unit/test_maybereorderthread_without_payload_shrink.cpp
+
+    # Phase 7 — Pack Mesh (ADR 0017).
+    unit/test_meshlet_vertex_count_bad.cpp
+    unit/test_output_count_overrun.cpp
+
+    # Phase 7 — Pack Precision/Packing (ADR 0017).
+    unit/test_min16float_opportunity.cpp
+    unit/test_unpack_then_repack.cpp
+    unit/test_manual_f32tof16.cpp
+
+    # Phase 7 — Pack Pressure/Memory (ADR 0017).
+    unit/test_vgpr_pressure_warning.cpp
+    unit/test_scratch_from_dynamic_indexing.cpp
+    unit/test_redundant_texture_sample.cpp
+    unit/test_groupshared_when_registers_suffice.cpp
+    unit/test_buffer_load_width_vs_cache_line.cpp
+
     # Golden-snapshot regression net (drives `tests/golden/`).
     unit/test_golden_snapshots.cpp
 )

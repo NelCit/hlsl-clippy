@@ -9,9 +9,7 @@ phase: 7
 
 # vgpr-pressure-warning
 
-> **Pre-v0 status:** this rule is documented ahead of implementation. The
-> detection logic requires IR-level analysis of compiled DXIL and is not yet
-> wired into the linter pipeline.
+> **Status:** shipped (Phase 7) -- see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 

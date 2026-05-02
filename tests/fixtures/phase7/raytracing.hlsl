@@ -77,6 +77,8 @@ void trace_shadow_ray_fast(float3 origin, float3 dir, inout SmallPayload payload
 // --- tracerray-conditional ---
 
 // HIT(tracerray-conditional): TraceRay inside an if driven by a per-lane value
+// HIT(live-state-across-traceray): locals defined-before / read-after the
+// `TraceRay` are carried in the ray-stack (ADR 0017).
 // (WorldRayDirection().y) — non-uniform condition extends live ranges across trace,
 // causing ray stack spills.
 [shader("closesthit")]
@@ -90,6 +92,19 @@ void ClosestHit(inout BigPayload payload, BuiltInTriangleIntersectionAttributes 
         ray.TMax      = TMax;
         TraceRay(Scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload);
     }
+}
+
+// --- maybereorderthread-without-payload-shrink ---
+//
+// HIT(maybereorderthread-without-payload-shrink): MaybeReorderThread call
+// site keeps several locals live; the SER scheduler must move that state.
+void raygen_reorder_helper() {
+    float a = 1.0;
+    float b = 2.0;
+    float c = 3.0;
+    float d = 4.0;
+    MaybeReorderThread(0, 0);
+    Output[uint2(0, 0)] = float4(a, b, c, d);
 }
 
 // --- anyhit-heavy-work ---

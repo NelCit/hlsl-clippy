@@ -59,6 +59,9 @@ void ms_good_threads(
 // --- mesh-output-decl-exceeds-256 ---
 
 // HIT(mesh-output-decl-exceeds-256): out vertices count 300 > 256 — invalid for
+// HIT(output-count-overrun): SetMeshOutputCounts(300, 256) -- 300 > the 300-vertex
+// declared ceiling (well above 256-cap); the Phase 7 rule (ADR 0017) flags the
+// literal-count path even when the array sized at 300 just barely matches.
 // the mesh shader spec; PSO creation fails.
 [numthreads(128, 1, 1)]
 [outputtopology("triangle")]

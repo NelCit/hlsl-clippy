@@ -223,6 +223,29 @@ add_library(hlsl_clippy_core STATIC
     src/rules/reordercoherent_uav_missing_barrier.cpp
     src/rules/wave_reduction_pixel_without_helper_attribute.cpp
     src/rules/quadany_replaceable_with_derivative_uniform_branch.cpp
+
+    # Phase 7 — Pack DXR (ADR 0017).
+    src/rules/oversized_ray_payload.cpp
+    src/rules/missing_accept_first_hit.cpp
+    src/rules/recursion_depth_not_declared.cpp
+    src/rules/live_state_across_traceray.cpp
+    src/rules/maybereorderthread_without_payload_shrink.cpp
+
+    # Phase 7 — Pack Mesh (ADR 0017).
+    src/rules/meshlet_vertex_count_bad.cpp
+    src/rules/output_count_overrun.cpp
+
+    # Phase 7 — Pack Precision/Packing (ADR 0017).
+    src/rules/min16float_opportunity.cpp
+    src/rules/unpack_then_repack.cpp
+    src/rules/manual_f32tof16.cpp
+
+    # Phase 7 — Pack Pressure/Memory (ADR 0017).
+    src/rules/vgpr_pressure_warning.cpp
+    src/rules/scratch_from_dynamic_indexing.cpp
+    src/rules/redundant_texture_sample.cpp
+    src/rules/groupshared_when_registers_suffice.cpp
+    src/rules/buffer_load_width_vs_cache_line.cpp
 )
 
 # Phase 7 — IR-level analysis infrastructure (ADR 0016, sub-phase 7a.1).

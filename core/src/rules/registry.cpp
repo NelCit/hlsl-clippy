@@ -180,6 +180,22 @@ std::vector<std::unique_ptr<Rule>> make_default_rules() {
     rules.push_back(rules::make_reordercoherent_uav_missing_barrier());
     rules.push_back(rules::make_wave_reduction_pixel_without_helper_attribute());
     rules.push_back(rules::make_quadany_replaceable_with_derivative_uniform_branch());
+    // Phase 7 — Pack DXR / Mesh / Precision / Pressure (ADR 0017)
+    rules.push_back(rules::make_oversized_ray_payload());
+    rules.push_back(rules::make_missing_accept_first_hit());
+    rules.push_back(rules::make_recursion_depth_not_declared());
+    rules.push_back(rules::make_live_state_across_traceray());
+    rules.push_back(rules::make_maybereorderthread_without_payload_shrink());
+    rules.push_back(rules::make_meshlet_vertex_count_bad());
+    rules.push_back(rules::make_output_count_overrun());
+    rules.push_back(rules::make_min16float_opportunity());
+    rules.push_back(rules::make_unpack_then_repack());
+    rules.push_back(rules::make_manual_f32tof16());
+    rules.push_back(rules::make_vgpr_pressure_warning());
+    rules.push_back(rules::make_scratch_from_dynamic_indexing());
+    rules.push_back(rules::make_redundant_texture_sample());
+    rules.push_back(rules::make_groupshared_when_registers_suffice());
+    rules.push_back(rules::make_buffer_load_width_vs_cache_line());
     return rules;
 }
 
