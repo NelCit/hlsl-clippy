@@ -50,9 +50,10 @@ using hlsl_clippy::RuleContext;
 using hlsl_clippy::SourceManager;
 using hlsl_clippy::Stage;
 
-/// Spy rule with `stage() == Stage::Ir`. Records every `on_ir` invocation
-/// alongside the (pointer-equal) `IrInfo` it received so tests can assert
-/// the orchestrator dispatched correctly.
+/// Spy rule with `stage() == Stage::Ir`. Records each invocation and a
+/// snapshot of the `IrInfo` it received. We snapshot rather than store a
+/// pointer because the orchestrator's `IrInfo` lives in a temporary inside
+/// `lint()` and is destroyed before the test inspects the result.
 class IrSpyRule : public Rule {
 public:
     [[nodiscard]] std::string_view id() const noexcept override {
@@ -69,20 +70,20 @@ public:
                const IrInfo& ir,
                RuleContext& /*ctx*/) override {
         invocations_++;
-        last_ir_ = &ir;
+        last_ir_snapshot_ = ir;  // copy
     }
 
     [[nodiscard]] std::uint32_t invocations() const noexcept {
         return invocations_;
     }
-    [[nodiscard]] const IrInfo* last_ir() const noexcept {
-        return last_ir_;
+    [[nodiscard]] const IrInfo& last_ir() const noexcept {
+        return last_ir_snapshot_;
     }
 
 private:
     static constexpr std::string_view id_{"test-ir-spy"};
     std::uint32_t invocations_ = 0;
-    const IrInfo* last_ir_ = nullptr;
+    IrInfo last_ir_snapshot_;
 };
 
 /// Spy rule with `stage() == Stage::Ast`. Records `on_node` invocations.
@@ -155,18 +156,33 @@ TEST_CASE("AST-only rule pack: orchestrator never invokes the IR engine",
 }
 
 TEST_CASE("Stage::Ir rule + enable_ir=true: orchestrator dispatches on_ir "
-          "or surfaces the 7a.1 not-implemented diagnostic",
+          "with a metadata-only IrInfo (7a.2-step1)",
           "[ir][orchestrator]") {
-    // 7a.1 ships a stub engine -- analyze() always fails with
-    // `clippy::ir-not-implemented`. The orchestrator surfaces that
-    // diagnostic and skips on_ir dispatch; the spy's invocations_ counter
-    // therefore stays at 0. Once 7a.2 lands, this test will need an
-    // additional branch where the engine returns a real IrInfo and on_ir
-    // is dispatched. The behaviour locked in here is the WIRE: an IR-stage
-    // rule with enable_ir=true causes either dispatch OR a clippy::ir-*
-    // diagnostic, never silent skipping.
+    // 7a.2-step1 wires `IrEngine::analyze()` against the existing
+    // ReflectionEngine: `IrInfo::functions` carries one entry per
+    // entry point with `entry_point_name` + `stage`. Per-instruction
+    // walks come in 7a.2-step2 (DXC + DXIL parser); this test locks in
+    // the metadata-only contract today.
     SourceManager sources;
-    const std::string buf = "float4 ps_main() : SV_Target { return 1.0; }\n";
+    // Same shape as the known-working `k_one_cbuffer_one_binding` from
+    // test_reflection.cpp. Slang requires at least one declared resource
+    // visible to the entry point before its reflection lays down a usable
+    // entry-point record; a bare `float4 ps_main()` returns 0 entry points.
+    const std::string buf = R"hlsl(
+cbuffer SceneConstants
+{
+    float4x4 view_proj;
+};
+
+Texture2D<float4> base_color;
+SamplerState linear_sampler;
+
+[shader("pixel")]
+float4 ps_main(float2 uv : TEXCOORD0) : SV_Target
+{
+    return base_color.Sample(linear_sampler, uv);
+}
+)hlsl";
     const auto src = sources.add_buffer("ir_routed.hlsl", buf);
     REQUIRE(src.valid());
 
@@ -176,22 +192,32 @@ TEST_CASE("Stage::Ir rule + enable_ir=true: orchestrator dispatches on_ir "
     rules.push_back(std::move(spy));
 
     LintOptions options;
+    options.target_profile = std::string{"sm_6_6"};
     options.enable_reflection = false;
     options.enable_control_flow = false;
     options.enable_ir = true;
     const auto diagnostics = lint(sources, src, rules, options);
     const auto ir_diagnostics = filter_engine_diagnostics(diagnostics);
 
-    // Either the stub fired (7a.1) OR a real IR-info dispatch landed
-    // (7a.2). Exactly one of these branches is true at any commit.
-    if (spy_raw->invocations() == 0U) {
-        REQUIRE(ir_diagnostics.size() == 1U);
-        CHECK(ir_diagnostics[0].code == "clippy::ir-not-implemented");
-        CHECK(ir_diagnostics[0].severity == hlsl_clippy::Severity::Note);
-    } else {
-        CHECK(spy_raw->invocations() == 1U);
-        CHECK(ir_diagnostics.empty());
-    }
+    // The engine succeeds (metadata-only) -- on_ir fires once, no
+    // engine diagnostic surfaces. Reflection ran transparently inside
+    // `IrEngine::analyze` even though `enable_reflection=false`; that's
+    // by design (the reflection cache key + fingerprint are independent
+    // of LintOptions and the IR engine drives reflection on its own).
+    REQUIRE(spy_raw->invocations() == 1U);
+    CHECK(ir_diagnostics.empty());
+
+    const auto& ir = spy_raw->last_ir();
+    REQUIRE(!ir.functions.empty());
+
+    // The pixel-stage entry point lives in `IrInfo::functions` keyed by
+    // its source name -- `find_function_by_name` is the rule-author API.
+    const auto* fn = ir.find_function_by_name("ps_main");
+    REQUIRE(fn != nullptr);
+    CHECK(fn->stage == "pixel");
+    // 7a.2-step1: blocks stay empty -- per-instruction walks come in
+    // 7a.2-step2.
+    CHECK(fn->blocks.empty());
 }
 
 TEST_CASE("Stage::Ir rule + enable_ir=false: orchestrator silently skips IR stage",
