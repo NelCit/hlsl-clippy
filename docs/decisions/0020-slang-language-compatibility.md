@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 date: 2026-05-02
 decision-makers: maintainers
 consulted: ADR 0001, ADR 0002, ADR 0012, ADR 0014, ADR 0019
