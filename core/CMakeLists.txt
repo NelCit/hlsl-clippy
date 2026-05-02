@@ -286,6 +286,12 @@ add_library(hlsl_clippy_core STATIC
     src/rules/numwaves_anchored_cap.cpp
     src/rules/reference_data_type_not_supported_pre_sm610.cpp
     src/rules/rga_pressure_bridge_stub.cpp
+
+    # v1.5.0 — Phase 8.C Slang-specific rules (ADR 0021 sub-phase C).
+    src/rules/slang_generic_without_constraint.cpp
+    src/rules/slang_interface_conformance_missing_method.cpp
+    src/rules/slang_module_import_without_use.cpp
+    src/rules/slang_associatedtype_shadowing_builtin.cpp
 )
 
 # Phase 7 — IR-level analysis infrastructure (ADR 0016, sub-phase 7a.1).

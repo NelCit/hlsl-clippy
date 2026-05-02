@@ -325,6 +325,12 @@ add_executable(hlsl_clippy_unit_tests
     # AST/CFG dispatch gating, and the clippy::language-skip-ast notice.
     unit/test_slang_dispatch.cpp
 
+    # v1.5.0 — Phase 8.C Slang-specific rules (ADR 0021 sub-phase C).
+    unit/test_slang_generic_without_constraint.cpp
+    unit/test_slang_interface_conformance_missing_method.cpp
+    unit/test_slang_module_import_without_use.cpp
+    unit/test_slang_associatedtype_shadowing_builtin.cpp
+
     # Golden-snapshot regression net (drives `tests/golden/`).
     unit/test_golden_snapshots.cpp
 )

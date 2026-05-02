@@ -220,6 +220,11 @@ std::vector<std::unique_ptr<Rule>> make_default_rules() {
     rules.push_back(rules::make_numwaves_anchored_cap());
     rules.push_back(rules::make_reference_data_type_not_supported_pre_sm610());
     rules.push_back(rules::make_rga_pressure_bridge_stub());
+    // Phase 8.C — Slang-specific rules (ADR 0021 sub-phase C).
+    rules.push_back(rules::make_slang_generic_without_constraint());
+    rules.push_back(rules::make_slang_interface_conformance_missing_method());
+    rules.push_back(rules::make_slang_module_import_without_use());
+    rules.push_back(rules::make_slang_associatedtype_shadowing_builtin());
     return rules;
 }
 

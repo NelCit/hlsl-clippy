@@ -240,4 +240,10 @@ namespace hlsl_clippy::rules {
 [[nodiscard]] std::unique_ptr<Rule> make_reference_data_type_not_supported_pre_sm610();
 [[nodiscard]] std::unique_ptr<Rule> make_rga_pressure_bridge_stub();
 
+// Phase 8.C — Slang-specific rules (ADR 0021 sub-phase C).
+[[nodiscard]] std::unique_ptr<Rule> make_slang_generic_without_constraint();
+[[nodiscard]] std::unique_ptr<Rule> make_slang_interface_conformance_missing_method();
+[[nodiscard]] std::unique_ptr<Rule> make_slang_module_import_without_use();
+[[nodiscard]] std::unique_ptr<Rule> make_slang_associatedtype_shadowing_builtin();
+
 }  // namespace hlsl_clippy::rules

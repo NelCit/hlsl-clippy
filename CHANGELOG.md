@@ -13,6 +13,65 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [1.5.0] — 2026-05-02
+
+**v1.5.0 — Slang sub-phase C: 4 Slang-language-specific rules.** Per
+[ADR 0021 §"Sub-phase C"](docs/decisions/0021-slang-sub-phase-b-tree-sitter.md)
+v1.4.0's grammar integration unlocked tree-sitter-slang's Slang-specific
+node-kinds (`interface_specifier`, `extension_specifier`,
+`associatedtype_declaration`, `import_statement`, `template_type` with
+`__generic` name). v1.5.0 ships the first 4 rules that fire ONLY on
+`.slang` sources. Total registered rule count: 189 → **193**.
+
+All 4 rules are gated on `tree.language() == tree_sitter_slang()` so
+they emit zero diagnostics on `.hlsl` sources. Existing 189 rules
+unchanged.
+
+### Added
+
+- **Pack 8.C — Slang-specific rules (4 rules)**:
+  - `slang-generic-without-constraint` — `__generic<T>` (parsed as
+    `template_type` with name `__generic`) without an associated
+    `where T : ITrait` clause / capability constraint. Constraint-less
+    generics defer to runtime monomorphisation rather than compile-time
+    specialisation, costing instruction-cache footprint and per-
+    instantiation register pressure.
+  - `slang-interface-conformance-missing-method` — an
+    `extension_specifier` with `base_class_clause` whose body
+    (`function_definition` set) doesn't cover the interface's
+    declared-method set (`field_declaration` set on the corresponding
+    `interface_specifier`). Slang's diagnostic on missing-method-
+    conformance is silent at module-level and only surfaces at
+    use-site.
+  - `slang-module-import-without-use` — `import_statement` whose
+    imported module is never referenced in the importing translation
+    unit. Mirrors `unused-cbuffer-field` in spirit; surfaces dead
+    imports that bloat compile time.
+  - `slang-associatedtype-shadowing-builtin` — `associatedtype` whose
+    declared `type_identifier` shadows a built-in HLSL/Slang type
+    (38-entry vocabulary covering `float`/`Texture2D`/etc.). Subtle
+    bug — Slang's name resolution prefers the associated type within
+    an interface scope.
+- **`tests/fixtures/slang/{generic_unconstrained,interface_conformance_missing,dead_import,associatedtype_shadow}.slang`** — per-rule fixtures with `// HIT(...)` annotations for the bad pattern + `// SHOULD-NOT-HIT(...)` for nearby good patterns.
+- **4 unit-test TUs** under `tests/unit/test_slang_*.cpp`. Each asserts
+  the rule fires on the canonical bad pattern AND emits zero
+  diagnostics on the corresponding `.hlsl`-extension source.
+
+### Drift from ADR 0021's sub-phase C predictions
+
+The ADR predicted node-kinds based on Theta-Dev's README; tree-sitter-
+grammars/tree-sitter-slang surfaces them slightly differently. The
+v1.5.0 rules anchor on the empirical names; the doc pages cite the
+actual node-kinds:
+- `generic_parameter_list` predicted → actual is `template_type` with
+  name `__generic` and `template_argument_list` carrying
+  `interface_requirements` children.
+- `interface_declaration` / `extension_declaration` → actual are
+  `interface_specifier` / `extension_specifier` (they're type-specifier
+  subtypes since interfaces and extensions act as types in Slang).
+- `import_declaration` → actual is `import_statement`.
+- `associatedtype_declaration` matched as predicted.
+
 ## [1.4.1] — 2026-05-02
 
 **Patch — CI repair + ADR 0021 addendum + parser threading.** Fixes
@@ -1505,6 +1564,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[1.5.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/NelCit/hlsl-clippy/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/NelCit/hlsl-clippy/compare/v1.3.0...v1.3.1
