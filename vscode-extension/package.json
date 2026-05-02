@@ -3,7 +3,7 @@
   "displayName": "HLSL Clippy",
   "description": "Linter for HLSL — performance + correctness rules beyond what dxc catches.",
   "publisher": "nelcit",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.85.0"
@@ -96,6 +96,11 @@
         "command": "hlslClippy.openWalkthrough",
         "title": "Open Welcome Walkthrough",
         "category": "HLSL Clippy"
+      },
+      {
+        "command": "hlslClippy.fixAllInDocument",
+        "title": "Fix All in Document",
+        "category": "HLSL Clippy"
       }
     ],
     "menus": {
@@ -116,18 +121,23 @@
           "when": "editorLangId == hlsl"
         },
         {
-          "command": "hlslClippy.relintDocument",
+          "command": "hlslClippy.fixAllInDocument",
           "group": "9_hlslClippy@4",
           "when": "editorLangId == hlsl"
         },
         {
-          "command": "hlslClippy.showAllRules",
+          "command": "hlslClippy.relintDocument",
           "group": "9_hlslClippy@5",
           "when": "editorLangId == hlsl"
         },
         {
-          "command": "hlslClippy.showOutput",
+          "command": "hlslClippy.showAllRules",
           "group": "9_hlslClippy@6",
+          "when": "editorLangId == hlsl"
+        },
+        {
+          "command": "hlslClippy.showOutput",
+          "group": "9_hlslClippy@7",
           "when": "editorLangId == hlsl"
         }
       ],
@@ -146,6 +156,10 @@
         },
         {
           "command": "hlslClippy.suppressRuleForFile",
+          "when": "editorLangId == hlsl"
+        },
+        {
+          "command": "hlslClippy.fixAllInDocument",
           "when": "editorLangId == hlsl"
         }
       ]
@@ -233,6 +247,26 @@
           ],
           "default": "off",
           "description": "Traces the communication between VS Code and the hlsl-clippy LSP server."
+        },
+        "hlslClippy.inlineDiagnostics": {
+          "type": "string",
+          "enum": [
+            "off",
+            "errors-only",
+            "all"
+          ],
+          "enumDescriptions": [
+            "No inline message; rely on squiggles + Problems panel.",
+            "Show inline message at end of line for Error severity only.",
+            "Show inline message at end of line for every severity (Error + Warning + Info)."
+          ],
+          "default": "off",
+          "description": "Render the diagnostic message at the end of the offending line (Error Lens style)."
+        },
+        "hlslClippy.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the HLSL Clippy badge in the status bar (severity-split diagnostic count + click for actions). Disable if your status bar is crowded."
         }
       }
     }

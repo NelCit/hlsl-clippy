@@ -96,6 +96,22 @@ code --install-extension hlsl-clippy-<version>-<target>.vsix
 | `hlslClippy.enableReflection` | `boolean` | `true` | Enable Phase 3 reflection-aware rules. Disable on slow machines to keep AST-only latency. |
 | `hlslClippy.enableControlFlow` | `boolean` | `true` | Enable Phase 4 CFG-aware rules. |
 | `hlslClippy.trace.server` | `string` | `"off"` | Trace LSP communication (`off` / `messages` / `verbose`). |
+| `hlslClippy.inlineDiagnostics` | `string` | `"off"` | Render the diagnostic message inline at end of line (Error Lens style). `off` / `errors-only` / `all`. |
+| `hlslClippy.showStatusBar` | `boolean` | `true` | Show the HLSL Clippy badge in the status bar. Disable if your status bar is crowded. |
+
+### Auto-fix on save
+
+Add this to your `settings.json` to apply every machine-applicable fix
+each time you save an HLSL file:
+
+```json
+"editor.codeActionsOnSave": {
+  "source.fixAll.hlslClippy": "always"
+}
+```
+
+You can also trigger it manually via **HLSL Clippy: Fix All in Document**
+(`Ctrl+Shift+P`).
 
 ## Commands
 

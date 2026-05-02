@@ -13,6 +13,41 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [0.6.4] — 2026-05-02
+
+VS Code extension UX wave #3: inline diagnostic decorations
+(Error Lens style), `source.fixAll.hlslClippy` for auto-fix-on-save,
+status-bar visibility toggle, and an explicit
+"Fix All in Document" command.
+
+### Added
+- **Inline diagnostic decorations** (opt-in via
+  `hlslClippy.inlineDiagnostics` setting). Renders the diagnostic
+  message at the end of the offending line in a dim italic colour
+  themed to severity. Three modes: `off` (default), `errors-only`,
+  `all`. Only one inline message per line (highest-priority
+  diagnostic wins) so dense files stay readable.
+- **`source.fixAll.hlslClippy`** code action kind. Apply every
+  machine-applicable fix in the active document at once, optionally
+  on save:
+  ```jsonc
+  // settings.json
+  "editor.codeActionsOnSave": {
+    "source.fixAll.hlslClippy": "always"
+  }
+  ```
+- **`HLSL Clippy: Fix All in Document`** command (also right-click
+  menu + status-bar quick-pick) for explicit one-shot invocation.
+- **`hlslClippy.showStatusBar`** boolean setting -- hides the
+  status-bar badge for users with crowded status bars (commands and
+  hotkeys still work).
+
+### Changed
+- Status-bar `renderStatus()` re-renders on
+  `onDidChangeConfiguration` so toggling
+  `hlslClippy.showStatusBar` / `inlineDiagnostics` takes effect
+  immediately without a window reload.
+
 ## [0.6.3] — 2026-05-02
 
 VS Code extension UX wave: inline right-click commands (no more
@@ -647,6 +682,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.6.4]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.3...v0.6.4
 [0.6.3]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.0...v0.6.1

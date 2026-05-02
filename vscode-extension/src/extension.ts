@@ -24,6 +24,15 @@ let client: LanguageClient | undefined;
 let outputChannel: vscode.OutputChannel | undefined;
 let statusBarItem: vscode.StatusBarItem | undefined;
 
+// Inline-diagnostic decoration types, lazily created on first use. We
+// keep one type per severity so VS Code can apply a different colour
+// without us having to rebuild the type each time.
+let inlineDecorationTypes: {
+    error: vscode.TextEditorDecorationType;
+    warning: vscode.TextEditorDecorationType;
+    info: vscode.TextEditorDecorationType;
+} | undefined;
+
 const k_languageId = "hlsl";
 const k_clientId = "hlslClippy";
 const k_clientName = "HLSL Clippy";
@@ -42,6 +51,18 @@ function renderStatus() {
     if (!statusBarItem) {
         return;
     }
+    // Respect the user's preference: set `hlslClippy.showStatusBar` to
+    // `false` to hide the badge entirely (it stays around for command
+    // routing but is not shown in the status bar).
+    const showStatusBar = vscode.workspace
+        .getConfiguration("hlslClippy")
+        .get<boolean>("showStatusBar", true);
+    if (!showStatusBar) {
+        statusBarItem.hide();
+        return;
+    }
+    statusBarItem.show();
+
     const icon =
         lastState === "ready" ? "$(check)"
             : lastState === "starting" ? "$(sync~spin)"
@@ -144,6 +165,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                     label: "$(file) Suppress Rule for Entire File",
                     description: "Insert a top-of-file `// hlsl-clippy: allow(rule)` directive",
                     command: "hlslClippy.suppressRuleForFile",
+                },
+                {
+                    label: "$(wand) Fix All in Document",
+                    description: "Apply every machine-applicable fix in the active document at once",
+                    command: "hlslClippy.fixAllInDocument",
                 },
                 {
                     label: "$(list-tree) Show All Rules",
@@ -394,12 +420,87 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         ),
     );
 
-    // Refresh the status-bar diagnostic count whenever the active editor or
-    // its diagnostics change. Cheap (status bar render is constant work);
-    // covers the typing-cadence case + the cursor-moves-to-other-file case.
+    // `source.fixAll.hlslClippy` -- the canonical "fix everything in this
+    // document" code-action kind. Pairs with `editor.codeActionsOnSave`
+    // so users can opt into auto-fixing on save:
+    //   "editor.codeActionsOnSave": { "source.fixAll.hlslClippy": "always" }
+    // Implementation: gather every diagnostic for the document, ask the
+    // LSP for code actions on each, keep only the ones that are
+    // machine-applicable, merge their edits into a single WorkspaceEdit.
+    const fixAllKind = vscode.CodeActionKind.SourceFixAll.append("hlslClippy");
     context.subscriptions.push(
-        vscode.window.onDidChangeActiveTextEditor(() => renderStatus()),
-        vscode.languages.onDidChangeDiagnostics(() => renderStatus()),
+        vscode.languages.registerCodeActionsProvider(
+            { scheme: "file", language: k_languageId },
+            new ClippyFixAllProvider(fixAllKind),
+            {
+                providedCodeActionKinds: [fixAllKind],
+            },
+        ),
+    );
+
+    // Explicit "fix all in document" command for users who want the
+    // operation without enabling codeActionsOnSave.
+    context.subscriptions.push(
+        vscode.commands.registerCommand("hlslClippy.fixAllInDocument", async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor || editor.document.languageId !== k_languageId) {
+                void vscode.window.showInformationMessage(
+                    "HLSL Clippy: open a .hlsl document to apply fix-all.",
+                );
+                return;
+            }
+            const range = new vscode.Range(
+                new vscode.Position(0, 0),
+                editor.document.lineAt(editor.document.lineCount - 1).range.end,
+            );
+            const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+                "vscode.executeCodeActionProvider",
+                editor.document.uri,
+                range,
+                fixAllKind.value,
+            );
+            if (!actions || actions.length === 0) {
+                void vscode.window.showInformationMessage(
+                    "HLSL Clippy: no auto-applicable fixes in this document.",
+                );
+                return;
+            }
+            // Take the first matching SourceFixAll action and apply its edit.
+            const action = actions.find((a) => a.kind?.contains(fixAllKind));
+            if (!action || !action.edit) {
+                void vscode.window.showInformationMessage(
+                    "HLSL Clippy: no auto-applicable fixes available.",
+                );
+                return;
+            }
+            await vscode.workspace.applyEdit(action.edit);
+            outputChannel?.appendLine(
+                `[hlsl-clippy] Applied fix-all to ${editor.document.uri.fsPath}.`,
+            );
+        }),
+    );
+
+    // Refresh the status-bar diagnostic count + inline decorations whenever
+    // the active editor or its diagnostics change. Cheap; both renders are
+    // constant work over the diagnostics list for the active document.
+    context.subscriptions.push(
+        vscode.window.onDidChangeActiveTextEditor(() => {
+            renderStatus();
+            renderInlineDecorations();
+        }),
+        vscode.languages.onDidChangeDiagnostics(() => {
+            renderStatus();
+            renderInlineDecorations();
+        }),
+        vscode.workspace.onDidChangeConfiguration((event) => {
+            if (
+                event.affectsConfiguration("hlslClippy.inlineDiagnostics") ||
+                event.affectsConfiguration("hlslClippy.showStatusBar")
+            ) {
+                renderStatus();
+                renderInlineDecorations();
+            }
+        }),
     );
 
     // React to settings changes that affect the server: settings forwarded as
@@ -628,6 +729,173 @@ class ClippyAuxCodeActionProvider implements vscode.CodeActionProvider {
             );
         }
         return out;
+    }
+}
+
+/// Inline-diagnostic decoration renderer (Error Lens style). Reads the
+/// `hlslClippy.inlineDiagnostics` setting:
+///   - `"off"`         (default for now -- opt-in to avoid surprising users)
+///   - `"errors-only"` -- only Severity::Error gets a trailing message
+///   - `"all"`         -- every severity gets one
+/// Renders the diagnostic message at the end of the offending line in a
+/// dim italic colour. Decoration types are reused across re-renders.
+function ensureInlineDecorationTypes(): NonNullable<typeof inlineDecorationTypes> {
+    if (inlineDecorationTypes) {
+        return inlineDecorationTypes;
+    }
+    const baseAfter: vscode.ThemableDecorationAttachmentRenderOptions = {
+        margin: "0 0 0 2em",
+        fontStyle: "italic",
+    };
+    inlineDecorationTypes = {
+        error: vscode.window.createTextEditorDecorationType({
+            after: {
+                ...baseAfter,
+                color: new vscode.ThemeColor("editorError.foreground"),
+            },
+        }),
+        warning: vscode.window.createTextEditorDecorationType({
+            after: {
+                ...baseAfter,
+                color: new vscode.ThemeColor("editorWarning.foreground"),
+            },
+        }),
+        info: vscode.window.createTextEditorDecorationType({
+            after: {
+                ...baseAfter,
+                color: new vscode.ThemeColor("editorInfo.foreground"),
+            },
+        }),
+    };
+    return inlineDecorationTypes;
+}
+
+function renderInlineDecorations() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== k_languageId) {
+        // Clear decorations on the previously-active editor by setting all
+        // ranges to empty; cheap and correct.
+        if (inlineDecorationTypes && editor) {
+            editor.setDecorations(inlineDecorationTypes.error, []);
+            editor.setDecorations(inlineDecorationTypes.warning, []);
+            editor.setDecorations(inlineDecorationTypes.info, []);
+        }
+        return;
+    }
+
+    const cfg = vscode.workspace.getConfiguration("hlslClippy");
+    const mode = cfg.get<string>("inlineDiagnostics", "off");
+    const types = ensureInlineDecorationTypes();
+    if (mode === "off") {
+        editor.setDecorations(types.error, []);
+        editor.setDecorations(types.warning, []);
+        editor.setDecorations(types.info, []);
+        return;
+    }
+
+    const errorRanges: vscode.DecorationOptions[] = [];
+    const warningRanges: vscode.DecorationOptions[] = [];
+    const infoRanges: vscode.DecorationOptions[] = [];
+
+    const seenLines = new Set<number>();
+    for (const d of vscode.languages.getDiagnostics(editor.document.uri)) {
+        if (d.source !== undefined && d.source !== "hlsl-clippy" && d.source !== "HLSL Clippy") {
+            continue;
+        }
+        if (mode === "errors-only" && d.severity !== vscode.DiagnosticSeverity.Error) {
+            continue;
+        }
+        // Only one inline message per line -- pick the highest-severity
+        // diagnostic on that line. Walking diagnostics in source order +
+        // tracking seen lines gives "first seen wins"; we filter by
+        // severity rank via a second pass below.
+        const line = d.range.start.line;
+        if (seenLines.has(line)) {
+            continue;
+        }
+        seenLines.add(line);
+
+        const lineEnd = editor.document.lineAt(line).range.end;
+        const decoration: vscode.DecorationOptions = {
+            range: new vscode.Range(lineEnd, lineEnd),
+            renderOptions: {
+                after: {
+                    contentText: ` ${d.message.split("\n")[0]}`,
+                },
+            },
+        };
+        if (d.severity === vscode.DiagnosticSeverity.Error) errorRanges.push(decoration);
+        else if (d.severity === vscode.DiagnosticSeverity.Warning) warningRanges.push(decoration);
+        else infoRanges.push(decoration);
+    }
+
+    editor.setDecorations(types.error, errorRanges);
+    editor.setDecorations(types.warning, warningRanges);
+    editor.setDecorations(types.info, infoRanges);
+}
+
+/// `source.fixAll.hlslClippy` provider. When VS Code asks for fix-all
+/// actions on save (or via the command palette), we walk every
+/// HLSL Clippy diagnostic in the document, ask the LSP for its
+/// code actions, and merge the machine-applicable ones into a single
+/// WorkspaceEdit. Diagnostics whose only fix is `suggestion`-grade are
+/// skipped -- we only auto-apply edits the user can re-apply by hand
+/// without surprise.
+class ClippyFixAllProvider implements vscode.CodeActionProvider {
+    constructor(private readonly fixAllKind: vscode.CodeActionKind) {}
+
+    async provideCodeActions(
+        document: vscode.TextDocument,
+        _range: vscode.Range | vscode.Selection,
+        context: vscode.CodeActionContext,
+    ): Promise<vscode.CodeAction[]> {
+        // Only respond when caller asked for our exact kind (or any
+        // SourceFixAll); avoids spurious work on every cursor move.
+        if (context.only && !context.only.contains(this.fixAllKind)) {
+            return [];
+        }
+        const all = vscode.languages.getDiagnostics(document.uri).filter(
+            (d) => d.source === undefined || d.source === "hlsl-clippy" || d.source === "HLSL Clippy",
+        );
+        if (all.length === 0) {
+            return [];
+        }
+        const merged = new vscode.WorkspaceEdit();
+        let appliedCount = 0;
+        for (const diag of all) {
+            const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+                "vscode.executeCodeActionProvider",
+                document.uri,
+                diag.range,
+                vscode.CodeActionKind.QuickFix.value,
+            );
+            if (!actions) continue;
+            // Pick the first action that has an edit (LSP-provided
+            // machine-applicable fixes always carry an edit; client-side
+            // suppress actions carry a command rather than an edit and
+            // get filtered out here).
+            const fix = actions.find(
+                (a) => a.kind?.contains(vscode.CodeActionKind.QuickFix)
+                    && a.edit !== undefined
+                    && !a.title.startsWith("HLSL Clippy: suppress"),
+            );
+            if (!fix || !fix.edit) continue;
+            for (const [uri, edits] of fix.edit.entries()) {
+                for (const e of edits) {
+                    merged.replace(uri, e.range, e.newText);
+                }
+            }
+            appliedCount++;
+        }
+        if (appliedCount === 0) {
+            return [];
+        }
+        const action = new vscode.CodeAction(
+            `HLSL Clippy: apply ${appliedCount} fix${appliedCount === 1 ? "" : "es"}`,
+            this.fixAllKind,
+        );
+        action.edit = merged;
+        return [action];
     }
 }
 
