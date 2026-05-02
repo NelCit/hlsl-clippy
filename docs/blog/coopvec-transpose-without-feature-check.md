@@ -1,5 +1,5 @@
----
-title: "coopvec-transpose-without-feature-check: A cooperative-vector matrix-multiply call whose `transposed` flag is true (`MATRIX_FLAG_TRANSPOSED` set) without a corresponding…"
+﻿---
+title: "coopvec-transpose-without-feature-check"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: cooperative-vector

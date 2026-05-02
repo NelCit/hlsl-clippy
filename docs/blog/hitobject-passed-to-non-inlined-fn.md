@@ -1,5 +1,5 @@
----
-title: "hitobject-passed-to-non-inlined-fn: A `dx::HitObject` value passed as an argument to or returned from a function that…"
+﻿---
+title: "hitobject-passed-to-non-inlined-fn"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: ser
@@ -17,7 +17,7 @@ related-rule: hitobject-passed-to-non-inlined-fn
 
 ## TL;DR
 
-The SER programming model bakes inlining into its hardware contract: the HitObject's per-lane state lives in registers that the RT cores own jointly with the SM, and the runtime only knows how to materialise / dematerialise that state at well-defined boundaries (raygen entry, `Invoke`, `MaybeReorderThread`). When a HitObject crosses a non-inlined call boundary, the calling convention has no recipe for spilling it — the spec marks the operation undefined precisely because no IHV has a defined hardware path for the spill. NVIDIA Ada Lovelace's compiler emits a hard error for the simplest forms; future implementations may either emit garbage or fault.
+The SER programming model bakes inlining into its hardware contract: the HitObject's per-lane state lives in registers that the RT cores own jointly with the SM, and the runtime only knows how to materialise / dematerialise that state at well-defined boundaries (raygen entry, `Invoke`, `MaybeReorderThread`). When a HitObject crosses a non-inlined call boundary, the calling convention has no recipe for spilling it â€” the spec marks the operation undefined precisely because no IHV has a defined hardware path for the spill. NVIDIA Ada Lovelace's compiler emits a hard error for the simplest forms; future implementations may either emit garbage or fault.
 
 ## What the rule fires on
 

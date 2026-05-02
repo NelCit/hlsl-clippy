@@ -1,5 +1,5 @@
----
-title: "oversized-cbuffer: A `cbuffer` or `ConstantBuffer<T>` whose total byte size, as reported by Slang's reflection API,…"
+﻿---
+title: "oversized-cbuffer"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -21,7 +21,7 @@ Every cbuffer bound to a shader occupies space in the GPU's constant-data path. 
 
 ## What the rule fires on
 
-A `cbuffer` or `ConstantBuffer<T>` whose total byte size, as reported by Slang's reflection API, exceeds a configurable threshold (default: 4096 bytes, i.e., 4 KB). The rule fires on the declaration itself, naming the actual size and the threshold. The canonical trigger in the fixture is `cbuffer Huge` with a `float4[256]` member (4096 bytes) plus a `float4 Tail` (16 bytes), totalling 4112 bytes (see `tests/fixtures/phase3/bindings.hlsl`, lines 27–31).
+A `cbuffer` or `ConstantBuffer<T>` whose total byte size, as reported by Slang's reflection API, exceeds a configurable threshold (default: 4096 bytes, i.e., 4 KB). The rule fires on the declaration itself, naming the actual size and the threshold. The canonical trigger in the fixture is `cbuffer Huge` with a `float4[256]` member (4096 bytes) plus a `float4 Tail` (16 bytes), totalling 4112 bytes (see `tests/fixtures/phase3/bindings.hlsl`, lines 27â€“31).
 
 See the [What it detects](../rules/oversized-cbuffer.md#what-it-detects) section of
 the rule page for the full pattern definition.

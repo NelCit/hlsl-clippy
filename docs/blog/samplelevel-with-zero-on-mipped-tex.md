@@ -1,5 +1,5 @@
----
-title: "samplelevel-with-zero-on-mipped-tex: Calls to `SampleLevel(sampler, uv, 0)` — or `SampleLevel(sampler, uv, 0.0)` — where the third…"
+﻿---
+title: "samplelevel-with-zero-on-mipped-tex"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: texture
@@ -21,7 +21,7 @@ Mip chains exist for two reasons: reducing aliasing in minification, and enablin
 
 ## What the rule fires on
 
-Calls to `SampleLevel(sampler, uv, 0)` — or `SampleLevel(sampler, uv, 0.0)` — where the third argument (the LOD parameter) is the literal zero, and where reflection data shows that the bound resource was declared with mip levels (a full mip chain or a partial chain with more than one level). The rule fires when a `Texture2D`, `TextureCube`, `Texture2DArray`, or similar mipped resource type is paired with an explicit mip-0 lock that is not guarded by a compile-time constant or a `[mips(1)]` resource annotation. It does not fire on resources explicitly declared as single-mip (`Texture2D<float4> T : register(t0); // mips 1`), on `Buffer<>` or `RWTexture2D<>` objects, or when the lod argument is a non-zero expression.
+Calls to `SampleLevel(sampler, uv, 0)` â€” or `SampleLevel(sampler, uv, 0.0)` â€” where the third argument (the LOD parameter) is the literal zero, and where reflection data shows that the bound resource was declared with mip levels (a full mip chain or a partial chain with more than one level). The rule fires when a `Texture2D`, `TextureCube`, `Texture2DArray`, or similar mipped resource type is paired with an explicit mip-0 lock that is not guarded by a compile-time constant or a `[mips(1)]` resource annotation. It does not fire on resources explicitly declared as single-mip (`Texture2D<float4> T : register(t0); // mips 1`), on `Buffer<>` or `RWTexture2D<>` objects, or when the lod argument is a non-zero expression.
 
 See the [What it detects](../rules/samplelevel-with-zero-on-mipped-tex.md#what-it-detects) section of
 the rule page for the full pattern definition.

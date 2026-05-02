@@ -1,5 +1,5 @@
----
-title: "dispatchmesh-not-called: An amplification shader entry point (`[shader("amplification")]` or any function with the amplification stage tag…"
+﻿---
+title: "dispatchmesh-not-called"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: mesh

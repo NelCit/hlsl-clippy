@@ -1,5 +1,5 @@
----
-title: "startvertexlocation-not-vs-input: A use of the SM 6.8 `SV_StartVertexLocation` (or the analogous `SV_StartInstanceLocation`) system-value semantic anywhere…"
+﻿---
+title: "startvertexlocation-not-vs-input"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: wave-helper-lane
@@ -17,7 +17,7 @@ related-rule: startvertexlocation-not-vs-input
 
 ## TL;DR
 
-`SV_StartVertexLocation` is the per-draw constant the rasterizer broadcasts to all VS invocations: it is the `BaseVertexLocation` argument of `DrawIndexed*`, materialised as a per-vertex input. On NVIDIA Ada Lovelace and AMD RDNA 2/3, the value is delivered through the shader-input pipeline as a uniform-across-the-wave value; Intel Xe-HPG implements the same path. The hardware delivers it only at VS-input — the value has no defined meaning at any later stage because the rasterizer does not propagate it through the inter-stage parameter cache.
+`SV_StartVertexLocation` is the per-draw constant the rasterizer broadcasts to all VS invocations: it is the `BaseVertexLocation` argument of `DrawIndexed*`, materialised as a per-vertex input. On NVIDIA Ada Lovelace and AMD RDNA 2/3, the value is delivered through the shader-input pipeline as a uniform-across-the-wave value; Intel Xe-HPG implements the same path. The hardware delivers it only at VS-input â€” the value has no defined meaning at any later stage because the rasterizer does not propagate it through the inter-stage parameter cache.
 
 ## What the rule fires on
 

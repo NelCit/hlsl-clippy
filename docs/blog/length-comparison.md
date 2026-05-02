@@ -1,5 +1,5 @@
----
-title: "length-comparison: A relational comparison of the form `length(v) < r`, `length(v) > r`, `length(v) <=…"
+﻿---
+title: "length-comparison"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math

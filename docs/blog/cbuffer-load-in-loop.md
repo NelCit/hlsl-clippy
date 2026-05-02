@@ -1,5 +1,5 @@
----
-title: "cbuffer-load-in-loop: Reads from a `cbuffer` (or `ConstantBuffer<T>`) field — or any arithmetic expression whose operands…"
+﻿---
+title: "cbuffer-load-in-loop"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow
@@ -17,11 +17,11 @@ related-rule: cbuffer-load-in-loop
 
 ## TL;DR
 
-Cbuffer data resides in a dedicated constant buffer cache — a small, high-bandwidth, read-only cache separate from L1/L2 texture and UAV caches. On AMD RDNA and RDNA 2/3, the constant cache (also called the scalar cache or K-cache) is accessed via the scalar register file (SGPRs). The hardware is architecturally designed for the case where every lane in a wave reads the same cbuffer value simultaneously, which it does for any truly uniform constant: one scalar load fills an SGPR, and that SGPR value is broadcast to all 32 or 64 lanes without consuming per-lane VGPR space. In practice, the cbuffer value is loaded into an SGPR once per wave (or per draw call in the driver's implementation) and cached there — no repeated cache requests occur.
+Cbuffer data resides in a dedicated constant buffer cache â€” a small, high-bandwidth, read-only cache separate from L1/L2 texture and UAV caches. On AMD RDNA and RDNA 2/3, the constant cache (also called the scalar cache or K-cache) is accessed via the scalar register file (SGPRs). The hardware is architecturally designed for the case where every lane in a wave reads the same cbuffer value simultaneously, which it does for any truly uniform constant: one scalar load fills an SGPR, and that SGPR value is broadcast to all 32 or 64 lanes without consuming per-lane VGPR space. In practice, the cbuffer value is loaded into an SGPR once per wave (or per draw call in the driver's implementation) and cached there â€” no repeated cache requests occur.
 
 ## What the rule fires on
 
-Reads from a `cbuffer` (or `ConstantBuffer<T>`) field — or any arithmetic expression whose operands are exclusively cbuffer fields and numeric literals — inside a loop body, when the expression is loop-invariant: it does not depend on the loop induction variable or any value defined inside the loop. The rule fires on repeated use of the same cbuffer field or constant-folded cbuffer expression within a loop (e.g., `Sigma * Sigma`, `NearZ`, `FarZ - NearZ`) where the field itself is not indexed by the loop counter. It does not fire when the cbuffer read is through a loop-counter-dependent index (e.g., `LightArray[i].position`), or when the field's value changes inside the loop body (which cannot happen with cbuffer reads, but may happen with local variable aliasing).
+Reads from a `cbuffer` (or `ConstantBuffer<T>`) field â€” or any arithmetic expression whose operands are exclusively cbuffer fields and numeric literals â€” inside a loop body, when the expression is loop-invariant: it does not depend on the loop induction variable or any value defined inside the loop. The rule fires on repeated use of the same cbuffer field or constant-folded cbuffer expression within a loop (e.g., `Sigma * Sigma`, `NearZ`, `FarZ - NearZ`) where the field itself is not indexed by the loop counter. It does not fire when the cbuffer read is through a loop-counter-dependent index (e.g., `LightArray[i].position`), or when the field's value changes inside the loop body (which cannot happen with cbuffer reads, but may happen with local variable aliasing).
 
 See the [What it detects](../rules/cbuffer-load-in-loop.md#what-it-detects) section of
 the rule page for the full pattern definition.

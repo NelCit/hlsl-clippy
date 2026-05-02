@@ -1,5 +1,5 @@
----
-title: "oriented-bbox-not-set-on-rdna4: A defensive informational rule. Fires once per source that contains any RT call (`TraceRay`,…"
+﻿---
+title: "oriented-bbox-not-set-on-rdna4"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: rdna4

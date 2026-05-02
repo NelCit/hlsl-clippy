@@ -1,5 +1,5 @@
----
-title: "quadany-replaceable-with-derivative-uniform-branch: A `QuadAny(cond)` or `QuadAll(cond)` guard wrapping an `if`-branch whose body is derivative-uniform — every…"
+﻿---
+title: "quadany-replaceable-with-derivative-uniform-branch"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: wave-helper-lane
@@ -17,11 +17,11 @@ related-rule: quadany-replaceable-with-derivative-uniform-branch
 
 ## TL;DR
 
-`QuadAny` (SM 6.7) is the canonical guard for keeping helper-lane participation alive across a per-lane branch in PS: when any lane in the quad wants to enter the branch, all four enter, and the helper lanes provide the derivative neighbours that texture sampling and `ddx`/`ddy` require. The cost is the wave-shuffle that `QuadAny` issues — typically 2-4 instructions on NVIDIA Turing/Ada Lovelace, AMD RDNA 2/3, and Intel Xe-HPG.
+`QuadAny` (SM 6.7) is the canonical guard for keeping helper-lane participation alive across a per-lane branch in PS: when any lane in the quad wants to enter the branch, all four enter, and the helper lanes provide the derivative neighbours that texture sampling and `ddx`/`ddy` require. The cost is the wave-shuffle that `QuadAny` issues â€” typically 2-4 instructions on NVIDIA Turing/Ada Lovelace, AMD RDNA 2/3, and Intel Xe-HPG.
 
 ## What the rule fires on
 
-A `QuadAny(cond)` or `QuadAll(cond)` guard wrapping an `if`-branch whose body is derivative-uniform — every operation inside the branch either uses no derivatives or operates on values that are constant across the quad. In that case, the surrounding `if (QuadAny(cond))` adds no quad-correctness benefit and the simpler `if (cond)` is sufficient. The Phase 4 branch-shape detection identifies the wrapper pattern; the data-flow analysis verifies that the body has no derivative-bearing operations on quad-divergent values.
+A `QuadAny(cond)` or `QuadAll(cond)` guard wrapping an `if`-branch whose body is derivative-uniform â€” every operation inside the branch either uses no derivatives or operates on values that are constant across the quad. In that case, the surrounding `if (QuadAny(cond))` adds no quad-correctness benefit and the simpler `if (cond)` is sufficient. The Phase 4 branch-shape detection identifies the wrapper pattern; the data-flow analysis verifies that the body has no derivative-bearing operations on quad-divergent values.
 
 See the [What it detects](../rules/quadany-replaceable-with-derivative-uniform-branch.md#what-it-detects) section of
 the rule page for the full pattern definition.

@@ -1,5 +1,5 @@
----
-title: "fromrayquery-invoke-without-shader-table: A `dx::HitObject::FromRayQuery(...)` value passed to `Invoke(...)` without an intervening `SetShaderTableIndex(...)` call on the same…"
+﻿---
+title: "fromrayquery-invoke-without-shader-table"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: ser
@@ -17,11 +17,11 @@ related-rule: fromrayquery-invoke-without-shader-table
 
 ## TL;DR
 
-`HitObject::FromRayQuery` constructs a HitObject from the result of an inline `RayQuery::TraceRayInline + Proceed` traversal. The inline traversal does not consult a shader binding table — that is the whole point of the inline path — so the resulting HitObject has no shader-table index field set. When the application then wants to invoke a hit / miss shader through the SER path, it needs to tell the runtime which shader to dispatch; that's `SetShaderTableIndex`.
+`HitObject::FromRayQuery` constructs a HitObject from the result of an inline `RayQuery::TraceRayInline + Proceed` traversal. The inline traversal does not consult a shader binding table â€” that is the whole point of the inline path â€” so the resulting HitObject has no shader-table index field set. When the application then wants to invoke a hit / miss shader through the SER path, it needs to tell the runtime which shader to dispatch; that's `SetShaderTableIndex`.
 
 ## What the rule fires on
 
-A `dx::HitObject::FromRayQuery(...)` value passed to `Invoke(...)` without an intervening `SetShaderTableIndex(...)` call on the same HitObject on every CFG path between construction and invocation. The SER spec requires `FromRayQuery`-constructed HitObjects to carry an explicit shader-table index before they can be invoked — the inline `RayQuery` does not record one because it has no concept of a shader table at traversal time. The Phase 4 definite-assignment analysis walks the CFG between construction and invocation.
+A `dx::HitObject::FromRayQuery(...)` value passed to `Invoke(...)` without an intervening `SetShaderTableIndex(...)` call on the same HitObject on every CFG path between construction and invocation. The SER spec requires `FromRayQuery`-constructed HitObjects to carry an explicit shader-table index before they can be invoked â€” the inline `RayQuery` does not record one because it has no concept of a shader table at traversal time. The Phase 4 definite-assignment analysis walks the CFG between construction and invocation.
 
 See the [What it detects](../rules/fromrayquery-invoke-without-shader-table.md#what-it-detects) section of
 the rule page for the full pattern definition.

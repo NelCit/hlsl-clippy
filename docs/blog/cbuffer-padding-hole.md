@@ -1,5 +1,5 @@
----
-title: "cbuffer-padding-hole: A `cbuffer` or `ConstantBuffer<T>` declaration whose member layout contains one or more implicit padding…"
+﻿---
+title: "cbuffer-padding-hole"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -17,11 +17,11 @@ related-rule: cbuffer-padding-hole
 
 ## TL;DR
 
-cbuffer reads on all current GPU hardware — AMD RDNA/RDNA 2/RDNA 3 and NVIDIA Turing/Ada Lovelace — travel through the scalar/constant-data path. The hardware delivers constant data in 16-byte register slots (four `float` registers, one `float4`). A single cbuffer fetch retrieves one or more complete 128-bit slots; there is no mechanism to fetch a sub-register fraction. When padding holes exist, each 16-byte slot that contains a hole contains less usable data than it could: the padding bytes are transmitted across the constant-bus, occupy space in the L1 constant cache, and are then discarded by the shader.
+cbuffer reads on all current GPU hardware â€” AMD RDNA/RDNA 2/RDNA 3 and NVIDIA Turing/Ada Lovelace â€” travel through the scalar/constant-data path. The hardware delivers constant data in 16-byte register slots (four `float` registers, one `float4`). A single cbuffer fetch retrieves one or more complete 128-bit slots; there is no mechanism to fetch a sub-register fraction. When padding holes exist, each 16-byte slot that contains a hole contains less usable data than it could: the padding bytes are transmitted across the constant-bus, occupy space in the L1 constant cache, and are then discarded by the shader.
 
 ## What the rule fires on
 
-A `cbuffer` or `ConstantBuffer<T>` declaration whose member layout contains one or more implicit padding holes: gaps of unused bytes inserted by the HLSL packing rules (HLSL pack rule: each member is aligned to the smaller of its own size or 16 bytes, and no member may straddle a 16-byte boundary). The rule uses Slang's reflection API to retrieve the byte offset of every member, computes the gaps between consecutive members, and fires when any gap is non-zero. Common examples: `float Time` (4 bytes) followed by `float3 LightDir` (12 bytes, 16-byte aligned) leaves a 12-byte hole at offsets 4–15 (see `tests/fixtures/phase3/bindings.hlsl`, line 3–10).
+A `cbuffer` or `ConstantBuffer<T>` declaration whose member layout contains one or more implicit padding holes: gaps of unused bytes inserted by the HLSL packing rules (HLSL pack rule: each member is aligned to the smaller of its own size or 16 bytes, and no member may straddle a 16-byte boundary). The rule uses Slang's reflection API to retrieve the byte offset of every member, computes the gaps between consecutive members, and fires when any gap is non-zero. Common examples: `float Time` (4 bytes) followed by `float3 LightDir` (12 bytes, 16-byte aligned) leaves a 12-byte hole at offsets 4â€“15 (see `tests/fixtures/phase3/bindings.hlsl`, line 3â€“10).
 
 See the [What it detects](../rules/cbuffer-padding-hole.md#what-it-detects) section of
 the rule page for the full pattern definition.

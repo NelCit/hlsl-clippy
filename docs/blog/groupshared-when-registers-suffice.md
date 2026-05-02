@@ -1,5 +1,5 @@
----
-title: "groupshared-when-registers-suffice: A `groupshared` array used as per-thread scratch — written by thread `tid` and read…"
+﻿---
+title: "groupshared-when-registers-suffice"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup
@@ -17,11 +17,11 @@ related-rule: groupshared-when-registers-suffice
 
 ## TL;DR
 
-LDS / shared-memory is a precious resource on every modern GPU. AMD RDNA 2/3 has 64 KB of LDS per CU shared across all in-flight workgroups — a kernel that allocates 8 KB of LDS per workgroup limits in-flight workgroups to 8 per CU, which directly caps the kernel's wave occupancy and its ability to hide memory latency. NVIDIA Turing/Ada Lovelace has 100 KB of shared memory per SM with similar trade-offs. Intel Xe-HPG has 128 KB of SLM per Xe core. The marginal occupancy cliff is steep — going from 8 KB to 4 KB per workgroup typically doubles in-flight workgroups, doubles latency hiding, and can deliver 1.5-3x perf on memory-bound kernels.
+LDS / shared-memory is a precious resource on every modern GPU. AMD RDNA 2/3 has 64 KB of LDS per CU shared across all in-flight workgroups â€” a kernel that allocates 8 KB of LDS per workgroup limits in-flight workgroups to 8 per CU, which directly caps the kernel's wave occupancy and its ability to hide memory latency. NVIDIA Turing/Ada Lovelace has 100 KB of shared memory per SM with similar trade-offs. Intel Xe-HPG has 128 KB of SLM per Xe core. The marginal occupancy cliff is steep â€” going from 8 KB to 4 KB per workgroup typically doubles in-flight workgroups, doubles latency hiding, and can deliver 1.5-3x perf on memory-bound kernels.
 
 ## What the rule fires on
 
-A `groupshared` array used as per-thread scratch — written by thread `tid` and read only by thread `tid` (no cross-thread access) — whose size per thread is small enough that the compiler could keep it in registers. Default threshold: 8 elements per thread. The Phase 7 IR-level register-pressure analysis verifies that promoting the array to private (per-thread) registers does not push the kernel over the per-CU/SM register budget.
+A `groupshared` array used as per-thread scratch â€” written by thread `tid` and read only by thread `tid` (no cross-thread access) â€” whose size per thread is small enough that the compiler could keep it in registers. Default threshold: 8 elements per thread. The Phase 7 IR-level register-pressure analysis verifies that promoting the array to private (per-thread) registers does not push the kernel over the per-CU/SM register budget.
 
 See the [What it detects](../rules/groupshared-when-registers-suffice.md#what-it-detects) section of
 the rule page for the full pattern definition.

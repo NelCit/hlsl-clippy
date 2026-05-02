@@ -8,6 +8,36 @@ tags: [slang-language, parser, tree-sitter, v1.4, v1.5, language-compatibility, 
 
 # Slang sub-phase B — tree-sitter-slang grammar integration for `.slang` AST coverage
 
+## Addendum — 2026-05-02 (post-implementation)
+
+Two notes recorded after v1.4.0 shipped:
+
+1. **Upstream pivot (B.1).** This ADR's §"Decision Outcome" named
+   `Theta-Dev/tree-sitter-slang` as the upstream. That repo no
+   longer exists (404). v1.4.0 vendored
+   `tree-sitter-grammars/tree-sitter-slang` instead — the canonical
+   community port under the same `tree-sitter-grammars` org that
+   maintains `tree-sitter-hlsl`. It is strictly the better choice:
+   the grammar literally extends tree-sitter-hlsl by reference
+   (`module.exports = grammar(HLSL, {...})`), so HLSL node-kinds
+   are preserved by construction. The empirical pass-through
+   measurement was 99% (98 of 99 rules fire on both grammars) vs
+   the §3 spot-check projection of 92%. Sub-phase B.5 (per-rule
+   node-kind translation layer) is **not needed** at v1.4.
+
+2. **Vendor pattern (Option A) shipped instead of fork (Option B).**
+   The implementing agent had no GitHub-auth scope to fork. v1.4.0
+   ships the upstream pinned at SHA
+   `1dbcc4abc7b3cdd663eb03d93031167d6ed19f56` via
+   `cmake/TreeSitterSlangVersion.cmake`. The fork to
+   `nelcit/tree-sitter-slang` is queued as a maintainer-side
+   v1.4.x follow-up — all the ABI and patch infrastructure is
+   already in place; the fork is a one-time GitHub-side mechanical
+   step.
+
+The ADR's recommended Option B remains the preferred end-state;
+v1.4.0 ships Option A's pattern as a stepping stone.
+
 ## Strategic summary (TL;DR for maintainers)
 
 Twenty-line digest. Sub-phase A (ADR 0020, v1.3.0) shipped `.slang`

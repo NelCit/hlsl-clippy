@@ -1,5 +1,5 @@
----
-title: "interlocked-float-bit-cast-trick: The hand-rolled idiom for atomic min/max on floating-point data: a sequence of `asuint(x)`, conditional…"
+﻿---
+title: "interlocked-float-bit-cast-trick"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup
@@ -17,7 +17,7 @@ related-rule: interlocked-float-bit-cast-trick
 
 ## TL;DR
 
-Atomic min/max on floats is needed in several common workloads: depth-of-field min-Z buffers, soft-shadow blocker depth reductions, voxel-cone tracing min-distance writes, and TAA history-clip range computations. Before SM 6.6, HLSL had no atomic float intrinsic, so shaders cast the float to `uint`, exploited the property that IEEE 754 single-precision floats compare correctly as signed magnitudes when sign-flipped, did the integer atomic, then cast back. The trick is correct, but it expands to roughly 8-12 instructions per atomic call site (sign extraction, conditional XOR, integer atomic, inverse sign restoration, `asfloat`), and requires the shader author to remember the sign convention for their value range — a frequent source of subtle off-by-sign bugs in negative-depth or negative-LOD code paths.
+Atomic min/max on floats is needed in several common workloads: depth-of-field min-Z buffers, soft-shadow blocker depth reductions, voxel-cone tracing min-distance writes, and TAA history-clip range computations. Before SM 6.6, HLSL had no atomic float intrinsic, so shaders cast the float to `uint`, exploited the property that IEEE 754 single-precision floats compare correctly as signed magnitudes when sign-flipped, did the integer atomic, then cast back. The trick is correct, but it expands to roughly 8-12 instructions per atomic call site (sign extraction, conditional XOR, integer atomic, inverse sign restoration, `asfloat`), and requires the shader author to remember the sign convention for their value range â€” a frequent source of subtle off-by-sign bugs in negative-depth or negative-LOD code paths.
 
 ## What the rule fires on
 

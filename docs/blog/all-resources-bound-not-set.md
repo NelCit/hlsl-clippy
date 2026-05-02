@@ -1,5 +1,5 @@
----
-title: "all-resources-bound-not-set: A project-level configuration where shaders are compiled without the `-all-resources-bound` flag (or the equivalent…"
+﻿---
+title: "all-resources-bound-not-set"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -21,7 +21,7 @@ The `-all-resources-bound` compile flag communicates to the driver that the appl
 
 ## What the rule fires on
 
-A project-level configuration where shaders are compiled without the `-all-resources-bound` flag (or the equivalent `D3DCOMPILE_ALL_RESOURCES_BOUND` flag in legacy compilation pipelines) despite the project's root signature declaring a fully populated descriptor table — one where all declared descriptor ranges are unconditionally bound for every draw or dispatch in the pipeline. The rule operates at project/pipeline level rather than per-shader: it uses Slang's compilation flag introspection to check whether `AllResourcesBound` is set, and cross-references this against the shader's resource declarations to determine whether all declared resources are statically reachable and would be bound in a complete root signature. It fires as a project-level suggestion when the flag is absent and the shader's resource layout is consistent with full population.
+A project-level configuration where shaders are compiled without the `-all-resources-bound` flag (or the equivalent `D3DCOMPILE_ALL_RESOURCES_BOUND` flag in legacy compilation pipelines) despite the project's root signature declaring a fully populated descriptor table â€” one where all declared descriptor ranges are unconditionally bound for every draw or dispatch in the pipeline. The rule operates at project/pipeline level rather than per-shader: it uses Slang's compilation flag introspection to check whether `AllResourcesBound` is set, and cross-references this against the shader's resource declarations to determine whether all declared resources are statically reachable and would be bound in a complete root signature. It fires as a project-level suggestion when the flag is absent and the shader's resource layout is consistent with full population.
 
 See the [What it detects](../rules/all-resources-bound-not-set.md#what-it-detects) section of
 the rule page for the full pattern definition.

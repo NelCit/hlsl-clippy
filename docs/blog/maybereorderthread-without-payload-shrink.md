@@ -1,5 +1,5 @@
----
-title: "maybereorderthread-without-payload-shrink: A `dx::MaybeReorderThread(...)` call whose surrounding payload struct contains live state that is *not read*…"
+﻿---
+title: "maybereorderthread-without-payload-shrink"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: ser

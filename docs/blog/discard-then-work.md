@@ -1,5 +1,5 @@
----
-title: "discard-then-work: Significant computation — texture samples, loops with multiple instructions, arithmetic chains longer than a…"
+﻿---
+title: "discard-then-work"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow
@@ -21,7 +21,7 @@ Pixel shaders execute in 2x2 pixel quads. When one or more pixels in a quad call
 
 ## What the rule fires on
 
-Significant computation — texture samples, loops with multiple instructions, arithmetic chains longer than a configured threshold — that appears on a code path reachable only after a `discard` statement (or `clip(v)` with a potentially-negative argument) whose guard condition is non-uniform (per-pixel varying). The rule fires when the `discard` is inside an `if` whose predicate includes interpolated vertex attributes, texture reads, or other per-pixel varying data, and when the code following the `discard`-containing block is non-trivial. It does not fire when the `discard` is unreachable at runtime (e.g., guarded by a constant condition), when the subsequent work is a single arithmetic expression, or when `[earlydepthstencil]` is present (which changes the discard semantics in a way that makes the subsequent code less hazardous for helpers).
+Significant computation â€” texture samples, loops with multiple instructions, arithmetic chains longer than a configured threshold â€” that appears on a code path reachable only after a `discard` statement (or `clip(v)` with a potentially-negative argument) whose guard condition is non-uniform (per-pixel varying). The rule fires when the `discard` is inside an `if` whose predicate includes interpolated vertex attributes, texture reads, or other per-pixel varying data, and when the code following the `discard`-containing block is non-trivial. It does not fire when the `discard` is unreachable at runtime (e.g., guarded by a constant condition), when the subsequent work is a single arithmetic expression, or when `[earlydepthstencil]` is present (which changes the discard semantics in a way that makes the subsequent code less hazardous for helpers).
 
 See the [What it detects](../rules/discard-then-work.md#what-it-detects) section of
 the rule page for the full pattern definition.

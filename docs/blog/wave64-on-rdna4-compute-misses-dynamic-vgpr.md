@@ -1,5 +1,5 @@
----
-title: "wave64-on-rdna4-compute-misses-dynamic-vgpr: A compute entry point declared `[WaveSize(64)]` (or `[WaveSize(64, 64)]`) under the `[experimental.target = rdna4]`…"
+﻿---
+title: "wave64-on-rdna4-compute-misses-dynamic-vgpr"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: rdna4

@@ -1,5 +1,5 @@
----
-title: "vrs-rate-conflict-with-target: A pixel shader that emits `SV_ShadingRate` when the source also declares a per-primitive coarse-rate…"
+﻿---
+title: "vrs-rate-conflict-with-target"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: vrs

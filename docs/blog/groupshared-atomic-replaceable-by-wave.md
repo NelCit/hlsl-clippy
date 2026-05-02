@@ -1,5 +1,5 @@
----
-title: "groupshared-atomic-replaceable-by-wave: `InterlockedAdd(gs[k], expr)`, `InterlockedOr(gs[k], mask)`, `InterlockedAnd(gs[k], mask)`, `InterlockedXor(gs[k], mask)`, `InterlockedMin(gs[k], val)`, or `InterlockedMax(gs[k], val)` against…"
+﻿---
+title: "groupshared-atomic-replaceable-by-wave"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup
@@ -21,7 +21,7 @@ LDS atomics on every modern GPU serialise on the cell address. When a wave of 32
 
 ## What the rule fires on
 
-`InterlockedAdd(gs[k], expr)`, `InterlockedOr(gs[k], mask)`, `InterlockedAnd(gs[k], mask)`, `InterlockedXor(gs[k], mask)`, `InterlockedMin(gs[k], val)`, or `InterlockedMax(gs[k], val)` against a *single* groupshared cell — typically a counter at index 0 — where every active lane in the wave contributes a value derivable via the corresponding `WaveActive*` reduction. The rule fires when one wave-reduce + a single representative-lane atomic would replace 32 (RDNA wave32 / NVIDIA / Xe-HPG) or 64 (RDNA wave64) per-lane LDS atomics with one. Distinct from [interlocked-bin-without-wave-prereduce](interlocked-bin-without-wave-prereduce.md), which targets a small fixed set of bins; this rule targets accumulation into one cell.
+`InterlockedAdd(gs[k], expr)`, `InterlockedOr(gs[k], mask)`, `InterlockedAnd(gs[k], mask)`, `InterlockedXor(gs[k], mask)`, `InterlockedMin(gs[k], val)`, or `InterlockedMax(gs[k], val)` against a *single* groupshared cell â€” typically a counter at index 0 â€” where every active lane in the wave contributes a value derivable via the corresponding `WaveActive*` reduction. The rule fires when one wave-reduce + a single representative-lane atomic would replace 32 (RDNA wave32 / NVIDIA / Xe-HPG) or 64 (RDNA wave64) per-lane LDS atomics with one. Distinct from [interlocked-bin-without-wave-prereduce](interlocked-bin-without-wave-prereduce.md), which targets a small fixed set of bins; this rule targets accumulation into one cell.
 
 See the [What it detects](../rules/groupshared-atomic-replaceable-by-wave.md#what-it-detects) section of
 the rule page for the full pattern definition.

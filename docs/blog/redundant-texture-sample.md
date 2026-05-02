@@ -1,5 +1,5 @@
----
-title: "redundant-texture-sample: Two or more calls to the same texture's `Sample`, `SampleLevel`, or `SampleGrad` method with…"
+﻿---
+title: "redundant-texture-sample"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: memory
@@ -21,7 +21,7 @@ A texture sample is not free: the hardware must compute the MIP-map level, look 
 
 ## What the rule fires on
 
-Two or more calls to the same texture's `Sample`, `SampleLevel`, or `SampleGrad` method with identical arguments — the same texture object, the same sampler, and the same UV coordinates — appearing in the same basic block with no intervening write to the texture or to the UV value. The compiler's built-in common-subexpression elimination (CSE) pass normally handles this, but it may fail when the duplicate calls are separated by a function call boundary, when the texture object is passed as a parameter (obscuring aliasing information), or when the compiler's alias analysis conservatively assumes the function may write the texture. The rule fires on the second (and subsequent) sample of any (texture, sampler, UV) triple that has already been sampled in the same basic block.
+Two or more calls to the same texture's `Sample`, `SampleLevel`, or `SampleGrad` method with identical arguments â€” the same texture object, the same sampler, and the same UV coordinates â€” appearing in the same basic block with no intervening write to the texture or to the UV value. The compiler's built-in common-subexpression elimination (CSE) pass normally handles this, but it may fail when the duplicate calls are separated by a function call boundary, when the texture object is passed as a parameter (obscuring aliasing information), or when the compiler's alias analysis conservatively assumes the function may write the texture. The rule fires on the second (and subsequent) sample of any (texture, sampler, UV) triple that has already been sampled in the same basic block.
 
 See the [What it detects](../rules/redundant-texture-sample.md#what-it-detects) section of
 the rule page for the full pattern definition.

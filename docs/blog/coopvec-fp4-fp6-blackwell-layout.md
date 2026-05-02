@@ -1,5 +1,5 @@
----
-title: "coopvec-fp4-fp6-blackwell-layout: A matrix matmul (`MatrixMul`, `MatrixVectorMul`, `OuterProductAccumulate`) with FP4 / FP6 element type (`COMPONENT_TYPE_FLOAT_E2M1`, `COMPONENT_TYPE_FLOAT_E3M2`,…"
+﻿---
+title: "coopvec-fp4-fp6-blackwell-layout"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: blackwell

@@ -1,5 +1,5 @@
----
-title: "coherence-hint-redundant-bits: A `dx::MaybeReorderThread(hit, coherenceHint, hintBits)` call whose `hintBits` argument is larger than necessary to express…"
+﻿---
+title: "coherence-hint-redundant-bits"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: ser
@@ -17,7 +17,7 @@ related-rule: coherence-hint-redundant-bits
 
 ## TL;DR
 
-`MaybeReorderThread`'s coherence hint is the developer-supplied bucketing key the runtime uses to coalesce divergent lanes. NVIDIA Ada Lovelace's SER scheduler uses up to 16 bits of hint by default; AMD RDNA 4's SER implementation (when shipped) and the Vulkan `VK_EXT_ray_tracing_invocation_reorder` extension expose the same surface. The driver applies the hint's `hintBits` mask to the `coherenceHint` value and uses the masked bits to bucket lanes — fewer bits means a coarser bucketing and a potentially less effective reorder.
+`MaybeReorderThread`'s coherence hint is the developer-supplied bucketing key the runtime uses to coalesce divergent lanes. NVIDIA Ada Lovelace's SER scheduler uses up to 16 bits of hint by default; AMD RDNA 4's SER implementation (when shipped) and the Vulkan `VK_EXT_ray_tracing_invocation_reorder` extension expose the same surface. The driver applies the hint's `hintBits` mask to the `coherenceHint` value and uses the masked bits to bucket lanes â€” fewer bits means a coarser bucketing and a potentially less effective reorder.
 
 ## What the rule fires on
 

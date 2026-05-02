@@ -1,5 +1,5 @@
----
-title: "comparison-with-nan-literal: Any comparison (`==`, `!=`, `<`, `<=`, `>`, `>=`) whose left or right operand is…"
+﻿---
+title: "comparison-with-nan-literal"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: misc
@@ -17,7 +17,7 @@ related-rule: comparison-with-nan-literal
 
 ## TL;DR
 
-IEEE 754 mandates that every ordered comparison involving a NaN operand returns `false`, and every unordered comparison returns `true`. This means `x < (0.0 / 0.0)` is unconditionally `false` for all finite, infinite, and NaN values of `x` — including when `x` is itself NaN. The comparison is a constant, not a runtime test.
+IEEE 754 mandates that every ordered comparison involving a NaN operand returns `false`, and every unordered comparison returns `true`. This means `x < (0.0 / 0.0)` is unconditionally `false` for all finite, infinite, and NaN values of `x` â€” including when `x` is itself NaN. The comparison is a constant, not a runtime test.
 
 ## What the rule fires on
 

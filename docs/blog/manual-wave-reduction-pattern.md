@@ -1,5 +1,5 @@
----
-title: "manual-wave-reduction-pattern: Hand-rolled reductions that reproduce the semantics of `WaveActiveSum`, `WaveActiveProduct`, `WaveActiveMin`, `WaveActiveMax`, `WaveActiveBitOr`, `WaveActiveBitAnd`, `WaveActiveBitXor`,…"
+﻿---
+title: "manual-wave-reduction-pattern"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow
@@ -17,7 +17,7 @@ related-rule: manual-wave-reduction-pattern
 
 ## TL;DR
 
-Every modern GPU implements wave-level reductions as a primitive on dedicated cross-lane hardware: AMD RDNA 2/3 uses DPP (Data-Parallel Primitives) and SDWA paths through the SIMD unit, completing a 32-lane reduction in 5 cycles (log₂ 32) on RDNA 3; NVIDIA Ada Lovelace exposes `__shfl_xor_sync` / shfl-tree wired into the warp shuffle network, similarly 5 cycles for a 32-lane warp; Intel Xe-HPG provides equivalent subgroup-reduce intrinsics through the vector ALU's lane-crossing path. The HLSL `WaveActive*` family compiles to those primitives directly. A hand-rolled equivalent — whether it goes through LDS atomics, a tree-reduction with barriers, or an explicit `WaveReadLaneAt` ladder — replaces those 5 dedicated cycles with 32-64 ALU operations plus LDS / barrier traffic.
+Every modern GPU implements wave-level reductions as a primitive on dedicated cross-lane hardware: AMD RDNA 2/3 uses DPP (Data-Parallel Primitives) and SDWA paths through the SIMD unit, completing a 32-lane reduction in 5 cycles (logâ‚‚ 32) on RDNA 3; NVIDIA Ada Lovelace exposes `__shfl_xor_sync` / shfl-tree wired into the warp shuffle network, similarly 5 cycles for a 32-lane warp; Intel Xe-HPG provides equivalent subgroup-reduce intrinsics through the vector ALU's lane-crossing path. The HLSL `WaveActive*` family compiles to those primitives directly. A hand-rolled equivalent â€” whether it goes through LDS atomics, a tree-reduction with barriers, or an explicit `WaveReadLaneAt` ladder â€” replaces those 5 dedicated cycles with 32-64 ALU operations plus LDS / barrier traffic.
 
 ## What the rule fires on
 

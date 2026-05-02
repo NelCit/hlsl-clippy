@@ -1,5 +1,5 @@
----
-title: "groupshared-stride-32-bank-conflict: Declarations of `groupshared` arrays accessed with an index expression of the form `tid *…"
+﻿---
+title: "groupshared-stride-32-bank-conflict"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup
@@ -21,7 +21,7 @@ GPU groupshared / LDS memory is internally organised into 32 parallel banks (som
 
 ## What the rule fires on
 
-Declarations of `groupshared` arrays accessed with an index expression of the form `tid * 32 + k`, `gi * 32 + k`, `tid << 5 | k`, or any constant stride that is a multiple of 32 (32, 64, 128, ...). The same pattern triggers for 2D groupshared arrays declared `[N][32]` (or `[N][64]`) and accessed `Tile[i][j]` — the second dimension being a power-of-two multiple of 32 forces every column access to land in the same LDS bank.
+Declarations of `groupshared` arrays accessed with an index expression of the form `tid * 32 + k`, `gi * 32 + k`, `tid << 5 | k`, or any constant stride that is a multiple of 32 (32, 64, 128, ...). The same pattern triggers for 2D groupshared arrays declared `[N][32]` (or `[N][64]`) and accessed `Tile[i][j]` â€” the second dimension being a power-of-two multiple of 32 forces every column access to land in the same LDS bank.
 
 See the [What it detects](../rules/groupshared-stride-32-bank-conflict.md#what-it-detects) section of
 the rule page for the full pattern definition.

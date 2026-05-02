@@ -1,5 +1,5 @@
----
-title: "wavesize-fixed-on-sm68-target: A fixed-form `[WaveSize(N)]` attribute on a kernel compiled against an SM 6.8 (or later)…"
+﻿---
+title: "wavesize-fixed-on-sm68-target"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: wave-helper-lane

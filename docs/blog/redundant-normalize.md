@@ -1,5 +1,5 @@
----
-title: "redundant-normalize: Calls of the form `normalize(normalize(x))` where the outer `normalize` is applied to a vector…"
+﻿---
+title: "redundant-normalize"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: saturate-redundancy
@@ -17,7 +17,7 @@ related-rule: redundant-normalize
 
 ## TL;DR
 
-`normalize(v)` expands to `v * rsqrt(dot(v, v))`. For a 3-component vector, the full computation is: one 3-wide dot product (three multiplies and two adds), one `rsqrt`, and three scalar multiplies (or a 3-wide vector multiply). On AMD RDNA 3, `v_rsq_f32` is a transcendental instruction that issues at 1/4 of the standard VALU rate. On NVIDIA Turing and Ada Lovelace, `MUFU.RSQ` similarly occupies the multi-function unit and is not pipelined at full throughput. The entire sequence — dot product, `rsqrt`, scale — costs roughly 8-10 VALU-equivalent instructions on current GPU hardware.
+`normalize(v)` expands to `v * rsqrt(dot(v, v))`. For a 3-component vector, the full computation is: one 3-wide dot product (three multiplies and two adds), one `rsqrt`, and three scalar multiplies (or a 3-wide vector multiply). On AMD RDNA 3, `v_rsq_f32` is a transcendental instruction that issues at 1/4 of the standard VALU rate. On NVIDIA Turing and Ada Lovelace, `MUFU.RSQ` similarly occupies the multi-function unit and is not pipelined at full throughput. The entire sequence â€” dot product, `rsqrt`, scale â€” costs roughly 8-10 VALU-equivalent instructions on current GPU hardware.
 
 ## What the rule fires on
 

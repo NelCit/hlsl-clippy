@@ -1,5 +1,5 @@
----
-title: "long-vector-bytebuf-load-misaligned: A `ByteAddressBuffer.Load<vector<T, N>>(offset)` with `N >= 5` whose constant-folded `offset` is not aligned to…"
+﻿---
+title: "long-vector-bytebuf-load-misaligned"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: long-vectors
@@ -21,7 +21,7 @@ Long-vector loads through `ByteAddressBuffer` lower to a sequence of widened sca
 
 ## What the rule fires on
 
-A `ByteAddressBuffer.Load<vector<T, N>>(offset)` with `N >= 5` whose constant-folded `offset` is not aligned to the natural alignment of the long-vector type (`N * sizeof(T)` rounded up to the IHV's preferred load width — 16 bytes for FP16/BF16, 32 bytes for FP32 long vectors with `N >= 8`). Constant-fold the offset; fire on misalignment.
+A `ByteAddressBuffer.Load<vector<T, N>>(offset)` with `N >= 5` whose constant-folded `offset` is not aligned to the natural alignment of the long-vector type (`N * sizeof(T)` rounded up to the IHV's preferred load width â€” 16 bytes for FP16/BF16, 32 bytes for FP32 long vectors with `N >= 8`). Constant-fold the offset; fire on misalignment.
 
 See the [What it detects](../rules/long-vector-bytebuf-load-misaligned.md#what-it-detects) section of
 the rule page for the full pattern definition.

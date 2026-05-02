@@ -1,5 +1,5 @@
----
-title: "mesh-node-not-leaf: A work-graph mesh node (a node with `[NodeLaunch("mesh")]`) that has any outgoing `NodeOutput<...>` declarations.…"
+﻿---
+title: "mesh-node-not-leaf"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: work-graphs
@@ -21,7 +21,7 @@ Mesh nodes integrate the mesh-shader pipeline into work graphs: a node receives 
 
 ## What the rule fires on
 
-A work-graph mesh node (a node with `[NodeLaunch("mesh")]`) that has any outgoing `NodeOutput<...>` declarations. The Mesh Nodes in Work Graphs preview specification requires mesh nodes to be leaf nodes — they consume input records but produce only rasterized output. Slang reflection identifies the node-launch kind and the output declarations; the rule fires when both coexist.
+A work-graph mesh node (a node with `[NodeLaunch("mesh")]`) that has any outgoing `NodeOutput<...>` declarations. The Mesh Nodes in Work Graphs preview specification requires mesh nodes to be leaf nodes â€” they consume input records but produce only rasterized output. Slang reflection identifies the node-launch kind and the output declarations; the rule fires when both coexist.
 
 See the [What it detects](../rules/mesh-node-not-leaf.md#what-it-detects) section of
 the rule page for the full pattern definition.

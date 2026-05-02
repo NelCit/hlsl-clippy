@@ -1,5 +1,5 @@
----
-title: "mesh-output-decl-exceeds-256: A mesh-shader entry point whose `out vertices` or `out indices` array declarations exceed 256…"
+﻿---
+title: "mesh-output-decl-exceeds-256"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: mesh

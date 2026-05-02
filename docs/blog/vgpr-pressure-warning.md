@@ -1,5 +1,5 @@
----
-title: "vgpr-pressure-warning: A live-range-based static estimate of per-lane VGPR consumption for each entry-point function in the…"
+﻿---
+title: "vgpr-pressure-warning"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: memory
@@ -17,7 +17,7 @@ related-rule: vgpr-pressure-warning
 
 ## TL;DR
 
-Every VGPR (vector general-purpose register) allocated to a shader is multiplied across every lane in a wave. On AMD RDNA 2/3, a wave is 32 or 64 lanes wide, and the hardware VGPR file holds 1536 registers per compute unit per SIMD32 unit. If a shader requires 80 VGPRs per lane, only 1536/80 = 19 waves can be resident concurrently per SIMD32 — barely two full waves. At 64 VGPRs the number rises to 24 waves; at 32 VGPRs it reaches the hardware maximum of 48 waves. Fewer resident waves means the scheduler has fewer instruction streams to overlap with memory latency, and the arithmetic units stall waiting for texture or buffer returns. The effect is especially pronounced in pixel shaders with many simultaneous texture fetches, where latency-hiding determines whether the TMU operates at peak throughput.
+Every VGPR (vector general-purpose register) allocated to a shader is multiplied across every lane in a wave. On AMD RDNA 2/3, a wave is 32 or 64 lanes wide, and the hardware VGPR file holds 1536 registers per compute unit per SIMD32 unit. If a shader requires 80 VGPRs per lane, only 1536/80 = 19 waves can be resident concurrently per SIMD32 â€” barely two full waves. At 64 VGPRs the number rises to 24 waves; at 32 VGPRs it reaches the hardware maximum of 48 waves. Fewer resident waves means the scheduler has fewer instruction streams to overlap with memory latency, and the arithmetic units stall waiting for texture or buffer returns. The effect is especially pronounced in pixel shaders with many simultaneous texture fetches, where latency-hiding determines whether the TMU operates at peak throughput.
 
 ## What the rule fires on
 

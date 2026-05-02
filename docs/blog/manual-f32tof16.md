@@ -1,5 +1,5 @@
----
-title: "manual-f32tof16: Hand-written bit-twiddling sequences that implement an FP32-to-FP16 or FP16-to-FP32 conversion manually using `asuint`, `asfloat`,…"
+﻿---
+title: "manual-f32tof16"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: packed-math
@@ -21,7 +21,7 @@ related-rule: manual-f32tof16
 
 ## What the rule fires on
 
-Hand-written bit-twiddling sequences that implement an FP32-to-FP16 or FP16-to-FP32 conversion manually using `asuint`, `asfloat`, bit-shifts, masks, and bias additions, rather than calling the `f32tof16` / `f16tof32` intrinsics (available since SM 5.0) or using a `min16float` cast. The canonical bad patterns are: extracting the sign bit with `(x >> 31) & 1`, extracting the exponent with `(x >> 23) & 0xFF`, re-biasing by subtracting 127 and adding 15, masking the mantissa, and assembling the result — all performed on the raw `uint` bitcast of the `float`. The rule matches both the full conversion and common sub-idioms that partially re-implement the intrinsic.
+Hand-written bit-twiddling sequences that implement an FP32-to-FP16 or FP16-to-FP32 conversion manually using `asuint`, `asfloat`, bit-shifts, masks, and bias additions, rather than calling the `f32tof16` / `f16tof32` intrinsics (available since SM 5.0) or using a `min16float` cast. The canonical bad patterns are: extracting the sign bit with `(x >> 31) & 1`, extracting the exponent with `(x >> 23) & 0xFF`, re-biasing by subtracting 127 and adding 15, masking the mantissa, and assembling the result â€” all performed on the raw `uint` bitcast of the `float`. The rule matches both the full conversion and common sub-idioms that partially re-implement the intrinsic.
 
 See the [What it detects](../rules/manual-f32tof16.md#what-it-detects) section of
 the rule page for the full pattern definition.

@@ -1,5 +1,5 @@
----
-title: "groupshared-overwrite-before-barrier: A write to a `groupshared` cell `gs[i]` followed by a second write to the…"
+﻿---
+title: "groupshared-overwrite-before-barrier"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup
@@ -17,7 +17,7 @@ related-rule: groupshared-overwrite-before-barrier
 
 ## TL;DR
 
-GPU memory ordering for groupshared / LDS is barrier-relative: a write becomes visible to other lanes in the workgroup only after a `GroupMemoryBarrier*` is executed by both the writer and the reader. With no intervening barrier, a write that is shadowed by a later write from the same thread is unobservable to every other thread — the second write completely supersedes the first in the LDS bank, and no consumer wave ever sees the original value. On AMD RDNA 2/3 the LDS write coalescer may fold back-to-back same-address stores into a single transaction, but the wasted instruction issue still occupies the LDS write port. On NVIDIA Ada the shared-memory atomic / store unit serialises the two writes; on Intel Xe-HPG the SLM behaves similarly. In every case the first write costs a full LDS write cycle and produces zero observable effect.
+GPU memory ordering for groupshared / LDS is barrier-relative: a write becomes visible to other lanes in the workgroup only after a `GroupMemoryBarrier*` is executed by both the writer and the reader. With no intervening barrier, a write that is shadowed by a later write from the same thread is unobservable to every other thread â€” the second write completely supersedes the first in the LDS bank, and no consumer wave ever sees the original value. On AMD RDNA 2/3 the LDS write coalescer may fold back-to-back same-address stores into a single transaction, but the wasted instruction issue still occupies the LDS write port. On NVIDIA Ada the shared-memory atomic / store unit serialises the two writes; on Intel Xe-HPG the SLM behaves similarly. In every case the first write costs a full LDS write cycle and produces zero observable effect.
 
 ## What the rule fires on
 

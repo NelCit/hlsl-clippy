@@ -80,6 +80,7 @@ jobs:
           # deps (worth investigating but not fatal).
           expected=$(npm list --production --all --parseable 2>/dev/null \
             | sed 's|.*/node_modules/||' \
+            | grep -v '^/' \
             | grep -v '^[A-Z]' | grep -v '^$' \
             | grep -v "^$(node -p "require('./package.json').name")$" \
             | sort -u)

@@ -1,5 +1,5 @@
----
-title: "ser-coherence-hint-bits-overflow: A `MaybeReorderThread(hint, bits)` call where `bits > 16` (or the `HitObject::MaybeReorderThread` variant where the…"
+﻿---
+title: "ser-coherence-hint-bits-overflow"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: ser

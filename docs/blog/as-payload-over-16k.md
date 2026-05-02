@@ -1,5 +1,5 @@
----
-title: "as-payload-over-16k: The `payload` struct passed from an amplification shader (`DispatchMesh`) to its child mesh shaders…"
+﻿---
+title: "as-payload-over-16k"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: mesh

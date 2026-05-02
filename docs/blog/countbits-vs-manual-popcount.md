@@ -1,5 +1,5 @@
----
-title: "countbits-vs-manual-popcount: Loops or expression trees that count the set bits of an integer scalar by…"
+﻿---
+title: "countbits-vs-manual-popcount"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -21,7 +21,7 @@ Every shader-capable GPU shipping since DirectX 11 has a single-cycle population
 
 ## What the rule fires on
 
-Loops or expression trees that count the set bits of an integer scalar by hand, in any of the canonical forms: a `for`/`while` loop that shifts and accumulates the low bit (`while (x) { count += x & 1; x >>= 1; }`), Brian Kernighan's clear-the-lowest-bit loop (`while (x) { x &= x - 1; ++count; }`), an unrolled SWAR-style sequence of mask-shift-add reductions (`x = (x & 0x55555555u) + ((x >> 1) & 0x55555555u);` and the matching widening passes), or a small lookup-table indexed by an 8- or 16-bit slice. The rule keys on the structural shape — a loop body that strictly tests, masks, and decrements a working integer, or a sequence of three or four magic-constant masks at 0x55555555/0x33333333/0x0F0F0F0F. It does not fire when the loop body does anything besides bit counting (e.g., remembers which bits were set, or maps each bit to a side effect).
+Loops or expression trees that count the set bits of an integer scalar by hand, in any of the canonical forms: a `for`/`while` loop that shifts and accumulates the low bit (`while (x) { count += x & 1; x >>= 1; }`), Brian Kernighan's clear-the-lowest-bit loop (`while (x) { x &= x - 1; ++count; }`), an unrolled SWAR-style sequence of mask-shift-add reductions (`x = (x & 0x55555555u) + ((x >> 1) & 0x55555555u);` and the matching widening passes), or a small lookup-table indexed by an 8- or 16-bit slice. The rule keys on the structural shape â€” a loop body that strictly tests, masks, and decrements a working integer, or a sequence of three or four magic-constant masks at 0x55555555/0x33333333/0x0F0F0F0F. It does not fire when the loop body does anything besides bit counting (e.g., remembers which bits were set, or maps each bit to a side effect).
 
 See the [What it detects](../rules/countbits-vs-manual-popcount.md#what-it-detects) section of
 the rule page for the full pattern definition.

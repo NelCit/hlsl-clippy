@@ -1,5 +1,5 @@
----
-title: "output-count-overrun: Mesh-shader entry points that, at the IR level, write to `verts[i]` or `tris[i]` with…"
+﻿---
+title: "output-count-overrun"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: mesh
@@ -17,7 +17,7 @@ related-rule: output-count-overrun
 
 ## TL;DR
 
-The mesh-shader output arrays are not ordinary HLSL arrays — they are bound to fixed-size on-chip groupshared regions whose extent is fixed at PSO compilation time from the `out vertices N` and `out indices M` attributes. On AMD RDNA 2/3, this region lives in the LDS (local data store); writing past the declared count typically clobbers neighbouring meshlet output state or, depending on driver and shader compiler version, silently writes nothing while the rasteriser consumes the truncated output. On NVIDIA Ada Lovelace, the same scenario produces undefined behaviour: the SM's mesh-shader output buffer has bank-conflict checks, but no bounds checks, and overruns can corrupt index data fed to the raster. Intel Xe-HPG validates only in development driver builds; release drivers permit the overrun and the resulting visual artefacts are typically diagnosed days later as "missing triangles" or "geometry pop-in."
+The mesh-shader output arrays are not ordinary HLSL arrays â€” they are bound to fixed-size on-chip groupshared regions whose extent is fixed at PSO compilation time from the `out vertices N` and `out indices M` attributes. On AMD RDNA 2/3, this region lives in the LDS (local data store); writing past the declared count typically clobbers neighbouring meshlet output state or, depending on driver and shader compiler version, silently writes nothing while the rasteriser consumes the truncated output. On NVIDIA Ada Lovelace, the same scenario produces undefined behaviour: the SM's mesh-shader output buffer has bank-conflict checks, but no bounds checks, and overruns can corrupt index data fed to the raster. Intel Xe-HPG validates only in development driver builds; release drivers permit the overrun and the resulting visual artefacts are typically diagnosed days later as "missing triangles" or "geometry pop-in."
 
 ## What the rule fires on
 

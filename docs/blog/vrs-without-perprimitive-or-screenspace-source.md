@@ -1,5 +1,5 @@
----
-title: "vrs-without-perprimitive-or-screenspace-source: A pixel-shader entry point that emits `SV_ShadingRate` but the source contains no upstream VRS…"
+﻿---
+title: "vrs-without-perprimitive-or-screenspace-source"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: vrs

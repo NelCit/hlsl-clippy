@@ -1,5 +1,5 @@
----
-title: "wave-active-all-equal-precheck: Resource-array indexing patterns of the form `Textures[idx].Sample(...)` or `Buffers[idx].Load(...)` where `idx` is computed from…"
+﻿---
+title: "wave-active-all-equal-precheck"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow

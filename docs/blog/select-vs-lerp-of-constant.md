@@ -1,5 +1,5 @@
----
-title: "select-vs-lerp-of-constant: Calls to `lerp(K1, K2, t)` where both `K1` and `K2` are compile-time constant scalars…"
+﻿---
+title: "select-vs-lerp-of-constant"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -17,11 +17,11 @@ related-rule: select-vs-lerp-of-constant
 
 ## TL;DR
 
-`lerp(K1, K2, t)` is mathematically `K1 + (K2 - K1) * t`. With both `K1` and `K2` known at compile time, `K2 - K1` is itself a constant — call it `D` — and the entire expression collapses to a single fused multiply-add: `mad(t, D, K1)`. On AMD RDNA 2/3 that is one `v_fma_f32` issued at full VALU rate; on NVIDIA Turing and Ada Lovelace, one `FFMA`; on Intel Xe-HPG, one FMA on the EU. When the compiler sees the constant operands and folds `K2 - K1` ahead of time, the call costs one ALU cycle. When the compiler does *not* fold — and this is where the rule earns its keep — the call costs two: one to compute `K2 - K1` at runtime, one for the FMA, plus an extra register to hold the temporary.
+`lerp(K1, K2, t)` is mathematically `K1 + (K2 - K1) * t`. With both `K1` and `K2` known at compile time, `K2 - K1` is itself a constant â€” call it `D` â€” and the entire expression collapses to a single fused multiply-add: `mad(t, D, K1)`. On AMD RDNA 2/3 that is one `v_fma_f32` issued at full VALU rate; on NVIDIA Turing and Ada Lovelace, one `FFMA`; on Intel Xe-HPG, one FMA on the EU. When the compiler sees the constant operands and folds `K2 - K1` ahead of time, the call costs one ALU cycle. When the compiler does *not* fold â€” and this is where the rule earns its keep â€” the call costs two: one to compute `K2 - K1` at runtime, one for the FMA, plus an extra register to hold the temporary.
 
 ## What the rule fires on
 
-Calls to `lerp(K1, K2, t)` where both `K1` and `K2` are compile-time constant scalars or constant vector literals, and `t` is a runtime value. The constants may appear as numeric literals (`0.5`, `float3(1, 0, 0)`), as named `static const` declarations whose initialiser is itself constant, or as expressions that fold to constants at parse time (`1.0 / 3.0`, `2.0 * PI`). The rule does not fire when either endpoint is a runtime expression — that case is the operation `lerp` exists to express. It also does not fire when both endpoints *and* `t` are constants, because that is dead code the compiler folds outright (and a separate constant-folding rule is the right home for it).
+Calls to `lerp(K1, K2, t)` where both `K1` and `K2` are compile-time constant scalars or constant vector literals, and `t` is a runtime value. The constants may appear as numeric literals (`0.5`, `float3(1, 0, 0)`), as named `static const` declarations whose initialiser is itself constant, or as expressions that fold to constants at parse time (`1.0 / 3.0`, `2.0 * PI`). The rule does not fire when either endpoint is a runtime expression â€” that case is the operation `lerp` exists to express. It also does not fire when both endpoints *and* `t` are constants, because that is dead code the compiler folds outright (and a separate constant-folding rule is the right home for it).
 
 See the [What it detects](../rules/select-vs-lerp-of-constant.md#what-it-detects) section of
 the rule page for the full pattern definition.

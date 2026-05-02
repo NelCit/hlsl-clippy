@@ -1,5 +1,5 @@
----
-title: "early-z-disabled-by-conditional-discard: Pixel shaders that contain `discard` (or its alias `clip(...)` for negative arguments) reachable from…"
+﻿---
+title: "early-z-disabled-by-conditional-discard"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow

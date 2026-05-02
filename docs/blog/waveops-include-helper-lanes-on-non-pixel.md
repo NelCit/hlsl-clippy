@@ -1,5 +1,5 @@
----
-title: "waveops-include-helper-lanes-on-non-pixel: The `[WaveOpsIncludeHelperLanes]` attribute applied to an entry-point function whose stage is not pixel. The…"
+﻿---
+title: "waveops-include-helper-lanes-on-non-pixel"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: wave-helper-lane
@@ -17,7 +17,7 @@ related-rule: waveops-include-helper-lanes-on-non-pixel
 
 ## TL;DR
 
-Helper lanes are a pixel-shader-specific concept. On NVIDIA Turing/Ada Lovelace, when a quad of pixels is partially covered, the rasterizer launches the wave with the uncovered lanes marked as helpers — they execute the same shader code so derivatives (`ddx` / `ddy`) can be computed by quad-message-passing, but their stores are masked off. AMD RDNA 2/3 implements the same model. Intel Xe-HPG is identical.
+Helper lanes are a pixel-shader-specific concept. On NVIDIA Turing/Ada Lovelace, when a quad of pixels is partially covered, the rasterizer launches the wave with the uncovered lanes marked as helpers â€” they execute the same shader code so derivatives (`ddx` / `ddy`) can be computed by quad-message-passing, but their stores are masked off. AMD RDNA 2/3 implements the same model. Intel Xe-HPG is identical.
 
 ## What the rule fires on
 

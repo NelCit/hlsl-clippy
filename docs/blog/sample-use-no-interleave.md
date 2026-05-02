@@ -1,5 +1,5 @@
----
-title: "sample-use-no-interleave: A `Texture.Sample*()` call whose result is consumed within the next 3 statements without intervening…"
+﻿---
+title: "sample-use-no-interleave"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: memory

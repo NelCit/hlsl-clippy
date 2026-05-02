@@ -1,5 +1,5 @@
----
-title: "isnormal-pre-sm69: A call to the `isnormal` intrinsic in a shader compiled against a target shader…"
+﻿---
+title: "isnormal-pre-sm69"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -21,7 +21,7 @@ related-rule: isnormal-pre-sm69
 
 ## What the rule fires on
 
-A call to the `isnormal` intrinsic in a shader compiled against a target shader model older than SM 6.9. The `isnormal` intrinsic — which returns true when the argument is a normal IEEE float (not zero, not subnormal, not infinity, not NaN) — was added in SM 6.9. Earlier targets do not implement it and DXC issues a hard compile error. Slang reflection provides the target SM; the rule reads the target and fires when `isnormal` is called against any pre-SM-6.9 target.
+A call to the `isnormal` intrinsic in a shader compiled against a target shader model older than SM 6.9. The `isnormal` intrinsic â€” which returns true when the argument is a normal IEEE float (not zero, not subnormal, not infinity, not NaN) â€” was added in SM 6.9. Earlier targets do not implement it and DXC issues a hard compile error. Slang reflection provides the target SM; the rule reads the target and fires when `isnormal` is called against any pre-SM-6.9 target.
 
 See the [What it detects](../rules/isnormal-pre-sm69.md#what-it-detects) section of
 the rule page for the full pattern definition.

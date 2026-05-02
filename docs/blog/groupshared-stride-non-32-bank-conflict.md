@@ -1,5 +1,5 @@
----
-title: "groupshared-stride-non-32-bank-conflict: Index expressions into `groupshared` arrays of the form `arr[tid * S + k]`, `arr[gi…"
+﻿---
+title: "groupshared-stride-non-32-bank-conflict"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup
@@ -17,11 +17,11 @@ related-rule: groupshared-stride-non-32-bank-conflict
 
 ## TL;DR
 
-GPU groupshared / LDS memory exposes 32 parallel banks of 4 bytes each on AMD RDNA 2/3 and on NVIDIA Turing / Ada / Blackwell. A wave of 32 lanes hitting 32 distinct banks completes in one cycle; any collision serialises the access. The conflict factor for a constant stride `S` is `32 / gcd(S, 32)` — so stride 2 yields a 2-way conflict (2x slowdown), stride 4 a 4-way (4x), stride 8 an 8-way (8x), stride 16 a 16-way (16x), and stride 64 a 32-way (32x — same as stride 32, because 64 mod 32 is 0). On Intel Xe-HPG the SLM exposes 16 banks at 4 bytes; the same modular arithmetic applies with a bank count of 16, so a stride-of-16 index is the worst case there but stride-2 / 4 / 8 still partially conflict.
+GPU groupshared / LDS memory exposes 32 parallel banks of 4 bytes each on AMD RDNA 2/3 and on NVIDIA Turing / Ada / Blackwell. A wave of 32 lanes hitting 32 distinct banks completes in one cycle; any collision serialises the access. The conflict factor for a constant stride `S` is `32 / gcd(S, 32)` â€” so stride 2 yields a 2-way conflict (2x slowdown), stride 4 a 4-way (4x), stride 8 an 8-way (8x), stride 16 a 16-way (16x), and stride 64 a 32-way (32x â€” same as stride 32, because 64 mod 32 is 0). On Intel Xe-HPG the SLM exposes 16 banks at 4 bytes; the same modular arithmetic applies with a bank count of 16, so a stride-of-16 index is the worst case there but stride-2 / 4 / 8 still partially conflict.
 
 ## What the rule fires on
 
-Index expressions into `groupshared` arrays of the form `arr[tid * S + k]`, `arr[gi * S + k]`, `arr[(tid << B) | k]`, or 2D access `arr[i][j]` where the inner-dimension stride `S` is in {2, 4, 8, 16, 64} — that is, any stride sharing a non-trivial GCD with 32. The companion rule [groupshared-stride-32-bank-conflict](groupshared-stride-32-bank-conflict.md) catches the worst case (stride exactly a multiple of 32); this rule catches the partial conflicts that still serialise the wave 2-, 4-, 8-, or 16-way.
+Index expressions into `groupshared` arrays of the form `arr[tid * S + k]`, `arr[gi * S + k]`, `arr[(tid << B) | k]`, or 2D access `arr[i][j]` where the inner-dimension stride `S` is in {2, 4, 8, 16, 64} â€” that is, any stride sharing a non-trivial GCD with 32. The companion rule [groupshared-stride-32-bank-conflict](groupshared-stride-32-bank-conflict.md) catches the worst case (stride exactly a multiple of 32); this rule catches the partial conflicts that still serialise the wave 2-, 4-, 8-, or 16-way.
 
 See the [What it detects](../rules/groupshared-stride-non-32-bank-conflict.md#what-it-detects) section of
 the rule page for the full pattern definition.

@@ -1,5 +1,5 @@
----
-title: "manual-mad-decomposition: A multiply followed by an add that the author has split across two statements…"
+﻿---
+title: "manual-mad-decomposition"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -17,7 +17,7 @@ related-rule: manual-mad-decomposition
 
 ## TL;DR
 
-Fused multiply-add (FMA) is the fundamental arithmetic primitive of every modern GPU. AMD RDNA 3 issues `v_fma_f32` and `v_fmac_f32` as full-rate VALU instructions — one per SIMD32 lane per clock. NVIDIA Turing, Ampere, and Ada Lovelace issue `FFMA` at full FP32 throughput; on Ada the FFMA path is the largest single contributor to the advertised FP32 TFLOPS figure. Intel Xe-HPG `mad` on the EU vector pipe is similarly first-class. When the compiler can see a multiply-then-add chain, it folds the pair into one instruction: half the issue slots, half the register lifetime for the intermediate, and one rounding step instead of two (FMA is more accurate than separate mul + add by IEEE 754-2008 definition).
+Fused multiply-add (FMA) is the fundamental arithmetic primitive of every modern GPU. AMD RDNA 3 issues `v_fma_f32` and `v_fmac_f32` as full-rate VALU instructions â€” one per SIMD32 lane per clock. NVIDIA Turing, Ampere, and Ada Lovelace issue `FFMA` at full FP32 throughput; on Ada the FFMA path is the largest single contributor to the advertised FP32 TFLOPS figure. Intel Xe-HPG `mad` on the EU vector pipe is similarly first-class. When the compiler can see a multiply-then-add chain, it folds the pair into one instruction: half the issue slots, half the register lifetime for the intermediate, and one rounding step instead of two (FMA is more accurate than separate mul + add by IEEE 754-2008 definition).
 
 ## What the rule fires on
 

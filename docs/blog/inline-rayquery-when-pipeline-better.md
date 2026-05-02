@@ -1,5 +1,5 @@
----
-title: "inline-rayquery-when-pipeline-better: Use of `RayQuery<>` (inline ray queries, SM 6.5+) in shaders where the workload characteristics…"
+﻿---
+title: "inline-rayquery-when-pipeline-better"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: dxr
@@ -21,7 +21,7 @@ DXR offers two ray-tracing programming models. Pipeline ray tracing (`TraceRay` 
 
 ## What the rule fires on
 
-Use of `RayQuery<>` (inline ray queries, SM 6.5+) in shaders where the workload characteristics make pipeline `TraceRay` the better choice — or, conversely, use of pipeline `TraceRay` for shaders where inline ray queries would be faster. The heuristic flags inline RQ inside pixel or compute shaders that traverse rays with high candidate counts (many alpha-tested any-hit calls), and flags pipeline RQ for shaders with simple shadow / AO / occlusion queries that have no any-hit work and a single uniform miss case.
+Use of `RayQuery<>` (inline ray queries, SM 6.5+) in shaders where the workload characteristics make pipeline `TraceRay` the better choice â€” or, conversely, use of pipeline `TraceRay` for shaders where inline ray queries would be faster. The heuristic flags inline RQ inside pixel or compute shaders that traverse rays with high candidate counts (many alpha-tested any-hit calls), and flags pipeline RQ for shaders with simple shadow / AO / occlusion queries that have no any-hit work and a single uniform miss case.
 
 See the [What it detects](../rules/inline-rayquery-when-pipeline-better.md#what-it-detects) section of
 the rule page for the full pattern definition.

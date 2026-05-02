@@ -1,5 +1,5 @@
----
-title: "coopvec-base-offset-misaligned: A cooperative-vector matrix-load call (`MatrixMul`, `MatrixVectorMul`, `OuterProductAccumulate`) whose constant-folded `offset` argument is not aligned…"
+﻿---
+title: "coopvec-base-offset-misaligned"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: cooperative-vector
@@ -17,7 +17,7 @@ related-rule: coopvec-base-offset-misaligned
 
 ## TL;DR
 
-Tensor / matrix engines on every IHV require their source operands to be aligned because the engine's load unit is wired for vector-width transactions. NVIDIA Ada Lovelace's tensor cores fetch operands in 128-bit-aligned groups; AMD RDNA 3/4 WMMA loads through a 128-bit-aligned scalar path; Intel Xe-HPG XMX engines align to the SIMD width. A misaligned base offset either splits the fetch into two transactions (cutting throughput in half) or, on stricter implementations, faults the load — the cooperative-vector spec writes the latter as undefined behaviour to give IHVs the freedom to fail loudly.
+Tensor / matrix engines on every IHV require their source operands to be aligned because the engine's load unit is wired for vector-width transactions. NVIDIA Ada Lovelace's tensor cores fetch operands in 128-bit-aligned groups; AMD RDNA 3/4 WMMA loads through a 128-bit-aligned scalar path; Intel Xe-HPG XMX engines align to the SIMD width. A misaligned base offset either splits the fetch into two transactions (cutting throughput in half) or, on stricter implementations, faults the load â€” the cooperative-vector spec writes the latter as undefined behaviour to give IHVs the freedom to fail loudly.
 
 ## What the rule fires on
 

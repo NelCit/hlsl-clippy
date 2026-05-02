@@ -1,5 +1,5 @@
----
-title: "sin-cos-pair: Separate calls to `sin(x)` and `cos(x)` within the same function body where both calls…"
+﻿---
+title: "sin-cos-pair"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -17,11 +17,11 @@ related-rule: sin-cos-pair
 
 ## TL;DR
 
-On AMD RDNA/RDNA 2/RDNA 3, NVIDIA Turing/Ada Lovelace, and Intel Xe-HPG, `sin` and `cos` are transcendental instructions that run on the special-function unit (TALU / transcendental ALU) at one-quarter peak VALU throughput. Two separate calls — `sin(x)` and `cos(x)` — occupy two distinct quarter-rate issue slots: on RDNA 3 that is `v_sin_f32` followed by `v_cos_f32`, each at 1/4 rate, for a combined cost of roughly 8 full-rate ALU-equivalent cycles.
+On AMD RDNA/RDNA 2/RDNA 3, NVIDIA Turing/Ada Lovelace, and Intel Xe-HPG, `sin` and `cos` are transcendental instructions that run on the special-function unit (TALU / transcendental ALU) at one-quarter peak VALU throughput. Two separate calls â€” `sin(x)` and `cos(x)` â€” occupy two distinct quarter-rate issue slots: on RDNA 3 that is `v_sin_f32` followed by `v_cos_f32`, each at 1/4 rate, for a combined cost of roughly 8 full-rate ALU-equivalent cycles.
 
 ## What the rule fires on
 
-Separate calls to `sin(x)` and `cos(x)` within the same function body where both calls share the same argument expression `x`. The rule matches any two calls — in any order, any number of statements apart — that operate on the same syntactic argument (same identifier, same literal, or structurally identical sub-expression). It does not fire when only one of the two is present, when the arguments differ, or when the results of both calls are already combined via a `sincos` intrinsic call.
+Separate calls to `sin(x)` and `cos(x)` within the same function body where both calls share the same argument expression `x`. The rule matches any two calls â€” in any order, any number of statements apart â€” that operate on the same syntactic argument (same identifier, same literal, or structurally identical sub-expression). It does not fire when only one of the two is present, when the arguments differ, or when the results of both calls are already combined via a `sincos` intrinsic call.
 
 See the [What it detects](../rules/sin-cos-pair.md#what-it-detects) section of
 the rule page for the full pattern definition.

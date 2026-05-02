@@ -1,5 +1,5 @@
----
-title: "mesh-node-missing-output-topology: A mesh node (function annotated `[NodeLaunch("mesh")]`) that lacks the `[outputtopology(...)]` attribute or that has…"
+﻿---
+title: "mesh-node-missing-output-topology"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: work-graphs
@@ -17,7 +17,7 @@ related-rule: mesh-node-missing-output-topology
 
 ## TL;DR
 
-`[outputtopology]` tells the rasterizer how to interpret the index buffer the mesh shader emits — `"triangle"` means three indices per primitive, `"line"` means two. The preview Mesh Nodes spec inherits this attribute requirement directly from the standalone mesh-shader spec; the rasterizer wiring is the same on every IHV (Ada / RDNA 3 / Xe-HPG). Without the attribute, the runtime cannot wire the mesh node to the rasterizer because it doesn't know which primitive-assembly path to use.
+`[outputtopology]` tells the rasterizer how to interpret the index buffer the mesh shader emits â€” `"triangle"` means three indices per primitive, `"line"` means two. The preview Mesh Nodes spec inherits this attribute requirement directly from the standalone mesh-shader spec; the rasterizer wiring is the same on every IHV (Ada / RDNA 3 / Xe-HPG). Without the attribute, the runtime cannot wire the mesh node to the rasterizer because it doesn't know which primitive-assembly path to use.
 
 ## What the rule fires on
 

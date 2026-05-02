@@ -1,5 +1,5 @@
----
-title: "coopvec-fp8-with-non-optimal-layout: A cooperative-vector matrix multiply whose interpretation enum names an FP8 component type (`COMPONENT_TYPE_FLOAT_E4M3`, `COMPONENT_TYPE_FLOAT_E5M2`)…"
+﻿---
+title: "coopvec-fp8-with-non-optimal-layout"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: cooperative-vector
@@ -17,7 +17,7 @@ related-rule: coopvec-fp8-with-non-optimal-layout
 
 ## TL;DR
 
-FP8 (E4M3 and E5M2) is the SM 6.9 cooperative-vector path's lowest-precision data type and the one with the highest throughput on the tensor engines. NVIDIA Ada Lovelace's tensor cores execute FP8 matmul at roughly 2x the FP16 throughput; AMD RDNA 3/4's WMMA-FP8 path matches; Intel Xe-HPG's XMX engines have the same approximate ratio. The throughput advantage requires the engine's native FP8 storage layout — the hardware fetcher assumes the bytes are pre-arranged in the swizzle pattern that lets one fetch deliver one tensor-core operand.
+FP8 (E4M3 and E5M2) is the SM 6.9 cooperative-vector path's lowest-precision data type and the one with the highest throughput on the tensor engines. NVIDIA Ada Lovelace's tensor cores execute FP8 matmul at roughly 2x the FP16 throughput; AMD RDNA 3/4's WMMA-FP8 path matches; Intel Xe-HPG's XMX engines have the same approximate ratio. The throughput advantage requires the engine's native FP8 storage layout â€” the hardware fetcher assumes the bytes are pre-arranged in the swizzle pattern that lets one fetch deliver one tensor-core operand.
 
 ## What the rule fires on
 

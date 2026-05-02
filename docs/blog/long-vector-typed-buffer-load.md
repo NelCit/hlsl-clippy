@@ -1,5 +1,5 @@
----
-title: "long-vector-typed-buffer-load: A `Buffer<vector<T, N>>` declaration with `N >= 5`, or a typed-buffer `Load`/`operator[]` whose returned…"
+﻿---
+title: "long-vector-typed-buffer-load"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: long-vectors
@@ -17,7 +17,7 @@ related-rule: long-vector-typed-buffer-load
 
 ## TL;DR
 
-Typed buffers (`Buffer<float4>`, `RWBuffer<uint2>`, etc.) are texture-cache-backed views: the texture units on every IHV (NVIDIA's L1, AMD RDNA's TC, Intel Xe-HPG's L1 sampler cache) accept the load with a DXGI format descriptor, which the hardware uses to pick the right fetch shape and the right format conversion. Long vectors have no DXGI format equivalent — there is no `DXGI_FORMAT_R32G32B32A32B32C32D32E32F32_FLOAT` because the texture cache hardware was never designed for 32-byte fetches. The DXC validator rejects the type combination at PSO compile.
+Typed buffers (`Buffer<float4>`, `RWBuffer<uint2>`, etc.) are texture-cache-backed views: the texture units on every IHV (NVIDIA's L1, AMD RDNA's TC, Intel Xe-HPG's L1 sampler cache) accept the load with a DXGI format descriptor, which the hardware uses to pick the right fetch shape and the right format conversion. Long vectors have no DXGI format equivalent â€” there is no `DXGI_FORMAT_R32G32B32A32B32C32D32E32F32_FLOAT` because the texture cache hardware was never designed for 32-byte fetches. The DXC validator rejects the type combination at PSO compile.
 
 ## What the rule fires on
 

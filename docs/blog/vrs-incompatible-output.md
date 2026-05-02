@@ -1,5 +1,5 @@
----
-title: "vrs-incompatible-output: Pixel-shader entry points that write per-sample outputs (`SV_Coverage`, `SV_SampleIndex`, an `[earlydepthstencil]`-marked `SV_Depth`, or per-sample…"
+﻿---
+title: "vrs-incompatible-output"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: vrs
@@ -17,7 +17,7 @@ related-rule: vrs-incompatible-output
 
 ## TL;DR
 
-VRS is a coarse-shading optimisation: NVIDIA Turing and Ada Lovelace expose Tier 1 (per-draw) and Tier 2 (image-based + per-primitive) shading rates that let one PS invocation cover up to a 4x4 pixel region. AMD RDNA 2/3 implements the same surface as Variable Rate Shading at the rasterizer, with hardware that broadcasts the single shaded result across the coarse footprint. Intel Xe-HPG (Arc/Battlemage) added VRS Tier 2 with the same semantics. The whole point is to amortise PS work across multiple raster samples — the wave executes one set of derivatives, one set of sample fetches, and one ALU sequence per coarse fragment.
+VRS is a coarse-shading optimisation: NVIDIA Turing and Ada Lovelace expose Tier 1 (per-draw) and Tier 2 (image-based + per-primitive) shading rates that let one PS invocation cover up to a 4x4 pixel region. AMD RDNA 2/3 implements the same surface as Variable Rate Shading at the rasterizer, with hardware that broadcasts the single shaded result across the coarse footprint. Intel Xe-HPG (Arc/Battlemage) added VRS Tier 2 with the same semantics. The whole point is to amortise PS work across multiple raster samples â€” the wave executes one set of derivatives, one set of sample fetches, and one ALU sequence per coarse fragment.
 
 ## What the rule fires on
 

@@ -1,5 +1,5 @@
----
-title: "rov-without-earlydepthstencil: A pixel shader entry point that declares one or more `RasterizerOrderedBuffer<T>`, `RasterizerOrderedTexture2D<T>`, or any…"
+﻿---
+title: "rov-without-earlydepthstencil"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -17,11 +17,11 @@ related-rule: rov-without-earlydepthstencil
 
 ## TL;DR
 
-ROVs enforce ordering between pixel shader invocations that cover the same pixel: later-rasterized primitives must not commit their ROV writes until earlier-rasterized primitives have completed. On AMD RDNA 2/RDNA 3 and NVIDIA Turing/Ada Lovelace, this ordering is implemented via a serialization primitive — typically a per-pixel lock or a per-pixel write-order fence — that the hardware acquires before any ROV access and releases after. The critical section is the span of shader code between the lock acquisition and the lock release.
+ROVs enforce ordering between pixel shader invocations that cover the same pixel: later-rasterized primitives must not commit their ROV writes until earlier-rasterized primitives have completed. On AMD RDNA 2/RDNA 3 and NVIDIA Turing/Ada Lovelace, this ordering is implemented via a serialization primitive â€” typically a per-pixel lock or a per-pixel write-order fence â€” that the hardware acquires before any ROV access and releases after. The critical section is the span of shader code between the lock acquisition and the lock release.
 
 ## What the rule fires on
 
-A pixel shader entry point that declares one or more `RasterizerOrderedBuffer<T>`, `RasterizerOrderedTexture2D<T>`, or any other `RasterizerOrdered*` resource (ROV) without the `[earlydepthstencil]` function attribute, and without a `discard` statement or a `SV_Depth` write that would make early depth legally ambiguous. The rule uses Slang's reflection API to identify entry points with ROV-typed resource bindings and checks whether the `[earlydepthstencil]` attribute is present. It does not fire when the shader contains `discard`, writes `SV_Depth`, or writes `SV_Coverage` — situations where `[earlydepthstencil]` would change semantics.
+A pixel shader entry point that declares one or more `RasterizerOrderedBuffer<T>`, `RasterizerOrderedTexture2D<T>`, or any other `RasterizerOrdered*` resource (ROV) without the `[earlydepthstencil]` function attribute, and without a `discard` statement or a `SV_Depth` write that would make early depth legally ambiguous. The rule uses Slang's reflection API to identify entry points with ROV-typed resource bindings and checks whether the `[earlydepthstencil]` attribute is present. It does not fire when the shader contains `discard`, writes `SV_Depth`, or writes `SV_Coverage` â€” situations where `[earlydepthstencil]` would change semantics.
 
 See the [What it detects](../rules/rov-without-earlydepthstencil.md#what-it-detects) section of
 the rule page for the full pattern definition.

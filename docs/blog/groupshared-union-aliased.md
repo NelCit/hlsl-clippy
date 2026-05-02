@@ -1,5 +1,5 @@
----
-title: "groupshared-union-aliased: A `groupshared` declaration whose layout exposes two distinct typed views over the same byte…"
+﻿---
+title: "groupshared-union-aliased"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup

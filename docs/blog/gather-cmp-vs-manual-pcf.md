@@ -1,5 +1,5 @@
----
-title: "gather-cmp-vs-manual-pcf: A 2x2 grid of `SampleCmp` or `SampleCmpLevelZero` calls whose UV arguments differ by constant…"
+﻿---
+title: "gather-cmp-vs-manual-pcf"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: texture

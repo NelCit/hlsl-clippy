@@ -1,5 +1,5 @@
----
-title: "getgroupwaveindex-without-wavesize-attribute: A call to `GetGroupWaveIndex()` or `GetGroupWaveCount()` (SM 6.10, proposal 0048 Accepted) inside a function…"
+﻿---
+title: "getgroupwaveindex-without-wavesize-attribute"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: sm6_10

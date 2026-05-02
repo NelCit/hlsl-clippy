@@ -1,5 +1,5 @@
----
-title: "wavesize-range-disordered: A `[WaveSize(min, preferred, max)]` or `[WaveSize(min, max)]` attribute whose constant arguments are not in…"
+﻿---
+title: "wavesize-range-disordered"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: wave-helper-lane

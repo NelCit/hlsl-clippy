@@ -1,5 +1,5 @@
----
-title: "sv-depth-vs-conservative-depth: A pixel-shader entry that writes `SV_Depth` (a per-pixel depth override) without using one of…"
+﻿---
+title: "sv-depth-vs-conservative-depth"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: vrs
@@ -17,7 +17,7 @@ related-rule: sv-depth-vs-conservative-depth
 
 ## TL;DR
 
-Early depth-stencil (early-Z, early-S) is a hidden-surface optimisation that runs the depth/stencil test *before* the pixel shader executes. On NVIDIA Turing/Ada Lovelace and AMD RDNA 2/3, the rasterizer hands eligible fragments to the PixelHash unit, and the GPU uses the rasterised depth to cull occluded pixels before allocating a wave. Intel Xe-HPG (Arc Alchemist, Battlemage) implements the same early-Z stage. When `SV_Depth` is written from PS without any ordering hint, the hardware cannot use the rasterised depth for the test — the actual depth might be anywhere — so it disables early-Z and runs the full PS to compute the depth, *then* tests. For a draw that would have been 50% occluded, this doubles the PS workload.
+Early depth-stencil (early-Z, early-S) is a hidden-surface optimisation that runs the depth/stencil test *before* the pixel shader executes. On NVIDIA Turing/Ada Lovelace and AMD RDNA 2/3, the rasterizer hands eligible fragments to the PixelHash unit, and the GPU uses the rasterised depth to cull occluded pixels before allocating a wave. Intel Xe-HPG (Arc Alchemist, Battlemage) implements the same early-Z stage. When `SV_Depth` is written from PS without any ordering hint, the hardware cannot use the rasterised depth for the test â€” the actual depth might be anywhere â€” so it disables early-Z and runs the full PS to compute the depth, *then* tests. For a draw that would have been 50% occluded, this doubles the PS workload.
 
 ## What the rule fires on
 

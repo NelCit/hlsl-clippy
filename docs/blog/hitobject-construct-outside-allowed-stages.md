@@ -1,5 +1,5 @@
----
-title: "hitobject-construct-outside-allowed-stages: A `dx::HitObject::TraceRay`, `dx::HitObject::FromRayQuery`, or `dx::HitObject::MakeMiss` constructor call from a stage other than the SM…"
+﻿---
+title: "hitobject-construct-outside-allowed-stages"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: ser

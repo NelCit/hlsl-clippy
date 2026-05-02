@@ -1,5 +1,5 @@
----
-title: "reference-data-type-not-supported-pre-sm610: `<qual> ref <type>` parameter syntax (matching HLSL Specs proposal 0006, under-review) on a translation…"
+﻿---
+title: "reference-data-type-not-supported-pre-sm610"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: sm6_10

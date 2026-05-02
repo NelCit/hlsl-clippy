@@ -1,5 +1,5 @@
----
-title: "barrier-in-divergent-cf: Calls to `GroupMemoryBarrierWithGroupSync`, `DeviceMemoryBarrierWithGroupSync`, `AllMemoryBarrierWithGroupSync`, and the variants without `WithGroupSync` (`GroupMemoryBarrier`, `DeviceMemoryBarrier`, `AllMemoryBarrier`) when…"
+﻿---
+title: "barrier-in-divergent-cf"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow
@@ -17,11 +17,11 @@ related-rule: barrier-in-divergent-cf
 
 ## TL;DR
 
-GPU compute shaders run as independent thread groups. Within a thread group, threads share a pool of groupshared (LDS) memory and are expected to coordinate via barriers. A `GroupMemoryBarrierWithGroupSync` tells the hardware: stall every thread in this group until all of them reach this instruction. The GPU implements this by counting how many threads have checked in; only when the count reaches the group size does execution resume. If some threads never reach the barrier — because they took a divergent branch — the counter never reaches the group size. The result is a GPU hang: the threads that reached the barrier wait indefinitely. On AMD GCN and RDNA architectures, this stalls the entire compute unit because the scheduler cannot retire the wavefront. On NVIDIA architectures, the warp-level implementation deadlocks similarly. Neither the DX12 runtime nor the driver can detect this class of hang at API level; it manifests as a device-removed error or a TDR reset in production.
+GPU compute shaders run as independent thread groups. Within a thread group, threads share a pool of groupshared (LDS) memory and are expected to coordinate via barriers. A `GroupMemoryBarrierWithGroupSync` tells the hardware: stall every thread in this group until all of them reach this instruction. The GPU implements this by counting how many threads have checked in; only when the count reaches the group size does execution resume. If some threads never reach the barrier â€” because they took a divergent branch â€” the counter never reaches the group size. The result is a GPU hang: the threads that reached the barrier wait indefinitely. On AMD GCN and RDNA architectures, this stalls the entire compute unit because the scheduler cannot retire the wavefront. On NVIDIA architectures, the warp-level implementation deadlocks similarly. Neither the DX12 runtime nor the driver can detect this class of hang at API level; it manifests as a device-removed error or a TDR reset in production.
 
 ## What the rule fires on
 
-Calls to `GroupMemoryBarrierWithGroupSync`, `DeviceMemoryBarrierWithGroupSync`, `AllMemoryBarrierWithGroupSync`, and the variants without `WithGroupSync` (`GroupMemoryBarrier`, `DeviceMemoryBarrier`, `AllMemoryBarrier`) when they appear inside a branch whose condition depends on a non-uniform value. Non-uniform in this context means any condition that is not provably identical for all threads in the thread group simultaneously — including conditions derived from `SV_DispatchThreadID`, `SV_GroupIndex`, per-pixel varying data, or any value loaded from a non-constant buffer with a thread-varying index. The rule fires on any `if`, `else if`, `else`, `for`, `while`, or `switch` that contains a synchronising barrier intrinsic and whose predicate is not demonstrably thread-group-uniform.
+Calls to `GroupMemoryBarrierWithGroupSync`, `DeviceMemoryBarrierWithGroupSync`, `AllMemoryBarrierWithGroupSync`, and the variants without `WithGroupSync` (`GroupMemoryBarrier`, `DeviceMemoryBarrier`, `AllMemoryBarrier`) when they appear inside a branch whose condition depends on a non-uniform value. Non-uniform in this context means any condition that is not provably identical for all threads in the thread group simultaneously â€” including conditions derived from `SV_DispatchThreadID`, `SV_GroupIndex`, per-pixel varying data, or any value loaded from a non-constant buffer with a thread-varying index. The rule fires on any `if`, `else if`, `else`, `for`, `while`, or `switch` that contains a synchronising barrier intrinsic and whose predicate is not demonstrably thread-group-uniform.
 
 See the [What it detects](../rules/barrier-in-divergent-cf.md#what-it-detects) section of
 the rule page for the full pattern definition.

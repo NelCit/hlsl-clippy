@@ -1,5 +1,5 @@
----
-title: "pipeline-when-inline-better: A full DXR pipeline-`TraceRay` call from a stage that would do better with an…"
+﻿---
+title: "pipeline-when-inline-better"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: dxr
@@ -17,11 +17,11 @@ related-rule: pipeline-when-inline-better
 
 ## TL;DR
 
-DXR exposes two traversal styles. *Pipeline ray tracing* uses `TraceRay` and a state-object full of hit-group and miss shaders; the runtime's scheduler dispatches the right shader through the shader-binding-table indirection on every hit, and SER (SM 6.9) layers on top to coalesce the divergent dispatches. *Inline ray tracing* uses `RayQuery` and runs the traversal as a method call inside the caller — no shader table, no hit-group dispatch, no payload spill across the trace. Both NVIDIA Ada Lovelace and AMD RDNA 3 expose the same RT-core hardware to both modes; the difference is entirely in the surrounding scheduling.
+DXR exposes two traversal styles. *Pipeline ray tracing* uses `TraceRay` and a state-object full of hit-group and miss shaders; the runtime's scheduler dispatches the right shader through the shader-binding-table indirection on every hit, and SER (SM 6.9) layers on top to coalesce the divergent dispatches. *Inline ray tracing* uses `RayQuery` and runs the traversal as a method call inside the caller â€” no shader table, no hit-group dispatch, no payload spill across the trace. Both NVIDIA Ada Lovelace and AMD RDNA 3 expose the same RT-core hardware to both modes; the difference is entirely in the surrounding scheduling.
 
 ## What the rule fires on
 
-A full DXR pipeline-`TraceRay` call from a stage that would do better with an inline `RayQuery`. The rule fires on `TraceRay` invocations whose payload is empty or single-scalar, whose `MissShaderIndex` and `RayContributionToHitGroupIndex` resolve to "shadow-ray" hit groups (any-hit / closest-hit shaders that only set a single bool), and whose call-site stage already runs in compute or pixel — both stages where a `RayQuery<RAY_FLAG_*>` inline traversal pays no shader-table indirection. The companion rule `inline-rayquery-when-pipeline-better` detects the opposite direction.
+A full DXR pipeline-`TraceRay` call from a stage that would do better with an inline `RayQuery`. The rule fires on `TraceRay` invocations whose payload is empty or single-scalar, whose `MissShaderIndex` and `RayContributionToHitGroupIndex` resolve to "shadow-ray" hit groups (any-hit / closest-hit shaders that only set a single bool), and whose call-site stage already runs in compute or pixel â€” both stages where a `RayQuery<RAY_FLAG_*>` inline traversal pays no shader-table indirection. The companion rule `inline-rayquery-when-pipeline-better` detects the opposite direction.
 
 See the [What it detects](../rules/pipeline-when-inline-better.md#what-it-detects) section of
 the rule page for the full pattern definition.

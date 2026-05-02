@@ -1,5 +1,5 @@
----
-title: "comparison-sampler-without-comparison-op: A `SamplerComparisonState` declaration that, across all reflection-visible call sites against textures bound with this…"
+﻿---
+title: "comparison-sampler-without-comparison-op"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: texture

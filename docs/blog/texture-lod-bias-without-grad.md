@@ -1,5 +1,5 @@
----
-title: "texture-lod-bias-without-grad: Calls to `SampleBias(sampler, uv, bias)` in any of these contexts: a compute shader (any…"
+﻿---
+title: "texture-lod-bias-without-grad"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: texture
@@ -17,7 +17,7 @@ related-rule: texture-lod-bias-without-grad
 
 ## TL;DR
 
-Implicit derivatives — the values returned by `ddx()` and `ddy()` — are computed by the hardware using the difference between the current lane's value and its horizontal or vertical neighbour lane within a 2x2 pixel quad. The quad is the fundamental unit of pixel shader execution on all current GPU architectures: AMD GCN through RDNA 3, NVIDIA Kepler through Ada Lovelace, and Intel Xe-HPG all dispatch pixel shaders in 2x2 quads to support finite-difference derivative computation. In compute shaders, no such quad structure exists — the notion of a neighbouring lane in pixel space is undefined. When `ddx(uv)` is evaluated in a compute shader, the compiler either inserts a zero (producing a derivative of zero, which maps to mip 0) or produces architecturally undefined results, depending on the driver and shader model version.
+Implicit derivatives â€” the values returned by `ddx()` and `ddy()` â€” are computed by the hardware using the difference between the current lane's value and its horizontal or vertical neighbour lane within a 2x2 pixel quad. The quad is the fundamental unit of pixel shader execution on all current GPU architectures: AMD GCN through RDNA 3, NVIDIA Kepler through Ada Lovelace, and Intel Xe-HPG all dispatch pixel shaders in 2x2 quads to support finite-difference derivative computation. In compute shaders, no such quad structure exists â€” the notion of a neighbouring lane in pixel space is undefined. When `ddx(uv)` is evaluated in a compute shader, the compiler either inserts a zero (producing a derivative of zero, which maps to mip 0) or produces architecturally undefined results, depending on the driver and shader model version.
 
 ## What the rule fires on
 

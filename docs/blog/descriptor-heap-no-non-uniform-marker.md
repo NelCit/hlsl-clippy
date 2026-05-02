@@ -1,5 +1,5 @@
----
-title: "descriptor-heap-no-non-uniform-marker: A `ResourceDescriptorHeap[i]` or `SamplerDescriptorHeap[i]` access (SM 6.6 dynamic indexing into the descriptor heap) where…"
+﻿---
+title: "descriptor-heap-no-non-uniform-marker"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -21,7 +21,7 @@ SM 6.6 introduced direct `ResourceDescriptorHeap` indexing as a first-class HLSL
 
 ## What the rule fires on
 
-A `ResourceDescriptorHeap[i]` or `SamplerDescriptorHeap[i]` access (SM 6.6 dynamic indexing into the descriptor heap) where the index `i` is a per-lane divergent value — typically a function parameter, a semantic input (`TEXCOORD`, `SV_InstanceID`), or any value derived from one — and the index is not wrapped in `NonUniformResourceIndex(...)`. The rule uses Slang's reflection and uniformity analysis to determine whether `i` could differ across lanes in the same wave. See `tests/fixtures/phase3/bindings_extra.hlsl`, lines 30–32 for the `get_material_texture` example and lines 35–38 for the correct `NonUniformResourceIndex` counterpart.
+A `ResourceDescriptorHeap[i]` or `SamplerDescriptorHeap[i]` access (SM 6.6 dynamic indexing into the descriptor heap) where the index `i` is a per-lane divergent value â€” typically a function parameter, a semantic input (`TEXCOORD`, `SV_InstanceID`), or any value derived from one â€” and the index is not wrapped in `NonUniformResourceIndex(...)`. The rule uses Slang's reflection and uniformity analysis to determine whether `i` could differ across lanes in the same wave. See `tests/fixtures/phase3/bindings_extra.hlsl`, lines 30â€“32 for the `get_material_texture` example and lines 35â€“38 for the correct `NonUniformResourceIndex` counterpart.
 
 See the [What it detects](../rules/descriptor-heap-no-non-uniform-marker.md#what-it-detects) section of
 the rule page for the full pattern definition.

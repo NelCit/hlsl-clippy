@@ -1,5 +1,5 @@
----
-title: "wave-reduction-pixel-without-helper-attribute: A pixel-shader entry that performs a wave reduction (`WaveActiveSum`, `WaveActiveProduct`, `WaveActiveCountBits`, `WaveActiveBallot`, etc.) whose…"
+﻿---
+title: "wave-reduction-pixel-without-helper-attribute"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: wave-helper-lane
@@ -17,7 +17,7 @@ related-rule: wave-reduction-pixel-without-helper-attribute
 
 ## TL;DR
 
-By default, pixel-shader wave intrinsics exclude helper lanes from the active mask: a `WaveActiveSum(x)` that sees a partially-covered quad sums only the covered lanes and ignores the helpers. This is usually what the author wants — helpers don't contribute meaningful values for non-derivative work. But when the reduction's result then flows into a derivative operation, the derivative computation needs the full quad to be coherent: `ddx(uniform)` is zero only when *all four* quad lanes have the same value.
+By default, pixel-shader wave intrinsics exclude helper lanes from the active mask: a `WaveActiveSum(x)` that sees a partially-covered quad sums only the covered lanes and ignores the helpers. This is usually what the author wants â€” helpers don't contribute meaningful values for non-derivative work. But when the reduction's result then flows into a derivative operation, the derivative computation needs the full quad to be coherent: `ddx(uniform)` is zero only when *all four* quad lanes have the same value.
 
 ## What the rule fires on
 

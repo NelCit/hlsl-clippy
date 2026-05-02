@@ -1,5 +1,5 @@
----
-title: "flatten-on-uniform-branch: The `[flatten]` attribute applied to an `if` / `else` whose condition is dynamically uniform…"
+﻿---
+title: "flatten-on-uniform-branch"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow
@@ -17,7 +17,7 @@ related-rule: flatten-on-uniform-branch
 
 ## TL;DR
 
-The `[flatten]` and `[branch]` attributes are HLSL hints that tell the compiler how to lower an `if` / `else` to GPU instructions. `[flatten]` says: evaluate both arms unconditionally and select between them with a predicate (no jump, no divergence handling — both arms always run). `[branch]` says: emit a real conditional jump and let the lanes that take the false path skip the true arm's instructions entirely. The two have very different cost models: `[flatten]` is cheaper when the arms are short and the branch would otherwise cost more in divergence handling than the work the skipped arm performs; `[branch]` is cheaper when the arms are non-trivial and the predicate is uniform across the wave (so all lanes take the same path and the inactive arm's instructions are genuinely skipped).
+The `[flatten]` and `[branch]` attributes are HLSL hints that tell the compiler how to lower an `if` / `else` to GPU instructions. `[flatten]` says: evaluate both arms unconditionally and select between them with a predicate (no jump, no divergence handling â€” both arms always run). `[branch]` says: emit a real conditional jump and let the lanes that take the false path skip the true arm's instructions entirely. The two have very different cost models: `[flatten]` is cheaper when the arms are short and the branch would otherwise cost more in divergence handling than the work the skipped arm performs; `[branch]` is cheaper when the arms are non-trivial and the predicate is uniform across the wave (so all lanes take the same path and the inactive arm's instructions are genuinely skipped).
 
 ## What the rule fires on
 

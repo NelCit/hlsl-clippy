@@ -1,5 +1,5 @@
----
-title: "triangle-object-positions-without-allow-data-access-flag: Every call site of `TriangleObjectPositions()` (SM 6.10 ray-tracing intrinsic). Project-side state (the BLAS-build flag)…"
+﻿---
+title: "triangle-object-positions-without-allow-data-access-flag"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: dxr

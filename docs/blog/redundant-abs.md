@@ -1,5 +1,5 @@
----
-title: "redundant-abs: Calls to `abs(expr)` where the enclosed expression is statically provable to be non-negative. The…"
+﻿---
+title: "redundant-abs"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: saturate-redundancy
@@ -17,7 +17,7 @@ related-rule: redundant-abs
 
 ## TL;DR
 
-`abs` in HLSL is not a free operation when applied to an arbitrary VGPR value. On AMD RDNA, RDNA 2, and RDNA 3, `abs` can be encoded as a source modifier bit on an instruction that reads the value — similar to how `neg` works — but only when the `abs` is the direct input to another ALU instruction that supports the modifier. When `abs(expr)` is used as a standalone expression (assigned to a variable, returned, or passed to a function), and the compiler cannot fold it into the consuming instruction, it must emit an explicit instruction. The typical lowering is `v_max_f32 dst, src, -src` (which computes `max(x, -x)`), occupying a full VALU slot.
+`abs` in HLSL is not a free operation when applied to an arbitrary VGPR value. On AMD RDNA, RDNA 2, and RDNA 3, `abs` can be encoded as a source modifier bit on an instruction that reads the value â€” similar to how `neg` works â€” but only when the `abs` is the direct input to another ALU instruction that supports the modifier. When `abs(expr)` is used as a standalone expression (assigned to a variable, returned, or passed to a function), and the compiler cannot fold it into the consuming instruction, it must emit an explicit instruction. The typical lowering is `v_max_f32 dst, src, -src` (which computes `max(x, -x)`), occupying a full VALU slot.
 
 ## What the rule fires on
 

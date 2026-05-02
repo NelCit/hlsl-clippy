@@ -1,5 +1,5 @@
----
-title: "buffer-load-width-vs-cache-line: A scalar `Load` (or `operator[]` returning a single element) on a `ByteAddressBuffer` / `StructuredBuffer<T>`…"
+﻿---
+title: "buffer-load-width-vs-cache-line"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings

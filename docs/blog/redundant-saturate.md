@@ -1,5 +1,5 @@
----
-title: "redundant-saturate: Calls of the form `saturate(saturate(x))` where the outer `saturate` is applied to an expression…"
+﻿---
+title: "redundant-saturate"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: saturate-redundancy
@@ -17,11 +17,11 @@ related-rule: redundant-saturate
 
 ## TL;DR
 
-On AMD RDNA, RDNA 2, and RDNA 3 hardware, `saturate` is not an independent instruction. It is an output modifier bit (`_clamp`) that is folded into whichever ALU instruction produces the value — an ADD, MUL, MAD, FMA, or similar — at zero additional cycle cost. The compiler can attach `_clamp` to the last instruction that writes the register and the hardware enforces the [0, 1] clamp during writeback with no extra cycles.
+On AMD RDNA, RDNA 2, and RDNA 3 hardware, `saturate` is not an independent instruction. It is an output modifier bit (`_clamp`) that is folded into whichever ALU instruction produces the value â€” an ADD, MUL, MAD, FMA, or similar â€” at zero additional cycle cost. The compiler can attach `_clamp` to the last instruction that writes the register and the hardware enforces the [0, 1] clamp during writeback with no extra cycles.
 
 ## What the rule fires on
 
-Calls of the form `saturate(saturate(x))` where the outer `saturate` is applied to an expression already guaranteed to be in [0, 1] because it is itself a `saturate` call. The rule matches both the direct nested form — `saturate(saturate(expr))` — and the split-variable form where a `saturate` result is stored in an intermediate variable and then passed to a second `saturate` (see lines 8-11 of `tests/fixtures/phase2/redundant.hlsl`). It does not fire when the argument to the outer `saturate` could originate from any source other than a prior `saturate`.
+Calls of the form `saturate(saturate(x))` where the outer `saturate` is applied to an expression already guaranteed to be in [0, 1] because it is itself a `saturate` call. The rule matches both the direct nested form â€” `saturate(saturate(expr))` â€” and the split-variable form where a `saturate` result is stored in an intermediate variable and then passed to a second `saturate` (see lines 8-11 of `tests/fixtures/phase2/redundant.hlsl`). It does not fire when the argument to the outer `saturate` could originate from any source other than a prior `saturate`.
 
 See the [What it detects](../rules/redundant-saturate.md#what-it-detects) section of
 the rule page for the full pattern definition.

@@ -1,5 +1,5 @@
----
-title: "numthreads-not-wave-aligned: A compute or amplification shader whose `[numthreads(X, Y, Z)]` attribute produces a total thread…"
+﻿---
+title: "numthreads-not-wave-aligned"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup
@@ -21,7 +21,7 @@ The wave (or warp, in NVIDIA terminology) is the atomic unit of GPU execution. A
 
 ## What the rule fires on
 
-A compute or amplification shader whose `[numthreads(X, Y, Z)]` attribute produces a total thread count (X * Y * Z) that is not a multiple of the configured wave size. The default `target-wave-size` is 32 (matching NVIDIA Turing/Ada and AMD RDNA/RDNA 2/RDNA 3 in their default 32-wide mode). A total that is not divisible by 32 means the final wave of every thread group is launched with some lanes masked off — hardware dead weight. The rule fires on `[numthreads(7, 7, 1)]` (49 threads, not a multiple of 32 or 64), `[numthreads(5, 13, 1)]` (65 threads), and similar configurations. It does not fire when the total is an exact multiple of the configured wave size.
+A compute or amplification shader whose `[numthreads(X, Y, Z)]` attribute produces a total thread count (X * Y * Z) that is not a multiple of the configured wave size. The default `target-wave-size` is 32 (matching NVIDIA Turing/Ada and AMD RDNA/RDNA 2/RDNA 3 in their default 32-wide mode). A total that is not divisible by 32 means the final wave of every thread group is launched with some lanes masked off â€” hardware dead weight. The rule fires on `[numthreads(7, 7, 1)]` (49 threads, not a multiple of 32 or 64), `[numthreads(5, 13, 1)]` (65 threads), and similar configurations. It does not fire when the total is an exact multiple of the configured wave size.
 
 See the [What it detects](../rules/numthreads-not-wave-aligned.md#what-it-detects) section of
 the rule page for the full pattern definition.

@@ -1,5 +1,5 @@
----
-title: "byteaddressbuffer-load-misaligned: A `Load2`, `Load3`, or `Load4` call on a `ByteAddressBuffer` (or `RWByteAddressBuffer`) where the byte…"
+﻿---
+title: "byteaddressbuffer-load-misaligned"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -17,7 +17,7 @@ related-rule: byteaddressbuffer-load-misaligned
 
 ## TL;DR
 
-`ByteAddressBuffer` widened loads compile to a single `BUFFER_LOAD_DWORDX{2,3,4}` (RDNA) or `LDG.E.{64,128}` (NVIDIA Turing/Ada) memory instruction. The hardware paths assume the address is naturally aligned to the load width: 8 bytes for an `x2`, 16 bytes for `x4`. AMD RDNA 2/3 documents that misaligned vector loads are *split* by the memory pipeline into the corresponding number of single-DWORD transactions — a `Load4` at offset 13 turns into four serial 4-byte loads instead of one 16-byte load. NVIDIA Ada Lovelace's L1 likewise penalises sub-line-aligned widened loads by replaying the access; Intel Xe-HPG's URB load path documents an equivalent fallback.
+`ByteAddressBuffer` widened loads compile to a single `BUFFER_LOAD_DWORDX{2,3,4}` (RDNA) or `LDG.E.{64,128}` (NVIDIA Turing/Ada) memory instruction. The hardware paths assume the address is naturally aligned to the load width: 8 bytes for an `x2`, 16 bytes for `x4`. AMD RDNA 2/3 documents that misaligned vector loads are *split* by the memory pipeline into the corresponding number of single-DWORD transactions â€” a `Load4` at offset 13 turns into four serial 4-byte loads instead of one 16-byte load. NVIDIA Ada Lovelace's L1 likewise penalises sub-line-aligned widened loads by replaying the access; Intel Xe-HPG's URB load path documents an equivalent fallback.
 
 ## What the rule fires on
 

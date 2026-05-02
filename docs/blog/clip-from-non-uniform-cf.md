@@ -1,5 +1,5 @@
----
-title: "clip-from-non-uniform-cf: A call to `clip(x)` (the HLSL component-wise discard intrinsic that retires the lane when…"
+﻿---
+title: "clip-from-non-uniform-cf"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow
@@ -17,11 +17,11 @@ related-rule: clip-from-non-uniform-cf
 
 ## TL;DR
 
-Pixel-shader early-Z (and stencil) testing is a critical bandwidth optimisation: the rasteriser tests depth before invoking the pixel shader, so occluded fragments never run. A pixel shader that may issue `clip(x)` (or `discard`) modifies the depth attachment as a side effect of the shader body, which forces the hardware to defer depth update until after shader execution. On AMD RDNA 2/3, the GE / SX hardware downgrades from "early-Z + early-stencil" to "late-Z" for the entire pipeline state when the shader contains a clip / discard reachable on any path — losing the bandwidth savings on every fragment, not just the clipped ones. NVIDIA Ada applies the same downgrade per-pipeline-state; Intel Xe-HPG behaves analogously. The shader author can opt back into early-Z by adding the `[earlydepthstencil]` attribute, which promises the hardware that the depth value is unaffected by the shader (the clip / discard then retires the lane *after* the early-Z test has already updated depth, accepting the resulting incorrect depth in exchange for the bandwidth recovery — a trade-off only the author can authorise).
+Pixel-shader early-Z (and stencil) testing is a critical bandwidth optimisation: the rasteriser tests depth before invoking the pixel shader, so occluded fragments never run. A pixel shader that may issue `clip(x)` (or `discard`) modifies the depth attachment as a side effect of the shader body, which forces the hardware to defer depth update until after shader execution. On AMD RDNA 2/3, the GE / SX hardware downgrades from "early-Z + early-stencil" to "late-Z" for the entire pipeline state when the shader contains a clip / discard reachable on any path â€” losing the bandwidth savings on every fragment, not just the clipped ones. NVIDIA Ada applies the same downgrade per-pipeline-state; Intel Xe-HPG behaves analogously. The shader author can opt back into early-Z by adding the `[earlydepthstencil]` attribute, which promises the hardware that the depth value is unaffected by the shader (the clip / discard then retires the lane *after* the early-Z test has already updated depth, accepting the resulting incorrect depth in exchange for the bandwidth recovery â€” a trade-off only the author can authorise).
 
 ## What the rule fires on
 
-A call to `clip(x)` (the HLSL component-wise discard intrinsic that retires the lane when any component of `x` is negative) inside a pixel-shader entry point whose containing function lacks the `[earlydepthstencil]` attribute and is reachable from non-uniform control flow — that is, the path from entry to the `clip` call passes through at least one branch whose condition is per-lane varying. Distinct from the locked [early-z-disabled-by-conditional-discard](early-z-disabled-by-conditional-discard.md), which fires on `discard`; `clip(x)` has its own semantics (retire on negative component, threshold per channel) and an independent suppression scope.
+A call to `clip(x)` (the HLSL component-wise discard intrinsic that retires the lane when any component of `x` is negative) inside a pixel-shader entry point whose containing function lacks the `[earlydepthstencil]` attribute and is reachable from non-uniform control flow â€” that is, the path from entry to the `clip` call passes through at least one branch whose condition is per-lane varying. Distinct from the locked [early-z-disabled-by-conditional-discard](early-z-disabled-by-conditional-discard.md), which fires on `discard`; `clip(x)` has its own semantics (retire on negative component, threshold per channel) and an independent suppression scope.
 
 See the [What it detects](../rules/clip-from-non-uniform-cf.md#what-it-detects) section of
 the rule page for the full pattern definition.

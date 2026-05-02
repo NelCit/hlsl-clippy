@@ -1,5 +1,5 @@
----
-title: "rwresource-read-only-usage: An `RWBuffer<T>`, `RWStructuredBuffer<T>`, `RWTexture1D<T>`, `RWTexture2D<T>`, `RWTexture3D<T>`, or any other read-write (UAV) resource declaration that…"
+﻿---
+title: "rwresource-read-only-usage"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -21,7 +21,7 @@ UAV (unordered access view) resources and SRV (shader resource view) resources d
 
 ## What the rule fires on
 
-An `RWBuffer<T>`, `RWStructuredBuffer<T>`, `RWTexture1D<T>`, `RWTexture2D<T>`, `RWTexture3D<T>`, or any other read-write (UAV) resource declaration that is only ever read in the shader — never written to and never passed to an intrinsic that performs a write (e.g., `InterlockedAdd`, `Store`, assignment via `[]` operator). The rule uses Slang's reflection API to identify UAV-typed resources and checks all access sites for write operations. See `tests/fixtures/phase3/bindings.hlsl`, lines 48–53 (`ReadOnlyRW`, accessed only as `ReadOnlyRW[0]` on the right-hand side) and `tests/fixtures/phase3/bindings_extra.hlsl`, lines 50–55 (`AccumBuffer`, accessed only via `AccumBuffer.Load(...)`).
+An `RWBuffer<T>`, `RWStructuredBuffer<T>`, `RWTexture1D<T>`, `RWTexture2D<T>`, `RWTexture3D<T>`, or any other read-write (UAV) resource declaration that is only ever read in the shader â€” never written to and never passed to an intrinsic that performs a write (e.g., `InterlockedAdd`, `Store`, assignment via `[]` operator). The rule uses Slang's reflection API to identify UAV-typed resources and checks all access sites for write operations. See `tests/fixtures/phase3/bindings.hlsl`, lines 48â€“53 (`ReadOnlyRW`, accessed only as `ReadOnlyRW[0]` on the right-hand side) and `tests/fixtures/phase3/bindings_extra.hlsl`, lines 50â€“55 (`AccumBuffer`, accessed only via `AccumBuffer.Load(...)`).
 
 See the [What it detects](../rules/rwresource-read-only-usage.md#what-it-detects) section of
 the rule page for the full pattern definition.

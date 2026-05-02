@@ -1,5 +1,5 @@
----
-title: "hitobject-invoke-after-recursion-cap: A `dx::HitObject::Invoke(...)` call reachable from a closest-hit shader chain whose nominal recursion depth exceeds…"
+﻿---
+title: "hitobject-invoke-after-recursion-cap"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: ser

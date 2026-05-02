@@ -1,5 +1,5 @@
----
-title: "structured-buffer-stride-mismatch: A `StructuredBuffer<T>` or `RWStructuredBuffer<T>` declaration where the element type `T` has a byte size…"
+﻿---
+title: "structured-buffer-stride-mismatch"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -21,7 +21,7 @@ related-rule: structured-buffer-stride-mismatch
 
 ## What the rule fires on
 
-A `StructuredBuffer<T>` or `RWStructuredBuffer<T>` declaration where the element type `T` has a byte size that is not a multiple of 16. The rule uses Slang's reflection API to determine `sizeof(T)` after HLSL struct-packing rules are applied, then checks `sizeof(T) % 16 != 0`. Common triggers: `StructuredBuffer<Particle>` where `Particle` contains only `float3 pos` (12 bytes, remainder 12); `StructuredBuffer<GpuLight>` where `GpuLight` has `float3 + float + float3 = 28 bytes`, remainder 12. See `tests/fixtures/phase3/bindings.hlsl`, lines 42–45 (`Particle`, 12 bytes) and `tests/fixtures/phase3/bindings_extra.hlsl`, lines 59–67 (`GpuLight`, 28 bytes).
+A `StructuredBuffer<T>` or `RWStructuredBuffer<T>` declaration where the element type `T` has a byte size that is not a multiple of 16. The rule uses Slang's reflection API to determine `sizeof(T)` after HLSL struct-packing rules are applied, then checks `sizeof(T) % 16 != 0`. Common triggers: `StructuredBuffer<Particle>` where `Particle` contains only `float3 pos` (12 bytes, remainder 12); `StructuredBuffer<GpuLight>` where `GpuLight` has `float3 + float + float3 = 28 bytes`, remainder 12. See `tests/fixtures/phase3/bindings.hlsl`, lines 42â€“45 (`Particle`, 12 bytes) and `tests/fixtures/phase3/bindings_extra.hlsl`, lines 59â€“67 (`GpuLight`, 28 bytes).
 
 See the [What it detects](../rules/structured-buffer-stride-mismatch.md#what-it-detects) section of
 the rule page for the full pattern definition.

@@ -1,5 +1,5 @@
----
-title: "redundant-precision-cast: Nested cast expressions that form precision-degrading or no-op round-trips. Three specific patterns are detected:"
+﻿---
+title: "redundant-precision-cast"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: misc
@@ -17,7 +17,7 @@ related-rule: redundant-precision-cast
 
 ## TL;DR
 
-Each type conversion — `v_cvt_f32_i32`, `v_cvt_i32_f32`, `v_cvt_f32_f16`, `v_cvt_f16_f32` on RDNA; the equivalent `FCONV`/`I2F`/`F2I` family on Turing and Xe-HPG — is a real ALU instruction. Pairs of such instructions in a round-trip pattern consume two instruction-issue slots and two VGPR reads/writes. On RDNA 3, conversion instructions execute in the VALU pipeline at full throughput, so a two-instruction round-trip costs two cycles of VALU occupancy per lane — identical in cost to two FP32 multiplies — for zero arithmetic progress.
+Each type conversion â€” `v_cvt_f32_i32`, `v_cvt_i32_f32`, `v_cvt_f32_f16`, `v_cvt_f16_f32` on RDNA; the equivalent `FCONV`/`I2F`/`F2I` family on Turing and Xe-HPG â€” is a real ALU instruction. Pairs of such instructions in a round-trip pattern consume two instruction-issue slots and two VGPR reads/writes. On RDNA 3, conversion instructions execute in the VALU pipeline at full throughput, so a two-instruction round-trip costs two cycles of VALU occupancy per lane â€” identical in cost to two FP32 multiplies â€” for zero arithmetic progress.
 
 ## What the rule fires on
 

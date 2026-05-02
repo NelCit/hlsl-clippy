@@ -1,5 +1,5 @@
----
-title: "bgra-rgba-swizzle-mismatch: A shader that reads `.rgba` (or any subset like `.r`, `.rgb`, `.gb`) from a…"
+﻿---
+title: "bgra-rgba-swizzle-mismatch"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: texture
@@ -17,7 +17,7 @@ related-rule: bgra-rgba-swizzle-mismatch
 
 ## TL;DR
 
-`DXGI_FORMAT_B8G8R8A8_UNORM` is the historical swap-chain format for D3D presentation; many older paths (especially UI / IMGUI overlays composited onto the swap-chain) still use BGRA8 throughout. The hardware texture sampler on AMD RDNA 2/3, NVIDIA Turing/Ada, and Intel Xe-HPG reads BGRA8 storage and presents it to the shader as a `float4` whose `.x` lane carries the *blue* channel and `.z` lane carries the *red* channel — the storage order, not the conceptual RGBA order. There is no hardware swizzle on the load path on D3D12; the format-to-shader-view mapping is exactly the storage layout. (Vulkan exposes a per-view `componentMapping` swizzle that can compensate at descriptor creation; D3D12 does not.)
+`DXGI_FORMAT_B8G8R8A8_UNORM` is the historical swap-chain format for D3D presentation; many older paths (especially UI / IMGUI overlays composited onto the swap-chain) still use BGRA8 throughout. The hardware texture sampler on AMD RDNA 2/3, NVIDIA Turing/Ada, and Intel Xe-HPG reads BGRA8 storage and presents it to the shader as a `float4` whose `.x` lane carries the *blue* channel and `.z` lane carries the *red* channel â€” the storage order, not the conceptual RGBA order. There is no hardware swizzle on the load path on D3D12; the format-to-shader-view mapping is exactly the storage layout. (Vulkan exposes a per-view `componentMapping` swizzle that can compensate at descriptor creation; D3D12 does not.)
 
 ## What the rule fires on
 

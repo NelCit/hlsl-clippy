@@ -1,5 +1,5 @@
----
-title: "divergent-buffer-index-on-uniform-resource: An indexed buffer access `buf[i]` (where `buf` is a `Buffer`, `StructuredBuffer`, `ByteAddressBuffer`, or `ConstantBuffer<T>`…"
+﻿---
+title: "divergent-buffer-index-on-uniform-resource"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -21,7 +21,7 @@ Modern GPUs split memory paths between the *scalar* / *constant* cache and the *
 
 ## What the rule fires on
 
-An indexed buffer access `buf[i]` (where `buf` is a `Buffer`, `StructuredBuffer`, `ByteAddressBuffer`, or `ConstantBuffer<T>` and `i` is a wave-divergent expression) on a *resource binding* that is itself uniform across the wave — that is, `buf` is referenced through a single descriptor known at compile time, not through an `[NonUniformResourceIndex]` heap index. The hazard is the index, not the resource. The rule fires when the divergence analysis can prove the index varies across the wave (typical sources: `SV_DispatchThreadID`, per-lane loaded values, results of `WaveReadLaneAt`) while the resource itself is bound uniformly.
+An indexed buffer access `buf[i]` (where `buf` is a `Buffer`, `StructuredBuffer`, `ByteAddressBuffer`, or `ConstantBuffer<T>` and `i` is a wave-divergent expression) on a *resource binding* that is itself uniform across the wave â€” that is, `buf` is referenced through a single descriptor known at compile time, not through an `[NonUniformResourceIndex]` heap index. The hazard is the index, not the resource. The rule fires when the divergence analysis can prove the index varies across the wave (typical sources: `SV_DispatchThreadID`, per-lane loaded values, results of `WaveReadLaneAt`) while the resource itself is bound uniformly.
 
 See the [What it detects](../rules/divergent-buffer-index-on-uniform-resource.md#what-it-detects) section of
 the rule page for the full pattern definition.

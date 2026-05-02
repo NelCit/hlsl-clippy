@@ -1,5 +1,5 @@
----
-title: "setmeshoutputcounts-in-divergent-cf: Calls to `SetMeshOutputCounts(vertexCount, primitiveCount)` inside a mesh shader that are reachable from a non-thread-uniform…"
+﻿---
+title: "setmeshoutputcounts-in-divergent-cf"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: mesh

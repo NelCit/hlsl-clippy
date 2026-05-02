@@ -1,5 +1,5 @@
----
-title: "wavesize-32-on-xe2-misses-simd16: A compute / mesh / amplification kernel pinned `[WaveSize(32)]` under the `[experimental.target = xe2]`…"
+﻿---
+title: "wavesize-32-on-xe2-misses-simd16"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: xe2

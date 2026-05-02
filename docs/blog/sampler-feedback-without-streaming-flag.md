@@ -1,5 +1,5 @@
----
-title: "sampler-feedback-without-streaming-flag: A shader that calls `WriteSamplerFeedback`, `WriteSamplerFeedbackBias`, `WriteSamplerFeedbackGrad`, or `WriteSamplerFeedbackLevel` against a `FeedbackTexture2D` / `FeedbackTexture2DArray`…"
+﻿---
+title: "sampler-feedback-without-streaming-flag"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: sampler-feedback

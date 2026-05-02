@@ -1,5 +1,5 @@
----
-title: "cbuffer-divergent-index: A read from a `cbuffer`, `ConstantBuffer<T>`, or inline constant buffer (ICB) where the field…"
+﻿---
+title: "cbuffer-divergent-index"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -21,7 +21,7 @@ cbuffer and constant-buffer data is served to shader threads through a dedicated
 
 ## What the rule fires on
 
-A read from a `cbuffer`, `ConstantBuffer<T>`, or inline constant buffer (ICB) where the field is selected through an index that is per-lane divergent — for example, `cb.array[lane_idx]` where `lane_idx` is derived from a semantic input (`SV_InstanceID`, `TEXCOORD`, or similar) or from a wave-divergent computation. The rule relies on Slang's uniformity analysis to determine whether the index is wave-uniform or potentially divergent. It does not fire on compile-time-constant indices or on indices that Slang can prove are uniform across all lanes in the wave.
+A read from a `cbuffer`, `ConstantBuffer<T>`, or inline constant buffer (ICB) where the field is selected through an index that is per-lane divergent â€” for example, `cb.array[lane_idx]` where `lane_idx` is derived from a semantic input (`SV_InstanceID`, `TEXCOORD`, or similar) or from a wave-divergent computation. The rule relies on Slang's uniformity analysis to determine whether the index is wave-uniform or potentially divergent. It does not fire on compile-time-constant indices or on indices that Slang can prove are uniform across all lanes in the wave.
 
 See the [What it detects](../rules/cbuffer-divergent-index.md#what-it-detects) section of
 the rule page for the full pattern definition.

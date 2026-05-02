@@ -1,5 +1,5 @@
----
-title: "lerp-extremes: Calls to `lerp(a, b, t)` where the interpolation weight `t` is a numeric literal…"
+﻿---
+title: "lerp-extremes"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -17,7 +17,7 @@ related-rule: lerp-extremes
 
 ## TL;DR
 
-The `lerp(a, b, t)` intrinsic compiles to a multiply-add sequence: `a + t * (b - a)`, or on architectures with a native `lerp` instruction, to a single FMA-class operation. On AMD RDNA 3, `v_lerp_u8` exists for packed integer paths; for FP32 the compiler emits `v_fma_f32` (or two instructions: `v_sub_f32` + `v_mad_f32`). Either way, a call with a constant `t` of 0 or 1 performs arithmetic that reduces algebraically to a constant output — yet most GPU compilers do not eliminate the entire `lerp` call at the HLSL source level and instead rely on a later constant-folding pass that may not trigger across function boundaries or after inlining.
+The `lerp(a, b, t)` intrinsic compiles to a multiply-add sequence: `a + t * (b - a)`, or on architectures with a native `lerp` instruction, to a single FMA-class operation. On AMD RDNA 3, `v_lerp_u8` exists for packed integer paths; for FP32 the compiler emits `v_fma_f32` (or two instructions: `v_sub_f32` + `v_mad_f32`). Either way, a call with a constant `t` of 0 or 1 performs arithmetic that reduces algebraically to a constant output â€” yet most GPU compilers do not eliminate the entire `lerp` call at the HLSL source level and instead rely on a later constant-folding pass that may not trigger across function boundaries or after inlining.
 
 ## What the rule fires on
 

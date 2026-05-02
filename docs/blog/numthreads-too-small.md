@@ -1,5 +1,5 @@
----
-title: "numthreads-too-small: A compute or amplification shader whose `[numthreads(X, Y, Z)]` attribute produces a total thread…"
+﻿---
+title: "numthreads-too-small"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup
@@ -17,7 +17,7 @@ related-rule: numthreads-too-small
 
 ## TL;DR
 
-A thread group with fewer than 32 threads can never fill a single wave. On RDNA 3 with a 32-wide wave, a thread group of 16 threads is launched as one wave with 16 active lanes and 16 permanently masked-off lanes. Those 16 masked lanes are not recycled by the hardware — the wave occupies a full wave slot in the CU's wave scheduler for the entire duration of the kernel, including all memory latency hiding. This means that at best 50% of the execution resources in that wave slot are doing productive work. Across a full dispatch of many thread groups, effective VALU throughput is capped at 50% of the achievable rate for that occupancy level.
+A thread group with fewer than 32 threads can never fill a single wave. On RDNA 3 with a 32-wide wave, a thread group of 16 threads is launched as one wave with 16 active lanes and 16 permanently masked-off lanes. Those 16 masked lanes are not recycled by the hardware â€” the wave occupies a full wave slot in the CU's wave scheduler for the entire duration of the kernel, including all memory latency hiding. This means that at best 50% of the execution resources in that wave slot are doing productive work. Across a full dispatch of many thread groups, effective VALU throughput is capped at 50% of the achievable rate for that occupancy level.
 
 ## What the rule fires on
 

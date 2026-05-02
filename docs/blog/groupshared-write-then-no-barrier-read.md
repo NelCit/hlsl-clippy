@@ -1,5 +1,5 @@
----
-title: "groupshared-write-then-no-barrier-read: Compute shader code paths where a thread writes a `groupshared` location and a different…"
+﻿---
+title: "groupshared-write-then-no-barrier-read"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup

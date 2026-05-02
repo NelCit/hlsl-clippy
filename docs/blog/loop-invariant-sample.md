@@ -1,5 +1,5 @@
----
-title: "loop-invariant-sample: Calls to any texture sampling intrinsic — `Sample`, `SampleLevel`, `SampleGrad`, `SampleBias`, `SampleCmp`, `SampleCmpLevelZero`, `Gather`,…"
+﻿---
+title: "loop-invariant-sample"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow
@@ -21,7 +21,7 @@ A texture sample is one of the most expensive single operations in a GPU shader,
 
 ## What the rule fires on
 
-Calls to any texture sampling intrinsic — `Sample`, `SampleLevel`, `SampleGrad`, `SampleBias`, `SampleCmp`, `SampleCmpLevelZero`, `Gather`, `GatherRed`, `GatherGreen`, `GatherBlue`, `GatherAlpha`, `Load` — inside a loop body when the texture argument, sampler argument, and all coordinate arguments are loop-invariant: none of them depend on the loop induction variable or any value defined inside the loop. The rule fires when the UV or load coordinate is determined by the data-flow graph to be loop-invariant (no transitive dependency on the loop counter or any variable assigned inside the loop). It does not fire when any argument — including the mip level for `SampleLevel`, the gradient for `SampleGrad`, or any component of the coordinate — varies with the loop counter.
+Calls to any texture sampling intrinsic â€” `Sample`, `SampleLevel`, `SampleGrad`, `SampleBias`, `SampleCmp`, `SampleCmpLevelZero`, `Gather`, `GatherRed`, `GatherGreen`, `GatherBlue`, `GatherAlpha`, `Load` â€” inside a loop body when the texture argument, sampler argument, and all coordinate arguments are loop-invariant: none of them depend on the loop induction variable or any value defined inside the loop. The rule fires when the UV or load coordinate is determined by the data-flow graph to be loop-invariant (no transitive dependency on the loop counter or any variable assigned inside the loop). It does not fire when any argument â€” including the mip level for `SampleLevel`, the gradient for `SampleGrad`, or any component of the coordinate â€” varies with the loop counter.
 
 See the [What it detects](../rules/loop-invariant-sample.md#what-it-detects) section of
 the rule page for the full pattern definition.

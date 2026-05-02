@@ -1,5 +1,5 @@
----
-title: "omm-traceray-force-omm-2state-without-pipeline-flag: A `TraceRay(...)` call with `RAY_FLAG_FORCE_OMM_2_STATE` set when the DXR pipeline subobject's `D3D12_RAYTRACING_PIPELINE_FLAG_ALLOW_OPACITY_MICROMAPS` is not…"
+﻿---
+title: "omm-traceray-force-omm-2state-without-pipeline-flag"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: opacity-micromaps

@@ -1,5 +1,5 @@
----
-title: "loop-attribute-conflict: A `for`, `while`, or `do`-`while` loop whose attribute list contains a contradictory pair of…"
+﻿---
+title: "loop-attribute-conflict"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow
@@ -17,11 +17,11 @@ related-rule: loop-attribute-conflict
 
 ## TL;DR
 
-HLSL's loop attributes are mutually exclusive intent declarations, not composable flags. `[unroll]` tells the compiler to fully replicate the loop body and drop the back-edge entirely; `[loop]` tells the compiler to keep the loop as a real branch and *not* unroll. When both attributes appear on the same loop, DXC and Slang both pick one (typically the first declared, but the rule is not part of the spec) and emit a warning that is easy to miss in a noisy build log. The shader still compiles and runs correctly, but the runtime cost depends on which attribute won — and that choice is fragile across compiler versions and back-ends. The same source on the same hardware can swap between unrolled and rolled codegen across a DXC point release, which is exactly the kind of unowned drift this linter exists to catch.
+HLSL's loop attributes are mutually exclusive intent declarations, not composable flags. `[unroll]` tells the compiler to fully replicate the loop body and drop the back-edge entirely; `[loop]` tells the compiler to keep the loop as a real branch and *not* unroll. When both attributes appear on the same loop, DXC and Slang both pick one (typically the first declared, but the rule is not part of the spec) and emit a warning that is easy to miss in a noisy build log. The shader still compiles and runs correctly, but the runtime cost depends on which attribute won â€” and that choice is fragile across compiler versions and back-ends. The same source on the same hardware can swap between unrolled and rolled codegen across a DXC point release, which is exactly the kind of unowned drift this linter exists to catch.
 
 ## What the rule fires on
 
-A `for`, `while`, or `do`-`while` loop whose attribute list contains a contradictory pair of compiler hints — most commonly `[unroll]` together with `[loop]` on the same statement, or `[unroll(N)]` with `[loop]`. The rule also fires on `[unroll(N)]` where `N` exceeds a configurable threshold (`unroll-max`, default 32), because past that bound the unroll either silently degrades to `[loop]` codegen on every back-end or blows up VGPR pressure to the point of dropping wave occupancy. The rule does not fire on a lone `[unroll]`, a lone `[loop]`, a lone `[fastopt]`, or `[unroll(N)]` with `N` at or below the threshold — those are well-formed compiler hints with a single intent.
+A `for`, `while`, or `do`-`while` loop whose attribute list contains a contradictory pair of compiler hints â€” most commonly `[unroll]` together with `[loop]` on the same statement, or `[unroll(N)]` with `[loop]`. The rule also fires on `[unroll(N)]` where `N` exceeds a configurable threshold (`unroll-max`, default 32), because past that bound the unroll either silently degrades to `[loop]` codegen on every back-end or blows up VGPR pressure to the point of dropping wave occupancy. The rule does not fire on a lone `[unroll]`, a lone `[loop]`, a lone `[fastopt]`, or `[unroll(N)]` with `N` at or below the threshold â€” those are well-formed compiler hints with a single intent.
 
 See the [What it detects](../rules/loop-attribute-conflict.md#what-it-detects) section of
 the rule page for the full pattern definition.

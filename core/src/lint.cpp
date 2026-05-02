@@ -188,19 +188,23 @@ namespace {
                                                 ExperimentalTarget active_target,
                                                 SourceLanguage resolved_language,
                                                 const Config* config = nullptr) {
-    // ADR 0020 sub-phase A — when the resolved source language is Slang we
-    // skip the tree-sitter-hlsl parse entirely. Slang's language extensions
-    // (__generic, interface, extension, associatedtype, import) would surface
-    // as ERROR nodes that AST rules either misfire on or quietly skip; far
-    // cleaner to short-circuit the parser invocation and route directly to
-    // reflection. The orchestrator still emits a one-shot
-    // `clippy::language-skip-ast` notice so users see *why* AST/CFG rules
-    // were silent on this source.
+    // ADR 0021 sub-phase B (v1.4.0) — both `.hlsl` and `.slang` paths now
+    // dispatch the AST stage. `.slang` parses through tree-sitter-slang
+    // (which extends tree-sitter-hlsl by reference, preserving 99% of
+    // node-kinds) while `.hlsl` continues through tree-sitter-hlsl.
+    // `should_dispatch_ast_stage` is kept as a hook for a future opt-out
+    // surface (e.g. a Metal-only target language v2.0+); today it always
+    // returns true.
     const bool dispatch_ast = should_dispatch_ast_stage(resolved_language);
 
     std::optional<parser::ParsedSource> parsed;
     if (dispatch_ast) {
-        parsed = parser::parse(sources, source);
+        // ADR 0021 v1.4.x cleanup — pass the orchestrator-resolved
+        // `SourceLanguage` to the parser explicitly so a config override
+        // (`[lint] source-language = "slang"` on an `.hlsl`-extension path,
+        // or vice versa) routes to the correct grammar at the parser layer
+        // instead of being re-derived from the file extension.
+        parsed = parser::parse(sources, source, resolved_language);
         if (!parsed) {
             return {};
         }

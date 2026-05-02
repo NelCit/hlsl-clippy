@@ -1,5 +1,5 @@
----
-title: "compare-equal-float: Any use of `==` or `!=` where both operands are of type `float`, `half`,…"
+﻿---
+title: "compare-equal-float"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: misc
@@ -17,11 +17,11 @@ related-rule: compare-equal-float
 
 ## TL;DR
 
-Floating-point numbers represent values with finite precision: a 32-bit `float` has a 23-bit mantissa, meaning the gap between adjacent representable values (the ULP, unit in the last place) grows with magnitude. Two computations that produce the "same" value by different instruction sequences — different order of operations, different FMA folding, different intermediate registers — can land in adjacent ULPs and compare unequal even when mathematically they should be identical.
+Floating-point numbers represent values with finite precision: a 32-bit `float` has a 23-bit mantissa, meaning the gap between adjacent representable values (the ULP, unit in the last place) grows with magnitude. Two computations that produce the "same" value by different instruction sequences â€” different order of operations, different FMA folding, different intermediate registers â€” can land in adjacent ULPs and compare unequal even when mathematically they should be identical.
 
 ## What the rule fires on
 
-Any use of `==` or `!=` where both operands are of type `float`, `half`, `float2`/`float3`/`float4`, or the corresponding `half` vector types. The rule fires on the comparison operator node. It does not fire when either operand is of an integer type (`int`, `uint`, `bool`, etc.) or when the comparison is between a float value and a literal that the compiler can prove is exactly representable and the surrounding context is a known-safe pattern (such as comparing against `0.0` inside a `isnan`-style idiom — see Options). Integer `==` is correct and is never flagged.
+Any use of `==` or `!=` where both operands are of type `float`, `half`, `float2`/`float3`/`float4`, or the corresponding `half` vector types. The rule fires on the comparison operator node. It does not fire when either operand is of an integer type (`int`, `uint`, `bool`, etc.) or when the comparison is between a float value and a literal that the compiler can prove is exactly representable and the surrounding context is a known-safe pattern (such as comparing against `0.0` inside a `isnan`-style idiom â€” see Options). Integer `==` is correct and is never flagged.
 
 See the [What it detects](../rules/compare-equal-float.md#what-it-detects) section of
 the rule page for the full pattern definition.

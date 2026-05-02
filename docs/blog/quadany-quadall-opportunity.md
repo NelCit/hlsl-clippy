@@ -1,5 +1,5 @@
----
-title: "quadany-quadall-opportunity: A pixel-shader `if (cond)` whose condition is a per-lane (quad-divergent) boolean and whose body…"
+﻿---
+title: "quadany-quadall-opportunity"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow
@@ -17,11 +17,11 @@ related-rule: quadany-quadall-opportunity
 
 ## TL;DR
 
-Pixel-shader derivatives (`ddx`, `ddy`, and the implicit derivatives consumed by `Sample`) are computed by differencing values across the 2x2 quad of neighbouring pixels. The hardware requires all four quad lanes to be active — even pixels outside the rendered triangle remain active as "helper lanes" specifically to supply derivative samples. When a per-lane `if` retires some quad lanes (because their condition is false), the derivative inputs from those lanes become undefined: AMD RDNA 2/3 returns implementation-defined values for the derivative tap from a retired lane, NVIDIA Ada produces undefined sampler LOD on the surviving lanes' implicit-derivative samples, and Intel Xe-HPG behaves similarly. The visible artefact is mip-aliasing or seams at the boundary between branch-taken and branch-not-taken regions.
+Pixel-shader derivatives (`ddx`, `ddy`, and the implicit derivatives consumed by `Sample`) are computed by differencing values across the 2x2 quad of neighbouring pixels. The hardware requires all four quad lanes to be active â€” even pixels outside the rendered triangle remain active as "helper lanes" specifically to supply derivative samples. When a per-lane `if` retires some quad lanes (because their condition is false), the derivative inputs from those lanes become undefined: AMD RDNA 2/3 returns implementation-defined values for the derivative tap from a retired lane, NVIDIA Ada produces undefined sampler LOD on the surviving lanes' implicit-derivative samples, and Intel Xe-HPG behaves similarly. The visible artefact is mip-aliasing or seams at the boundary between branch-taken and branch-not-taken regions.
 
 ## What the rule fires on
 
-A pixel-shader `if (cond)` whose condition is a per-lane (quad-divergent) boolean and whose body issues at least one derivative-bearing operation — `Sample`, `SampleBias`, `SampleGrad`, `ddx`, `ddy`, `ddx_fine`, `ddy_fine`, or any function call that transitively invokes one. The opportunity is to wrap the condition in `QuadAny(cond)`, so that whenever any lane in the 2x2 quad takes the branch, all four lanes participate as helpers and the derivative ops have valid neighbour samples. Companion (not duplicate) of the locked ADR 0010 rule `quadany-replaceable-with-derivative-uniform-branch` — that rule detects the *opposite* direction (replace `QuadAny` with a derivative-uniform predicate); this rule detects the forward direction (wrap a plain `if` in `QuadAny`).
+A pixel-shader `if (cond)` whose condition is a per-lane (quad-divergent) boolean and whose body issues at least one derivative-bearing operation â€” `Sample`, `SampleBias`, `SampleGrad`, `ddx`, `ddy`, `ddx_fine`, `ddy_fine`, or any function call that transitively invokes one. The opportunity is to wrap the condition in `QuadAny(cond)`, so that whenever any lane in the 2x2 quad takes the branch, all four lanes participate as helpers and the derivative ops have valid neighbour samples. Companion (not duplicate) of the locked ADR 0010 rule `quadany-replaceable-with-derivative-uniform-branch` â€” that rule detects the *opposite* direction (replace `QuadAny` with a derivative-uniform predicate); this rule detects the forward direction (wrap a plain `if` in `QuadAny`).
 
 See the [What it detects](../rules/quadany-quadall-opportunity.md#what-it-detects) section of
 the rule page for the full pattern definition.

@@ -1,5 +1,5 @@
----
-title: "feedback-every-sample: Calls to `WriteSamplerFeedback`, `WriteSamplerFeedbackBias`, `WriteSamplerFeedbackGrad`, or `WriteSamplerFeedbackLevel` placed unconditionally in the hot path of…"
+﻿---
+title: "feedback-every-sample"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: sampler-feedback

@@ -1,5 +1,5 @@
----
-title: "length-then-divide: Expressions that normalise a vector by manually dividing it by its own length, in…"
+﻿---
+title: "length-then-divide"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -17,7 +17,7 @@ related-rule: length-then-divide
 
 ## TL;DR
 
-`normalize(v)` is an HLSL intrinsic that lowers to the canonical `v * rsqrt(dot(v, v))` sequence on every shipping GPU compiler. The manual `v / length(v)` lowers to `v / sqrt(dot(v, v))`, which is materially worse on the hardware. On AMD RDNA 3, `v_sqrt_f32` and `v_rsq_f32` both occupy the transcendental unit at one-quarter VALU throughput, so the square-root step is the same cost. The difference is the divide: GPU FP division is not a single-cycle operation. RDNA 3 implements scalar FP32 divide as a software macro built on `v_rcp_f32` (one transcendental issue) plus a Newton-Raphson refinement step, totalling roughly 3-5 effective cycles. NVIDIA Ada Lovelace lowers FP32 divide similarly, with `MUFU.RCP` plus refinement on the multi-function unit. The `rsqrt`-and-multiply path replaces the divide with one rcp-equivalent transcendental and one full-rate multiply per vector component — a net saving of 2-4 cycles per normalisation site over the divide form, before counting the vector multiply that the divide must do per-component anyway.
+`normalize(v)` is an HLSL intrinsic that lowers to the canonical `v * rsqrt(dot(v, v))` sequence on every shipping GPU compiler. The manual `v / length(v)` lowers to `v / sqrt(dot(v, v))`, which is materially worse on the hardware. On AMD RDNA 3, `v_sqrt_f32` and `v_rsq_f32` both occupy the transcendental unit at one-quarter VALU throughput, so the square-root step is the same cost. The difference is the divide: GPU FP division is not a single-cycle operation. RDNA 3 implements scalar FP32 divide as a software macro built on `v_rcp_f32` (one transcendental issue) plus a Newton-Raphson refinement step, totalling roughly 3-5 effective cycles. NVIDIA Ada Lovelace lowers FP32 divide similarly, with `MUFU.RCP` plus refinement on the multi-function unit. The `rsqrt`-and-multiply path replaces the divide with one rcp-equivalent transcendental and one full-rate multiply per vector component â€” a net saving of 2-4 cycles per normalisation site over the divide form, before counting the vector multiply that the divide must do per-component anyway.
 
 ## What the rule fires on
 

@@ -1,5 +1,5 @@
----
-title: "groupshared-too-large: One or more `groupshared` variable declarations in a compute shader whose combined byte size…"
+﻿---
+title: "groupshared-too-large"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup

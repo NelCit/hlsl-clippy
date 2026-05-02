@@ -1,5 +1,5 @@
----
-title: "div-without-epsilon: Division expressions `a / b` where the divisor `b` is one of: a `length(...)`…"
+﻿---
+title: "div-without-epsilon"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math

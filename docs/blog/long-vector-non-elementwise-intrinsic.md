@@ -1,5 +1,5 @@
----
-title: "long-vector-non-elementwise-intrinsic: A call to a non-elementwise HLSL intrinsic — `cross`, `length`, `normalize`, `dot` (under specific…"
+﻿---
+title: "long-vector-non-elementwise-intrinsic"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: long-vectors
@@ -21,7 +21,7 @@ The SM 6.9 long-vector feature is a codegen change: DXIL gains first-class `vect
 
 ## What the rule fires on
 
-A call to a non-elementwise HLSL intrinsic — `cross`, `length`, `normalize`, `dot` (under specific arity rules), `transpose`, `mul` against a matrix, `determinant` — applied to a `vector<T, N>` with `N >= 5`. The SM 6.9 long-vector specification (DXIL vectors, proposal 0030) extends `vector<T, N>` to support `5 <= N <= 1024`, but only for *elementwise* intrinsics: arithmetic operators, `abs`, `sqrt`, `exp`, `log`, `min`, `max`, `mad`, `lerp`, `step`, `saturate`, comparison operators, and the like. Geometric, structural, and matrix-shape intrinsics are explicitly out of scope and produce a hard DXC validation error. The rule is pure AST: intrinsic name plus the literal vector type on the argument.
+A call to a non-elementwise HLSL intrinsic â€” `cross`, `length`, `normalize`, `dot` (under specific arity rules), `transpose`, `mul` against a matrix, `determinant` â€” applied to a `vector<T, N>` with `N >= 5`. The SM 6.9 long-vector specification (DXIL vectors, proposal 0030) extends `vector<T, N>` to support `5 <= N <= 1024`, but only for *elementwise* intrinsics: arithmetic operators, `abs`, `sqrt`, `exp`, `log`, `min`, `max`, `mad`, `lerp`, `step`, `saturate`, comparison operators, and the like. Geometric, structural, and matrix-shape intrinsics are explicitly out of scope and produce a hard DXC validation error. The rule is pure AST: intrinsic name plus the literal vector type on the argument.
 
 See the [What it detects](../rules/long-vector-non-elementwise-intrinsic.md#what-it-detects) section of
 the rule page for the full pattern definition.

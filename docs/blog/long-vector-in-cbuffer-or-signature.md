@@ -1,5 +1,5 @@
----
-title: "long-vector-in-cbuffer-or-signature: A `vector<T, N>` with `N >= 5` declared as a member of a `cbuffer`…"
+﻿---
+title: "long-vector-in-cbuffer-or-signature"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: long-vectors

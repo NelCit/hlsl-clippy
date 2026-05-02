@@ -1,5 +1,5 @@
----
-title: "hitobject-stored-in-memory: A `dx::HitObject` value (the SM 6.9 Shader Execution Reordering type) stored into any memory…"
+﻿---
+title: "hitobject-stored-in-memory"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: ser
@@ -17,7 +17,7 @@ related-rule: hitobject-stored-in-memory
 
 ## TL;DR
 
-`dx::HitObject` represents a deferred ray-tracing hit that has already executed traversal but has not yet been dispatched to its closest-hit / any-hit / miss shader. On NVIDIA Ada Lovelace (the launch IHV for SER) the HitObject lives in a per-lane register file slice that the RT cores own jointly with the SM; on AMD RDNA 3/4 (when SER ships there) the same lifetime constraint applies. Storing a HitObject in memory is meaningless because the runtime cannot reconstruct the per-lane RT-core state from a flat byte representation — there is no canonical layout, and the spec deliberately leaves it implementation-defined.
+`dx::HitObject` represents a deferred ray-tracing hit that has already executed traversal but has not yet been dispatched to its closest-hit / any-hit / miss shader. On NVIDIA Ada Lovelace (the launch IHV for SER) the HitObject lives in a per-lane register file slice that the RT cores own jointly with the SM; on AMD RDNA 3/4 (when SER ships there) the same lifetime constraint applies. Storing a HitObject in memory is meaningless because the runtime cannot reconstruct the per-lane RT-core state from a flat byte representation â€” there is no canonical layout, and the spec deliberately leaves it implementation-defined.
 
 ## What the rule fires on
 

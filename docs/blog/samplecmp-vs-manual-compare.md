@@ -1,5 +1,5 @@
----
-title: "samplecmp-vs-manual-compare: A pattern where a shader samples a depth or shadow texture with a standard…"
+﻿---
+title: "samplecmp-vs-manual-compare"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: texture

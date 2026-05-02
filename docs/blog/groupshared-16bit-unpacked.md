@@ -1,5 +1,5 @@
----
-title: "groupshared-16bit-unpacked: A `groupshared` array whose element type is `min16float`, `min16uint`, `min16int`, `float16_t`, `uint16_t`, or `int16_t`,…"
+﻿---
+title: "groupshared-16bit-unpacked"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup
@@ -17,7 +17,7 @@ related-rule: groupshared-16bit-unpacked
 
 ## TL;DR
 
-AMD RDNA 2/3 packs two 16-bit values per VGPR lane and per LDS bank, but the packing only pays off when the entire data path stays narrow. The hardware exposes packed-math instructions (`v_pk_add_f16`, `v_pk_mul_f16`, `v_dot2_f16`) that consume two `float16` lanes per VGPR and produce two `float16` results in one issue slot. When source code stores `min16float` in groupshared but widens to `float` at the load site, the savings collapse: the LDS access still moves the narrow representation, but the immediately-following type promotion forces the value into a full-width VGPR before any arithmetic, and the compiler cannot recover the narrow packing without proving every consumer remains narrow. NVIDIA Turing introduced HFMA2 and Ada extends it; the same principle holds — the half2 / int16x2 instructions need narrow operands sitting in narrow registers, not promoted scalars.
+AMD RDNA 2/3 packs two 16-bit values per VGPR lane and per LDS bank, but the packing only pays off when the entire data path stays narrow. The hardware exposes packed-math instructions (`v_pk_add_f16`, `v_pk_mul_f16`, `v_dot2_f16`) that consume two `float16` lanes per VGPR and produce two `float16` results in one issue slot. When source code stores `min16float` in groupshared but widens to `float` at the load site, the savings collapse: the LDS access still moves the narrow representation, but the immediately-following type promotion forces the value into a full-width VGPR before any arithmetic, and the compiler cannot recover the narrow packing without proving every consumer remains narrow. NVIDIA Turing introduced HFMA2 and Ada extends it; the same principle holds â€” the half2 / int16x2 instructions need narrow operands sitting in narrow registers, not promoted scalars.
 
 ## What the rule fires on
 

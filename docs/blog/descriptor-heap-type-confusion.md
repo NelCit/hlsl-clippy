@@ -1,5 +1,5 @@
----
-title: "descriptor-heap-type-confusion: An SM 6.6 dynamic heap access where the descriptor heap type does not match…"
+﻿---
+title: "descriptor-heap-type-confusion"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -17,7 +17,7 @@ related-rule: descriptor-heap-type-confusion
 
 ## TL;DR
 
-D3D12 descriptor heaps come in two distinct physical types: `D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV` (for constant buffer views, shader resource views, and unordered access views) and `D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER` (for samplers). These are separate memory regions in driver-managed GPU-accessible memory. At the hardware level — RDNA, Turing, Xe-HPG — the descriptor table pointer that the driver uses to locate a sampler lives in a different register from the one that locates CBVs/SRVs/UAVs. When HLSL accesses `SamplerDescriptorHeap[i]` and casts the result to a `Texture2D`, the driver forwards the sampler-heap base address to a resource-descriptor load unit; that unit interprets sampler-heap binary data as a resource descriptor. The result is a garbage resource handle.
+D3D12 descriptor heaps come in two distinct physical types: `D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV` (for constant buffer views, shader resource views, and unordered access views) and `D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER` (for samplers). These are separate memory regions in driver-managed GPU-accessible memory. At the hardware level â€” RDNA, Turing, Xe-HPG â€” the descriptor table pointer that the driver uses to locate a sampler lives in a different register from the one that locates CBVs/SRVs/UAVs. When HLSL accesses `SamplerDescriptorHeap[i]` and casts the result to a `Texture2D`, the driver forwards the sampler-heap base address to a resource-descriptor load unit; that unit interprets sampler-heap binary data as a resource descriptor. The result is a garbage resource handle.
 
 ## What the rule fires on
 

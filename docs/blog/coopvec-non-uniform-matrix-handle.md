@@ -1,5 +1,5 @@
----
-title: "coopvec-non-uniform-matrix-handle: A cooperative-vector matrix-multiply call (`MatrixMul`, `MatrixVectorMul`, `OuterProductAccumulate`) whose matrix-handle, base-offset, stride, or interpretation argument…"
+﻿---
+title: "coopvec-non-uniform-matrix-handle"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: cooperative-vector

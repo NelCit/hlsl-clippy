@@ -1,5 +1,5 @@
----
-title: "groupshared-first-read-without-barrier: A read of `gs[expr]` reachable from the kernel entry without any preceding `GroupMemoryBarrierWithGroupSync` (or…"
+﻿---
+title: "groupshared-first-read-without-barrier"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup
@@ -17,7 +17,7 @@ related-rule: groupshared-first-read-without-barrier
 
 ## TL;DR
 
-The HLSL / D3D12 memory model treats groupshared memory as unordered across lanes until a `GroupMemoryBarrier*` makes prior writes visible. Without that barrier, a lane reading `gs[some_other_lane_index]` is racing the lane that wrote that cell. The race is real on every modern GPU: AMD RDNA 2/3 issues LDS reads through the LDS read port without a wait on prior writes from sibling waves in the same workgroup; NVIDIA Ada's shared-memory unit similarly does not auto-fence cross-warp reads; Intel Xe-HPG SLM behaves identically. The hazard often hides behind a same-wave coincidence (within a single wave, lanes execute in lockstep on most IHVs, so a same-wave write-then-read happens to work), but as soon as a workgroup contains more than one wave, cross-wave reads see undefined values — sometimes the new write, sometimes the old.
+The HLSL / D3D12 memory model treats groupshared memory as unordered across lanes until a `GroupMemoryBarrier*` makes prior writes visible. Without that barrier, a lane reading `gs[some_other_lane_index]` is racing the lane that wrote that cell. The race is real on every modern GPU: AMD RDNA 2/3 issues LDS reads through the LDS read port without a wait on prior writes from sibling waves in the same workgroup; NVIDIA Ada's shared-memory unit similarly does not auto-fence cross-warp reads; Intel Xe-HPG SLM behaves identically. The hazard often hides behind a same-wave coincidence (within a single wave, lanes execute in lockstep on most IHVs, so a same-wave write-then-read happens to work), but as soon as a workgroup contains more than one wave, cross-wave reads see undefined values â€” sometimes the new write, sometimes the old.
 
 ## What the rule fires on
 

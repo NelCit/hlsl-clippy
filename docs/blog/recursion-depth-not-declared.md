@@ -1,5 +1,5 @@
----
-title: "recursion-depth-not-declared: DXR pipeline-state-object construction sites (in companion C++ source consumed by the linter, or in…"
+﻿---
+title: "recursion-depth-not-declared"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: dxr
@@ -17,7 +17,7 @@ related-rule: recursion-depth-not-declared
 
 ## TL;DR
 
-`MaxTraceRecursionDepth` is not a hint — it is a hard sizing parameter the driver uses to allocate the per-lane ray stack at PSO creation time. The runtime multiplies the declared depth by the maximum payload + attribute + per-call live-state footprint to compute the stack size, then allocates that amount of scratch memory per lane in the launch grid. On a 1080p `DispatchRays` with one ray per pixel and 64-lane waves on RDNA 3, the ray-stack pool sized at `MaxTraceRecursionDepth = 8` versus `MaxTraceRecursionDepth = 2` is a four-times difference in allocated scratch — easily tens of megabytes of VRAM that sits unused if the actual depth is shallower.
+`MaxTraceRecursionDepth` is not a hint â€” it is a hard sizing parameter the driver uses to allocate the per-lane ray stack at PSO creation time. The runtime multiplies the declared depth by the maximum payload + attribute + per-call live-state footprint to compute the stack size, then allocates that amount of scratch memory per lane in the launch grid. On a 1080p `DispatchRays` with one ray per pixel and 64-lane waves on RDNA 3, the ray-stack pool sized at `MaxTraceRecursionDepth = 8` versus `MaxTraceRecursionDepth = 2` is a four-times difference in allocated scratch â€” easily tens of megabytes of VRAM that sits unused if the actual depth is shallower.
 
 ## What the rule fires on
 

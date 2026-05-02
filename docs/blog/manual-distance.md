@@ -1,5 +1,5 @@
----
-title: "manual-distance: The expression `length(a - b)` where `a` and `b` are vector expressions. The rule…"
+﻿---
+title: "manual-distance"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math

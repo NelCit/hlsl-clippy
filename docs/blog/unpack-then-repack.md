@@ -1,5 +1,5 @@
----
-title: "unpack-then-repack: An `unpack_u8u32` (or `unpack_s8s32`) call on a value whose four unpacked channels are then…"
+﻿---
+title: "unpack-then-repack"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: packed-math

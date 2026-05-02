@@ -1,5 +1,5 @@
----
-title: "quadany-quadall-non-quad-stage: A call to `QuadAny(...)`, `QuadAll(...)`, `QuadReadAcrossX`, `QuadReadAcrossY`, or `QuadReadAcrossDiagonal` from an entry stage that…"
+﻿---
+title: "quadany-quadall-non-quad-stage"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: wave-helper-lane

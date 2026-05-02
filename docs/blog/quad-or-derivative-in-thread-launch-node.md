@@ -1,5 +1,5 @@
----
-title: "quad-or-derivative-in-thread-launch-node: Work-graph nodes declared with `[NodeLaunch("thread")]` (thread-launch nodes, where each input record produces a single…"
+﻿---
+title: "quad-or-derivative-in-thread-launch-node"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: work-graphs

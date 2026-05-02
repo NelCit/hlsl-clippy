@@ -1,5 +1,5 @@
----
-title: "manual-srgb-conversion: A hand-rolled gamma 2.2 or sRGB transfer function (`pow(c, 2.2)`, `pow(c.rgb, 2.2)`, `pow(c, 1.0/2.2)`,…"
+﻿---
+title: "manual-srgb-conversion"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: texture
@@ -17,7 +17,7 @@ related-rule: manual-srgb-conversion
 
 ## TL;DR
 
-`*_SRGB` texture formats on every modern GPU IHV invoke a hardware sRGB-to-linear converter on every texel fetch. AMD RDNA 2/3 documents the converter as part of the TMU's format-decode pipeline; NVIDIA Turing/Ada and Intel Xe-HPG provide equivalent hardware. The hardware converter runs for free on the sample path — there is no shader-cycle cost — and it implements the exact piecewise sRGB curve from the IEC 61966-2-1 specification, with sub-bit precision better than what a 32-bit `pow(c, 2.2)` can achieve given the precision loss of the transcendental.
+`*_SRGB` texture formats on every modern GPU IHV invoke a hardware sRGB-to-linear converter on every texel fetch. AMD RDNA 2/3 documents the converter as part of the TMU's format-decode pipeline; NVIDIA Turing/Ada and Intel Xe-HPG provide equivalent hardware. The hardware converter runs for free on the sample path â€” there is no shader-cycle cost â€” and it implements the exact piecewise sRGB curve from the IEC 61966-2-1 specification, with sub-bit precision better than what a 32-bit `pow(c, 2.2)` can achieve given the precision loss of the transcendental.
 
 ## What the rule fires on
 

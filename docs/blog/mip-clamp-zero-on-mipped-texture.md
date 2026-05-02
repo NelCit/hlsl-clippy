@@ -1,5 +1,5 @@
----
-title: "mip-clamp-zero-on-mipped-texture: A `SamplerState` whose descriptor pins `MaxLOD = 0` (or a `Sample`/`SampleLevel` call with `clamp…"
+﻿---
+title: "mip-clamp-zero-on-mipped-texture"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: texture
@@ -17,7 +17,7 @@ related-rule: mip-clamp-zero-on-mipped-texture
 
 ## TL;DR
 
-Mipmaps on every desktop GPU exist for two reasons: anti-aliasing minified samples (the higher-frequency texels of mip 0 alias under minification, so the hardware blends in coarser mips when the screen-space derivatives indicate minification) and bandwidth amortisation (a coarser mip is 1/4 the texel count and 1/4 the bandwidth). The texture sampler unit on AMD RDNA 2/3 (TMU), NVIDIA Turing/Ada (TEX/L1), and Intel Xe-HPG samples mips by computing a fractional LOD from the screen-space derivatives, then trilinearly blending two adjacent mips. When `MaxLOD = 0`, the hardware clamps the LOD selection to mip 0 regardless of derivatives — minified samples re-enter the aliasing regime and bandwidth scales with screen footprint instead of texel footprint.
+Mipmaps on every desktop GPU exist for two reasons: anti-aliasing minified samples (the higher-frequency texels of mip 0 alias under minification, so the hardware blends in coarser mips when the screen-space derivatives indicate minification) and bandwidth amortisation (a coarser mip is 1/4 the texel count and 1/4 the bandwidth). The texture sampler unit on AMD RDNA 2/3 (TMU), NVIDIA Turing/Ada (TEX/L1), and Intel Xe-HPG samples mips by computing a fractional LOD from the screen-space derivatives, then trilinearly blending two adjacent mips. When `MaxLOD = 0`, the hardware clamps the LOD selection to mip 0 regardless of derivatives â€” minified samples re-enter the aliasing regime and bandwidth scales with screen footprint instead of texel footprint.
 
 ## What the rule fires on
 

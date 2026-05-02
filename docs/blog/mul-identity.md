@@ -1,5 +1,5 @@
----
-title: "mul-identity: Arithmetic expressions where one operand is a numeric literal that makes the operation trivially…"
+﻿---
+title: "mul-identity"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -17,7 +17,7 @@ related-rule: mul-identity
 
 ## TL;DR
 
-Every VALU instruction on a GPU occupies an issue slot. On AMD RDNA 3, the VALU can sustain one FP32 instruction per clock per SIMD32 lane at peak throughput. A multiply-by-one issues an FP32 `v_mul_f32` that reads two source registers, executes a multiply, and writes back — doing mathematically zero work. A GPU compiler may eliminate these in an early simplification pass, but only when the constant is visible and the pass runs before register allocation. Across function boundaries, after constant-buffer loads, or in generated shader code from offline material compilers, this simplification frequently does not happen at the HLSL level.
+Every VALU instruction on a GPU occupies an issue slot. On AMD RDNA 3, the VALU can sustain one FP32 instruction per clock per SIMD32 lane at peak throughput. A multiply-by-one issues an FP32 `v_mul_f32` that reads two source registers, executes a multiply, and writes back â€” doing mathematically zero work. A GPU compiler may eliminate these in an early simplification pass, but only when the constant is visible and the pass runs before register allocation. Across function boundaries, after constant-buffer loads, or in generated shader code from offline material compilers, this simplification frequently does not happen at the HLSL level.
 
 ## What the rule fires on
 

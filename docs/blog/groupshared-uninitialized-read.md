@@ -1,5 +1,5 @@
----
-title: "groupshared-uninitialized-read: Reads from a `groupshared` variable or array element before any thread in the group…"
+﻿---
+title: "groupshared-uninitialized-read"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow
@@ -17,7 +17,7 @@ related-rule: groupshared-uninitialized-read
 
 ## TL;DR
 
-Groupshared memory (LDS on AMD, shared memory on NVIDIA, SLM on Intel Xe) is allocated per thread group and retains its value only for the duration of a single group's lifetime. At the start of a group's execution, the contents of its LDS allocation are undefined — the hardware does not zero-initialise it. On most implementations, LDS will contain whatever a previous thread group wrote to those addresses before it finished, or potentially hardware-specific reset values. Either way, reading before writing produces a value that is not under programmer control and will vary across hardware, driver versions, and group scheduling order.
+Groupshared memory (LDS on AMD, shared memory on NVIDIA, SLM on Intel Xe) is allocated per thread group and retains its value only for the duration of a single group's lifetime. At the start of a group's execution, the contents of its LDS allocation are undefined â€” the hardware does not zero-initialise it. On most implementations, LDS will contain whatever a previous thread group wrote to those addresses before it finished, or potentially hardware-specific reset values. Either way, reading before writing produces a value that is not under programmer control and will vary across hardware, driver versions, and group scheduling order.
 
 ## What the rule fires on
 

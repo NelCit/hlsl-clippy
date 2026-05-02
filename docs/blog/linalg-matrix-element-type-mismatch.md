@@ -1,5 +1,5 @@
----
-title: "linalg-matrix-element-type-mismatch: A `linalg::*Mul` chain whose matrix element type (e.g. `COMPONENT_TYPE_FLOAT16`, `COMPONENT_TYPE_FLOAT_E4M3`) is mixed with a…"
+﻿---
+title: "linalg-matrix-element-type-mismatch"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: linalg

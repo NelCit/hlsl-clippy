@@ -1,5 +1,5 @@
----
-title: "nodeid-implicit-mismatch: A work-graph node entry where the node's implicit `[NodeID(...)]` (derived from the function name…"
+﻿---
+title: "nodeid-implicit-mismatch"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: work-graphs

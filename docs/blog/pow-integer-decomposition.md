@@ -1,5 +1,5 @@
----
-title: "pow-integer-decomposition: Calls to `pow(x, e)` where the exponent `e` is a literal integer or floating-point…"
+﻿---
+title: "pow-integer-decomposition"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -17,7 +17,7 @@ related-rule: pow-integer-decomposition
 
 ## TL;DR
 
-As described in [pow-to-mul](pow-to-mul.md), `pow(x, e)` on AMD RDNA/RDNA 2/RDNA 3, NVIDIA Turing/Ada Lovelace, and Intel Xe-HPG always lowers to `exp2(e * log2(x))` regardless of the exponent value. A `pow(x, 5.0)` call carries the same two-quarter-rate-instruction cost as `pow(x, 5000.0)`. For small integer exponents that cost can be replaced by a sequence of full-rate multiply instructions using the pow-by-squaring algorithm: `pow(x, 5)` becomes `x2 = x*x; x4 = x2*x2; return x4*x;` — three multiplies, all at full VALU rate. On RDNA 3, a full-rate FP32 multiply issues at 1 per clock per SIMD32 lane; three of them cost 3 full-rate cycles versus the ~4 effective cycles of the transcendental pair, and critically they occupy the general VALU rather than the shared transcendental unit (TALU).
+As described in [pow-to-mul](pow-to-mul.md), `pow(x, e)` on AMD RDNA/RDNA 2/RDNA 3, NVIDIA Turing/Ada Lovelace, and Intel Xe-HPG always lowers to `exp2(e * log2(x))` regardless of the exponent value. A `pow(x, 5.0)` call carries the same two-quarter-rate-instruction cost as `pow(x, 5000.0)`. For small integer exponents that cost can be replaced by a sequence of full-rate multiply instructions using the pow-by-squaring algorithm: `pow(x, 5)` becomes `x2 = x*x; x4 = x2*x2; return x4*x;` â€” three multiplies, all at full VALU rate. On RDNA 3, a full-rate FP32 multiply issues at 1 per clock per SIMD32 lane; three of them cost 3 full-rate cycles versus the ~4 effective cycles of the transcendental pair, and critically they occupy the general VALU rather than the shared transcendental unit (TALU).
 
 ## What the rule fires on
 

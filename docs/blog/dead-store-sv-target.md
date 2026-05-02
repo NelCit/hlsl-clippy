@@ -1,5 +1,5 @@
----
-title: "dead-store-sv-target: An assignment to a pixel-shader output variable carrying the `SV_Target` semantic (or to a…"
+﻿---
+title: "dead-store-sv-target"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -17,11 +17,11 @@ related-rule: dead-store-sv-target
 
 ## TL;DR
 
-A dead store to an `SV_Target` output variable computes and writes a value that the GPU will never read. The computation of the dead value — any arithmetic, texture samples, or other operations that produced it — is wasted ALU and memory bandwidth. On AMD RDNA and NVIDIA Turing, the compiler may eliminate simple constant dead stores (e.g., `result = float4(1,0,0,1)` followed by an unconditional override), but it cannot in general eliminate dead stores whose right-hand side involves function calls, texture samples, or control-flow-dependent values without a full inter-procedural dead-code elimination pass — which GPU shader compilers rarely perform at the full-program scale.
+A dead store to an `SV_Target` output variable computes and writes a value that the GPU will never read. The computation of the dead value â€” any arithmetic, texture samples, or other operations that produced it â€” is wasted ALU and memory bandwidth. On AMD RDNA and NVIDIA Turing, the compiler may eliminate simple constant dead stores (e.g., `result = float4(1,0,0,1)` followed by an unconditional override), but it cannot in general eliminate dead stores whose right-hand side involves function calls, texture samples, or control-flow-dependent values without a full inter-procedural dead-code elimination pass â€” which GPU shader compilers rarely perform at the full-program scale.
 
 ## What the rule fires on
 
-An assignment to a pixel-shader output variable carrying the `SV_Target` semantic (or to a local variable that is returned as `SV_Target`) where that assignment is immediately overwritten on all paths before the value is returned or used. The first write is a dead store: it is never read, so the computation and the write are wasted. The rule uses Slang's reflection API to identify `SV_Target`-typed outputs and a light data-flow pass to detect write-before-read patterns within the same function scope. See `tests/fixtures/phase3/bindings_extra.hlsl`, lines 42–46 for the `ps_dead_store` example: `float4 result = float4(1,0,0,1)` is written and then immediately overwritten by `result = float4(0,1,0,1)` before `result` is used.
+An assignment to a pixel-shader output variable carrying the `SV_Target` semantic (or to a local variable that is returned as `SV_Target`) where that assignment is immediately overwritten on all paths before the value is returned or used. The first write is a dead store: it is never read, so the computation and the write are wasted. The rule uses Slang's reflection API to identify `SV_Target`-typed outputs and a light data-flow pass to detect write-before-read patterns within the same function scope. See `tests/fixtures/phase3/bindings_extra.hlsl`, lines 42â€“46 for the `ps_dead_store` example: `float4 result = float4(1,0,0,1)` is written and then immediately overwritten by `result = float4(0,1,0,1)` before `result` is used.
 
 See the [What it detects](../rules/dead-store-sv-target.md#what-it-detects) section of
 the rule page for the full pattern definition.

@@ -1,5 +1,5 @@
----
-title: "min16float-opportunity: ALU-bound regions in a shader where all values in a computation chain are `float`…"
+﻿---
+title: "min16float-opportunity"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: packed-math
@@ -21,7 +21,7 @@ related-rule: min16float-opportunity
 
 ## What the rule fires on
 
-ALU-bound regions in a shader where all values in a computation chain are `float` (32-bit) but the precision requirement is consistent with `min16float` (minimum 16-bit): the inputs are either in the normalised range [0, 1] (colour channels, barycentric weights, UV coordinates), or the computation is an accumulation whose intermediate error budget allows 16-bit rounding. The rule fires when it can establish — either from value-range analysis or from explicit `saturate`/clamp annotations — that no intermediate value in the chain exceeds the `min16float` representable range and that the output is consumed by a write to an 8-bit render target, a sampler-feedback write, or an explicit conversion back to a packed format.
+ALU-bound regions in a shader where all values in a computation chain are `float` (32-bit) but the precision requirement is consistent with `min16float` (minimum 16-bit): the inputs are either in the normalised range [0, 1] (colour channels, barycentric weights, UV coordinates), or the computation is an accumulation whose intermediate error budget allows 16-bit rounding. The rule fires when it can establish â€” either from value-range analysis or from explicit `saturate`/clamp annotations â€” that no intermediate value in the chain exceeds the `min16float` representable range and that the output is consumed by a write to an 8-bit render target, a sampler-feedback write, or an explicit conversion back to a packed format.
 
 See the [What it detects](../rules/min16float-opportunity.md#what-it-detects) section of
 the rule page for the full pattern definition.

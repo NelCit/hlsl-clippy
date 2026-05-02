@@ -1,5 +1,5 @@
----
-title: "gather-channel-narrowing: Expressions of the form `texture.Gather(sampler, uv).r`, `.g`, `.b`, or `.a` — where `Gather` is…"
+﻿---
+title: "gather-channel-narrowing"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: texture
@@ -21,7 +21,7 @@ related-rule: gather-channel-narrowing
 
 ## What the rule fires on
 
-Expressions of the form `texture.Gather(sampler, uv).r`, `.g`, `.b`, or `.a` — where `Gather` is called and only a single scalar channel of the resulting `float4` is consumed. The rule fires when the swizzle immediately follows the `Gather` call and the remaining three components are provably dead (not stored, not passed to a function, not part of a larger swizzle). The equivalent hardware-direct call is `GatherRed`, `GatherGreen`, `GatherBlue`, or `GatherAlpha` respectively. The rule fires on `Texture2D`, `Texture2DArray`, and `TextureCube` gather variants. It does not fire when more than one channel of the gathered `float4` is used downstream.
+Expressions of the form `texture.Gather(sampler, uv).r`, `.g`, `.b`, or `.a` â€” where `Gather` is called and only a single scalar channel of the resulting `float4` is consumed. The rule fires when the swizzle immediately follows the `Gather` call and the remaining three components are provably dead (not stored, not passed to a function, not part of a larger swizzle). The equivalent hardware-direct call is `GatherRed`, `GatherGreen`, `GatherBlue`, or `GatherAlpha` respectively. The rule fires on `Texture2D`, `Texture2DArray`, and `TextureCube` gather variants. It does not fire when more than one channel of the gathered `float4` is used downstream.
 
 See the [What it detects](../rules/gather-channel-narrowing.md#what-it-detects) section of
 the rule page for the full pattern definition.

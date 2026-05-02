@@ -1,5 +1,5 @@
----
-title: "numwaves-anchored-cap: A `[numthreads(X, Y, Z)]` declaration where `X * Y * Z > 1024` (the…"
+﻿---
+title: "numwaves-anchored-cap"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup

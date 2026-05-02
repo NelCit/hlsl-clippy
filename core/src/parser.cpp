@@ -43,22 +43,21 @@ namespace {
 
 }  // namespace
 
-std::optional<ParsedSource> parse(const SourceManager& sources, SourceId source) {
+std::optional<ParsedSource> parse(const SourceManager& sources,
+                                  SourceId source,
+                                  SourceLanguage language) {
     const SourceFile* file = sources.get(source);
     if (file == nullptr) {
         return std::nullopt;
     }
 
-    // ADR 0021 sub-phase B.2 — resolve the per-file source language by
-    // extension. The orchestrator separately tracks the resolved language
-    // (it consults `Config::source_language()` and falls back to inference);
-    // the parser path here is reachable from both `lint()` calls and the
-    // shared CFG engine's reparse helpers, so we re-derive the language
-    // locally rather than threading it through every call site. The
-    // detection function is pure-functional and trivially fast — a single
-    // extension comparison.
-    const SourceLanguage lang = detect_language(file->path());
-    const ::TSLanguage* grammar = select_language(lang);
+    // `Auto` falls back to extension-based inference. This keeps the
+    // single-arg call site (CFG-engine reparse helpers) working without
+    // forcing every internal caller to thread the resolved language
+    // through.
+    const SourceLanguage resolved =
+        language == SourceLanguage::Auto ? detect_language(file->path()) : language;
+    const ::TSLanguage* grammar = select_language(resolved);
 
     const UniqueParser parser{ts_parser_new()};
     if (!parser) {
@@ -79,6 +78,10 @@ std::optional<ParsedSource> parse(const SourceManager& sources, SourceId source)
 
     return ParsedSource{
         .source = source, .bytes = bytes, .tree = std::move(tree), .language = grammar};
+}
+
+std::optional<ParsedSource> parse(const SourceManager& sources, SourceId source) {
+    return parse(sources, source, SourceLanguage::Auto);
 }
 
 }  // namespace hlsl_clippy::parser

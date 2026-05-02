@@ -1,5 +1,5 @@
----
-title: "primcount-overrun-in-conditional-cf: A mesh-shader entry point that calls `SetMeshOutputCounts(v, p)` once at the top, then issues…"
+﻿---
+title: "primcount-overrun-in-conditional-cf"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: mesh
@@ -17,7 +17,7 @@ related-rule: primcount-overrun-in-conditional-cf
 
 ## TL;DR
 
-Mesh shaders on D3D12 (and the Vulkan / Metal equivalents) declare an upper bound on vertex and primitive output via `[outputtopology(...)]` plus a per-launch dynamic count via `SetMeshOutputCounts(maxVerts, maxPrims)`. The hardware allocates output storage for exactly that many primitives — on AMD RDNA 2/3 the mesh-shader output buffer is sized at compile time from the declared maxima and trimmed at launch by the dynamic call; on NVIDIA Ada the per-meshlet primitive ring is sized to the declared bound; on Intel Xe-HPG the equivalent output staging area is similarly sized. Writing past the declared count is undefined behaviour: the hardware may silently drop the over-count primitive, may overwrite a neighbouring meshlet's output (corrupting another lane group's geometry), or may surface a TDR / device-removed error if the IHV's runtime adds a bounds check on debug runtimes. The reproducibility varies by IHV and by driver version, which makes the bug a classic intermittent crash.
+Mesh shaders on D3D12 (and the Vulkan / Metal equivalents) declare an upper bound on vertex and primitive output via `[outputtopology(...)]` plus a per-launch dynamic count via `SetMeshOutputCounts(maxVerts, maxPrims)`. The hardware allocates output storage for exactly that many primitives â€” on AMD RDNA 2/3 the mesh-shader output buffer is sized at compile time from the declared maxima and trimmed at launch by the dynamic call; on NVIDIA Ada the per-meshlet primitive ring is sized to the declared bound; on Intel Xe-HPG the equivalent output staging area is similarly sized. Writing past the declared count is undefined behaviour: the hardware may silently drop the over-count primitive, may overwrite a neighbouring meshlet's output (corrupting another lane group's geometry), or may surface a TDR / device-removed error if the IHV's runtime adds a bounds check on debug runtimes. The reproducibility varies by IHV and by driver version, which makes the bug a classic intermittent crash.
 
 ## What the rule fires on
 

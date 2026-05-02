@@ -1,5 +1,5 @@
----
-title: "coopvec-stride-mismatch: A cooperative-vector matrix-load call (`MatrixMul`, `MatrixVectorMul`, `OuterProductAccumulate`) whose constant-folded `stride` argument does not equal…"
+﻿---
+title: "coopvec-stride-mismatch"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: cooperative-vector
@@ -17,7 +17,7 @@ related-rule: coopvec-stride-mismatch
 
 ## TL;DR
 
-When a cooperative-vector call uses a generic row-major or column-major layout, the matrix engine on each IHV (Ada tensor cores, RDNA 3/4 WMMA, Xe-HPG XMX) walks the source buffer using the stride argument as the per-row byte advance. The engine assumes the stride is the natural one for the matrix shape and component type; if it isn't, the engine reads garbage bytes from outside the matrix or from the wrong row, and produces NaN-laced or zero results. There is no error signalled at runtime — the tensor engine has no concept of buffer bounds beyond what the stride tells it.
+When a cooperative-vector call uses a generic row-major or column-major layout, the matrix engine on each IHV (Ada tensor cores, RDNA 3/4 WMMA, Xe-HPG XMX) walks the source buffer using the stride argument as the per-row byte advance. The engine assumes the stride is the natural one for the matrix shape and component type; if it isn't, the engine reads garbage bytes from outside the matrix or from the wrong row, and produces NaN-laced or zero results. There is no error signalled at runtime â€” the tensor engine has no concept of buffer bounds beyond what the stride tells it.
 
 ## What the rule fires on
 

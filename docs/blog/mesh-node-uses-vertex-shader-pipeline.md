@@ -1,5 +1,5 @@
----
-title: "mesh-node-uses-vertex-shader-pipeline: A work-graph node configuration that pairs a mesh node (`[NodeLaunch("mesh")]`) with a vertex-shader pipeline…"
+﻿---
+title: "mesh-node-uses-vertex-shader-pipeline"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: work-graphs
@@ -17,11 +17,11 @@ related-rule: mesh-node-uses-vertex-shader-pipeline
 
 ## TL;DR
 
-The mesh-shader pipeline on every IHV (Ada / RDNA 3 / Xe-HPG) uses a different state-object path than the legacy IA/VS/HS/DS/GS pipeline. Mesh nodes plug into the mesh-shader path: the runtime resolves the node's pipeline subobject to a `D3D12_MESH_SHADER_PIPELINE_STATE_DESC` and creates the underlying mesh PSO at work-graph state-object creation. The legacy path has no slot for a mesh-node entry — the IA stage is absent in the mesh pipeline, and the work-graph runtime cannot reconstruct a meaningful state for the rasterizer.
+The mesh-shader pipeline on every IHV (Ada / RDNA 3 / Xe-HPG) uses a different state-object path than the legacy IA/VS/HS/DS/GS pipeline. Mesh nodes plug into the mesh-shader path: the runtime resolves the node's pipeline subobject to a `D3D12_MESH_SHADER_PIPELINE_STATE_DESC` and creates the underlying mesh PSO at work-graph state-object creation. The legacy path has no slot for a mesh-node entry â€” the IA stage is absent in the mesh pipeline, and the work-graph runtime cannot reconstruct a meaningful state for the rasterizer.
 
 ## What the rule fires on
 
-A work-graph node configuration that pairs a mesh node (`[NodeLaunch("mesh")]`) with a vertex-shader pipeline subobject. The Mesh Nodes in Work Graphs preview spec requires the program identifier to reference a Mesh Shader Pipeline State subobject — the analogue of the standalone `D3D12_MESH_SHADER_PIPELINE_STATE_DESC`. The legacy VS+PS pipeline is not a valid container for a mesh node. Slang reflection identifies the pipeline subobject kind referenced by each node entry.
+A work-graph node configuration that pairs a mesh node (`[NodeLaunch("mesh")]`) with a vertex-shader pipeline subobject. The Mesh Nodes in Work Graphs preview spec requires the program identifier to reference a Mesh Shader Pipeline State subobject â€” the analogue of the standalone `D3D12_MESH_SHADER_PIPELINE_STATE_DESC`. The legacy VS+PS pipeline is not a valid container for a mesh node. Slang reflection identifies the pipeline subobject kind referenced by each node entry.
 
 See the [What it detects](../rules/mesh-node-uses-vertex-shader-pipeline.md#what-it-detects) section of
 the rule page for the full pattern definition.

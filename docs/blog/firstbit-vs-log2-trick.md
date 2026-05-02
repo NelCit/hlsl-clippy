@@ -1,5 +1,5 @@
----
-title: "firstbit-vs-log2-trick: Expressions that compute the position of the most-significant set bit of a non-zero unsigned…"
+﻿---
+title: "firstbit-vs-log2-trick"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -17,7 +17,7 @@ related-rule: firstbit-vs-log2-trick
 
 ## TL;DR
 
-`firstbithigh(uint)` and `firstbitlow(uint)` are both single ISA instructions on every shader-capable GPU since SM 5.0. AMD RDNA 3 lowers them to `v_ffbh_u32` and `v_ffbl_b32`, both full-rate VALU integer ops. NVIDIA Turing and Ada Lovelace use `FLO` (find-leading-one) and a related instruction; both retire in a single cycle on the integer pipe. The `log2` detour, by contrast, requires three steps: an integer-to-float conversion (`v_cvt_f32_u32` on RDNA, full-rate but with a separate ALU port), a `log2` (`v_log_f32` on RDNA 3, which issues at one-quarter rate as a transcendental on the SFU/MUFU shared with `exp`, `rcp`, `rsqrt`, `sin`, and `cos`), and a float-to-integer truncation back. The end-to-end cost is roughly 6-8 VALU-equivalent cycles versus one for the intrinsic — and the slow step is exactly the transcendental unit that the rest of the shader is also competing for.
+`firstbithigh(uint)` and `firstbitlow(uint)` are both single ISA instructions on every shader-capable GPU since SM 5.0. AMD RDNA 3 lowers them to `v_ffbh_u32` and `v_ffbl_b32`, both full-rate VALU integer ops. NVIDIA Turing and Ada Lovelace use `FLO` (find-leading-one) and a related instruction; both retire in a single cycle on the integer pipe. The `log2` detour, by contrast, requires three steps: an integer-to-float conversion (`v_cvt_f32_u32` on RDNA, full-rate but with a separate ALU port), a `log2` (`v_log_f32` on RDNA 3, which issues at one-quarter rate as a transcendental on the SFU/MUFU shared with `exp`, `rcp`, `rsqrt`, `sin`, and `cos`), and a float-to-integer truncation back. The end-to-end cost is roughly 6-8 VALU-equivalent cycles versus one for the intrinsic â€” and the slow step is exactly the transcendental unit that the rest of the shader is also competing for.
 
 ## What the rule fires on
 

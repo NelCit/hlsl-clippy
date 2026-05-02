@@ -1,5 +1,5 @@
----
-title: "reordercoherent-uav-missing-barrier: A UAV qualified `[reordercoherent]` whose write site reaches a read site across a `MaybeReorderThread`…"
+﻿---
+title: "reordercoherent-uav-missing-barrier"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: ser

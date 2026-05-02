@@ -1,5 +1,5 @@
----
-title: "precise-missing-on-iterative-refine: A loop whose body implements a Newton-Raphson, Halley, or related iterative-refinement step on a…"
+﻿---
+title: "precise-missing-on-iterative-refine"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -17,7 +17,7 @@ related-rule: precise-missing-on-iterative-refine
 
 ## TL;DR
 
-GPU compilers for HLSL run aggressive fast-math reordering by default. The optimiser sees `x = x - f(x)/fprime(x)` and is free to: (a) apply mul-add fusion that changes rounding, (b) reorder the subtraction with respect to constant folds, (c) re-associate `x*x*x` to `x*(x*x)` or `pow(x, 3)`, and crucially (d) recognise that across an unbounded number of iterations the algebraic limit collapses certain residuals to zero — at which point the optimiser may fold the entire iteration to the initial guess, on the grounds that `x = x - 0` is identity. On AMD RDNA 2/3, NVIDIA Ada Lovelace, and Intel Xe-HPG the resulting codegen is silently a no-op iteration: the initial guess passes through unchanged. The author intended N rounds of quadratic-convergence refinement; the shader runs zero rounds.
+GPU compilers for HLSL run aggressive fast-math reordering by default. The optimiser sees `x = x - f(x)/fprime(x)` and is free to: (a) apply mul-add fusion that changes rounding, (b) reorder the subtraction with respect to constant folds, (c) re-associate `x*x*x` to `x*(x*x)` or `pow(x, 3)`, and crucially (d) recognise that across an unbounded number of iterations the algebraic limit collapses certain residuals to zero â€” at which point the optimiser may fold the entire iteration to the initial guess, on the grounds that `x = x - 0` is identity. On AMD RDNA 2/3, NVIDIA Ada Lovelace, and Intel Xe-HPG the resulting codegen is silently a no-op iteration: the initial guess passes through unchanged. The author intended N rounds of quadratic-convergence refinement; the shader runs zero rounds.
 
 ## What the rule fires on
 

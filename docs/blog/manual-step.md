@@ -1,5 +1,5 @@
----
-title: "manual-step: A ternary conditional expression of the form `x > a ? 1.0 : 0.0`…"
+﻿---
+title: "manual-step"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -17,7 +17,7 @@ related-rule: manual-step
 
 ## TL;DR
 
-In GLSL/HLSL shader code, conditional expressions `x > a ? 1.0 : 0.0` are common in material shaders for binary masks, alpha cutouts, and clipping thresholds. On a GPU, a ternary conditional in a shader may compile to a comparison instruction plus a `select`/`conditional move` (e.g., `v_cndmask_b32` on RDNA, `SEL` on Xe-HPG). This is already efficient — there is no branch divergence because the compiler recognises the constant-branch ternary — but the pattern still requires a comparison instruction that produces a boolean predicate and a separate select instruction that consumes it.
+In GLSL/HLSL shader code, conditional expressions `x > a ? 1.0 : 0.0` are common in material shaders for binary masks, alpha cutouts, and clipping thresholds. On a GPU, a ternary conditional in a shader may compile to a comparison instruction plus a `select`/`conditional move` (e.g., `v_cndmask_b32` on RDNA, `SEL` on Xe-HPG). This is already efficient â€” there is no branch divergence because the compiler recognises the constant-branch ternary â€” but the pattern still requires a comparison instruction that produces a boolean predicate and a separate select instruction that consumes it.
 
 ## What the rule fires on
 

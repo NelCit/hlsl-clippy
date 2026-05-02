@@ -1,5 +1,5 @@
----
-title: "ser-trace-then-invoke-without-reorder: A `dx::HitObject::TraceRay` (or `FromRayQuery`) construction whose only use is a direct `Invoke` call on…"
+﻿---
+title: "ser-trace-then-invoke-without-reorder"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: ser
@@ -17,7 +17,7 @@ related-rule: ser-trace-then-invoke-without-reorder
 
 ## TL;DR
 
-The whole point of using `dx::HitObject::TraceRay` + `Invoke` instead of plain `TraceRay` is to give the runtime an opportunity to reorder lanes before the closest-hit / miss shader runs. If the application constructs a HitObject and invokes it immediately without calling `MaybeReorderThread`, the runtime gets no reorder opportunity — it dispatches the shaders in whatever order the lanes happen to land, exactly as plain `TraceRay` would. The HitObject machinery (which has its own per-lane register-spill cost on every IHV: NVIDIA Ada Lovelace, AMD RDNA 4 when shipped, Intel Xe-HPG when shipped) is paid for and discarded.
+The whole point of using `dx::HitObject::TraceRay` + `Invoke` instead of plain `TraceRay` is to give the runtime an opportunity to reorder lanes before the closest-hit / miss shader runs. If the application constructs a HitObject and invokes it immediately without calling `MaybeReorderThread`, the runtime gets no reorder opportunity â€” it dispatches the shaders in whatever order the lanes happen to land, exactly as plain `TraceRay` would. The HitObject machinery (which has its own per-lane register-spill cost on every IHV: NVIDIA Ada Lovelace, AMD RDNA 4 when shipped, Intel Xe-HPG when shipped) is paid for and discarded.
 
 ## What the rule fires on
 

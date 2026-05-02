@@ -1,5 +1,5 @@
----
-title: "pack-then-unpack-roundtrip: A `pack_u8(unpack_u8u32(x))` sequence — or the signed equivalents `pack_s8(unpack_s8s32(x))` — where no arithmetic is…"
+﻿---
+title: "pack-then-unpack-roundtrip"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: packed-math
@@ -17,11 +17,11 @@ related-rule: pack-then-unpack-roundtrip
 
 ## TL;DR
 
-Both `pack_u8`/`unpack_u8u32` and `f32tof16`/`f16tof32` are ALU instructions. Each costs at least one VALU cycle on RDNA 3 and Turing; the pair together cost two cycles plus a data dependency that prevents the subsequent use of the result from issuing until both complete. In a compute shader that processes large arrays of packed values, a dead round-trip in the inner loop adds two wasted cycles per element per wave. At 32 million elements across a 1080p frame buffer and 64 lanes per wave, the dead pair contributes roughly 1 million wasted VALU instructions per dispatch — a measurable fraction of a 60 Hz frame budget.
+Both `pack_u8`/`unpack_u8u32` and `f32tof16`/`f16tof32` are ALU instructions. Each costs at least one VALU cycle on RDNA 3 and Turing; the pair together cost two cycles plus a data dependency that prevents the subsequent use of the result from issuing until both complete. In a compute shader that processes large arrays of packed values, a dead round-trip in the inner loop adds two wasted cycles per element per wave. At 32 million elements across a 1080p frame buffer and 64 lanes per wave, the dead pair contributes roughly 1 million wasted VALU instructions per dispatch â€” a measurable fraction of a 60 Hz frame budget.
 
 ## What the rule fires on
 
-A `pack_u8(unpack_u8u32(x))` sequence — or the signed equivalents `pack_s8(unpack_s8s32(x))` — where no arithmetic is performed on the individual channels between the unpack and the repack. The result of the pair is always equal to the original packed value `x`; both operations are dead. The rule also fires on the floating-point analogue: `f16tof32(f32tof16(x))` where the intermediate 16-bit value is not used for any other purpose, because the result of the pair is the FP32 value nearest to `x` that is representable in FP16 — a precision loss that serves no purpose if the output is used in a full-precision context.
+A `pack_u8(unpack_u8u32(x))` sequence â€” or the signed equivalents `pack_s8(unpack_s8s32(x))` â€” where no arithmetic is performed on the individual channels between the unpack and the repack. The result of the pair is always equal to the original packed value `x`; both operations are dead. The rule also fires on the floating-point analogue: `f16tof32(f32tof16(x))` where the intermediate 16-bit value is not used for any other purpose, because the result of the pair is the FP32 value nearest to `x` that is representable in FP16 â€” a precision loss that serves no purpose if the output is used in a full-precision context.
 
 See the [What it detects](../rules/pack-then-unpack-roundtrip.md#what-it-detects) section of
 the rule page for the full pattern definition.

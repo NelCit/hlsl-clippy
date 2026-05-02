@@ -1,5 +1,5 @@
----
-title: "coherence-hint-encodes-shader-type: A `dx::MaybeReorderThread(hit, coherenceHint, hintBits)` call whose `coherenceHint` expression is data-flow-tainted by `hit.IsHit()` or `hit.GetShaderTableIndex()`.…"
+﻿---
+title: "coherence-hint-encodes-shader-type"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: ser
@@ -17,7 +17,7 @@ related-rule: coherence-hint-encodes-shader-type
 
 ## TL;DR
 
-The whole point of SER is that the driver's scheduler already knows how to coalesce lanes by their downstream shader (hit group / miss / etc.). NVIDIA Ada Lovelace's scheduler uses the HitObject's intrinsic data to pre-bucket lanes; AMD RDNA 4 / Vulkan SER extensions match. The `coherenceHint` argument is meant for *application-specific* axes the scheduler doesn't know about: which material is hit, which BVH instance was traversed, which payload bucket the lane belongs to. Encoding the shader-table index into the hint duplicates information the scheduler already has and forces it to factor the same axis twice into its bucketing — at best wasted work, at worst a worse final grouping than the no-hint baseline.
+The whole point of SER is that the driver's scheduler already knows how to coalesce lanes by their downstream shader (hit group / miss / etc.). NVIDIA Ada Lovelace's scheduler uses the HitObject's intrinsic data to pre-bucket lanes; AMD RDNA 4 / Vulkan SER extensions match. The `coherenceHint` argument is meant for *application-specific* axes the scheduler doesn't know about: which material is hit, which BVH instance was traversed, which payload bucket the lane belongs to. Encoding the shader-table index into the hint duplicates information the scheduler already has and forces it to factor the same axis twice into its bucketing â€” at best wasted work, at worst a worse final grouping than the no-hint baseline.
 
 ## What the rule fires on
 

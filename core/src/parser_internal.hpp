@@ -10,6 +10,7 @@
 
 #include <tree_sitter/api.h>
 
+#include "hlsl_clippy/language.hpp"
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
 
@@ -47,11 +48,22 @@ struct ParsedSource {
     const ::TSLanguage* language = nullptr;
 };
 
-/// Parse `source`'s contents through tree-sitter-hlsl. Returns `std::nullopt`
-/// if the parser could not be constructed or the parse returned no tree at
-/// all. Grammar `ERROR` nodes are *not* fatal: tree-sitter recovers and the
-/// rest of the tree is still walkable.
+/// Parse `source`'s contents. Returns `std::nullopt` if the parser could not
+/// be constructed or the parse returned no tree at all. Grammar `ERROR` nodes
+/// are *not* fatal: tree-sitter recovers and the rest of the tree is still
+/// walkable.
+///
+/// The single-arg overload re-derives the source language from the file's
+/// extension via `detect_language()`. The two-arg overload accepts a
+/// pre-resolved `SourceLanguage` and is used by the orchestrator to honour
+/// `Config::source_language` overrides on otherwise-ambiguous paths
+/// (e.g. an `.hlsl`-extension file that the user has explicitly tagged
+/// `[lint] source-language = "slang"`). `Auto` is treated as if the
+/// single-arg path had been called.
 [[nodiscard]] std::optional<ParsedSource> parse(const SourceManager& sources, SourceId source);
+[[nodiscard]] std::optional<ParsedSource> parse(const SourceManager& sources,
+                                                SourceId source,
+                                                SourceLanguage language);
 
 }  // namespace hlsl_clippy::parser
 

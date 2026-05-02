@@ -1,5 +1,5 @@
----
-title: "unused-cbuffer-field: A field declared inside a `cbuffer`, `ConstantBuffer<T>`, or user-defined struct used as a constant…"
+﻿---
+title: "unused-cbuffer-field"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings

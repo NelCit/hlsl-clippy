@@ -1,5 +1,5 @@
----
-title: "isspecialfloat-implicit-fp16-promotion: A call to one of the SM 6.9 numerical-classification intrinsics (`isnan`, `isinf`, `isfinite`, `isnormal`)…"
+﻿---
+title: "isspecialfloat-implicit-fp16-promotion"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math

@@ -1,5 +1,5 @@
----
-title: "feedback-write-wrong-stage: Calls to `WriteSamplerFeedback`, `WriteSamplerFeedbackBias`, `WriteSamplerFeedbackGrad`, or `WriteSamplerFeedbackLevel` from a shader stage other than pixel.…"
+﻿---
+title: "feedback-write-wrong-stage"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: sampler-feedback

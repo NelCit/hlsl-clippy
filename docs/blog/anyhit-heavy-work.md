@@ -1,5 +1,5 @@
----
-title: "anyhit-heavy-work: Any-hit shaders (entry points marked `[shader("anyhit")]`) that perform work beyond the supported lightweight tasks:…"
+﻿---
+title: "anyhit-heavy-work"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: dxr

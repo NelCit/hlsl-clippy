@@ -1,5 +1,5 @@
----
-title: "pack-clamp-on-prove-bounded: A call to `pack_clamp_u8` (or `pack_clamp_s8`) where the argument can be proven to already…"
+﻿---
+title: "pack-clamp-on-prove-bounded"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: packed-math

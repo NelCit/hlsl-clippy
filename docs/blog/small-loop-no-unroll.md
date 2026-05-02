@@ -1,5 +1,5 @@
----
-title: "small-loop-no-unroll: `for` or `while` loops whose trip count is a compile-time constant (a literal integer,…"
+﻿---
+title: "small-loop-no-unroll"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow
@@ -17,7 +17,7 @@ related-rule: small-loop-no-unroll
 
 ## TL;DR
 
-A GPU loop compiled without `[unroll]` generates real branch instructions: a counter decrement, a compare, and a conditional backward branch at the bottom of each iteration. On a wave of 32 or 64 lanes, this overhead is paid once per iteration but amortises across all lanes simultaneously — the branch is uniform, so there is no divergence penalty, and the branch predictor (on hardware that has one) can predict it with high accuracy for small-count loops. However, the overhead is still non-zero: the counter update and compare consume ALU cycles, the backward edge occupies fetch bandwidth, and the loop carries a data dependency on the counter variable that can limit instruction-level parallelism within the loop body.
+A GPU loop compiled without `[unroll]` generates real branch instructions: a counter decrement, a compare, and a conditional backward branch at the bottom of each iteration. On a wave of 32 or 64 lanes, this overhead is paid once per iteration but amortises across all lanes simultaneously â€” the branch is uniform, so there is no divergence penalty, and the branch predictor (on hardware that has one) can predict it with high accuracy for small-count loops. However, the overhead is still non-zero: the counter update and compare consume ALU cycles, the backward edge occupies fetch bandwidth, and the loop carries a data dependency on the counter variable that can limit instruction-level parallelism within the loop body.
 
 ## What the rule fires on
 

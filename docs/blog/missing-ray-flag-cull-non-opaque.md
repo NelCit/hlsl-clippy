@@ -1,5 +1,5 @@
----
-title: "missing-ray-flag-cull-non-opaque: `TraceRay(...)` or `RayQuery::TraceRayInline(...)` calls whose ray-flag argument does not include `RAY_FLAG_CULL_NON_OPAQUE` in a context…"
+﻿---
+title: "missing-ray-flag-cull-non-opaque"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: dxr

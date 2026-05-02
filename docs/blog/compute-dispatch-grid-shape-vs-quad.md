@@ -1,5 +1,5 @@
----
-title: "compute-dispatch-grid-shape-vs-quad: A compute or amplification entry point declared with `[numthreads(N, 1, 1)]` (a 1D thread-group…"
+﻿---
+title: "compute-dispatch-grid-shape-vs-quad"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup

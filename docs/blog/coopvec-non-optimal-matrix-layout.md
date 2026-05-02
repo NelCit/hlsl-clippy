@@ -1,5 +1,5 @@
----
-title: "coopvec-non-optimal-matrix-layout: A `dx::linalg::MatrixMul`, `dx::linalg::MatrixVectorMul`, or `dx::linalg::OuterProductAccumulate` call whose matrix-layout enum argument is not one of…"
+﻿---
+title: "coopvec-non-optimal-matrix-layout"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: cooperative-vector
@@ -17,7 +17,7 @@ related-rule: coopvec-non-optimal-matrix-layout
 
 ## TL;DR
 
-Cooperative Vectors (SM 6.9) target the tensor-core / matrix-engine hardware on each IHV: NVIDIA Ada Lovelace's tensor cores, AMD RDNA 3/4's WMMA path, and Intel Xe-HPG's XMX engines. Each engine prefers a vendor-specific weight layout so the matrix-element fetch hits the engine's native swizzle pattern in a single transaction. The HLSL spec exposes two opaque enums — `MATRIX_LAYOUT_INFERENCING_OPTIMAL` and `MATRIX_LAYOUT_TRAINING_OPTIMAL` — that the driver maps to its hardware-preferred layout at upload time via the `D3D12_LINEAR_ALGEBRA_MATRIX_LAYOUT_CONVERT` API.
+Cooperative Vectors (SM 6.9) target the tensor-core / matrix-engine hardware on each IHV: NVIDIA Ada Lovelace's tensor cores, AMD RDNA 3/4's WMMA path, and Intel Xe-HPG's XMX engines. Each engine prefers a vendor-specific weight layout so the matrix-element fetch hits the engine's native swizzle pattern in a single transaction. The HLSL spec exposes two opaque enums â€” `MATRIX_LAYOUT_INFERENCING_OPTIMAL` and `MATRIX_LAYOUT_TRAINING_OPTIMAL` â€” that the driver maps to its hardware-preferred layout at upload time via the `D3D12_LINEAR_ALGEBRA_MATRIX_LAYOUT_CONVERT` API.
 
 ## What the rule fires on
 

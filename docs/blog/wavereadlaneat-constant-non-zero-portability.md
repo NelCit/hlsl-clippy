@@ -1,5 +1,5 @@
----
-title: "wavereadlaneat-constant-non-zero-portability: A `WaveReadLaneAt(x, K)` call where `K` is a compile-time non-zero constant in an entry…"
+﻿---
+title: "wavereadlaneat-constant-non-zero-portability"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow
@@ -17,7 +17,7 @@ related-rule: wavereadlaneat-constant-non-zero-portability
 
 ## TL;DR
 
-`WaveReadLaneAt(x, K)` returns the value of `x` from lane `K` within the current wave. The valid range of `K` is `[0, WaveGetLaneCount() - 1]`. On AMD RDNA 1/2/3 the hardware supports both 32-wide and 64-wide waves; the driver picks one per-PSO based on hints and register pressure. On NVIDIA Turing and Ada Lovelace the wave is always 32 lanes. On Intel Xe-HPG the SIMD width is 8, 16, or 32 lanes depending on the compiler's choice. A `WaveReadLaneAt(x, 47)` is valid on RDNA wave64, undefined on RDNA wave32 / Ada (lane index out of range), and undefined on Xe-HPG wave16 / wave32. The HLSL spec says out-of-range lane indices produce undefined results — in practice the hardware returns garbage or zero depending on the IHV.
+`WaveReadLaneAt(x, K)` returns the value of `x` from lane `K` within the current wave. The valid range of `K` is `[0, WaveGetLaneCount() - 1]`. On AMD RDNA 1/2/3 the hardware supports both 32-wide and 64-wide waves; the driver picks one per-PSO based on hints and register pressure. On NVIDIA Turing and Ada Lovelace the wave is always 32 lanes. On Intel Xe-HPG the SIMD width is 8, 16, or 32 lanes depending on the compiler's choice. A `WaveReadLaneAt(x, 47)` is valid on RDNA wave64, undefined on RDNA wave32 / Ada (lane index out of range), and undefined on Xe-HPG wave16 / wave32. The HLSL spec says out-of-range lane indices produce undefined results â€” in practice the hardware returns garbage or zero depending on the IHV.
 
 ## What the rule fires on
 

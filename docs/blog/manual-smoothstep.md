@@ -1,5 +1,5 @@
----
-title: "manual-smoothstep: A hand-rolled cubic Hermite interpolation that implements the body of the `smoothstep` intrinsic. Specifically,…"
+﻿---
+title: "manual-smoothstep"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -17,7 +17,7 @@ related-rule: manual-smoothstep
 
 ## TL;DR
 
-The cubic Hermite polynomial `t*t*(3 - 2*t)` is 5 FP32 operations for a scalar input: one multiply (for `t*t`), one multiply-by-2, one subtract, one multiply (for `t*t * (3 - 2*t)`). The preceding `saturate((x - edge0) / (edge1 - edge0))` adds a subtract, a subtract, a division (or reciprocal-multiply), and a saturate — roughly 4 more operations, with the division typically being a 2-cycle `v_rcp_f32` sequence. Total: approximately 10 scalar FP32 instructions.
+The cubic Hermite polynomial `t*t*(3 - 2*t)` is 5 FP32 operations for a scalar input: one multiply (for `t*t`), one multiply-by-2, one subtract, one multiply (for `t*t * (3 - 2*t)`). The preceding `saturate((x - edge0) / (edge1 - edge0))` adds a subtract, a subtract, a division (or reciprocal-multiply), and a saturate â€” roughly 4 more operations, with the division typically being a 2-cycle `v_rcp_f32` sequence. Total: approximately 10 scalar FP32 instructions.
 
 ## What the rule fires on
 

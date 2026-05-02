@@ -1,5 +1,5 @@
----
-title: "wave-intrinsic-helper-lane-hazard: Pixel shaders that call any cross-lane wave intrinsic (`WaveActiveSum`, `WaveActiveMin`, `WavePrefixSum`, `WaveActiveBallot`, `WaveReadLaneAt`, etc.)…"
+﻿---
+title: "wave-intrinsic-helper-lane-hazard"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow

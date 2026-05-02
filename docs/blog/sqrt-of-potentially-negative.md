@@ -1,5 +1,5 @@
----
-title: "sqrt-of-potentially-negative: Calls to `sqrt(x)` (and `rsqrt(x)`) where `x` is a signed expression whose value can…"
+﻿---
+title: "sqrt-of-potentially-negative"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math

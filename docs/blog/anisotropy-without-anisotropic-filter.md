@@ -1,5 +1,5 @@
----
-title: "anisotropy-without-anisotropic-filter: A `SamplerState` (or `SamplerComparisonState`) whose descriptor sets `MaxAnisotropy > 1` while the `Filter` field…"
+﻿---
+title: "anisotropy-without-anisotropic-filter"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: texture

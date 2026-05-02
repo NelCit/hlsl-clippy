@@ -1,5 +1,5 @@
----
-title: "cbuffer-large-fits-rootcbv-not-table: A `cbuffer` (or `ConstantBuffer<T>`) whose total size, as reported by Slang reflection, fits within…"
+﻿---
+title: "cbuffer-large-fits-rootcbv-not-table"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -21,7 +21,7 @@ D3D12's root signature distinguishes three binding kinds for cbuffers, in increa
 
 ## What the rule fires on
 
-A `cbuffer` (or `ConstantBuffer<T>`) whose total size, as reported by Slang reflection, fits within the D3D12 root CBV size limit (a CBV may address up to 65536 bytes per the D3D12 spec) and that is referenced once per dispatch / draw — i.e. the binding does not require an array of CBVs swept by an index — but is currently bound through a descriptor table rather than as a root CBV. The detector reads the binding kind from reflection (descriptor table vs root CBV vs root constants) and matches against the cbuffer size and access pattern. **D3D12-relevant:** Vulkan binds uniform buffers via descriptor sets without the root-vs-table distinction (push descriptors are the closest equivalent), and Metal handles small constant buffers via setBytes/setBuffer on the encoder; this rule still surfaces a portability concern because the descriptor-indirection cost shows up as extra indirect loads on every backend, even when the API surface differs.
+A `cbuffer` (or `ConstantBuffer<T>`) whose total size, as reported by Slang reflection, fits within the D3D12 root CBV size limit (a CBV may address up to 65536 bytes per the D3D12 spec) and that is referenced once per dispatch / draw â€” i.e. the binding does not require an array of CBVs swept by an index â€” but is currently bound through a descriptor table rather than as a root CBV. The detector reads the binding kind from reflection (descriptor table vs root CBV vs root constants) and matches against the cbuffer size and access pattern. **D3D12-relevant:** Vulkan binds uniform buffers via descriptor sets without the root-vs-table distinction (push descriptors are the closest equivalent), and Metal handles small constant buffers via setBytes/setBuffer on the encoder; this rule still surfaces a portability concern because the descriptor-indirection cost shows up as extra indirect loads on every backend, even when the API surface differs.
 
 See the [What it detects](../rules/cbuffer-large-fits-rootcbv-not-table.md#what-it-detects) section of
 the rule page for the full pattern definition.

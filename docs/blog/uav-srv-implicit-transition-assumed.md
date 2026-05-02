@@ -1,5 +1,5 @@
----
-title: "uav-srv-implicit-transition-assumed: A shader that writes to a UAV `U` and subsequently reads from an SRV…"
+﻿---
+title: "uav-srv-implicit-transition-assumed"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -17,7 +17,7 @@ related-rule: uav-srv-implicit-transition-assumed
 
 ## TL;DR
 
-D3D12 makes resource state transitions explicit. A resource bound as a UAV in one draw / dispatch and then read as an SRV in the next requires an explicit `D3D12_RESOURCE_BARRIER` (or the new enhanced barrier `D3D12_TEXTURE_BARRIER` on D3D12 Agility SDK 1.7+) between the two — the transition flushes the UAV writer's L1 / L0 caches, invalidates the reader's L1, and on AMD RDNA 2/3 specifically issues a wait for the writer's shader-engine to drain before the reader's wave can launch. Without the barrier, the reader sees stale data from before the write (cached in its own L1), partial data (writer not yet drained), or data that lands during the read (race condition). The hardware does not detect the hazard; the runtime does not insert the barrier; the application is responsible for issuing it.
+D3D12 makes resource state transitions explicit. A resource bound as a UAV in one draw / dispatch and then read as an SRV in the next requires an explicit `D3D12_RESOURCE_BARRIER` (or the new enhanced barrier `D3D12_TEXTURE_BARRIER` on D3D12 Agility SDK 1.7+) between the two â€” the transition flushes the UAV writer's L1 / L0 caches, invalidates the reader's L1, and on AMD RDNA 2/3 specifically issues a wait for the writer's shader-engine to drain before the reader's wave can launch. Without the barrier, the reader sees stale data from before the write (cached in its own L1), partial data (writer not yet drained), or data that lands during the read (race condition). The hardware does not detect the hazard; the runtime does not insert the barrier; the application is responsible for issuing it.
 
 ## What the rule fires on
 

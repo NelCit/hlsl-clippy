@@ -1,5 +1,5 @@
----
-title: "groupshared-over-32k-without-attribute: Total `groupshared` allocation in a translation unit exceeding the SM 6.10 default of 32…"
+﻿---
+title: "groupshared-over-32k-without-attribute"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: sm6_10

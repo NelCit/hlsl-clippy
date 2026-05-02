@@ -1,5 +1,5 @@
----
-title: "missing-accept-first-hit: `TraceRay` (or `RayQuery::TraceRayInline`) call sites whose ray-flags argument lacks `RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH` even though the caller…"
+﻿---
+title: "missing-accept-first-hit"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: dxr
@@ -17,7 +17,7 @@ related-rule: missing-accept-first-hit
 
 ## TL;DR
 
-Without `RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH`, the BVH traversal must continue until every leaf node intersected by the ray has been tested, because any later intersection might be closer than the current candidate. With the flag set, traversal terminates the moment the first opaque hit is recorded — for shadow rays, this halves the average traversal cost in dense geometry and reduces it by far more in skybox-bounded scenes where the typical shadow ray passes through hundreds of empty BVH nodes before hitting an occluder.
+Without `RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH`, the BVH traversal must continue until every leaf node intersected by the ray has been tested, because any later intersection might be closer than the current candidate. With the flag set, traversal terminates the moment the first opaque hit is recorded â€” for shadow rays, this halves the average traversal cost in dense geometry and reduces it by far more in skybox-bounded scenes where the typical shadow ray passes through hundreds of empty BVH nodes before hitting an occluder.
 
 ## What the rule fires on
 

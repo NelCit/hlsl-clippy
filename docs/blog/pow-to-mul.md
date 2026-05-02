@@ -1,5 +1,5 @@
----
-title: "pow-to-mul: Calls to `pow(x, e)` where the exponent `e` is a literal integer or floating-point…"
+﻿---
+title: "pow-to-mul"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -17,7 +17,7 @@ related-rule: pow-to-mul
 
 ## TL;DR
 
-`pow(x, e)` is not compiled to repeated multiplication by any shipping GPU compiler. On AMD RDNA/RDNA 2/RDNA 3, NVIDIA Turing/Ada Lovelace, and Intel Xe-HPG, the `pow` intrinsic lowers to the transcendental pair `exp2(e * log2(x))`. Each of `v_log_f32` and `v_exp_f32` on RDNA 3 executes at one-quarter the peak VALU throughput — so a single `pow(x, 3.0)` occupies the equivalent of roughly 4 full-rate ALU cycles, the same cost as `pow(x, 37.5)`. The exponent value 3.0 does not make the instruction cheaper.
+`pow(x, e)` is not compiled to repeated multiplication by any shipping GPU compiler. On AMD RDNA/RDNA 2/RDNA 3, NVIDIA Turing/Ada Lovelace, and Intel Xe-HPG, the `pow` intrinsic lowers to the transcendental pair `exp2(e * log2(x))`. Each of `v_log_f32` and `v_exp_f32` on RDNA 3 executes at one-quarter the peak VALU throughput â€” so a single `pow(x, 3.0)` occupies the equivalent of roughly 4 full-rate ALU cycles, the same cost as `pow(x, 37.5)`. The exponent value 3.0 does not make the instruction cheaper.
 
 ## What the rule fires on
 

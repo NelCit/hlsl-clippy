@@ -1,5 +1,5 @@
----
-title: "sample-in-loop-implicit-grad: Calls to `Texture2D::Sample`, `Texture2DArray::Sample`, `TextureCube::Sample`, and the other `Sample` overloads that compute texture LOD…"
+﻿---
+title: "sample-in-loop-implicit-grad"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow
@@ -17,7 +17,7 @@ related-rule: sample-in-loop-implicit-grad
 
 ## TL;DR
 
-Pixel shaders execute as 2x2 quads — the smallest unit at which the rasterizer guarantees neighbouring fragments are co-resident on the same SIMD lanes. Implicit-derivative texture sampling computes mip selection by differencing the texture coordinate against the three other lanes in the quad. On AMD RDNA 2/3, this is implemented by the `image_sample` instruction reading `S#` and `T#` operands across the four quad lanes through the cross-lane permute network. On NVIDIA Turing and Ada, the texture unit (TMU) consumes coordinates from all four quad lanes in parallel and forms the partial derivatives in dedicated derivative-computation hardware before issuing the actual fetch. On Intel Xe-HPG, the same quad-coupled fetch protocol applies through the sampler subsystem.
+Pixel shaders execute as 2x2 quads â€” the smallest unit at which the rasterizer guarantees neighbouring fragments are co-resident on the same SIMD lanes. Implicit-derivative texture sampling computes mip selection by differencing the texture coordinate against the three other lanes in the quad. On AMD RDNA 2/3, this is implemented by the `image_sample` instruction reading `S#` and `T#` operands across the four quad lanes through the cross-lane permute network. On NVIDIA Turing and Ada, the texture unit (TMU) consumes coordinates from all four quad lanes in parallel and forms the partial derivatives in dedicated derivative-computation hardware before issuing the actual fetch. On Intel Xe-HPG, the same quad-coupled fetch protocol applies through the sampler subsystem.
 
 ## What the rule fires on
 

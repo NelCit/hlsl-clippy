@@ -1,5 +1,5 @@
----
-title: "texture-as-buffer: A `Texture2D`, `Texture1D`, or `Texture2DArray` resource that is accessed exclusively through integer-coordinate `Load(int3(x, 0,…"
+﻿---
+title: "texture-as-buffer"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: texture

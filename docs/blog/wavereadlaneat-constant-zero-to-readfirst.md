@@ -1,5 +1,5 @@
----
-title: "wavereadlaneat-constant-zero-to-readfirst: Calls of the form `WaveReadLaneAt(x, 0)` where the second argument is the integer literal…"
+﻿---
+title: "wavereadlaneat-constant-zero-to-readfirst"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math
@@ -17,7 +17,7 @@ related-rule: wavereadlaneat-constant-zero-to-readfirst
 
 ## TL;DR
 
-`WaveReadLaneAt(x, lane)` is the general lane-index broadcast: every active lane in the wave receives the value of `x` from the lane numbered `lane`. The hardware contract is general-purpose — `lane` may be any value in `[0, WaveGetLaneCount())`, may differ across waves, and is required to be uniform across the active lanes for the result to be defined. Because `lane` is a runtime input from the compiler's perspective, the lowering must emit the lane-index broadcast in its general form: on AMD RDNA 2/3 that is `v_readlane_b32` (a SALU instruction) plus the bookkeeping required to broadcast back to VGPRs; on NVIDIA Turing and Ada Lovelace, the `SHFL.IDX` shuffle with a per-lane index argument; on Intel Xe-HPG, the SLM-backed lane-index path. None of these are expensive in absolute terms, but they all encode "the lane index is variable" and the compiler cannot strip the index plumbing.
+`WaveReadLaneAt(x, lane)` is the general lane-index broadcast: every active lane in the wave receives the value of `x` from the lane numbered `lane`. The hardware contract is general-purpose â€” `lane` may be any value in `[0, WaveGetLaneCount())`, may differ across waves, and is required to be uniform across the active lanes for the result to be defined. Because `lane` is a runtime input from the compiler's perspective, the lowering must emit the lane-index broadcast in its general form: on AMD RDNA 2/3 that is `v_readlane_b32` (a SALU instruction) plus the bookkeeping required to broadcast back to VGPRs; on NVIDIA Turing and Ada Lovelace, the `SHFL.IDX` shuffle with a per-lane index argument; on Intel Xe-HPG, the SLM-backed lane-index path. None of these are expensive in absolute terms, but they all encode "the lane index is variable" and the compiler cannot strip the index plumbing.
 
 ## What the rule fires on
 

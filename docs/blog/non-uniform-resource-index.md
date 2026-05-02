@@ -1,5 +1,5 @@
----
-title: "non-uniform-resource-index: A dynamic index into a resource array parameter — such as `Texture2D textures[]`, `ConstantBuffer<T>…"
+﻿---
+title: "non-uniform-resource-index"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -17,11 +17,11 @@ related-rule: non-uniform-resource-index
 
 ## TL;DR
 
-The DXIL specification (and by extension the HLSL specification for SM 5.1 and later) defines it as undefined behaviour to index a resource array with a non-uniform value without the `NonUniformResourceIndex` marker. The reason is architectural: resource descriptors are resolved by the driver before shader dispatch, and the hardware uses a single descriptor index per wave to look up the resource binding. If all lanes in a wave use the same index (uniform access), the driver emits a single descriptor load and broadcasts the resource handle to all lanes. If the index varies per lane (non-uniform), the driver must emit a waterfall loop — a sequential iteration over unique index values, masking inactive lanes at each step.
+The DXIL specification (and by extension the HLSL specification for SM 5.1 and later) defines it as undefined behaviour to index a resource array with a non-uniform value without the `NonUniformResourceIndex` marker. The reason is architectural: resource descriptors are resolved by the driver before shader dispatch, and the hardware uses a single descriptor index per wave to look up the resource binding. If all lanes in a wave use the same index (uniform access), the driver emits a single descriptor load and broadcasts the resource handle to all lanes. If the index varies per lane (non-uniform), the driver must emit a waterfall loop â€” a sequential iteration over unique index values, masking inactive lanes at each step.
 
 ## What the rule fires on
 
-A dynamic index into a resource array parameter — such as `Texture2D textures[]`, `ConstantBuffer<T> cbs[]`, or any other unbounded / bounded resource array — where the index is a per-lane divergent value and is not wrapped in `NonUniformResourceIndex(...)`. The rule uses Slang's reflection API to identify parameters of array-of-resource type, then uses Slang's uniformity analysis to determine whether each index expression could differ across lanes in the same wave. It does not fire when the index is a compile-time constant, a root constant, or any value that Slang can prove is wave-uniform.
+A dynamic index into a resource array parameter â€” such as `Texture2D textures[]`, `ConstantBuffer<T> cbs[]`, or any other unbounded / bounded resource array â€” where the index is a per-lane divergent value and is not wrapped in `NonUniformResourceIndex(...)`. The rule uses Slang's reflection API to identify parameters of array-of-resource type, then uses Slang's uniformity analysis to determine whether each index expression could differ across lanes in the same wave. It does not fire when the index is a compile-time constant, a root constant, or any value that Slang can prove is wave-uniform.
 
 See the [What it detects](../rules/non-uniform-resource-index.md#what-it-detects) section of
 the rule page for the full pattern definition.

@@ -13,6 +13,64 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [1.4.1] — 2026-05-02
+
+**Patch — CI repair + ADR 0021 addendum + parser threading.** Fixes
+three bugs surfaced after v1.4.0's tag push pinged GitHub Actions:
+
+### Fixed
+
+- **`.github/workflows/lint.yml` `vsix-activation-check` step** — the
+  diff between expected and actual prod deps mistakenly included the
+  workspace-root path (e.g. `/home/runner/work/.../vscode-extension`)
+  as a "missing dep". `npm list --parseable` puts the workspace root
+  on its own line and the previous `sed 's|.*/node_modules/||'` left
+  that line untouched; added a `grep -v '^/'` clause that drops it.
+  Lint job now passes 6/6 on every release tag.
+- **`.github/workflows/docs.yml` VitePress build** — 204 of the
+  v1.0.0 stub blog posts had `title: "<rule-id>: <prose with embedded
+  "quotes" and `backticks` and U+2026 ellipsis...>"` front-matter
+  that YAML's parser refused to read inside a double-quoted scalar.
+  The build broke at `docs/blog/anyhit-heavy-work.md` line 3 column 5
+  on every push since v1.0.0. Replaced all stub titles with the
+  clean form `title: "<rule-id>"` via
+  `tools/fix-blog-stub-titles.ps1`. The full rule-id-prefixed title
+  remains in the body's H1; the front-matter just hosts the
+  parser-stable form.
+- **CodeQL build of `core/src/rules/sample_use_no_interleave.cpp`**
+  on Linux Clang — `-Wunused-variable` false-error on `fn_text`.
+  Already fixed in v1.4.0 (commit `cc5773a` dropped the unused
+  binding); v1.4.1 carries forward.
+
+### Changed
+
+- **`core/src/parser_internal.hpp` + `core/src/parser.cpp`** — added
+  a two-arg `parse(sources, source, language)` overload that accepts
+  a pre-resolved `SourceLanguage`. Single-arg overload preserved for
+  the CFG-engine reparse helpers that don't have orchestrator
+  context. Closes the v1.4.0.x drift item from ADR 0021's
+  implementation report: a `[lint] source-language = "slang"`
+  config setting on an `.hlsl`-extension file now routes through
+  tree-sitter-slang at the parser layer, not just the orchestrator.
+
+### Added
+
+- **`tools/fix-blog-stub-titles.ps1`** — idempotent script that
+  rewrites stub-blog `title:` fields to the YAML-safe rule-id form.
+  Re-run if the stub generator's output ever drifts back.
+
+### Documentation
+
+- **ADR 0021 addendum** — records two post-implementation items:
+  the upstream pivot from `Theta-Dev/tree-sitter-slang` (404'd) to
+  `tree-sitter-grammars/tree-sitter-slang` (canonical community
+  port that extends tree-sitter-hlsl by reference, yielding 99%
+  pass-through vs the projected 92%); and the deferred fork to
+  `nelcit/tree-sitter-slang` per Option B (no GitHub-auth scope at
+  implementation time; ABI infrastructure is in place). The recommended
+  end-state remains Option B; v1.4.0 shipped Option A as a stepping
+  stone.
+
 ## [1.4.0] — 2026-05-03
 
 **v1.4.0 — Slang sub-phase B (ADR 0021): tree-sitter-slang AST + CFG
@@ -1447,6 +1505,8 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[1.4.1]: https://github.com/NelCit/hlsl-clippy/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/NelCit/hlsl-clippy/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.1.0...v1.2.0

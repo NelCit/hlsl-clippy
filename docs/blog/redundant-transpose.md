@@ -1,5 +1,5 @@
----
-title: "redundant-transpose: Calls of the form `transpose(transpose(M))` where a matrix is transposed twice, yielding the original…"
+﻿---
+title: "redundant-transpose"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: saturate-redundancy
@@ -17,7 +17,7 @@ related-rule: redundant-transpose
 
 ## TL;DR
 
-`transpose` in HLSL is a pure value operation: it rearranges the rows and columns of a matrix without any mathematical computation beyond register reassignment. In an ideal pipeline — when the compiler can see both `transpose` calls in the same function and the matrix is stored in contiguous VGPRs — the two calls cancel out and no instructions are emitted. However, this cancellation is not guaranteed across function-call boundaries, across inlining decisions, or when the matrix is passed through a constant buffer or read from a structured buffer.
+`transpose` in HLSL is a pure value operation: it rearranges the rows and columns of a matrix without any mathematical computation beyond register reassignment. In an ideal pipeline â€” when the compiler can see both `transpose` calls in the same function and the matrix is stored in contiguous VGPRs â€” the two calls cancel out and no instructions are emitted. However, this cancellation is not guaranteed across function-call boundaries, across inlining decisions, or when the matrix is passed through a constant buffer or read from a structured buffer.
 
 ## What the rule fires on
 

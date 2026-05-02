@@ -1,5 +1,5 @@
----
-title: "wave-intrinsic-non-uniform: Calls to any wave intrinsic that operates across the active lane set — `WaveActiveSum`,…"
+﻿---
+title: "wave-intrinsic-non-uniform"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: control-flow
@@ -17,11 +17,11 @@ related-rule: wave-intrinsic-non-uniform
 
 ## TL;DR
 
-Wave intrinsics operate across the set of lanes that are currently active at the instruction's execution point. When all lanes in a wave enter the intrinsic together, the operation is well-defined: `WaveActiveSum(x)` sums the value `x` from every lane in the wave. But when the intrinsic executes inside a divergent branch, only the subset of lanes that took that branch are active — the rest are masked off by the hardware. The result of `WaveActiveSum` in this position is the sum across only the participating subset, not the full wave. This is almost never what the programmer intended; more importantly, the participating subset varies from wave to wave depending on data values, making the result non-deterministic across runs on the same input if the hardware scheduler changes wave composition. The D3D12 and Vulkan specifications classify this as undefined behaviour for operations that require wave uniformity at entry.
+Wave intrinsics operate across the set of lanes that are currently active at the instruction's execution point. When all lanes in a wave enter the intrinsic together, the operation is well-defined: `WaveActiveSum(x)` sums the value `x` from every lane in the wave. But when the intrinsic executes inside a divergent branch, only the subset of lanes that took that branch are active â€” the rest are masked off by the hardware. The result of `WaveActiveSum` in this position is the sum across only the participating subset, not the full wave. This is almost never what the programmer intended; more importantly, the participating subset varies from wave to wave depending on data values, making the result non-deterministic across runs on the same input if the hardware scheduler changes wave composition. The D3D12 and Vulkan specifications classify this as undefined behaviour for operations that require wave uniformity at entry.
 
 ## What the rule fires on
 
-Calls to any wave intrinsic that operates across the active lane set — `WaveActiveSum`, `WaveActiveProduct`, `WaveActiveMin`, `WaveActiveMax`, `WaveActiveBitAnd`, `WaveActiveBitOr`, `WaveActiveBitXor`, `WaveActiveAllTrue`, `WaveActiveAnyTrue`, `WaveActiveAllEqual`, `WaveActiveBallot`, `WavePrefixSum`, `WavePrefixProduct`, `WaveReadLaneFirst`, `WaveReadLaneAt`, `WaveMatch`, `WaveMultiPrefixSum`, and `WaveMultiPrefixProduct` — when they appear inside a branch whose condition is non-uniform across the threads of the wave. The rule fires when the predicate is derived from per-thread varying data (thread IDs, buffer reads with thread-varying index, per-pixel varying inputs) rather than from a provably uniform source (cbuffer fields, literal constants, `WaveIsFirstLane` results).
+Calls to any wave intrinsic that operates across the active lane set â€” `WaveActiveSum`, `WaveActiveProduct`, `WaveActiveMin`, `WaveActiveMax`, `WaveActiveBitAnd`, `WaveActiveBitOr`, `WaveActiveBitXor`, `WaveActiveAllTrue`, `WaveActiveAnyTrue`, `WaveActiveAllEqual`, `WaveActiveBallot`, `WavePrefixSum`, `WavePrefixProduct`, `WaveReadLaneFirst`, `WaveReadLaneAt`, `WaveMatch`, `WaveMultiPrefixSum`, and `WaveMultiPrefixProduct` â€” when they appear inside a branch whose condition is non-uniform across the threads of the wave. The rule fires when the predicate is derived from per-thread varying data (thread IDs, buffer reads with thread-varying index, per-pixel varying inputs) rather than from a provably uniform source (cbuffer fields, literal constants, `WaveIsFirstLane` results).
 
 See the [What it detects](../rules/wave-intrinsic-non-uniform.md#what-it-detects) section of
 the rule page for the full pattern definition.

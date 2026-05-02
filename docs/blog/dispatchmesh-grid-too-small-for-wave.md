@@ -1,5 +1,5 @@
----
-title: "dispatchmesh-grid-too-small-for-wave: A `DispatchMesh(x, y, z)` call where all three arguments are integer literals and `x…"
+﻿---
+title: "dispatchmesh-grid-too-small-for-wave"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: mesh

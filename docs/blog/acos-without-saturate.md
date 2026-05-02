@@ -1,5 +1,5 @@
----
-title: "acos-without-saturate: Calls to `acos(x)` (and `asin(x)`) where the argument is the result of a `dot(a,…"
+﻿---
+title: "acos-without-saturate"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math

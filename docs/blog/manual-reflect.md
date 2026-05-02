@@ -1,5 +1,5 @@
----
-title: "manual-reflect: The expression `v - 2.0 * dot(n, v) * n` (or algebraically equivalent forms…"
+﻿---
+title: "manual-reflect"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: math

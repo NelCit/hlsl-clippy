@@ -1,5 +1,5 @@
----
-title: "bool-straddles-16b: A `bool` member inside a `cbuffer` or `ConstantBuffer<T>` whose byte offset causes it to…"
+﻿---
+title: "bool-straddles-16b"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -17,11 +17,11 @@ related-rule: bool-straddles-16b
 
 ## TL;DR
 
-A `bool` in a cbuffer is loaded as part of a 16-byte slot fetch. When the `bool` sits at bytes 12–15 of a slot, the load is well-defined and correct — the problem is that the D3D12 / HLSL specification treats the effective value as the result of a non-zero test on the underlying DWORD, but the exact byte layout of that DWORD relative to the 16-byte register depends on whether the compiler chose to pack it into the same slot or bumped it to the next one. `fxc` and `dxc` have historically made different decisions for this layout, meaning a cbuffer filled on the CPU side using one compiler's reflection output may be read incorrectly by a shader compiled with another. This is a correctness hazard, not merely a performance issue.
+A `bool` in a cbuffer is loaded as part of a 16-byte slot fetch. When the `bool` sits at bytes 12â€“15 of a slot, the load is well-defined and correct â€” the problem is that the D3D12 / HLSL specification treats the effective value as the result of a non-zero test on the underlying DWORD, but the exact byte layout of that DWORD relative to the 16-byte register depends on whether the compiler chose to pack it into the same slot or bumped it to the next one. `fxc` and `dxc` have historically made different decisions for this layout, meaning a cbuffer filled on the CPU side using one compiler's reflection output may be read incorrectly by a shader compiled with another. This is a correctness hazard, not merely a performance issue.
 
 ## What the rule fires on
 
-A `bool` member inside a `cbuffer` or `ConstantBuffer<T>` whose byte offset causes it to span — or be placed at — a 16-byte register boundary. Under HLSL packing rules a `bool` occupies 4 bytes (one DWORD, promoted from 1-bit to 32-bit for GPU register layout), but the packing rule that prevents members from straddling a 16-byte slot boundary can place the `bool` at byte offset 12 inside a slot, leaving it exactly at the boundary. The rule uses Slang's reflection API to retrieve each member's byte offset and size, then checks whether `(offset % 16) + sizeof(member) > 16`. The canonical trigger is `float3` (12 bytes) followed by `bool`: `float3` lands at an aligned offset, consumes 12 bytes, and the `bool` at offset 12 within the slot technically fits in the last 4 bytes — but whether the compiler packs it there or bumps it to the next slot is implementation-defined and varies across `dxc`, `fxc`, and Slang. See `tests/fixtures/phase3/bindings.hlsl`, lines 12–18 for the `StraddleCB` example.
+A `bool` member inside a `cbuffer` or `ConstantBuffer<T>` whose byte offset causes it to span â€” or be placed at â€” a 16-byte register boundary. Under HLSL packing rules a `bool` occupies 4 bytes (one DWORD, promoted from 1-bit to 32-bit for GPU register layout), but the packing rule that prevents members from straddling a 16-byte slot boundary can place the `bool` at byte offset 12 inside a slot, leaving it exactly at the boundary. The rule uses Slang's reflection API to retrieve each member's byte offset and size, then checks whether `(offset % 16) + sizeof(member) > 16`. The canonical trigger is `float3` (12 bytes) followed by `bool`: `float3` lands at an aligned offset, consumes 12 bytes, and the `bool` at offset 12 within the slot technically fits in the last 4 bytes â€” but whether the compiler packs it there or bumps it to the next slot is implementation-defined and varies across `dxc`, `fxc`, and Slang. See `tests/fixtures/phase3/bindings.hlsl`, lines 12â€“18 for the `StraddleCB` example.
 
 See the [What it detects](../rules/bool-straddles-16b.md#what-it-detects) section of
 the rule page for the full pattern definition.

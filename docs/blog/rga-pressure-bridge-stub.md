@@ -1,5 +1,5 @@
----
-title: "rga-pressure-bridge-stub: Per ADR 0018 §4.3, this is an infrastructure investment, not a rule per se.…"
+﻿---
+title: "rga-pressure-bridge-stub"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: rdna4
@@ -21,7 +21,7 @@ The current `vgpr-pressure-warning` rule is an AST heuristic. AMD's RGA ("Live V
 
 ## What the rule fires on
 
-Per ADR 0018 §4.3, this is an infrastructure investment, not a rule per se. Fires once per source compiled under the `[experimental.target = rdna4]` config gate, emitting a `Severity::Note` informational diagnostic that points the developer to the future `tools/rga-bridge` work item.
+Per ADR 0018 Â§4.3, this is an infrastructure investment, not a rule per se. Fires once per source compiled under the `[experimental.target = rdna4]` config gate, emitting a `Severity::Note` informational diagnostic that points the developer to the future `tools/rga-bridge` work item.
 
 See the [What it detects](../rules/rga-pressure-bridge-stub.md#what-it-detects) section of
 the rule page for the full pattern definition.

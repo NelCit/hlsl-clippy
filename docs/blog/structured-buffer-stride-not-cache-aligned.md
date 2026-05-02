@@ -1,5 +1,5 @@
----
-title: "structured-buffer-stride-not-cache-aligned: A `StructuredBuffer<T>` or `RWStructuredBuffer<T>` whose element stride (computed by Slang reflection from the HLSL…"
+﻿---
+title: "structured-buffer-stride-not-cache-aligned"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings

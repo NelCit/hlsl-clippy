@@ -1,5 +1,5 @@
----
-title: "ray-flag-force-opaque-with-anyhit: A `TraceRay(...)` call with `RAY_FLAG_FORCE_OPAQUE` set in a translation unit that also defines a…"
+﻿---
+title: "ray-flag-force-opaque-with-anyhit"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: dxr

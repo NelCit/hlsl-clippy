@@ -1,5 +1,5 @@
----
-title: "byteaddressbuffer-narrow-when-typed-fits: A `ByteAddressBuffer.Load4` (or `Load2` / `Load3`) followed by an `asfloat` / `asuint` round-trip that…"
+﻿---
+title: "byteaddressbuffer-narrow-when-typed-fits"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings

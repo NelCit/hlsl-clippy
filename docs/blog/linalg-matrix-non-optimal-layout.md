@@ -1,5 +1,5 @@
----
-title: "linalg-matrix-non-optimal-layout: A `linalg::*Mul` / `OuterProductAccumulate` call (SM 6.10, proposal 0035) whose matrix-layout enum argument is…"
+﻿---
+title: "linalg-matrix-non-optimal-layout"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: linalg

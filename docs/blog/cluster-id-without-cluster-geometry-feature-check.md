@@ -1,5 +1,5 @@
----
-title: "cluster-id-without-cluster-geometry-feature-check: A call to `ClusterID()` (SM 6.10 ray-tracing intrinsic) without a guarding `IsClusteredGeometrySupported()` check on…"
+﻿---
+title: "cluster-id-without-cluster-geometry-feature-check"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: sm6_10

@@ -1,5 +1,5 @@
----
-title: "min16float-in-cbuffer-roundtrip: A `min16float` (or `half`) cast applied to a `float` field loaded from a `cbuffer`.…"
+﻿---
+title: "min16float-in-cbuffer-roundtrip"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: packed-math
@@ -17,7 +17,7 @@ related-rule: min16float-in-cbuffer-roundtrip
 
 ## TL;DR
 
-`cbuffer` (constant buffer) fields are always stored as 32-bit aligned types on the GPU. When a shader reads a `float` cbuffer field and casts it to `min16float`, the compiler emits a `v_cvt_f16_f32` (RDNA) or `F2FP` (Turing) conversion instruction on every execution of that load. For a pixel shader invoked millions of times per frame — or a compute shader across thousands of thread groups — this single conversion instruction is replicated across every wave. On RDNA 3, `v_cvt_f16_f32` costs one VALU cycle, which is not itself expensive, but when the field is accessed inside a loop the instruction is issued once per iteration per wave, and the ALU time accumulates.
+`cbuffer` (constant buffer) fields are always stored as 32-bit aligned types on the GPU. When a shader reads a `float` cbuffer field and casts it to `min16float`, the compiler emits a `v_cvt_f16_f32` (RDNA) or `F2FP` (Turing) conversion instruction on every execution of that load. For a pixel shader invoked millions of times per frame â€” or a compute shader across thousands of thread groups â€” this single conversion instruction is replicated across every wave. On RDNA 3, `v_cvt_f16_f32` costs one VALU cycle, which is not itself expensive, but when the field is accessed inside a loop the instruction is issued once per iteration per wave, and the ALU time accumulates.
 
 ## What the rule fires on
 

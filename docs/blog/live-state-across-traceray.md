@@ -1,5 +1,5 @@
----
-title: "live-state-across-traceray: Local variables or intermediate computed values that are (a) assigned before a `TraceRay` or…"
+﻿---
+title: "live-state-across-traceray"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: memory
@@ -17,11 +17,11 @@ related-rule: live-state-across-traceray
 
 ## TL;DR
 
-`TraceRay` is not an ordinary function call. The DXR execution model suspends the calling shader and invokes intersection, any-hit, and closest-hit shaders that may themselves call `TraceRay` recursively. The hardware cannot keep the calling shader's register file live during traversal — the traversal may take hundreds of cycles and would block the entire SIMD unit if registers were held. Instead, the driver spills every value that the compiler determines is live across the trace to a per-lane ray stack: a private VRAM allocation, typically backed by the same scratch-memory infrastructure as local-array indexing. Each spilled `float4` costs a 128-bit write before the trace and a 128-bit read after it, with VRAM latencies (80-300 cycles per access on RDNA 3 and Turing).
+`TraceRay` is not an ordinary function call. The DXR execution model suspends the calling shader and invokes intersection, any-hit, and closest-hit shaders that may themselves call `TraceRay` recursively. The hardware cannot keep the calling shader's register file live during traversal â€” the traversal may take hundreds of cycles and would block the entire SIMD unit if registers were held. Instead, the driver spills every value that the compiler determines is live across the trace to a per-lane ray stack: a private VRAM allocation, typically backed by the same scratch-memory infrastructure as local-array indexing. Each spilled `float4` costs a 128-bit write before the trace and a 128-bit read after it, with VRAM latencies (80-300 cycles per access on RDNA 3 and Turing).
 
 ## What the rule fires on
 
-Local variables or intermediate computed values that are (a) assigned before a `TraceRay` or `RayQuery::TraceRayInline` call and (b) read after the call returns, making them live across the trace boundary. The rule fires when the number of such live values — weighted by their register footprint in bytes — exceeds a configurable byte threshold. It also fires for any individual value larger than 16 bytes (one `float4`) that is live across a trace, because even a single large live value materialises in the per-lane ray stack.
+Local variables or intermediate computed values that are (a) assigned before a `TraceRay` or `RayQuery::TraceRayInline` call and (b) read after the call returns, making them live across the trace boundary. The rule fires when the number of such live values â€” weighted by their register footprint in bytes â€” exceeds a configurable byte threshold. It also fires for any individual value larger than 16 bytes (one `float4`) that is live across a trace, because even a single large live value materialises in the per-lane ray stack.
 
 See the [What it detects](../rules/live-state-across-traceray.md#what-it-detects) section of
 the rule page for the full pattern definition.

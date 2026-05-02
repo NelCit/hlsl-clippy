@@ -1,5 +1,5 @@
----
-title: "cbuffer-fits-rootconstants: A `cbuffer` or `ConstantBuffer<T>` whose total size is at most 32 bytes (8 DWORDs)…"
+﻿---
+title: "cbuffer-fits-rootconstants"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: bindings
@@ -21,7 +21,7 @@ On D3D12, a cbuffer bound via a descriptor heap or root descriptor requires an i
 
 ## What the rule fires on
 
-A `cbuffer` or `ConstantBuffer<T>` whose total size is at most 32 bytes (8 DWORDs) — the maximum number of 32-bit values that D3D12 root constants can hold in one root parameter slot. The rule uses Slang's reflection API to determine the cbuffer's total byte size and fires when `total_bytes <= 32`. Both fixture examples qualify: `cbuffer Tiny` (8 bytes, 2 DWORDs; see `tests/fixtures/phase3/bindings.hlsl`, lines 21–24) and the four-DWORD `cbuffer PushCB` and the two-DWORD `cbuffer TinyBlurCB` (see `tests/fixtures/phase3/bindings_extra.hlsl`, lines 8–19).
+A `cbuffer` or `ConstantBuffer<T>` whose total size is at most 32 bytes (8 DWORDs) â€” the maximum number of 32-bit values that D3D12 root constants can hold in one root parameter slot. The rule uses Slang's reflection API to determine the cbuffer's total byte size and fires when `total_bytes <= 32`. Both fixture examples qualify: `cbuffer Tiny` (8 bytes, 2 DWORDs; see `tests/fixtures/phase3/bindings.hlsl`, lines 21â€“24) and the four-DWORD `cbuffer PushCB` and the two-DWORD `cbuffer TinyBlurCB` (see `tests/fixtures/phase3/bindings_extra.hlsl`, lines 8â€“19).
 
 See the [What it detects](../rules/cbuffer-fits-rootconstants.md#what-it-detects) section of
 the rule page for the full pattern definition.

@@ -1,5 +1,5 @@
----
-title: "mesh-numthreads-over-128: A mesh-shader or amplification-shader entry point whose `[numthreads(X, Y, Z)]` attribute multiplies out to…"
+﻿---
+title: "mesh-numthreads-over-128"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: mesh

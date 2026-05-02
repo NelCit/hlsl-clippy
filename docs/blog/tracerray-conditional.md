@@ -1,5 +1,5 @@
----
-title: "tracerray-conditional: Calls to `TraceRay(...)` (DXR pipeline) or `RayQuery::TraceRayInline(...)` (inline ray queries) placed inside an `if`,…"
+﻿---
+title: "tracerray-conditional"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: dxr
@@ -17,7 +17,7 @@ related-rule: tracerray-conditional
 
 ## TL;DR
 
-A `TraceRay` call is the most expensive primitive in any DXR shader. The DXR runtime must spill the caller's live registers to a per-lane stack so the called any-hit, intersection, miss, or closest-hit shaders can run with their own register set, then restore on return. On AMD RDNA 2/3 with hardware ray tracing, the spill happens to the per-lane scratch buffer in VMEM — typically 128-256 bytes per lane per active variable, costing one `buffer_store_dword` and one `buffer_load_dword` per VGPR live across the trace. On NVIDIA Turing, Ada, and Blackwell, the SER hardware (or the older non-SER traversal) stages spills through L1$, but the data still has to round-trip out of registers and back. On Intel Xe-HPG with hardware RT, the analogous spill goes through the URB / scratch.
+A `TraceRay` call is the most expensive primitive in any DXR shader. The DXR runtime must spill the caller's live registers to a per-lane stack so the called any-hit, intersection, miss, or closest-hit shaders can run with their own register set, then restore on return. On AMD RDNA 2/3 with hardware ray tracing, the spill happens to the per-lane scratch buffer in VMEM â€” typically 128-256 bytes per lane per active variable, costing one `buffer_store_dword` and one `buffer_load_dword` per VGPR live across the trace. On NVIDIA Turing, Ada, and Blackwell, the SER hardware (or the older non-SER traversal) stages spills through L1$, but the data still has to round-trip out of registers and back. On Intel Xe-HPG with hardware RT, the analogous spill goes through the URB / scratch.
 
 ## What the rule fires on
 

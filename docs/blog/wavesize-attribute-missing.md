@@ -1,5 +1,5 @@
----
-title: "wavesize-attribute-missing: A compute or amplification entry point that uses wave intrinsics in a way whose…"
+﻿---
+title: "wavesize-attribute-missing"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup
@@ -17,11 +17,11 @@ related-rule: wavesize-attribute-missing
 
 ## TL;DR
 
-Hardware wave size varies across IHVs and even across architectures from the same IHV. AMD RDNA 1/2/3 supports both 32-wide and 64-wide waves; the driver picks one based on the shader's hints (`[WaveSize]`, register pressure, SM version). NVIDIA Turing and Ada Lovelace are always 32-wide warps. Intel Xe-HPG SIMD width is 8, 16, or 32 lanes depending on register pressure and compiler decisions. A shader that relies on a specific wave size — e.g. assumes a wave covers exactly 32 lanes — runs correctly on Turing/Ada but produces silently wrong results on RDNA when the driver picks 64-wide, or on Xe-HPG when the compiler picks 16-wide.
+Hardware wave size varies across IHVs and even across architectures from the same IHV. AMD RDNA 1/2/3 supports both 32-wide and 64-wide waves; the driver picks one based on the shader's hints (`[WaveSize]`, register pressure, SM version). NVIDIA Turing and Ada Lovelace are always 32-wide warps. Intel Xe-HPG SIMD width is 8, 16, or 32 lanes depending on register pressure and compiler decisions. A shader that relies on a specific wave size â€” e.g. assumes a wave covers exactly 32 lanes â€” runs correctly on Turing/Ada but produces silently wrong results on RDNA when the driver picks 64-wide, or on Xe-HPG when the compiler picks 16-wide.
 
 ## What the rule fires on
 
-A compute or amplification entry point that uses wave intrinsics in a way whose result depends on the runtime wave size — e.g. `WaveGetLaneCount()` consumed by an arithmetic expression, `WaveReadLaneAt(x, K)` with `K >= 32`, fixed-stride reductions of the form `lane + 32`, or groupshared layouts indexed by `WaveGetLaneCount()` — without a corresponding `[WaveSize(N)]` or `[WaveSize(min, max)]` attribute on the entry. The detector reads the entry's `[WaveSize]` attribute via reflection and scans the AST for wave-size-dependent uses. It does not fire when `[WaveSize]` is present, nor when the only wave intrinsics in use are wave-size-agnostic (`WaveActiveSum`, `WavePrefixSum`, `WaveActiveBitOr`, `WaveActiveAllTrue`).
+A compute or amplification entry point that uses wave intrinsics in a way whose result depends on the runtime wave size â€” e.g. `WaveGetLaneCount()` consumed by an arithmetic expression, `WaveReadLaneAt(x, K)` with `K >= 32`, fixed-stride reductions of the form `lane + 32`, or groupshared layouts indexed by `WaveGetLaneCount()` â€” without a corresponding `[WaveSize(N)]` or `[WaveSize(min, max)]` attribute on the entry. The detector reads the entry's `[WaveSize]` attribute via reflection and scans the AST for wave-size-dependent uses. It does not fire when `[WaveSize]` is present, nor when the only wave intrinsics in use are wave-size-agnostic (`WaveActiveSum`, `WavePrefixSum`, `WaveActiveBitOr`, `WaveActiveAllTrue`).
 
 See the [What it detects](../rules/wavesize-attribute-missing.md#what-it-detects) section of
 the rule page for the full pattern definition.

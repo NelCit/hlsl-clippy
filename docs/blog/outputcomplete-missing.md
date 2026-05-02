@@ -1,5 +1,5 @@
----
-title: "outputcomplete-missing: Work-graph node entry points that obtain output records via `GetGroupNodeOutputRecords(...)`, `GetThreadNodeOutputRecords(...)`, or the analogous…"
+﻿---
+title: "outputcomplete-missing"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: work-graphs

@@ -1,5 +1,5 @@
----
-title: "maybereorderthread-outside-raygen: A call to `dx::MaybeReorderThread(...)` from any DXR stage other than raygeneration. The SM 6.9…"
+﻿---
+title: "maybereorderthread-outside-raygen"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: ser
@@ -17,7 +17,7 @@ related-rule: maybereorderthread-outside-raygen
 
 ## TL;DR
 
-SER's value comes from coalescing divergent lanes within a wave around a common shader execution. On NVIDIA Ada Lovelace's RT subsystem, the reorder happens at a hardware-scoped boundary that the runtime can only manipulate at the raygen invocation point — once a wave has dispatched into a closest-hit shader, the lane mapping is committed and reordering would have to spill and re-form the wave, which costs more than it saves. AMD RDNA 4 (when SER ships there) and the cross-platform Vulkan equivalent (`VK_EXT_ray_tracing_invocation_reorder`) exhibit the same constraint for the same hardware reason.
+SER's value comes from coalescing divergent lanes within a wave around a common shader execution. On NVIDIA Ada Lovelace's RT subsystem, the reorder happens at a hardware-scoped boundary that the runtime can only manipulate at the raygen invocation point â€” once a wave has dispatched into a closest-hit shader, the lane mapping is committed and reordering would have to spill and re-form the wave, which costs more than it saves. AMD RDNA 4 (when SER ships there) and the cross-platform Vulkan equivalent (`VK_EXT_ray_tracing_invocation_reorder`) exhibit the same constraint for the same hardware reason.
 
 ## What the rule fires on
 

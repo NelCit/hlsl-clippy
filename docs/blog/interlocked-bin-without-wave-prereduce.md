@@ -1,5 +1,5 @@
----
-title: "interlocked-bin-without-wave-prereduce: Calls to `InterlockedAdd`, `InterlockedOr`, or `InterlockedXor` against a `groupshared` array or a UAV buffer…"
+﻿---
+title: "interlocked-bin-without-wave-prereduce"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: workgroup
@@ -21,7 +21,7 @@ related-rule: interlocked-bin-without-wave-prereduce
 
 ## What the rule fires on
 
-Calls to `InterlockedAdd`, `InterlockedOr`, or `InterlockedXor` against a `groupshared` array or a UAV buffer with a small fixed bin count (≤ 32 indices) where the index is computed per-thread but the rule can prove the bin set is small enough that wave-level pre-reduction with `WaveActiveSum` or `WavePrefixSum` would coalesce most of the contention. Histograms with up to 32 bins, summary counters, per-material lane counters, and per-cluster occupancy maps are the canonical examples.
+Calls to `InterlockedAdd`, `InterlockedOr`, or `InterlockedXor` against a `groupshared` array or a UAV buffer with a small fixed bin count (â‰¤ 32 indices) where the index is computed per-thread but the rule can prove the bin set is small enough that wave-level pre-reduction with `WaveActiveSum` or `WavePrefixSum` would coalesce most of the contention. Histograms with up to 32 bins, summary counters, per-material lane counters, and per-cluster occupancy maps are the canonical examples.
 
 See the [What it detects](../rules/interlocked-bin-without-wave-prereduce.md#what-it-detects) section of
 the rule page for the full pattern definition.

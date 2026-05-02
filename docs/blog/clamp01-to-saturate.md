@@ -1,5 +1,5 @@
----
-title: "clamp01-to-saturate: Calls to `clamp(x, 0.0, 1.0)` — or the equivalent integer-literal form `clamp(x, 0, 1)`…"
+﻿---
+title: "clamp01-to-saturate"
 date: 2026-05-02
 author: hlsl-clippy maintainers
 category: saturate-redundancy
@@ -21,7 +21,7 @@ related-rule: clamp01-to-saturate
 
 ## What the rule fires on
 
-Calls to `clamp(x, 0.0, 1.0)` — or the equivalent integer-literal form `clamp(x, 0, 1)` — where both the lower and upper bounds are compile-time constants equal to exactly 0.0 and 1.0 respectively, after type coercion. The rule fires on scalar, vector, and matrix operands. It does not fire when either bound is a variable, a constant buffer field, or any expression that is not a numeric literal, even if the value happens to evaluate to 0 or 1 at runtime.
+Calls to `clamp(x, 0.0, 1.0)` â€” or the equivalent integer-literal form `clamp(x, 0, 1)` â€” where both the lower and upper bounds are compile-time constants equal to exactly 0.0 and 1.0 respectively, after type coercion. The rule fires on scalar, vector, and matrix operands. It does not fire when either bound is a variable, a constant buffer field, or any expression that is not a numeric literal, even if the value happens to evaluate to 0 or 1 at runtime.
 
 See the [What it detects](../rules/clamp01-to-saturate.md#what-it-detects) section of
 the rule page for the full pattern definition.
