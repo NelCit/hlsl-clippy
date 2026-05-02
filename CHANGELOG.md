@@ -13,6 +13,39 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [0.6.6] — 2026-05-02
+
+**Critical hotfix**: the LSP server has been broken on Windows since
+v0.5.0. `lsp/src/main.cpp` left stdin/stdout in text mode; Windows
+silently translates `\r\n` <-> `\n` in text-mode I/O, corrupting the
+LSP base-protocol framing in both directions. The framing parser
+searched for `\r\n\r\n` but Windows had stripped the `\r`, so the
+header terminator never matched -- the server hung forever waiting
+for a header that had already arrived. Symptom: VS Code's Problems
+panel stayed empty; no error logged anywhere.
+
+Verified end-to-end: `tools/smoke-lsp.js` drives the LSP via JSON-RPC
+stdio, sends `initialize` + `didOpen` for `tests/fixtures/phase2/math.hlsl`,
+and now receives 23 diagnostics back (`lerp-extremes`, `mul-identity`,
+`sin-cos-pair`, `manual-reflect`, `manual-step`, ...). Pre-fix: 0
+frames, server hung.
+
+### Fixed
+- **`lsp/src/main.cpp`**: call `_setmode(_fileno(stdin), _O_BINARY)`
+  + `_setmode(_fileno(stdout), _O_BINARY)` on Windows. Includes
+  `<fcntl.h>` and `<io.h>` for the API. Removed the wrong
+  "leave it text-mode" comment.
+
+### Added
+- **`tools/smoke-lsp.js`** -- standalone Node.js smoke test that
+  spawns `hlsl-clippy-lsp.exe`, drives a real JSON-RPC handshake
+  through stdio, and asserts at least one `publishDiagnostics`
+  frame is produced. Catches both LSP startup failure modes:
+  missing DLLs (server crashes before handshake) and text-mode
+  CRLF mangling (parser hangs forever). Fast (~3 s end-to-end);
+  documented in `vscode-extension/DEVELOPMENT.md` as the cheapest
+  pre-tag verification.
+
 ## [0.6.5] — 2026-05-02
 
 Hotfix release: v0.6.4's .vsix never published to the Marketplace
@@ -707,6 +740,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.6.6]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.5...v0.6.6
 [0.6.5]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.4...v0.6.5
 [0.6.4]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.3...v0.6.4
 [0.6.3]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.2...v0.6.3

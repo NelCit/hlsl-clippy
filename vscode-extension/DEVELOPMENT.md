@@ -94,12 +94,35 @@ code --install-extension nelcit.hlsl-clippy
 | `HLSL_CLIPPY_SKIP_BUILD=1` | Reuse the existing `build/` tree (no `cmake --build` step). |
 | `HLSL_CLIPPY_SKIP_INSTALL=1` | Build the `.vsix` but don't install it (useful in CI dry-runs). |
 
+## C. LSP smoke test (cheapest)
+
+A pre-flight that proves the `hlsl-clippy-lsp.exe` binary actually
+handshakes over JSON-RPC stdio and emits diagnostics. Catches both
+classes of LSP startup failure (missing Slang DLLs, CRLF mangling on
+Windows text-mode stdio). Takes ~3 seconds; runs without VS Code.
+
+```sh
+node tools/smoke-lsp.js
+```
+
+Expected output ends with:
+
+```
+PASS: 23 diagnostic(s) emitted across 1 frame(s).
+```
+
+If it ends with `FAIL: no diagnostics emitted.` the LSP is broken at
+the binary level; do not bother packaging the .vsix until this passes.
+
 ## Pre-release checklist (cheap version)
 
 Before tagging `vX.Y.Z`, run **at minimum**:
 
 ```sh
-# repo root
+# repo root: 3-second binary-level proof the LSP actually handshakes
+node tools/smoke-lsp.js
+
+# then build + install the real .vsix
 bash tools/build-vsix-local.sh   # or .ps1 on Windows
 ```
 

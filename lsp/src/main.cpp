@@ -12,6 +12,11 @@
 #include <ostream>
 #include <string>
 
+#if defined(_WIN32)
+#include <fcntl.h>
+#include <io.h>
+#endif
+
 #include <nlohmann/json.hpp>
 
 #include "document/manager.hpp"
@@ -63,16 +68,30 @@ void write_framed(std::ostream& out, const std::string& body) {
 // NOLINTNEXTLINE(bugprone-exception-escape) -- catch-all guarantees no escape.
 int main() {
     try {
-        // Binary I/O matters on Windows: ensure no CRLF translation on the
-        // framed stream. nlohmann/json round-trips raw bytes, but the
-        // framing layer expects exact byte counts to match Content-Length.
+        // Binary I/O is mandatory on Windows. The LSP framing layer parses
+        // `Content-Length: N\r\n\r\n<body>` and reads exactly N bytes; in
+        // text mode, Windows silently maps `\r\n` -> `\n` on stdin reads
+        // (so the framing terminator never matches anything that arrives
+        // from the wire) and `\n` -> `\r\n` on stdout writes (corrupting
+        // every Content-Length byte count). Both directions break LSP
+        // simultaneously. Symptom: server hangs immediately after spawn,
+        // VS Code's Problems panel stays empty, no error is logged.
+        //
+        // Pre-v0.6.6 this file kept text mode with a comment claiming
+        // "VS Code's vscode-languageclient writes raw bytes either way" --
+        // that comment was wrong. The languageclient writes per-spec
+        // CRLF-framed headers and our parser searches for `\r\n\r\n`.
+        // Without _setmode the LSP has been broken on Windows since v0.5.0.
 #if defined(_WIN32)
         std::ios_base::sync_with_stdio(false);
-        // Note: switching stdin/stdout to binary mode is platform-specific
-        // and usually done via _setmode in production. For sub-phase 5a,
-        // leave it text-mode; VS Code's vscode-languageclient writes raw
-        // bytes either way and Windows CRLF translation only flips
-        // standalone `\n` writes that we never produce in framed bodies.
+        if (_setmode(_fileno(stdin), _O_BINARY) == -1) {
+            std::cerr << "hlsl-clippy-lsp: failed to switch stdin to binary mode\n";
+            return 1;
+        }
+        if (_setmode(_fileno(stdout), _O_BINARY) == -1) {
+            std::cerr << "hlsl-clippy-lsp: failed to switch stdout to binary mode\n";
+            return 1;
+        }
 #endif
         return run_server(std::cin, std::cout);
     } catch (const std::exception& ex) {

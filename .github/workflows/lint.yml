@@ -54,6 +54,65 @@ jobs:
         working-directory: vscode-extension
         run: npx tsc -p .
 
+  # ── LSP smoke test ───────────────────────────────────────────────────
+  # Spawns hlsl-clippy-lsp.exe and drives a real JSON-RPC handshake +
+  # didOpen on a known-firing fixture. Catches:
+  #   * Missing Slang shared libs (exe load failure).
+  #   * Text-mode CRLF mangling (parser hangs forever) -- the v0.5.0
+  #     -> 0.6.6 root cause for VS Code reporting an empty Problems
+  #     panel on Windows.
+  # Linux-only; the same `_setmode` Windows fix is exercised in
+  # release-vscode.yml's matrix at tag time.
+  lsp-smoke:
+    name: hlsl-clippy-lsp JSON-RPC smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: true
+
+      - name: Set up Ninja
+        uses: seanmiddleditch/gha-setup-ninja@96bed6edff20d1dd61ecff9b75cc519d516e6401 # v5
+
+      - name: Install Clang 18
+        run: |
+          set -euo pipefail
+          wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
+          sudo apt-get install -y libc++-18-dev libc++abi-18-dev
+
+      - name: Cache Slang prebuilt
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/hlsl-clippy/slang
+          key: slang-Linux-${{ hashFiles('cmake/SlangVersion.cmake') }}
+
+      - name: Fetch Slang prebuilt
+        run: bash tools/fetch-slang.sh
+
+      - name: Set up Node 20
+        uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+
+      - name: Build hlsl_clippy_lsp
+        env:
+          CC: clang-18
+          CXX: clang++-18
+          CXXFLAGS: "-stdlib=libc++"
+          LDFLAGS: "-stdlib=libc++"
+        run: |
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target hlsl_clippy_lsp
+
+      - name: Run LSP smoke test
+        run: |
+          # tools/smoke-lsp.js targets build/lsp/hlsl-clippy-lsp.exe by
+          # name; on Linux the binary is just hlsl-clippy-lsp. Symlink
+          # so the same script works.
+          ln -sf hlsl-clippy-lsp build/lsp/hlsl-clippy-lsp.exe
+          node tools/smoke-lsp.js
+
   lint:
     name: clang-format + clang-tidy
     runs-on: ubuntu-latest
