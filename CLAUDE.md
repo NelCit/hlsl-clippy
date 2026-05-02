@@ -480,7 +480,7 @@ Silicon) or `slang-<version>-macos-x86_64.tar.gz` (Intel) into the same
 
 ## ADR index
 
-All 20 ADRs are in MADR 4.0 format under `docs/decisions/`. Each ADR's
+All 21 ADRs are in MADR 4.0 format under `docs/decisions/`. Each ADR's
 `status` field is the canonical authority — read it before assuming a
 decision is settled.
 
@@ -506,6 +506,7 @@ decision is settled.
 | [0018](docs/decisions/0018-v08-research-direction.md) | v0.8+ research direction — 17 LOCKED + 4 DEFERRED rules across v0.8/v0.9/v0.10 | Accepted |
 | [0019](docs/decisions/0019-v1-release-plan.md) | v1.0 release plan — API stability commitment + v1.x maintenance contract | Accepted |
 | [0020](docs/decisions/0020-slang-language-compatibility.md) | Slang language compatibility — sub-phase A (`.slang` recognition + reflection-only lint) for v1.3.0 | Accepted |
+| [0021](docs/decisions/0021-slang-sub-phase-b-tree-sitter.md) | Slang sub-phase B — tree-sitter-slang grammar integration for `.slang` AST coverage (v1.4+) | Accepted |
 
 "Proposed" ADRs represent plans that are approved in principle but not yet
 fully implemented. "Accepted" ADRs represent shipped decisions. Do not
