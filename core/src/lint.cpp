@@ -171,7 +171,8 @@ namespace {
                                                 SourceId source,
                                                 std::span<const std::unique_ptr<Rule>> rules,
                                                 const LintOptions& options,
-                                                ExperimentalTarget active_target) {
+                                                ExperimentalTarget active_target,
+                                                const Config* config = nullptr) {
     auto parsed = parser::parse(sources, source);
     if (!parsed) {
         return {};
@@ -181,6 +182,7 @@ namespace {
 
     RuleContext ctx{sources, source};
     ctx.set_suppressions(&suppressions);
+    ctx.set_config(config);
     const ::TSNode root = ts_tree_root_node(parsed->tree.get());
 
     // ----- AST stage --------------------------------------------------------
@@ -387,7 +389,8 @@ std::vector<Diagnostic> lint(const SourceManager& sources,
     // already gated by tree-sitter queries, that's a one-pass overhead, not a
     // behaviour change.
 
-    auto diagnostics = run_rules(sources, source, rules, options, config.experimental_target());
+    auto diagnostics =
+        run_rules(sources, source, rules, options, config.experimental_target(), &config);
 
     std::vector<Diagnostic> kept;
     kept.reserve(diagnostics.size());

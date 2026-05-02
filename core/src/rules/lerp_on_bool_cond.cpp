@@ -14,10 +14,15 @@
 //      b. a conditional_expression whose `consequence` and `alternative` are
 //         the literals 1 and 0 (or 0 and 1).
 //
-// The fix is suggestion-only: the `cond` operand may have a non-trivial type
-// the user wants to keep explicit, and switching to `?:` changes the
-// readability of the expression. The fix proposes `cond ? b : a` (or
-// `cond ? a : b` for the inverted ternary form).
+// Fix grade (v1.2 — ADR 0019, side-effect-purity oracle):
+//   * machine-applicable when both `a` and `b` are SideEffectFree per
+//     `purity_oracle::classify_expression`. The rewrite duplicates one of
+//     `{a, b}` along the false branch of the resulting `?:` and dropping the
+//     other along the true branch -- safe iff neither has observable side
+//     effects.
+//   * suggestion-only otherwise (a non-pure operand would be evaluated twice
+//     under the rewrite, OR not at all -- an observable change). Phase-1
+//     baseline behaviour for the rare impure-arg case.
 
 #include <cstdint>
 #include <memory>
@@ -31,6 +36,7 @@
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
+#include "rules/util/purity_oracle.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
@@ -190,6 +196,18 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                         const std::string& alternative =
                             swap ? std::string{b_text} : std::string{a_text};
 
+                        // The `?:` rewrite drops one of {a, b} along each
+                        // branch -- safe to apply automatically iff neither
+                        // operand has observable side effects (ADR 0019,
+                        // purity oracle). If either operand is impure or
+                        // unclassifiable, fall back to a suggestion-grade
+                        // fix that the user must hand-review.
+                        const auto a_purity = util::classify_expression(tree, a);
+                        const auto b_purity = util::classify_expression(tree, b);
+                        const bool both_pure =
+                            a_purity == util::Purity::SideEffectFree &&
+                            b_purity == util::Purity::SideEffectFree;
+
                         Diagnostic diag;
                         diag.code = std::string{k_rule_id};
                         diag.severity = Severity::Warning;
@@ -201,10 +219,16 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                             "stable lowering"};
 
                         Fix fix;
-                        fix.machine_applicable = false;
+                        fix.machine_applicable = both_pure;
                         fix.description = std::string{"replace with `"} + cond_text + " ? " +
                                           consequence + " : " + alternative +
-                                          "` for portable codegen across IHVs";
+                                          "` for portable codegen across IHVs" +
+                                          (both_pure
+                                               ? std::string{}
+                                               : std::string{
+                                                     " (suggestion-only: at least one of `a` / `b` "
+                                                     "is not side-effect-free, applying the "
+                                                     "rewrite would change the evaluation count)"});
                         TextEdit edit;
                         edit.span = Span{.source = tree.source_id(), .bytes = call_range};
                         edit.replacement = cond_text + " ? " + consequence + " : " + alternative;

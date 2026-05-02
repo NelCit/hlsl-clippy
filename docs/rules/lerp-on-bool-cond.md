@@ -2,7 +2,7 @@
 id: lerp-on-bool-cond
 category: math
 severity: warn
-applicability: suggestion
+applicability: machine-applicable
 since-version: v0.5.0
 phase: 2
 ---
@@ -61,7 +61,11 @@ none
 
 ## Fix availability
 
-**suggestion** — The candidate fix rewrites `lerp(a, b, (float)cond)` to `cond ? b : a` and the ternary-of-zero-and-one variant the same way. The rewrite is shown as a suggestion rather than machine-applied because the argument order matters and is easy to flip when reading quickly: `lerp(a, b, t)` returns `a` at `t == 0` (so the `false` branch returns `a`), and a careless rewrite to `cond ? a : b` inverts the meaning. The linter prints the corrected ternary inline so the reviewer can confirm the operand order before applying.
+**machine-applicable** (since v1.2 — ADR 0019) — The fix rewrites `lerp(a, b, (float)cond)` to `cond ? b : a` (and the inverted-ternary form `lerp(a, b, cond ? 0 : 1)` to `cond ? a : b`).
+
+The rewrite is machine-applicable when **both `a` and `b` classify as side-effect-free** under the v1.2 purity oracle (`core/src/rules/util/purity_oracle.{hpp,cpp}`): bare identifiers, field/subscript loads, allowlisted-pure intrinsic calls (textbook math + bit-twiddle + `as*` reinterpret casts) over pure args. The `?:` rewrite drops one of `{a, b}` along each branch, so safety requires both sides to be free of observable side effects.
+
+The fix downgrades to **suggestion-only** when either operand contains a non-allowlisted call (e.g. `g(x)` for an unknown user function), an assignment, an increment/decrement, or any other side-effectful sub-expression. Hand-review the rewrite in that case: applying it would change the call count or evaluation count of the impure operand, which is observable.
 
 ## See also
 

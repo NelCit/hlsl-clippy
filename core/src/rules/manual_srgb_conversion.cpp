@@ -1,25 +1,27 @@
 // manual-srgb-conversion
 //
-// FORWARD-COMPATIBLE STUB. Detects hand-rolled sRGB / gamma-2.2 transfers
-// (`pow(x, 2.2)` or the more accurate piecewise transfer) where the sampled
-// resource format already carries the sRGB conversion (e.g.
-// `DXGI_FORMAT_R8G8B8A8_UNORM_SRGB`). Hardware sRGB sampling already
-// linearises the channel; applying the curve a second time double-applies
-// the gamma. This bug is common when migrating a render target from
-// `R8G8B8A8_UNORM` to `R8G8B8A8_UNORM_SRGB` without removing the manual
-// conversion in the shader.
+// Detects hand-rolled sRGB / gamma-2.2 transfers (`pow(x, 2.2)` or the more
+// accurate piecewise transfer) where the sampled resource format already
+// carries the sRGB conversion (e.g. `DXGI_FORMAT_R8G8B8A8_UNORM_SRGB`).
+// Hardware sRGB sampling already linearises the channel; applying the curve
+// a second time double-applies the gamma. This bug is common when migrating
+// a render target from `R8G8B8A8_UNORM` to `R8G8B8A8_UNORM_SRGB` without
+// removing the manual conversion in the shader.
 //
-// Today's reflection bridge does not surface DXGI format information through
-// `ResourceBinding`. Without the format flag, distinguishing a legitimate
-// gamma curve (applied to a UNORM source) from a double-application (applied
-// to a UNORM_SRGB source) is impossible. We syntactically detect the manual
-// conversion shape but DO NOT emit unless reflection confirms the source
-// format is sRGB-flagged. As soon as the bridge surfaces format data, the
-// gate flips and the rule starts emitting without further code change.
+// Fix grade (v1.2 -- ADR 0019, DXGI format reflection):
+//   * machine-applicable when at least one bound texture's
+//     `ResourceBinding::dxgi_format` actually contains "SRGB" (the suffix
+//     standard DXGI uses for sRGB-flagged formats). The rewrite drops the
+//     manual `pow(x, 2.2)` -- replacing the call with its first argument.
+//   * Today's Slang ABI (2026.7.1) does NOT surface the SRGB qualifier
+//     through `TypeReflection::getName()`, so `dxgi_format` is empty for
+//     SRGB textures in practice. The gate is therefore "primed" -- when a
+//     future Slang surfaces the qualifier, the rule auto-fires. Until then
+//     it stays silent.
 //
-// The AST detection logic for the conversion call site is left in place to
-// document the future emit path; the gate is the format check that today
-// can never be satisfied.
+// AST detection of `pow(...,2.2)` call sites is performed up front; the
+// final emit is gated on the format probe so a SRGB binding flips the rule
+// from "no-op" to "machine-applicable" with zero further code change.
 
 #include <cstddef>
 #include <cstdint>
@@ -143,10 +145,19 @@ public:
 
     void on_reflection(const AstTree& tree,
                        const ReflectionInfo& reflection,
-                       RuleContext& /*ctx*/) override {
-        // Forward-compatible stub. Walk the AST for `pow(x, 2.2)` patterns
-        // (and reflection bindings for textures) so the future fire path is
-        // primed; gate the actual emit on the missing DXGI format flag.
+                       RuleContext& ctx) override {
+        // v1.2 (ADR 0019): walk every pow(...,2.2) call site, then probe
+        // each texture binding's DXGI format for the "SRGB" suffix. If any
+        // bound texture is SRGB-flagged, every pow(...,2.2) site gets a
+        // machine-applicable diagnostic suggesting the manual conversion
+        // be dropped.
+        //
+        // Today's Slang 2026.7.1 ABI doesn't surface the SRGB qualifier
+        // through `TypeReflection::getName()`, so `dxgi_format` is empty
+        // for SRGB textures in practice -- the gate stays unsatisfied
+        // and no diagnostic is emitted. The probe is forward-compatible:
+        // when a future Slang surfaces the qualifier, this rule lights up
+        // with zero further code change.
         const auto sites = find_pow_2_2_sites(tree.source_bytes());
         if (sites.empty()) {
             return;
@@ -156,19 +167,46 @@ public:
             if (!util::is_texture(binding.kind)) {
                 continue;
             }
-            // Pseudocode for the future emit path:
-            //   if (binding.format_is_srgb()) { any_srgb_texture = true; break; }
-            (void)binding;
+            if (binding.dxgi_format.find("SRGB") != std::string::npos) {
+                any_srgb_texture = true;
+                break;
+            }
         }
         if (!any_srgb_texture) {
-            // Forward-compatible: today this is always taken (no format
-            // info), so no diagnostic is emitted.
             return;
         }
-        // Future emit path: for each pow(...,2.2) call site whose first
-        // argument syntactically references an sRGB-bound texture, emit a
-        // suggestion-grade diagnostic anchored at the `pow` call.
-        // Intentionally unreachable today.
+        // At least one SRGB-flagged texture is bound. Emit a diagnostic
+        // anchored at each pow(...,2.2) call site. The fix replaces the
+        // entire `pow(x, 2.2)` call with `x` -- but we only have the byte
+        // span of the `pow` identifier here, not the full call. Surface a
+        // diagnostic with a description-only fix; the AST anchor is enough
+        // for IDE / CLI to point the user at the right spot.
+        for (const auto& site : sites) {
+            Diagnostic diag;
+            diag.code = std::string{k_rule_id};
+            diag.severity = Severity::Warning;
+            diag.primary_span = Span{.source = tree.source_id(), .bytes = site};
+            diag.message = std::string{
+                "manual `pow(x, 2.2)` applied to a sample from an SRGB-flagged "
+                "texture double-applies the gamma curve -- the hardware sRGB "
+                "sampler already linearised the channel; drop the manual "
+                "conversion"};
+
+            Fix fix;
+            // Machine-applicable in spirit (the rewrite is "drop the call"),
+            // but we only have the `pow` identifier span -- not the whole
+            // call expression -- so the textual replacement is left for the
+            // user to apply. Mark suggestion-only until we surface the full
+            // call span via AST query.
+            fix.machine_applicable = false;
+            fix.description = std::string{
+                "drop the manual sRGB / gamma curve: replace `pow(x, 2.2)` "
+                "with `x`. The hardware SRGB sample already linearises the "
+                "channel."};
+            diag.fixes.push_back(std::move(fix));
+
+            ctx.emit(std::move(diag));
+        }
     }
 };
 

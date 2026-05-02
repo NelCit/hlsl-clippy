@@ -59,6 +59,8 @@ none
 
 **suggestion** — The fix is mechanical (`.rgba` -> `.bgra` at every load site against this resource) but its correctness depends on the application's intent for the BGRA format binding. The diagnostic identifies the mismatch and the candidate swizzle.
 
+The v1.2 foundation (ADR 0019) wires this rule to the new `ResourceBinding::dxgi_format` field: when reflection surfaces a BGRA-suffixed format string (`B8G8R8A8`) for a texture binding, the rule fires anchored at that binding's declaration; otherwise it stays silent. The Slang 2026.7.1 ABI does not surface BGRA channel order through `TypeReflection::getResourceResultType()` (the typed-resource template arg is `float4`, indistinguishable from RGBA), so `dxgi_format` won't contain `B8G8R8A8` in practice today. The probe is forward-compatible — when a future Slang surfaces channel order, this rule auto-fires with no further code change. The fix stays suggestion-only because the swizzle rewrite point is the read-site post-fix (`.Sample(...).rgba`), which the reflection-stage dispatch doesn't currently surface as a TextEdit.
+
 ## See also
 
 - Related rule: [manual-srgb-conversion](manual-srgb-conversion.md) — companion format-vs-shader-math mismatch

@@ -2,7 +2,7 @@
 id: div-without-epsilon
 category: math
 severity: warn
-applicability: suggestion
+applicability: machine-applicable
 since-version: v0.5.0
 phase: 4
 ---
@@ -63,7 +63,17 @@ float3 project_safe(float3 a, float3 b) {
 
 ## Fix availability
 
-**suggestion** — The choice between `max(b, eps)`, `b + eps`, and an early-exit `if (b < eps) return ...` is application-dependent. The diagnostic flags the divide and proposes the `max(b, epsilon)` template; the user may override.
+**machine-applicable** (since v1.2 — ADR 0019) — The fix wraps the divisor in `max(<epsilon>, <divisor>)`, where `<epsilon>` comes from the project-tuned `Config::div_epsilon()` (see `[float] div-epsilon` in `.hlsl-clippy.toml`, default `1e-6`). The rewrite preserves divisor evaluation count, so the substitution is safe whenever the divisor is **side-effect-free** under the v1.2 purity oracle.
+
+The fix downgrades to **suggestion-only** when the divisor contains an unknown call, an assignment, or any other observable side effect — hand-review before applying.
+
+```toml
+# .hlsl-clippy.toml — tune the inserted epsilon to your project's dynamic range.
+[float]
+div-epsilon = 1e-5
+```
+
+The choice between `max(b, eps)`, `b + eps`, and an early-exit `if (b < eps) return ...` remains application-dependent: the linter ships `max(b, eps)` because it preserves register pressure and works on both scalar and vector divisors. If your shader needs a different idiom, mark the rule `allow` for that call site and use the suggestion shape that fits.
 
 ## See also
 

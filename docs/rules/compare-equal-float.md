@@ -2,7 +2,7 @@
 id: compare-equal-float
 category: misc
 severity: warn
-applicability: suggestion
+applicability: machine-applicable
 since-version: v0.5.0
 phase: 2
 ---
@@ -85,14 +85,17 @@ tolerance-required = true
 
 ## Fix availability
 
-**suggestion** — `hlsl-clippy fix --suggestion` inserts a placeholder epsilon comparison:
+**machine-applicable** (since v1.2 — ADR 0019) — The fix rewrites `a == b` to `abs((a) - (b)) < <epsilon>` and `a != b` to `abs((a) - (b)) >= <epsilon>`, where `<epsilon>` is taken from the project-tuned `Config::compare_epsilon()` (see `[float] compare-epsilon` in `.hlsl-clippy.toml`, default `1e-4`).
 
-```hlsl
-// Suggested fix (epsilon value must be chosen by the programmer):
-abs(x - 0.0) < /*epsilon*/1e-6
+The rewrite is machine-applicable when **both operands classify as side-effect-free** under the v1.2 purity oracle. Because the textual rewrite preserves operand evaluation count (each appears exactly once on both sides), purity is sufficient to make the substitution safe.
+
+The fix downgrades to **suggestion-only** when either operand contains a non-allowlisted call (e.g. `g(x)`), an assignment, or any other observable side effect. Hand-review the rewrite in that case.
+
+```toml
+# .hlsl-clippy.toml — tune the inserted epsilon to your project's dynamic range.
+[float]
+compare-epsilon = 1e-3
 ```
-
-The epsilon literal `1e-6` is a placeholder. The programmer must replace it with a value appropriate for the domain. Because this change is not semantics-preserving without human review, it is never applied automatically by `hlsl-clippy fix` without the `--suggestion` flag.
 
 ## See also
 

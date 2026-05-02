@@ -100,7 +100,28 @@ float f(float a, float b, bool cond) { return lerp(a, b, (float)cond); }
     const auto* hit = find_rule(diags, "lerp-on-bool-cond");
     REQUIRE(hit != nullptr);
     REQUIRE_FALSE(hit->fixes.empty());
-    CHECK_FALSE(hit->fixes[0].machine_applicable);
+    // v1.2 (ADR 0019): both `a` and `b` are bare identifiers -- the purity
+    // oracle classifies them as SideEffectFree, so the rewrite is
+    // machine-applicable.
+    CHECK(hit->fixes[0].machine_applicable);
     REQUIRE(hit->fixes[0].edits.size() == 1U);
     CHECK(hit->fixes[0].edits[0].replacement == "cond ? b : a");
+}
+
+TEST_CASE("lerp-on-bool-cond fix downgrades to suggestion when an operand is impure",
+          "[rules][lerp-on-bool-cond][fix]") {
+    // `g(x)` is an unknown call -- the purity oracle returns SideEffectful,
+    // so the rewrite drops to suggestion-grade (machine_applicable = false).
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float g(float x);
+float f(float x, float b, bool cond) { return lerp(g(x), b, (float)cond); }
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    const auto* hit = find_rule(diags, "lerp-on-bool-cond");
+    REQUIRE(hit != nullptr);
+    REQUIRE_FALSE(hit->fixes.empty());
+    CHECK_FALSE(hit->fixes[0].machine_applicable);
+    REQUIRE(hit->fixes[0].edits.size() == 1U);
+    CHECK(hit->fixes[0].edits[0].replacement == "cond ? b : g(x)");
 }

@@ -13,6 +13,84 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [1.2.0] — 2026-05-02
+
+**v1.2 — machine-applicable fix conversion sweep (ADR 0019 §"v1.x patch
+trajectory" criterion #5).** Builds on the v1.2 foundation in commit
+`74097b7` (purity oracle + DXGI format reflection + configurable epsilon
+surface) to convert three rules from suggestion-only to machine-applicable,
+and to wire two reflection-stage stubs to the new `dxgi_format` field so
+they auto-fire when a future Slang surfaces the relevant format
+qualifiers. Honest machine-applicable count moves from 42 / 159 (26.4%) to
+45 / 159 (28.3%). The 50% target documented in ADR 0019 remains
+unreachable without v1.3+ infrastructure (multi-statement rewrites, IEEE
+precision, lossy quantisation, attribute trade-offs); this release closes
+out the conversions specifically unlocked by the v1.2 foundation.
+
+### Added
+
+- **`RuleContext::config()` / `RuleContext::set_config()`** — new accessor
+  + setter on the rule context that exposes the active `Config*` to rules
+  that need project-tuned scalar dials. Returns `nullptr` when the lint
+  run was started via a non-config-aware overload (legacy callers); rules
+  fall back to documented hard-coded defaults in that case.
+  `core/include/hlsl_clippy/rule.hpp`, `core/src/lint.cpp`.
+- **Tests** — 7 new `[fix]` cases covering the v1.2 conversions
+  (machine-applicable on pure operands, suggestion-grade fallback on
+  impure operands, project-tuned epsilon plumbing): 825 -> 827 cases /
+  2146 -> 2158 assertions on top of the v1.2-foundation baseline.
+
+### Changed
+
+- **`lerp-on-bool-cond`** — was suggestion-only; now machine-applicable
+  when both `a` and `b` operands classify as `SideEffectFree` under the
+  v1.2 purity oracle. Suggestion-only fallback when either operand is
+  impure (the `?:` rewrite drops one of `{a, b}` along each branch, so
+  side-effect freedom is required for safety). Fix replacement is
+  `cond ? b : a` (or the inverted form `cond ? a : b` for the
+  ternary-of-zero-and-one case).
+- **`compare-equal-float`** — was suggestion-only with no TextEdit; now
+  rewrites `a == b` to `abs((a) - (b)) < <epsilon>` and `a != b` to
+  `abs((a) - (b)) >= <epsilon>`, where `<epsilon>` comes from the new
+  `Config::compare_epsilon()` (see `[float] compare-epsilon`,
+  default 1e-4). Machine-applicable when both operands classify as pure
+  (the textual rewrite preserves operand evaluation count). Suggestion-
+  only fallback otherwise.
+- **`div-without-epsilon`** — was suggestion-only with no TextEdit; now
+  wraps the divisor in `max(<epsilon>, <divisor>)`, where `<epsilon>`
+  comes from the new `Config::div_epsilon()` (see `[float] div-epsilon`,
+  default 1e-6). Machine-applicable when the divisor classifies as pure;
+  suggestion-only fallback otherwise.
+- **`manual-srgb-conversion`** — was a forward-compatible stub that
+  never fired; now probes `ResourceBinding::dxgi_format` for the SRGB
+  suffix and emits a suggestion-grade diagnostic at every `pow(...,2.2)`
+  call site when at least one bound texture is SRGB-flagged. Today's
+  Slang 2026.7.1 ABI does not surface the SRGB qualifier, so the gate
+  stays unsatisfied in practice; the rule auto-fires when a future Slang
+  surfaces the qualifier with no further code change.
+- **`bgra-rgba-swizzle-mismatch`** — was a forward-compatible stub that
+  never fired; now probes `ResourceBinding::dxgi_format` for the
+  `B8G8R8A8` channel-order suffix and emits a suggestion-grade diagnostic
+  anchored at the binding's declaration when at least one bound texture
+  is BGRA-flagged. Today's Slang 2026.7.1 ABI does not surface BGRA
+  channel order, so the gate stays unsatisfied in practice; the rule
+  auto-fires when a future Slang surfaces the order with no further code
+  change.
+
+### Skipped
+
+- **`redundant-unorm-snorm-conversion`** — the original rule emits a
+  suggestion-grade `x` rewrite at AST stage with no link to the source
+  binding. Upgrading to machine-applicable would require pairing the AST
+  divide site with the specific resource binding it sampled, which is a
+  multi-stage refactor beyond v1.2 scope. The rule keeps its existing
+  suggestion-grade behaviour; v1.3+ will revisit if reflection surfaces
+  enough information to safely upgrade.
+
+### Fixed
+
+### Deprecated
+
 ## [1.1.0] — 2026-05-02
 
 **v1.1 — release-quality maintenance.** Closes the v1.1 ship list

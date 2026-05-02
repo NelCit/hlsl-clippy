@@ -9,6 +9,7 @@
 namespace hlsl_clippy {
 
 class SuppressionSet;
+struct Config;
 
 /// Experimental IHV target gate selectable from `.hlsl-clippy.toml` via
 /// `[experimental] target = "rdna4" | "blackwell" | "xe2"`. Per ADR 0018,
@@ -100,6 +101,24 @@ public:
         suppressions_ = suppressions;
     }
 
+    /// Install a (borrowed) config pointer. Rules that consume tunable knobs
+    /// (`compare_epsilon()`, `div_epsilon()`, future per-rule scalar dials)
+    /// read from `config()` and tolerate a `nullptr` return. The pointer is
+    /// borrowed and must outlive the `RuleContext`. The orchestrator wires
+    /// this in the config-aware `lint(..., const Config&, ...)` overload;
+    /// non-config-aware overloads leave it null and rules fall back to
+    /// hard-coded defaults (ADR 0019 §"v1.x patch trajectory").
+    void set_config(const Config* config) noexcept {
+        config_ = config;
+    }
+
+    /// Active configuration, or `nullptr` when the lint run was started via a
+    /// non-config-aware overload. Rules MUST tolerate the null case (treat it
+    /// as "use defaults").
+    [[nodiscard]] const Config* config() const noexcept {
+        return config_;
+    }
+
     /// Append a diagnostic to the current pass. Diagnostics matching an
     /// active inline-suppression are dropped silently.
     void emit(Diagnostic diag);
@@ -111,6 +130,7 @@ private:
     const SourceManager* sources_;
     SourceId source_;
     const SuppressionSet* suppressions_ = nullptr;
+    const Config* config_ = nullptr;
     std::vector<Diagnostic> diagnostics_;
 };
 

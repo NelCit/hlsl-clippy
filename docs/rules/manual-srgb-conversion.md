@@ -61,6 +61,8 @@ none
 
 **suggestion** — Removing the gamma call changes the visible output (the curve was masking some other tuning). The diagnostic identifies the doubled conversion; the author confirms the upstream tuning before stripping the call.
 
+The v1.2 foundation (ADR 0019) wires this rule to the new `ResourceBinding::dxgi_format` field: when reflection surfaces an SRGB-suffixed format string for any bound texture, the rule fires; otherwise it stays silent. The Slang 2026.7.1 ABI does not surface the SRGB qualifier through `TypeReflection::getName()`, so today `dxgi_format` is empty for SRGB textures in practice and the diagnostic is gated off. The probe is forward-compatible — when a future Slang surfaces the qualifier, this rule lights up with no further code change. The fix stays suggestion-only because the rewrite (drop the `pow(x, 2.2)` call and replace with `x`) requires confirming that no upstream tuning compensates for the doubled curve.
+
 ## See also
 
 - Related rule: [bgra-rgba-swizzle-mismatch](bgra-rgba-swizzle-mismatch.md) — companion format-vs-shader-math mismatch
