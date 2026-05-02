@@ -167,6 +167,186 @@ namespace {
     }
 }
 
+// ---------------------------------------------------------------------------
+// DXGI format extraction (v1.2, ADR 0019).
+//
+// Slang's reflection exposes the typed-resource template argument via
+// `TypeReflection::getResourceResultType()` -- e.g. for `Texture2D<float4>`
+// that returns the `float4` type. We map (vector_size, scalar_type,
+// qualifier) onto the corresponding DXGI_FORMAT_* string. Slang doesn't
+// surface a first-class UNORM/SNORM bit through this API path, so we probe
+// the type name (`getName()`) for `"unorm"` / `"snorm"` substrings -- HLSL
+// preserves those qualifiers in the textual type rendering for typed
+// resources, e.g. `Texture2D<unorm float4>` reflects with name
+// `unorm float4`.
+//
+// This is best-effort: any case we can't classify returns an empty string,
+// matching the public-header contract. v1.2 consumers handle "" by falling
+// back to AST-side heuristics.
+// ---------------------------------------------------------------------------
+
+[[nodiscard]] std::string format_for_components(unsigned components,
+                                                slang::TypeReflection::ScalarType scalar,
+                                                bool unorm,
+                                                bool snorm) {
+    using ST = slang::TypeReflection::ScalarType;
+
+    // UNORM / SNORM are only defined on 8- and 16-bit integer scalars.
+    // Any other combination falls back to plain integer / float formats.
+    const bool norm = unorm || snorm;
+    const bool is8 = scalar == ST::UInt8 || scalar == ST::Int8;
+    const bool is16 = scalar == ST::UInt16 || scalar == ST::Int16;
+
+    auto suffix = [&]() -> std::string {
+        if (norm && (is8 || is16)) {
+            return unorm ? "_UNORM" : "_SNORM";
+        }
+        switch (scalar) {
+            case ST::Float16:
+                return "_FLOAT";
+            case ST::Float32:
+                return "_FLOAT";
+            case ST::UInt32:
+                return "_UINT";
+            case ST::Int32:
+                return "_SINT";
+            case ST::UInt16:
+                return "_UINT";
+            case ST::Int16:
+                return "_SINT";
+            case ST::UInt8:
+                return "_UINT";
+            case ST::Int8:
+                return "_SINT";
+            default:
+                return std::string{};
+        }
+    }();
+    if (suffix.empty()) {
+        return std::string{};
+    }
+
+    auto bits = [&]() -> unsigned {
+        switch (scalar) {
+            case ST::Float16:
+            case ST::UInt16:
+            case ST::Int16:
+                return 16U;
+            case ST::Float32:
+            case ST::UInt32:
+            case ST::Int32:
+                return 32U;
+            case ST::UInt8:
+            case ST::Int8:
+                return 8U;
+            default:
+                return 0U;
+        }
+    }();
+    if (bits == 0U) {
+        return std::string{};
+    }
+
+    // Pick the DXGI channel layout. We only emit canonical N-channel layouts
+    // here (R, RG, RGBA). RGB-only DXGI formats are deliberately omitted —
+    // there is no `DXGI_FORMAT_R32G32B32_*` for 16- or 8-bit width, and the
+    // 32-bit-per-channel `R32G32B32_FLOAT` is the sole legal triple, which
+    // we do surface.
+    std::string channels;
+    switch (components) {
+        case 1: {
+            const std::string b = std::to_string(bits);
+            channels = "R" + b;
+            break;
+        }
+        case 2: {
+            const std::string b = std::to_string(bits);
+            channels = "R" + b + "G" + b;
+            break;
+        }
+        case 3: {
+            // RGB only valid at 32 bits per channel.
+            if (bits != 32U) {
+                return std::string{};
+            }
+            channels = "R32G32B32";
+            break;
+        }
+        case 4: {
+            const std::string b = std::to_string(bits);
+            channels = "R" + b + "G" + b + "B" + b + "A" + b;
+            break;
+        }
+        default:
+            return std::string{};
+    }
+
+    return std::string{"DXGI_FORMAT_"} + channels + suffix;
+}
+
+/// Extract a DXGI_FORMAT_* string from the typed-resource template arg of
+/// `resource_type`. Returns an empty string if the resource is untyped or
+/// the format cannot be classified. This is best-effort; the public-header
+/// contract documents that empty is a valid result.
+[[nodiscard]] std::string extract_dxgi_format(slang::TypeReflection* resource_type) {
+    if (resource_type == nullptr) {
+        return std::string{};
+    }
+    if (resource_type->getKind() != slang::TypeReflection::Kind::Resource) {
+        return std::string{};
+    }
+
+    // Untyped buffers don't have a meaningful DXGI format.
+    const SlangResourceShape shape = resource_type->getResourceShape();
+    const auto base_shape = static_cast<unsigned>(shape) & SLANG_RESOURCE_BASE_SHAPE_MASK;
+    if (base_shape == SLANG_BYTE_ADDRESS_BUFFER ||
+        base_shape == SLANG_STRUCTURED_BUFFER ||
+        base_shape == SLANG_ACCELERATION_STRUCTURE) {
+        return std::string{};
+    }
+
+    slang::TypeReflection* element = resource_type->getResourceResultType();
+    if (element == nullptr) {
+        return std::string{};
+    }
+
+    // Probe the textual rendering for UNORM / SNORM qualifiers. HLSL keeps
+    // those words in the typed-resource template arg's name string for the
+    // versions of Slang we ship against.
+    bool unorm = false;
+    bool snorm = false;
+    if (const char* raw = element->getName(); raw != nullptr) {
+        std::string_view nm{raw};
+        if (nm.find("unorm") != std::string_view::npos) {
+            unorm = true;
+        } else if (nm.find("snorm") != std::string_view::npos) {
+            snorm = true;
+        }
+    }
+
+    // Determine vector width + scalar type. Vectors expose getElementCount();
+    // scalars use 1.
+    unsigned components = 1U;
+    slang::TypeReflection* scalar_carrier = element;
+    if (element->getKind() == slang::TypeReflection::Kind::Vector) {
+        const std::size_t cnt = element->getElementCount();
+        if (cnt == 0U || cnt > 4U) {
+            return std::string{};
+        }
+        components = static_cast<unsigned>(cnt);
+        if (slang::TypeReflection* inner = element->getElementType(); inner != nullptr) {
+            scalar_carrier = inner;
+        }
+    }
+    const auto scalar = scalar_carrier->getScalarType();
+    if (scalar == slang::TypeReflection::ScalarType::None ||
+        scalar == slang::TypeReflection::ScalarType::Void) {
+        return std::string{};
+    }
+
+    return format_for_components(components, scalar, unorm, snorm);
+}
+
 /// Map Slang's TypeReflection (resource) to our coarse-grained ResourceKind.
 /// Slang exposes a kind tag plus a resource shape; we project both into the
 /// public enum. Anything we cannot classify becomes `Unknown` -- rules then
@@ -365,6 +545,11 @@ void emit_parameter(slang::VariableLayoutReflection* param,
     rb.register_slot = static_cast<std::uint32_t>(param->getOffset(category));
     rb.register_space = static_cast<std::uint32_t>(param->getBindingSpace(category));
 
+    // Resource type used for DXGI-format extraction. For arrays of resources
+    // (e.g. `Texture2D<float4> tex_array[]`) we want the element type, not
+    // the array wrapper.
+    slang::TypeReflection* format_carrier = type;
+
     // Slang reports unbounded arrays via the type-layout's element count.
     if (type != nullptr && type->getKind() == slang::TypeReflection::Kind::Array) {
         const std::size_t count = type->getElementCount();
@@ -375,8 +560,14 @@ void emit_parameter(slang::VariableLayoutReflection* param,
         slang::TypeReflection* element_type = type->getElementType();
         if (element_type != nullptr) {
             rb.kind = classify_resource(element_type);
+            format_carrier = element_type;
         }
     }
+
+    // v1.2 (ADR 0019) — surface the typed-resource DXGI format. The helper
+    // returns "" for untyped buffers / samplers / accel-structs, which is
+    // also the default-constructed value, so a bare assignment is correct.
+    rb.dxgi_format = extract_dxgi_format(format_carrier);
 
     rb.declaration_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
     bindings.push_back(std::move(rb));

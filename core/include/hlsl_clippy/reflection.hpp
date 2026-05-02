@@ -75,6 +75,23 @@ struct ResourceBinding {
     /// for rules that have no AST anchor available and need to render a
     /// diagnostic anyway.
     Span declaration_span{};
+
+    /// DXGI format string (e.g. `"DXGI_FORMAT_R32G32B32A32_FLOAT"`,
+    /// `"DXGI_FORMAT_R8G8B8A8_UNORM"`, `"DXGI_FORMAT_R16G16_SNORM"`).
+    /// Populated for typed resources (`Texture2D<float4>`, `Buffer<uint2>`,
+    /// `RWTexture3D<unorm float4>`, ...) by mapping the resource's element
+    /// type from Slang's reflection. Empty when:
+    ///   * the resource is untyped (`ByteAddressBuffer`, `RWByteAddressBuffer`,
+    ///     `StructuredBuffer<T>`, `ConstantBuffer<T>`, `SamplerState`,
+    ///     `RaytracingAccelerationStructure`);
+    ///   * Slang couldn't surface the format (vendor-specific extensions,
+    ///     unrecognised template arg);
+    ///   * the binding is not a typed-resource at all.
+    /// Consumers who need to compare against a known DXGI value should match
+    /// the suffix after `DXGI_FORMAT_` (e.g. `"R8G8B8A8_UNORM"`) — the prefix
+    /// is intentionally included so the field is paste-into-D3D12-headers
+    /// ready.
+    std::string dxgi_format;
 };
 
 /// One field in a constant-buffer layout. Offsets and sizes are in bytes and

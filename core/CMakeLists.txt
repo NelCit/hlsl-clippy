@@ -172,6 +172,11 @@ add_library(hlsl_clippy_core STATIC
     # `dispatchmesh-grid-too-small-for-wave` rule pack.
     src/rules/util/sm6_10.cpp
 
+    # v1.2 (ADR 0019) — side-effect-purity oracle. Used by the v1.2
+    # conversion-sweep agent + future hoist/duplicate rewrites. Conservative
+    # by design: any unrecognised node returns Purity::Unknown.
+    src/rules/util/purity_oracle.cpp
+
     # Phase 7 — liveness + register-pressure heuristic over the Phase 4 CFG
     # (ADR 0017 sub-phases 7b.1 + 7b.2).
     src/rules/util/liveness.cpp

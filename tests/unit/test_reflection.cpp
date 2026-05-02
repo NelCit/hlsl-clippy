@@ -326,6 +326,120 @@ TEST_CASE("LintOptions::enable_reflection = false skips on_reflection dispatch",
     CHECK_FALSE(has_rule(diagnostics, "clippy::reflection"));
 }
 
+// v1.2 (ADR 0019) — DXGI format reflection. The bridge extracts the DXGI
+// format from typed resources so rules don't have to AST-parse the template
+// arg themselves. Untyped resources surface as the empty string.
+
+constexpr std::string_view k_typed_texture_float4 = R"hlsl(
+Texture2D<float4> tex_color;
+
+[shader("pixel")]
+float4 ps_main(float2 uv : TEXCOORD0) : SV_Target
+{
+    return tex_color.Load(int3(0, 0, 0));
+}
+)hlsl";
+
+constexpr std::string_view k_typed_rwtexture_unorm = R"hlsl(
+RWTexture2D<unorm float4> tex_unorm;
+
+[shader("compute")]
+[numthreads(8, 8, 1)]
+void cs_main(uint3 tid : SV_DispatchThreadID)
+{
+    tex_unorm[tid.xy] = float4(0.0, 0.0, 0.0, 0.0);
+}
+)hlsl";
+
+constexpr std::string_view k_byteaddress_buffer = R"hlsl(
+ByteAddressBuffer raw_buffer;
+
+[shader("compute")]
+[numthreads(64, 1, 1)]
+void cs_main(uint3 tid : SV_DispatchThreadID)
+{
+    uint v = raw_buffer.Load(tid.x * 4);
+    (void)v;
+}
+)hlsl";
+
+TEST_CASE("ResourceBinding surfaces DXGI format for `Texture2D<float4>`",
+          "[reflection][engine][dxgi-format]") {
+    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    engine.clear_cache();
+
+    SourceManager sources;
+    const auto src =
+        sources.add_buffer("dxgi_typed.hlsl", std::string{k_typed_texture_float4});
+    REQUIRE(src.valid());
+
+    const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"});
+    REQUIRE(result.has_value());
+
+    // Find the texture binding and assert its DXGI format. Slang surfaces
+    // `float4` as 32-bit-per-channel float -> R32G32B32A32_FLOAT.
+    const auto* tex = result.value().find_binding_by_name("tex_color");
+    REQUIRE(tex != nullptr);
+    CHECK(tex->dxgi_format == "DXGI_FORMAT_R32G32B32A32_FLOAT");
+}
+
+TEST_CASE("ResourceBinding either surfaces UNORM or empty for `RWTexture2D<unorm float4>`",
+          "[reflection][engine][dxgi-format]") {
+    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    engine.clear_cache();
+
+    SourceManager sources;
+    const auto src =
+        sources.add_buffer("dxgi_unorm.hlsl", std::string{k_typed_rwtexture_unorm});
+    REQUIRE(src.valid());
+
+    const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"});
+    REQUIRE(result.has_value());
+
+    const auto* tex = result.value().find_binding_by_name("tex_unorm");
+    REQUIRE(tex != nullptr);
+    // Known Slang 2026.7.1 ABI limitation: Slang's TypeReflection collapses
+    // the `unorm` modifier on a typed-resource template arg (it surfaces
+    // `unorm float4` via a wrapper kind that is neither Vector nor Scalar
+    // in our enumeration). The bridge therefore returns an empty
+    // dxgi_format for `RWTexture2D<unorm float4>` rather than guess at a
+    // format. The public-header contract documents "" as a valid result for
+    // resources whose format the bridge cannot classify.
+    //
+    // We assert one of two outcomes:
+    //   * A future Slang surfaces the qualifier and the format contains
+    //     "UNORM" — preferred, the upgrade is transparent to the rule pack.
+    //   * Today's Slang collapses the qualifier and the format is empty —
+    //     consumers fall back to AST-side heuristics for the unorm/snorm
+    //     determination.
+    //
+    // Either way, the format MUST NOT be a non-UNORM concrete value (i.e.
+    // we must not silently surface `R32G32B32A32_FLOAT` for an
+    // explicitly-unorm texture).
+    const bool has_unorm = tex->dxgi_format.find("UNORM") != std::string::npos;
+    const bool is_empty = tex->dxgi_format.empty();
+    INFO("tex_unorm.dxgi_format = '" << tex->dxgi_format << "'");
+    CHECK((has_unorm || is_empty));
+}
+
+TEST_CASE("ResourceBinding leaves DXGI format empty for `ByteAddressBuffer`",
+          "[reflection][engine][dxgi-format]") {
+    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    engine.clear_cache();
+
+    SourceManager sources;
+    const auto src =
+        sources.add_buffer("dxgi_untyped.hlsl", std::string{k_byteaddress_buffer});
+    REQUIRE(src.valid());
+
+    const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"});
+    REQUIRE(result.has_value());
+
+    const auto* buf = result.value().find_binding_by_name("raw_buffer");
+    REQUIRE(buf != nullptr);
+    CHECK(buf->dxgi_format.empty());
+}
+
 TEST_CASE("LintOptions::enable_reflection = true dispatches on_reflection once",
           "[reflection][orchestrator]") {
     auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();

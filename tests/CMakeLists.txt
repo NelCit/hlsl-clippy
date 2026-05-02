@@ -192,6 +192,9 @@ add_executable(hlsl_clippy_unit_tests
     unit/test_sm6_10_util.cpp
     unit/test_experimental_target.cpp
 
+    # v1.2 (ADR 0019) — purity oracle used by the conversion-sweep agent.
+    unit/test_purity_oracle.cpp
+
     # Phase 5 sub-phase 5a — LSP server scaffolding (ADR 0014).
     unit/test_lsp.cpp
 

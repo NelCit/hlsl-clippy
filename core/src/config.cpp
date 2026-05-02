@@ -170,6 +170,47 @@ namespace {
         }
     }
 
+    // [float] compare-epsilon / div-epsilon (v1.2, ADR 0019).
+    //
+    // toml++ keeps integers and floats in distinct value types; users may
+    // legitimately write `compare-epsilon = 1` (integer) or
+    // `compare-epsilon = 0.05` (float). We accept both and reject anything
+    // else (string, array, table, bool) with a soft warning + default
+    // fallback so an old config never breaks the lint pipeline.
+    if (const auto* fl = root.get("float"); fl != nullptr) {
+        const auto* tbl = fl->as_table();
+        if (tbl == nullptr) {
+            return make_error("`float` must be a table", source);
+        }
+
+        auto parse_epsilon = [&](std::string_view key, float& out_value, float default_value) {
+            const auto* node = tbl->get(key);
+            if (node == nullptr) {
+                return;
+            }
+            std::optional<double> parsed;
+            if (const auto* f = node->as_floating_point(); f != nullptr) {
+                parsed = f->get();
+            } else if (const auto* i = node->as_integer(); i != nullptr) {
+                parsed = static_cast<double>(i->get());
+            }
+            if (!parsed.has_value() || !(*parsed > 0.0) || !(*parsed < 1.0)) {
+                std::string msg = "`float.";
+                msg += key;
+                msg +=
+                    "` must be a positive numeric value strictly less than 1.0; "
+                    "falling back to the default";
+                cfg.warnings.push_back(std::move(msg));
+                out_value = default_value;
+                return;
+            }
+            out_value = static_cast<float>(*parsed);
+        };
+
+        parse_epsilon("compare-epsilon", cfg.compare_epsilon_value, k_default_compare_epsilon);
+        parse_epsilon("div-epsilon", cfg.div_epsilon_value, k_default_div_epsilon);
+    }
+
     // [experimental] target
     if (const auto* exp = root.get("experimental"); exp != nullptr) {
         const auto* tbl = exp->as_table();

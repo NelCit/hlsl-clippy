@@ -44,6 +44,14 @@ struct RuleOverride {
     std::unordered_map<std::string, RuleSeverity> rule_severity;
 };
 
+/// Default value for `Config::compare_epsilon()`. Matches the historical
+/// hard-coded value used by `compare-equal-float` and friends.
+inline constexpr float k_default_compare_epsilon = 0.0001F;
+
+/// Default value for `Config::div_epsilon()`. Matches the historical
+/// hard-coded value used by `div-without-epsilon` and friends.
+inline constexpr float k_default_div_epsilon = 1.0e-6F;
+
 /// Parsed `.hlsl-clippy.toml`. Constructed via `load_config`.
 struct Config {
     /// Top-level `[rules]` table.
@@ -58,6 +66,19 @@ struct Config {
     /// `None`. Unrecognised values fall back to `None` and surface a
     /// human-readable string in `warnings`.
     ExperimentalTarget experimental_target_value = ExperimentalTarget::None;
+    /// `[float] compare-epsilon`. Tunes the noise floor that
+    /// numerical-comparison rules treat as "effectively equal" — see
+    /// `compare-equal-float`, `comparison-with-nan-literal`, and other
+    /// float-comparison rules. Default `k_default_compare_epsilon`.
+    /// Out-of-range / non-numeric values fall back to the default and
+    /// surface a `warnings` entry.
+    float compare_epsilon_value = k_default_compare_epsilon;
+    /// `[float] div-epsilon`. Tunes the threshold below which the
+    /// `div-without-epsilon` rule (and successor rules) consider a
+    /// divisor "potentially zero". Default `k_default_div_epsilon`.
+    /// Out-of-range / non-numeric values fall back to the default and
+    /// surface a `warnings` entry.
+    float div_epsilon_value = k_default_div_epsilon;
     /// Soft warnings collected while parsing the config. Each entry is a
     /// human-readable single-line message; the driver renders them as
     /// `clippy::config` `Severity::Warning` diagnostics. Hard parse errors
@@ -75,6 +96,18 @@ struct Config {
     /// `Rule::experimental_target()`.
     [[nodiscard]] ExperimentalTarget experimental_target() const noexcept {
         return experimental_target_value;
+    }
+
+    /// Configured `[float] compare-epsilon`. Default
+    /// `k_default_compare_epsilon` (0.0001).
+    [[nodiscard]] float compare_epsilon() const noexcept {
+        return compare_epsilon_value;
+    }
+
+    /// Configured `[float] div-epsilon`. Default
+    /// `k_default_div_epsilon` (1e-6).
+    [[nodiscard]] float div_epsilon() const noexcept {
+        return div_epsilon_value;
     }
 };
 

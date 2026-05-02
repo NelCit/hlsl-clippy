@@ -195,6 +195,47 @@ pow-const-squared = "panic"
     CHECK(result.error().message.find("panic") != std::string::npos);
 }
 
+// v1.2 (ADR 0019) — configurable epsilon surface. The `[float]` table
+// exposes `compare-epsilon` (default 0.0001) and `div-epsilon` (default
+// 1e-6); rules read them via `Config::compare_epsilon()` /
+// `Config::div_epsilon()`.
+
+TEST_CASE("Default config returns the canonical compare/div epsilons", "[config][float-epsilon]") {
+    const auto result = hlsl_clippy::load_config_string("");
+    REQUIRE(result.has_value());
+    const auto& cfg = result.value();
+    CHECK(cfg.compare_epsilon() == 0.0001F);
+    CHECK(cfg.div_epsilon() == 1.0e-6F);
+}
+
+TEST_CASE("[float] compare-epsilon overrides the default", "[config][float-epsilon]") {
+    constexpr std::string_view k_toml = R"(
+[float]
+compare-epsilon = 0.05
+)";
+    const auto result = hlsl_clippy::load_config_string(k_toml);
+    REQUIRE(result.has_value());
+    const auto& cfg = result.value();
+    CHECK(cfg.compare_epsilon() == 0.05F);
+    // Untouched key keeps the default.
+    CHECK(cfg.div_epsilon() == 1.0e-6F);
+    CHECK(cfg.warnings.empty());
+}
+
+TEST_CASE("[float] div-epsilon with a non-numeric value falls back to default + warning",
+          "[config][float-epsilon]") {
+    constexpr std::string_view k_toml = R"(
+[float]
+div-epsilon = "not-a-number"
+)";
+    const auto result = hlsl_clippy::load_config_string(k_toml);
+    REQUIRE(result.has_value());
+    const auto& cfg = result.value();
+    CHECK(cfg.div_epsilon() == 1.0e-6F);
+    REQUIRE(cfg.warnings.size() == 1U);
+    CHECK(cfg.warnings[0].find("div-epsilon") != std::string::npos);
+}
+
 TEST_CASE("includes/excludes patterns parse into vectors", "[config]") {
     constexpr std::string_view k_toml = R"(
 [includes]
