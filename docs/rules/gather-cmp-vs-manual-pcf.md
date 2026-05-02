@@ -77,7 +77,7 @@ none
 - Related rule: [`gather-channel-narrowing`](gather-channel-narrowing.md) — single-channel gather pattern uses `GatherRed` / `GatherGreen`
 - Related rule: [`missing-precise-on-pcf`](missing-precise-on-pcf.md) — PCF depth arithmetic without `precise` is a shadow acne risk
 - HLSL intrinsic reference: `Texture2D.GatherCmp`, `Texture2D.SampleCmpLevelZero` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.3.0 release_
+- Companion blog post: [texture overview](../blog/texture-overview.md)
 
 ---
 

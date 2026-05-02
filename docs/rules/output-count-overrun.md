@@ -76,7 +76,7 @@ void MeshMain(
 - DirectX 12 Ultimate: mesh shader specification, `SetMeshOutputCounts` semantics
 - AMD GPUOpen: "Mesh Shaders" — LDS layout and output-array sizing
 - NVIDIA developer documentation: mesh-shader output-buffer behaviour on Ada Lovelace
-- Companion blog post: _not yet published_
+- Companion blog post: [mesh overview](../blog/mesh-dxr-overview.md)
 
 ---
 

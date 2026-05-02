@@ -82,7 +82,7 @@ none
 - Related rule: [acos-without-saturate](acos-without-saturate.md) — domain protection for `acos`
 - Related rule: [div-without-epsilon](div-without-epsilon.md) — division by potentially-zero divisors
 - HLSL intrinsic reference: `sqrt`, `rsqrt`, `max`, `saturate` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

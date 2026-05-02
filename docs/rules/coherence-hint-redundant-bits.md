@@ -70,7 +70,7 @@ none
 - Related rule: [maybereorderthread-without-payload-shrink](maybereorderthread-without-payload-shrink.md) — companion SER perf rule
 - HLSL specification: [proposal 0027 Shader Execution Reordering](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0027-shader-execution-reordering.md)
 - Reference: [NVIDIA SER perf blog](https://developer.nvidia.com/blog/improve-shader-performance-and-in-game-frame-rates-with-shader-execution-reordering/)
-- Companion blog post: _not yet published_
+- Companion blog post: [ser overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

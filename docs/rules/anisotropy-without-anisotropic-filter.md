@@ -66,7 +66,7 @@ none
 - Related rule: [mip-clamp-zero-on-mipped-texture](mip-clamp-zero-on-mipped-texture.md) — sampler state that disables a feature the texture supports
 - Related rule: [comparison-sampler-without-comparison-op](comparison-sampler-without-comparison-op.md) — sampler descriptor type unused at the call site
 - D3D12 reference: `D3D12_SAMPLER_DESC.Filter` and `MaxAnisotropy` interaction in the D3D12 sampler documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [texture overview](../blog/texture-overview.md)
 
 ---
 

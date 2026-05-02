@@ -82,7 +82,7 @@ none
 - Related rule: [manual-wave-reduction-pattern](manual-wave-reduction-pattern.md) — manually-coded reductions that should use wave intrinsics
 - Related rule: [wave-prefix-sum-vs-scan-with-atomics](wave-prefix-sum-vs-scan-with-atomics.md) — scan replacement
 - HLSL intrinsic reference: `WaveActiveSum`, `WaveActiveCountBits`, `WaveIsFirstLane`
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

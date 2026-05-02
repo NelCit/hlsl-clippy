@@ -83,7 +83,7 @@ for (int i = 0; i < 128; i += 16) {
 - Related rule: [branch-on-uniform-missing-attribute](branch-on-uniform-missing-attribute.md) — analogous attribute-hint rule for uniform branches
 - Related rule: [vgpr-pressure-warning](vgpr-pressure-warning.md) — surfaces the occupancy cliff that an over-aggressive `[unroll(N)]` can trigger
 - HLSL attribute reference: `[unroll]`, `[unroll(N)]`, `[loop]`, `[fastopt]`, `[allow_uav_condition]` in the DirectX HLSL Attributes documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

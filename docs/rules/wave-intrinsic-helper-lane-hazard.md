@@ -73,7 +73,7 @@ none
 - Related rule: [early-z-disabled-by-conditional-discard](early-z-disabled-by-conditional-discard.md) — `discard` and early-Z interaction
 - Related rule: [sample-in-loop-implicit-grad](sample-in-loop-implicit-grad.md) — derivative correctness with helper lanes
 - HLSL intrinsic reference: `IsHelperLane`, `WaveActiveSum`, `WaveActiveBallot` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

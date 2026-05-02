@@ -75,7 +75,7 @@ none
 - Related rule: [early-z-disabled-by-conditional-discard](early-z-disabled-by-conditional-discard.md) — `discard` defeats early-Z by the same mechanism
 - Related rule: [vrs-incompatible-output](vrs-incompatible-output.md) — `SV_Depth` writes interact with VRS demotion
 - D3D12 specification: SV_DepthGreaterEqual / SV_DepthLessEqual semantics, early depth-stencil rules
-- Companion blog post: _not yet published_
+- Companion blog post: [vrs overview](../blog/texture-overview.md)
 
 ---
 

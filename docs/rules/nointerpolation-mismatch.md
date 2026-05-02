@@ -73,7 +73,7 @@ none
 - Related rule: [`unused-vs-output`](unused-vs-output.md) — vertex-output members that no consuming PS reads at all
 - HLSL reference: `nointerpolation`, `noperspective`, `centroid`, `sample` — interpolation modifiers in the DirectX HLSL semantics documentation
 - AMD RDNA ISA reference: `v_interp_p1_f32`, `v_interp_p2_f32`, `v_interp_mov_f32`
-- Companion blog post: _not yet published — will appear alongside the v0.3.0 release_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

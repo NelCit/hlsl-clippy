@@ -70,7 +70,7 @@ void main(uint tid : SV_GroupThreadID) {
 - Related rule: [byteaddressbuffer-load-misaligned](byteaddressbuffer-load-misaligned.md) — companion alignment rule on the wide-load form
 - Related rule: [byteaddressbuffer-narrow-when-typed-fits](byteaddressbuffer-narrow-when-typed-fits.md) — companion buffer-cache-path rule
 - Related rule: [structured-buffer-stride-not-cache-aligned](structured-buffer-stride-not-cache-aligned.md) — companion cache-line rule
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

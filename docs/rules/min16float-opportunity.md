@@ -103,7 +103,7 @@ human-confirmation prompt when run with `--fix`.
   for FP32-to-FP16 conversion
 - HLSL intrinsic reference: `min16float`, `min10float`, `half` — minimum
   precision types in HLSL
-- Companion blog post: _not yet published_
+- Companion blog post: [packed-math overview](../blog/math-overview.md)
 
 ---
 

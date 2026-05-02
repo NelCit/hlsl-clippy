@@ -105,7 +105,7 @@ unless the surrounding code already provides one.
 - HLSL intrinsic reference: `dot4add_u8packed`, `dot4add_i8packed` —
   SM 6.4 integer dot-product-accumulate intrinsics
 - DirectX HLSL Shader Model 6.4 specification — integer dot products
-- Companion blog post: _not yet published_
+- Companion blog post: [packed-math overview](../blog/math-overview.md)
 
 ---
 

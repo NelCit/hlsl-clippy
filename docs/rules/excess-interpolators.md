@@ -85,7 +85,7 @@ struct VsToPs {
 - Related rule: [`oversized-cbuffer`](oversized-cbuffer.md) — analogous resource-budget rule for the constant-data path
 - AMD GPUOpen: "Attribute interpolation on RDNA" — LDS layout for parameter cache
 - D3D12 SM6.x reference: maximum input attribute counts per shader stage
-- Companion blog post: _not yet published — will appear alongside the v0.3.0 release_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

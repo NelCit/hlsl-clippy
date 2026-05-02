@@ -78,7 +78,7 @@ RWStructuredBuffer<DebugPerRay> g_DebugSideBand : register(u3);
 - Related rule: [missing-accept-first-hit](missing-accept-first-hit.md) — shadow-ray payloads should be near-empty (one bool)
 - Related rule: [recursion-depth-not-declared](recursion-depth-not-declared.md) — recursion multiplies payload spill cost
 - DXR specification: payload size constraints and `[payload]` attribute in the DirectX Raytracing spec
-- Companion blog post: _not yet published_
+- Companion blog post: [dxr overview](../blog/mesh-dxr-overview.md)
 
 ---
 

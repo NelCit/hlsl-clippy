@@ -72,7 +72,7 @@ none
 - Related rule: [long-vector-typed-buffer-load](long-vector-typed-buffer-load.md) — companion long-vector spec rule
 - Related rule: [excess-interpolators](excess-interpolators.md) — IO signature pressure
 - HLSL specification: [proposal 0030 DXIL vectors](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0030-dxil-vectors.md)
-- Companion blog post: _not yet published_
+- Companion blog post: [long-vectors overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

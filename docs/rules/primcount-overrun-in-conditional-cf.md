@@ -87,7 +87,7 @@ none
 - Related rule: [output-count-overrun](output-count-overrun.md) — generic mesh-output overrun
 - Related rule: [outputcomplete-missing](outputcomplete-missing.md) — paired mesh-output completeness rule
 - HLSL reference: mesh-shader specification, `SetMeshOutputCounts` semantics
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [mesh overview](../blog/mesh-dxr-overview.md)
 
 ---
 

@@ -89,7 +89,7 @@ void ch_full_shading(inout Payload p, in HitAttrs a) {
 - Related rule: [inline-rayquery-when-pipeline-better](inline-rayquery-when-pipeline-better.md) — inline vs. pipeline RT
 - Microsoft DirectX docs: DXR — Any-Hit, Closest-Hit invocation order
 - NVIDIA developer blog: SER and any-hit grouping on Ada
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [dxr overview](../blog/mesh-dxr-overview.md)
 
 ---
 

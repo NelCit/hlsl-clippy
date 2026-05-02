@@ -9,7 +9,7 @@ phase: 3
 
 # bool-straddles-16b
 
-> **Status:** pre-v0 — rule scheduled for Phase 3; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 3) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -72,7 +72,7 @@ none
 - Related rule: [oversized-cbuffer](oversized-cbuffer.md) — cbuffer exceeds the default 4 KB threshold
 - HLSL constant buffer packing rules: `packoffset` keyword and `bool` layout in the DirectX HLSL reference
 - D3D12 Root Signature specification: constant buffer view descriptor layout
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

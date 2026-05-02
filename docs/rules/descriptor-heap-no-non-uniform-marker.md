@@ -9,7 +9,7 @@ phase: 3
 
 # descriptor-heap-no-non-uniform-marker
 
-> **Status:** pre-v0 — rule scheduled for Phase 3; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 3) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -67,7 +67,7 @@ none
 - Related rule: [descriptor-heap-type-confusion](descriptor-heap-type-confusion.md) — sampler fetched from the CBV/SRV/UAV heap or vice versa
 - HLSL SM 6.6 specification: `ResourceDescriptorHeap`, `SamplerDescriptorHeap`, `NonUniformResourceIndex`
 - DirectX-Specs: Shader Model 6.6 — Direct Heap Access
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

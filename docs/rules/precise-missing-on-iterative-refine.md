@@ -75,7 +75,7 @@ float refined_sqrt(float a) {
 - Related rule: [div-without-epsilon](div-without-epsilon.md) — division-stability hazard in iterative kernels
 - Related rule: [redundant-precision-cast](redundant-precision-cast.md) — companion precision rule
 - HLSL reference: `precise` qualifier in the DirectX HLSL specification
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

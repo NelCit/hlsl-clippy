@@ -70,7 +70,7 @@ none
 - Related rule: [coopvec-non-optimal-matrix-layout](coopvec-non-optimal-matrix-layout.md) — companion perf rule
 - Related rule: [coopvec-non-uniform-matrix-handle](coopvec-non-uniform-matrix-handle.md) — uniformity sibling rule
 - HLSL specification: [proposal 0029 Cooperative Vector](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0029-cooperative-vector.md)
-- Companion blog post: _not yet published_
+- Companion blog post: [cooperative-vector overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

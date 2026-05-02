@@ -77,7 +77,7 @@ none
 - Related rule: [outputcomplete-missing](outputcomplete-missing.md) — mandatory `OutputComplete` calls on node outputs
 - Related rule: [quad-or-derivative-in-thread-launch-node](quad-or-derivative-in-thread-launch-node.md) — derivative use in thread-launch node
 - D3D12 specification: Work Graphs node identification (SM 6.8) and `[NodeID]` attribute
-- Companion blog post: _not yet published_
+- Companion blog post: [work-graphs overview](../blog/mesh-dxr-overview.md)
 
 ---
 

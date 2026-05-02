@@ -71,7 +71,7 @@ float3 project_safe(float3 a, float3 b) {
 - Related rule: [sqrt-of-potentially-negative](sqrt-of-potentially-negative.md) — domain protection for `sqrt`
 - Related rule: [redundant-rcp-mul](redundant-rcp-mul.md) — algebraic simplification of `rcp` patterns
 - HLSL intrinsic reference: `rcp`, `length`, `dot`, `max` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

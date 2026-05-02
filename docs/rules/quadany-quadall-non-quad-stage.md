@@ -76,7 +76,7 @@ none
 - Related rule: [quadany-quadall-opportunity](quadany-quadall-opportunity.md) — opposite-direction perf rule
 - Related rule: [waveops-include-helper-lanes-on-non-pixel](waveops-include-helper-lanes-on-non-pixel.md) — sibling stage-validation rule
 - HLSL specification: [SM 6.7 quad intrinsics](https://microsoft.github.io/DirectX-Specs/d3d/HLSL_ShaderModel6_7.html)
-- Companion blog post: _not yet published_
+- Companion blog post: [wave-helper-lane overview](../blog/wave-helper-lane-overview.md)
 
 ---
 

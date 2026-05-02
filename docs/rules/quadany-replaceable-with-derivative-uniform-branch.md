@@ -78,7 +78,7 @@ none
 - Related rule: [quadany-quadall-non-quad-stage](quadany-quadall-non-quad-stage.md) — companion stage-validation rule
 - Related rule: [derivative-in-divergent-cf](derivative-in-divergent-cf.md) — companion derivative-correctness rule
 - HLSL specification: [SM 6.7 quad intrinsics](https://microsoft.github.io/DirectX-Specs/d3d/HLSL_ShaderModel6_7.html)
-- Companion blog post: _not yet published_
+- Companion blog post: [wave-helper-lane overview](../blog/wave-helper-lane-overview.md)
 
 ---
 

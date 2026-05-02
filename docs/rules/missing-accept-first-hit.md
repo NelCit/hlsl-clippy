@@ -74,7 +74,7 @@ void ShadeWithShadow() {
 - Related rule: [recursion-depth-not-declared](recursion-depth-not-declared.md) — shadow rays should not recurse; setting `MaxTraceRecursionDepth = 1` for shadow PSOs is a related win
 - DXR specification: `D3D12_RAY_FLAG` enumeration in the DirectX Raytracing spec
 - NVIDIA DXR best-practices: "Shadow Rays" section
-- Companion blog post: _not yet published_
+- Companion blog post: [dxr overview](../blog/mesh-dxr-overview.md)
 
 ---
 

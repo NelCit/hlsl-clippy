@@ -83,7 +83,7 @@ none
 - Related rule: [outputcomplete-missing](outputcomplete-missing.md) — work-graph node output completion
 - Related rule: [sample-in-loop-implicit-grad](sample-in-loop-implicit-grad.md) — derivative-coupled sampling in non-quad CF
 - Microsoft DirectX docs: Work Graphs — Thread-Launch Nodes (HLSL spec sec. 8.5)
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [work-graphs overview](../blog/mesh-dxr-overview.md)
 
 ---
 

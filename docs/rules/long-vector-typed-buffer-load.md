@@ -66,7 +66,7 @@ none
 - Related rule: [long-vector-non-elementwise-intrinsic](long-vector-non-elementwise-intrinsic.md) — companion long-vector spec rule
 - Related rule: [byteaddressbuffer-narrow-when-typed-fits](byteaddressbuffer-narrow-when-typed-fits.md) — opposite-direction perf rule for short-vector data
 - HLSL specification: [proposal 0030 DXIL vectors](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0030-dxil-vectors.md)
-- Companion blog post: _not yet published_
+- Companion blog post: [long-vectors overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

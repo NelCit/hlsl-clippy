@@ -71,7 +71,7 @@ none
 - Related rule: [mip-clamp-zero-on-mipped-texture](mip-clamp-zero-on-mipped-texture.md) — sampler state that disables mip filtering
 - D3D12 reference: `FeedbackTexture2D`, `WriteSamplerFeedback`, sampler feedback in the DirectX 12 Ultimate documentation
 - HLSL intrinsic reference: `WriteSamplerFeedback` in the DirectX HLSL Shader Model 6.5 documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [sampler-feedback overview](../blog/texture-overview.md)
 
 ---
 

@@ -80,7 +80,7 @@ none
 - Related rule: [groupshared-stride-32-bank-conflict](groupshared-stride-32-bank-conflict.md) — bank conflicts in groupshared memory
 - Related rule: [wave-intrinsic-non-uniform](wave-intrinsic-non-uniform.md) — wave intrinsic uniformity hazards
 - HLSL intrinsic reference: `WaveMatch`, `WaveActiveSum`, `InterlockedAdd` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

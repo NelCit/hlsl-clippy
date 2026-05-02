@@ -64,7 +64,7 @@ none
 - Related rule: [manual-srgb-conversion](manual-srgb-conversion.md) — companion format-vs-shader-math mismatch
 - DXGI reference: `DXGI_FORMAT_B8G8R8A8_UNORM` and the swap-chain format compatibility table
 - HLSL reference: vector swizzles in the DirectX HLSL Language Syntax documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [texture overview](../blog/texture-overview.md)
 
 ---
 

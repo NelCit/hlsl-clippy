@@ -9,7 +9,7 @@ phase: 4
 
 # cbuffer-load-in-loop
 
-> **Status:** pre-v0 — rule scheduled for Phase 4; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 4) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -94,7 +94,7 @@ none
 - Related rule: [redundant-computation-in-branch](redundant-computation-in-branch.md) — same expression in both arms of if/else
 - Related rule: [small-loop-no-unroll](small-loop-no-unroll.md) — constant-bounded loop without [unroll]
 - HLSL language reference: `cbuffer`, `ConstantBuffer<T>` in the DirectX HLSL documentation
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

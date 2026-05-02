@@ -108,7 +108,7 @@ and requests confirmation before applying.
   conversion
 - HLSL intrinsic reference: `pack_u8`, `unpack_u8u32`, `f32tof16`, `f16tof32`
   in DirectX HLSL SM 6.6 documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [packed-math overview](../blog/math-overview.md)
 
 ---
 

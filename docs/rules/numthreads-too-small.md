@@ -67,7 +67,7 @@ none
 - Related rule: [`numthreads-not-wave-aligned`](numthreads-not-wave-aligned.md) — thread group total not divisible by wave size
 - Related rule: [`groupshared-too-large`](groupshared-too-large.md) — groupshared memory limits that reduce occupancy further
 - HLSL reference: `[numthreads]` attribute in the DirectX HLSL Shader Model 6.x documentation
-- Companion blog post: _not yet published — will appear alongside the v0.3.0 release_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

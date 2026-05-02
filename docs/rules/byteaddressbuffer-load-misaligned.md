@@ -74,7 +74,7 @@ none
 - Related rule: [byteaddressbuffer-narrow-when-typed-fits](byteaddressbuffer-narrow-when-typed-fits.md) — prefer typed views when the access pattern matches
 - Related rule: [structured-buffer-stride-not-cache-aligned](structured-buffer-stride-not-cache-aligned.md) — stride alignment for typed structured buffers
 - HLSL intrinsic reference: `ByteAddressBuffer::Load2`, `Load3`, `Load4` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

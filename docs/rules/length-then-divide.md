@@ -63,7 +63,7 @@ none
 - Related rule: [inv-sqrt-to-rsqrt](inv-sqrt-to-rsqrt.md) — same transcendental-unit argument for `1.0 / sqrt(x)` outside the normalisation context
 - Related rule: [manual-distance](manual-distance.md) — companion rule for `length(a - b)` patterns
 - HLSL intrinsic reference: `normalize`, `length`, `rsqrt` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

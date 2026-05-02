@@ -65,7 +65,7 @@ none
 - Related rule: [isspecialfloat-implicit-fp16-promotion](isspecialfloat-implicit-fp16-promotion.md) — sibling SM 6.9 intrinsic rule
 - Related rule: [compare-equal-float](compare-equal-float.md) — companion floating-point hygiene rule
 - HLSL specification: [SM 6.9 numerical-classification intrinsics](https://microsoft.github.io/DirectX-Specs/d3d/HLSL_ShaderModel6_9.html)
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

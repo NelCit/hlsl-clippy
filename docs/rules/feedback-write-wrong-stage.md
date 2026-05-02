@@ -72,7 +72,7 @@ none
 - Related rule: [feedback-every-sample](feedback-every-sample.md) — overuse of feedback writes inside PS loops
 - Related rule: [sampler-feedback-without-streaming-flag](sampler-feedback-without-streaming-flag.md) — feedback write that is not consumed by streaming
 - D3D12 specification: Sampler Feedback (SM 6.5) stage restrictions
-- Companion blog post: _not yet published_
+- Companion blog post: [sampler-feedback overview](../blog/texture-overview.md)
 
 ---
 

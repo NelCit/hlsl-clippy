@@ -70,7 +70,7 @@ none
 - Related rule: [`samplegrad-with-constant-grads`](samplegrad-with-constant-grads.md) — zero gradients also force a specific LOD level
 - Related rule: [`texture-as-buffer`](texture-as-buffer.md) — resources accessed exclusively at mip 0 in a linear pattern may be better declared as `Buffer<>`
 - HLSL intrinsic reference: `Texture2D.SampleLevel`, `Texture2D.Sample`, `Texture2D.CalculateLevelOfDetail` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.3.0 release_
+- Companion blog post: [texture overview](../blog/texture-overview.md)
 
 ---
 

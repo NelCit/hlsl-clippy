@@ -88,7 +88,7 @@ void RayGen() {
 - Related rule: [coherence-hint-redundant-bits](coherence-hint-redundant-bits.md) — companion SER perf rule
 - Reference: [Indiana Jones SER live-state case study](https://developer.nvidia.com/blog/path-tracing-optimization-in-indiana-jones-shader-execution-reordering-and-live-state-reductions/)
 - HLSL specification: [proposal 0027 Shader Execution Reordering](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0027-shader-execution-reordering.md)
-- Companion blog post: _not yet published_
+- Companion blog post: [ser overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

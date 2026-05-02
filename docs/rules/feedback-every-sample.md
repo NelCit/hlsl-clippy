@@ -72,7 +72,7 @@ float4 ps_gated_feedback(float4 sv_pos : SV_Position,
 ## See also
 
 - Microsoft DirectX docs: Sampler Feedback — `FeedbackTexture2D`, `WriteSamplerFeedback*`
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [sampler-feedback overview](../blog/texture-overview.md)
 
 ---
 

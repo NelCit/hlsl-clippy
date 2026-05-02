@@ -70,7 +70,7 @@ none
 - Related rule: [comparison-sampler-without-comparison-op](comparison-sampler-without-comparison-op.md) — sampler descriptor type / call site mismatch
 - Related rule: [cbuffer-large-fits-rootcbv-not-table](cbuffer-large-fits-rootcbv-not-table.md) — same descriptor-heap-vs-root-binding tradeoff for cbuffers
 - D3D12 reference: `D3D12_STATIC_SAMPLER_DESC` and the static-sampler section of the root-signature documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

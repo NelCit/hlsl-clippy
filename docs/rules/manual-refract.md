@@ -9,7 +9,7 @@ phase: 2
 
 # manual-refract
 
-> **Status:** pre-v0 — rule scheduled for Phase 2; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 2) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -67,7 +67,7 @@ none
 - [`manual-reflect`](manual-reflect.md) — sibling rule for the closed-form `reflect(v, n)` formula.
 - [`manual-distance`](manual-distance.md) — open-coded `length(a - b)` → `distance(a, b)`.
 - HLSL intrinsic reference: `refract` in the DirectX HLSL Intrinsics documentation.
-- Companion blog post: _not yet published_.
+- Companion blog post: [math overview](../blog/math-overview.md).
 
 ---
 

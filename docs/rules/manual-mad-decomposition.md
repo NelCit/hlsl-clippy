@@ -59,7 +59,7 @@ none
 - Related rule: [pow-to-mul](pow-to-mul.md) — replaces transcendental `pow` with full-rate multiplies that themselves participate in MAD folding
 - Related rule: [dot4add-opportunity](dot4add-opportunity.md) — the integer DP4a equivalent of MAD folding for 8-bit dot products
 - HLSL intrinsic reference: `mad`, `fma` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

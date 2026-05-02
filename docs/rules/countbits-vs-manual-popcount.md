@@ -69,7 +69,7 @@ none
 - Related rule: [firstbit-vs-log2-trick](firstbit-vs-log2-trick.md) — replaces `log2((float)x)` MSB tricks with `firstbithigh()`
 - Related rule: [manual-f32tof16](manual-f32tof16.md) — another manual bit-manipulation pattern with an intrinsic equivalent
 - HLSL intrinsic reference: `countbits` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

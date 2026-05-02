@@ -9,7 +9,7 @@ phase: 3
 
 # cbuffer-padding-hole
 
-> **Status:** pre-v0 — rule scheduled for Phase 3; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 3) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -76,7 +76,7 @@ none
 - Related rule: [oversized-cbuffer](oversized-cbuffer.md) — cbuffer exceeds the default 4 KB threshold
 - Related rule: [cbuffer-fits-rootconstants](cbuffer-fits-rootconstants.md) — small cbuffer should be root constants on D3D12
 - HLSL constant buffer packing rules: `packoffset` keyword documentation in the DirectX HLSL reference
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

@@ -9,7 +9,7 @@ phase: 3
 
 # dead-store-sv-target
 
-> **Status:** pre-v0 — rule scheduled for Phase 3; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 3) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -65,7 +65,7 @@ none
 - Related rule: [unused-cbuffer-field](unused-cbuffer-field.md) — cbuffer field declared but never read
 - Related rule: [rwresource-read-only-usage](rwresource-read-only-usage.md) — RW resource only ever read
 - HLSL `SV_Target` semantic documentation in the DirectX HLSL reference
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

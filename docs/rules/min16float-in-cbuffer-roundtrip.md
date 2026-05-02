@@ -109,7 +109,7 @@ fix` presents the options and requests a choice.
   instead of intrinsic
 - HLSL reference: `min16float`, `float16_t`, SM 6.2 native 16-bit types, and
   cbuffer layout rules in DirectX HLSL documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [packed-math overview](../blog/math-overview.md)
 
 ---
 

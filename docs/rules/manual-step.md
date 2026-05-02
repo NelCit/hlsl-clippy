@@ -9,7 +9,7 @@ phase: 2
 
 # manual-step
 
-> **Status:** pre-v0 — rule scheduled for Phase 2; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 2) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -55,7 +55,7 @@ none
 
 - Related rule: [manual-smoothstep](manual-smoothstep.md) — the continuous generalisation: hand-rolled cubic Hermite → `smoothstep`
 - HLSL intrinsic reference: `step` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

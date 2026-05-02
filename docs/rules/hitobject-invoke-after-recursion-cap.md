@@ -66,7 +66,7 @@ none
 - Related rule: [recursion-depth-not-declared](recursion-depth-not-declared.md) — companion DXR validation rule
 - Related rule: [hitobject-passed-to-non-inlined-fn](hitobject-passed-to-non-inlined-fn.md) — companion SER programming-model rule
 - HLSL specification: [proposal 0027 Shader Execution Reordering](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0027-shader-execution-reordering.md)
-- Companion blog post: _not yet published_
+- Companion blog post: [ser overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

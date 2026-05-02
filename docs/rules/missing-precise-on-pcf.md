@@ -80,7 +80,7 @@ none
 - Related rule: [`samplecmp-without-comparison-sampler`](samplecmp-without-comparison-sampler.md) — `SampleCmp` called with a non-comparison sampler
 - HLSL reference: `precise` qualifier in the DirectX HLSL Language Reference
 - D3D Functional Spec: `SampleCmp`, `SampleCmpLevelZero`, comparison-sampler behaviour
-- Companion blog post: _not yet published — will appear alongside the v0.3.0 release_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

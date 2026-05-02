@@ -75,7 +75,7 @@ none
 - Related rule: [cbuffer-divergent-index](cbuffer-divergent-index.md) — cbuffer-specific divergent index hazard
 - Related rule: [wave-active-all-equal-precheck](wave-active-all-equal-precheck.md) — uniformity-test idiom
 - HLSL intrinsic reference: `WaveReadLaneFirst`, `NonUniformResourceIndex`
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

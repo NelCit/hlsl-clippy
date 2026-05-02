@@ -93,7 +93,7 @@ none
 - Related rule: [`samplegrad-with-constant-grads`](samplegrad-with-constant-grads.md) — zero explicit gradients collapse to mip 0 similarly
 - Related rule: [`samplelevel-with-zero-on-mipped-tex`](samplelevel-with-zero-on-mipped-tex.md) — explicit mip 0 on mipped resources
 - HLSL intrinsic reference: `Texture2D.SampleBias`, `Texture2D.SampleLevel`, `Texture2D.CalculateLevelOfDetail` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.3.0 release_
+- Companion blog post: [texture overview](../blog/texture-overview.md)
 
 ---
 

@@ -82,7 +82,7 @@ pow-to-mul = "allow"
 - Related rule: [pow-integer-decomposition](pow-integer-decomposition.md) — generalises to `pow(x, 3.0)`, `pow(x, 4.0)`, `pow(x, 5.0)`
 - Related rule: [pow-base-two-to-exp2](pow-base-two-to-exp2.md) — handles `pow(2.0, x)` → `exp2(x)`
 - HLSL intrinsic reference: `pow`, `exp2`, `log2` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.1 release_
+- Companion blog post: [Where the cycles go: pow(x, 2.0)](../blog/pow-const-squared.md)
 
 ---
 

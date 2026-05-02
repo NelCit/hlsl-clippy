@@ -84,7 +84,7 @@ none
 - Related rule: [barrier-in-divergent-cf](barrier-in-divergent-cf.md) — the same divergent-CF family for compute barriers
 - Related rule: [outputcomplete-missing](outputcomplete-missing.md) — work-graph node output completion (analogous in mesh nodes)
 - Microsoft DirectX docs: Mesh Shaders — `SetMeshOutputCounts` contract
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [mesh overview](../blog/mesh-dxr-overview.md)
 
 ---
 

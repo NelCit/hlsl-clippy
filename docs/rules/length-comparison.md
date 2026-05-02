@@ -9,7 +9,7 @@ phase: 2
 
 # length-comparison
 
-> **Status:** pre-v0 — rule scheduled for Phase 2; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 2) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -66,7 +66,7 @@ none
 - Related rule: [manual-distance](manual-distance.md) — `length(a - b)` → `distance(a, b)` as a prior cleanup step
 - Related rule: [inv-sqrt-to-rsqrt](inv-sqrt-to-rsqrt.md) — when the reciprocal length is needed instead of a comparison
 - HLSL intrinsic reference: `length`, `dot`, `distance` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

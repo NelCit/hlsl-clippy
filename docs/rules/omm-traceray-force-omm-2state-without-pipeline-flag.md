@@ -75,7 +75,7 @@ none
 - Related rule: [omm-allocaterayquery2-non-const-flags](omm-allocaterayquery2-non-const-flags.md) — companion OMM rule
 - HLSL specification: [proposal 0024 Opacity Micromaps](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0024-opacity-micromaps.md)
 - D3D12 specification: `D3D12_RAYTRACING_PIPELINE_CONFIG1` flags
-- Companion blog post: _not yet published_
+- Companion blog post: [opacity-micromaps overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

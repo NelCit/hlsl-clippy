@@ -65,7 +65,7 @@ none
 - Related rule: [wavesize-range-disordered](wavesize-range-disordered.md) — companion validation
 - Related rule: [wavereadlaneat-constant-non-zero-portability](wavereadlaneat-constant-non-zero-portability.md) — kernels that genuinely require a fixed wave size
 - HLSL specification: [SM 6.8 WaveSize range form](https://microsoft.github.io/DirectX-Specs/d3d/HLSL_ShaderModel6_8.html)
-- Companion blog post: _not yet published_
+- Companion blog post: [wave-helper-lane overview](../blog/wave-helper-lane-overview.md)
 
 ---
 

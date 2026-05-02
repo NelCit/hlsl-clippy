@@ -68,7 +68,7 @@ none
 - Related rule: [hitobject-construct-outside-allowed-stages](hitobject-construct-outside-allowed-stages.md) — HitObject construction outside allowed stages
 - Related rule: [maybereorderthread-without-payload-shrink](maybereorderthread-without-payload-shrink.md) — perf rule on the same intrinsic
 - HLSL specification: [proposal 0027 Shader Execution Reordering](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0027-shader-execution-reordering.md)
-- Companion blog post: _not yet published_
+- Companion blog post: [ser overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

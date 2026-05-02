@@ -9,7 +9,7 @@ phase: 2
 
 # mul-identity
 
-> **Status:** pre-v0 — rule scheduled for Phase 2; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 2) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -66,7 +66,7 @@ none
 ## See also
 
 - Related rule: [lerp-extremes](lerp-extremes.md) — analogous dead-arithmetic elimination for `lerp(a, b, 0)` and `lerp(a, b, 1)`
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

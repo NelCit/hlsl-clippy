@@ -73,7 +73,7 @@ none
 - Related rule: [wave-prefix-sum-vs-scan-with-atomics](wave-prefix-sum-vs-scan-with-atomics.md) — scan variant
 - Related rule: [interlocked-bin-without-wave-prereduce](interlocked-bin-without-wave-prereduce.md) — small-bin pre-reduce
 - HLSL intrinsic reference: `WaveActiveSum`, `WaveActiveBitOr`, `WaveActiveCountBits`
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

@@ -86,7 +86,7 @@ none
 - Related rule: [mesh-numthreads-over-128](mesh-numthreads-over-128.md) — companion mesh-pipeline cap
 - Related rule: [mesh-output-decl-exceeds-256](mesh-output-decl-exceeds-256.md) — companion mesh-pipeline cap
 - D3D12 specification: Amplification Shader payload size cap (16 KB)
-- Companion blog post: _not yet published_
+- Companion blog post: [mesh overview](../blog/mesh-dxr-overview.md)
 
 ---
 

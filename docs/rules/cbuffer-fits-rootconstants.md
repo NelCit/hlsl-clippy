@@ -9,7 +9,7 @@ phase: 3
 
 # cbuffer-fits-rootconstants
 
-> **Status:** pre-v0 — rule scheduled for Phase 3; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 3) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -79,7 +79,7 @@ none
 - Related rule: [oversized-cbuffer](oversized-cbuffer.md) — cbuffer exceeds the default 4 KB threshold
 - D3D12 specification: Root Signature Version 1.1, `D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS`
 - DirectX-Specs: root signature cost model (64 DWORD total budget)
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

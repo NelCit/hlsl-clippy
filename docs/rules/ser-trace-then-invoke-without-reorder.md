@@ -72,7 +72,7 @@ none
 - Related rule: [coherence-hint-encodes-shader-type](coherence-hint-encodes-shader-type.md) — companion SER perf rule
 - Related rule: [maybereorderthread-without-payload-shrink](maybereorderthread-without-payload-shrink.md) — companion SER perf rule
 - Reference: [NVIDIA SER perf blog](https://developer.nvidia.com/blog/improve-shader-performance-and-in-game-frame-rates-with-shader-execution-reordering/)
-- Companion blog post: _not yet published_
+- Companion blog post: [ser overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

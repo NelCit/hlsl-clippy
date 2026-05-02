@@ -69,7 +69,7 @@ none
 - Related rule: [clamp01-to-saturate](clamp01-to-saturate.md) — replaces `clamp(x, 0.0, 1.0)` with `saturate(x)`
 - Related rule: [redundant-abs](redundant-abs.md) — drops `abs` around expressions proven non-negative, including `saturate` output
 - HLSL intrinsic reference: `saturate` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.2.0 release_
+- Companion blog post: [saturate-redundancy overview](../blog/math-overview.md)
 
 ---
 

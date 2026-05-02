@@ -9,7 +9,7 @@ phase: 4
 
 # groupshared-uninitialized-read
 
-> **Status:** pre-v0 — rule scheduled for Phase 4; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 4) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -103,7 +103,7 @@ none
 - Related rule: [groupshared-write-then-no-barrier-read](groupshared-write-then-no-barrier-read.md) — cross-thread read without barrier between write and read
 - Related rule: [barrier-in-divergent-cf](barrier-in-divergent-cf.md) — barrier inside divergent CF (deadlock hazard)
 - HLSL intrinsic reference: `GroupMemoryBarrierWithGroupSync` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

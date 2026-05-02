@@ -75,7 +75,7 @@ none
 - Related rule: [groupshared-overwrite-before-barrier](groupshared-overwrite-before-barrier.md) — write later overwritten before any barrier
 - Related rule: [groupshared-too-large](groupshared-too-large.md) — LDS budget pressure
 - Related rule: [unused-cbuffer-field](unused-cbuffer-field.md) — sibling def-use rule for cbuffer fields
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

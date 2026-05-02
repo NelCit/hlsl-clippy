@@ -9,7 +9,7 @@ phase: 2
 
 # manual-smoothstep
 
-> **Status:** pre-v0 — rule scheduled for Phase 2; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 2) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -63,7 +63,7 @@ none
 
 - Related rule: [manual-step](manual-step.md) — the degenerate case: binary 0/1 threshold → `step`
 - HLSL intrinsic reference: `smoothstep` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

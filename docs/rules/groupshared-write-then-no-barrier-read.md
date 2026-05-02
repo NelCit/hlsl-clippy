@@ -77,7 +77,7 @@ none
 - Related rule: [groupshared-uninitialized-read](groupshared-uninitialized-read.md) — reading a groupshared slot before any thread has written
 - Related rule: [groupshared-stride-32-bank-conflict](groupshared-stride-32-bank-conflict.md) — bank conflict patterns
 - HLSL intrinsic reference: `GroupMemoryBarrierWithGroupSync`, `AllMemoryBarrierWithGroupSync` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

@@ -73,7 +73,7 @@ none
 
 - Related rule: [excess-interpolators](excess-interpolators.md) — IO signature pressure
 - HLSL specification: [SM 6.8 SV_StartVertexLocation](https://microsoft.github.io/DirectX-Specs/d3d/HLSL_ShaderModel6_8.html)
-- Companion blog post: _not yet published_
+- Companion blog post: [wave-helper-lane overview](../blog/wave-helper-lane-overview.md)
 
 ---
 

@@ -65,7 +65,7 @@ none
 - Related rule: [anisotropy-without-anisotropic-filter](anisotropy-without-anisotropic-filter.md) — sampler state field that has no effect under the chosen filter
 - Related rule: [comparison-sampler-without-comparison-op](comparison-sampler-without-comparison-op.md) — sampler descriptor type unused at the call site
 - D3D12 reference: `D3D12_SAMPLER_DESC` field documentation, mip filtering in the D3D12 sampler documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [texture overview](../blog/texture-overview.md)
 
 ---
 

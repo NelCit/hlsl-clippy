@@ -79,7 +79,7 @@ none
 - Related rule: [derivative-in-divergent-cf](derivative-in-divergent-cf.md) — underlying hazard
 - Related rule: [quadany-quadall-opportunity](quadany-quadall-opportunity.md) — `if`-statement analogue
 - HLSL reference: `[forcecase]` / `[call]` attributes on `switch` in the DirectX HLSL specification
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

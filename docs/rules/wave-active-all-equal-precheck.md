@@ -69,7 +69,7 @@ none
 - Related rule: [wave-intrinsic-helper-lane-hazard](wave-intrinsic-helper-lane-hazard.md) — helper-lane participation in wave operations
 - HLSL intrinsic reference: `WaveActiveAllEqual`, `WaveReadLaneFirst`, `NonUniformResourceIndex` in the DirectX HLSL Intrinsics documentation
 - AMD GPU Open: scalarisation patterns in bindless rendering
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

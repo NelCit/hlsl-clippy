@@ -14,9 +14,13 @@ All rules grouped by category. Each entry links to the dedicated rule page,
 which includes the GPU-mechanism reasoning and (where applicable) the
 quick-fix rewrite.
 
-> **Status:** pre-v0 — many pages document design intent ahead of the rule
-> shipping. The phase column tracks when each rule lands. See
-> [ROADMAP](/roadmap) for the phase-by-phase plan.
+> **Status:** v0.5.6 shipped — 154 rules ship end-to-end across the
+> categories below. The catalog also lists ~30 doc-only stubs for
+> rules queued in [ADR 0007](/decisions/0007-rule-pack-expansion) /
+> [ADR 0010](/decisions/0010-sm69-rule-expansion) /
+> [ADR 0011](/decisions/0011-candidate-rule-adoption) that have not
+> landed yet — those pages document design intent ahead of code.
+> See [ROADMAP](/roadmap) for the phase-by-phase plan.
 
 **Total rules documented:** {{ catalog.total }}
 

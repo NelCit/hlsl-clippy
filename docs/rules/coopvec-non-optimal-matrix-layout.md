@@ -75,7 +75,7 @@ none
 - Related rule: [coopvec-stride-mismatch](coopvec-stride-mismatch.md) — companion validation
 - Related rule: [coopvec-base-offset-misaligned](coopvec-base-offset-misaligned.md) — companion validation
 - HLSL specification: [proposal 0029 Cooperative Vector](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0029-cooperative-vector.md)
-- Companion blog post: _not yet published_
+- Companion blog post: [cooperative-vector overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

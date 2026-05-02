@@ -81,7 +81,7 @@ none
 - Related rule: [`gather-cmp-vs-manual-pcf`](gather-cmp-vs-manual-pcf.md) — for 2x2 unrolled `SampleCmp` patterns, `GatherCmp` further reduces TMU calls
 - Related rule: [`missing-precise-on-pcf`](missing-precise-on-pcf.md) — depth-compare arithmetic without `precise` is a shadow acne risk
 - HLSL intrinsic reference: `Texture2D.SampleCmp`, `Texture2D.SampleCmpLevelZero`, `SamplerComparisonState` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.3.0 release_
+- Companion blog post: [texture overview](../blog/texture-overview.md)
 
 ---
 

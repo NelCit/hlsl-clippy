@@ -72,7 +72,7 @@ none
 - Related rule: [wavereadlaneat-constant-non-zero-portability](wavereadlaneat-constant-non-zero-portability.md) — specific case of constant-K WaveReadLaneAt
 - Related rule: [numthreads-not-wave-aligned](numthreads-not-wave-aligned.md) — thread-group total vs wave size
 - HLSL reference: `[WaveSize]` attribute, `WaveGetLaneCount`, wave intrinsics in the DirectX HLSL Shader Model 6.6+ documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

@@ -116,7 +116,7 @@ always manual.
   usage directly inflates effective register pressure
 - HLSL intrinsic reference: `Buffer<T>`, `StructuredBuffer<T>`,
   `cbuffer` arrays — alternatives to local indexable arrays
-- Companion blog post: _not yet published_
+- Companion blog post: [memory overview](../blog/workgroup-overview.md)
 
 ---
 

@@ -107,7 +107,7 @@ values is zero. `hlsl-clippy fix` applies the substitution automatically.
   `min16float` arithmetic instead of manual FP16 packing
 - HLSL intrinsic reference: `f32tof16`, `f16tof32` — available from SM 5.0;
   documented in the DirectX HLSL Intrinsics reference
-- Companion blog post: _not yet published_
+- Companion blog post: [packed-math overview](../blog/math-overview.md)
 
 ---
 

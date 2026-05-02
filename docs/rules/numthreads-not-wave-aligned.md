@@ -82,7 +82,7 @@ target-wave-size = 64
 - Related rule: [`numthreads-too-small`](numthreads-too-small.md) — thread group total smaller than the minimum wave size
 - Related rule: [`groupshared-too-large`](groupshared-too-large.md) — groupshared memory exceeding occupancy thresholds
 - HLSL reference: `[numthreads]` attribute, `WaveSize` in the DirectX HLSL Shader Model 6.x documentation
-- Companion blog post: _not yet published — will appear alongside the v0.3.0 release_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

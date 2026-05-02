@@ -9,7 +9,7 @@ phase: 2
 
 # pow-base-two-to-exp2
 
-> **Status:** pre-v0 — rule scheduled for Phase 2; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 2) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -57,7 +57,7 @@ none
 - Related rule: [pow-const-squared](pow-const-squared.md) — focused on the exponent-2 case
 - Related rule: [pow-integer-decomposition](pow-integer-decomposition.md) — handles `pow(x, 5.0)` and above
 - HLSL intrinsic reference: `exp2`, `pow`, `log2` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

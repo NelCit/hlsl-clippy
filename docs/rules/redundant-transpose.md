@@ -57,7 +57,7 @@ none
 - Related rule: [redundant-normalize](redundant-normalize.md) — detects double `normalize` by the same involution argument
 - Related rule: [redundant-saturate](redundant-saturate.md) — detects `saturate(saturate(x))` by idempotence
 - HLSL intrinsic reference: `transpose` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.2.0 release_
+- Companion blog post: [saturate-redundancy overview](../blog/math-overview.md)
 
 ---
 

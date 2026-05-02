@@ -70,7 +70,7 @@ none
 - Related rule: [static-sampler-when-dynamic-used](static-sampler-when-dynamic-used.md) — sampler descriptor placement
 - Related rule: [anisotropy-without-anisotropic-filter](anisotropy-without-anisotropic-filter.md) — sampler descriptor field that has no effect at the call site
 - HLSL intrinsic reference: `SampleCmp`, `SampleCmpLevelZero`, `SamplerComparisonState` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [texture overview](../blog/texture-overview.md)
 
 ---
 

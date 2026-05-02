@@ -74,7 +74,7 @@ none
 - Related rule: [wavesize-attribute-missing](wavesize-attribute-missing.md) — broader wave-size-dependence detector
 - Related rule: [wavereadlaneat-constant-zero-to-readfirst](wavereadlaneat-constant-zero-to-readfirst.md) — Phase 2 AST-only sibling for `K == 0`
 - HLSL intrinsic reference: `WaveReadLaneAt`, `WaveGetLaneCount`, `[WaveSize]` in the DirectX HLSL Shader Model 6.0+ documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

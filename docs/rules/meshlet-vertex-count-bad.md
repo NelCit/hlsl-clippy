@@ -75,7 +75,7 @@ void MeshMain(
 - AMD GPUOpen: "Mesh Shaders" best-practice guide
 - NVIDIA: "Mesh Shaders" Turing/Ampere/Ada developer documentation
 - DirectX 12 Ultimate: mesh shader specification (`SetMeshOutputCounts`, `[outputtopology]`)
-- Companion blog post: _not yet published_
+- Companion blog post: [mesh overview](../blog/mesh-dxr-overview.md)
 
 ---
 

@@ -9,7 +9,7 @@ phase: 2
 
 # pow-to-mul
 
-> **Status:** pre-v0 — rule scheduled for Phase 2; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 2) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -77,7 +77,7 @@ none
 - Related rule: [pow-integer-decomposition](pow-integer-decomposition.md) — generalises to exponents 5 and above using pow-by-squaring
 - Related rule: [pow-base-two-to-exp2](pow-base-two-to-exp2.md) — handles `pow(2.0, x)` → `exp2(x)`
 - HLSL intrinsic reference: `pow`, `exp2`, `log2` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

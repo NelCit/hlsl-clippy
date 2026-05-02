@@ -71,7 +71,7 @@ none
 - Related rule: [groupshared-16bit-unpacked](groupshared-16bit-unpacked.md) — 16-bit groupshared storage that widens at every access
 - Related rule: [groupshared-stride-32-bank-conflict](groupshared-stride-32-bank-conflict.md) — bank conflicts on stride-32 access
 - HLSL reference: `groupshared` storage class in the DirectX HLSL Shader Model 6.x documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

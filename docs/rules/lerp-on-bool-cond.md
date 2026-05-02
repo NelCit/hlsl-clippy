@@ -69,7 +69,7 @@ none
 - Related rule: [select-vs-lerp-of-constant](select-vs-lerp-of-constant.md) — companion rule for the both-endpoints-are-constants case
 - Related rule: [manual-step](manual-step.md) — surfaces the analogous step/mix anti-pattern
 - HLSL intrinsic reference: `lerp`, `select`, ternary operator in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

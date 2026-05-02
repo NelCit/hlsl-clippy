@@ -68,7 +68,7 @@ none
 
 - Related rule: [`samplelevel-with-zero-on-mipped-tex`](samplelevel-with-zero-on-mipped-tex.md) — the output of this fix may itself trigger this rule if the target resource is mipped
 - HLSL intrinsic reference: `Texture2D.SampleGrad`, `Texture2D.SampleLevel` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.3.0 release_
+- Companion blog post: [texture overview](../blog/texture-overview.md)
 
 ---
 

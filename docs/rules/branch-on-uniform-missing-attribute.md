@@ -9,7 +9,7 @@ phase: 4
 
 # branch-on-uniform-missing-attribute
 
-> **Status:** pre-v0 — rule scheduled for Phase 4; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 4) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -97,7 +97,7 @@ none
 - Related rule: [wave-intrinsic-non-uniform](wave-intrinsic-non-uniform.md) — non-uniform control flow causing incorrect wave operation results
 - Related rule: [small-loop-no-unroll](small-loop-no-unroll.md) — analogous attribute-hint rule for constant-bounded loops
 - HLSL attribute reference: `[branch]`, `[flatten]` in the DirectX HLSL Attributes documentation
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

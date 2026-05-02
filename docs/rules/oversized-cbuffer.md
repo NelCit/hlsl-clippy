@@ -9,7 +9,7 @@ phase: 3
 
 # oversized-cbuffer
 
-> **Status:** pre-v0 — rule scheduled for Phase 3; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 3) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -69,7 +69,7 @@ cbuffer HugeFixed : register(b3) {
 - Related rule: [cbuffer-fits-rootconstants](cbuffer-fits-rootconstants.md) — small cbuffers that could be root constants on D3D12
 - Related rule: [cbuffer-divergent-index](cbuffer-divergent-index.md) — cbuffer read with a divergent index (serializes on NVIDIA constant cache)
 - D3D12 Root Signature specification: constant buffer view size constraints
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

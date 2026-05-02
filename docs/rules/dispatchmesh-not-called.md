@@ -92,7 +92,7 @@ none
 - Related rule: [outputcomplete-missing](outputcomplete-missing.md) — mesh-output completeness
 - Related rule: [primcount-overrun-in-conditional-cf](primcount-overrun-in-conditional-cf.md) — companion mesh-output-count rule
 - HLSL reference: amplification-shader specification, `DispatchMesh` semantics
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [mesh overview](../blog/mesh-dxr-overview.md)
 
 ---
 

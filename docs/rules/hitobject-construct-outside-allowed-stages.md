@@ -68,7 +68,7 @@ none
 - Related rule: [maybereorderthread-outside-raygen](maybereorderthread-outside-raygen.md) — sibling SER programming-model rule
 - Related rule: [hitobject-passed-to-non-inlined-fn](hitobject-passed-to-non-inlined-fn.md) — inter-procedural sibling rule
 - HLSL specification: [proposal 0027 Shader Execution Reordering](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0027-shader-execution-reordering.md)
-- Companion blog post: _not yet published_
+- Companion blog post: [ser overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

@@ -70,7 +70,7 @@ none
 - Related rule: [groupshared-write-then-no-barrier-read](groupshared-write-then-no-barrier-read.md) — write-side phrasing of the same hazard
 - Related rule: [barrier-in-divergent-cf](barrier-in-divergent-cf.md) — barrier hazards in divergent CF
 - HLSL intrinsic reference: `GroupMemoryBarrierWithGroupSync`
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

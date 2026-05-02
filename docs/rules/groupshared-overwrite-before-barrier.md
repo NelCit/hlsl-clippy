@@ -69,7 +69,7 @@ none
 - Related rule: [groupshared-dead-store](groupshared-dead-store.md) — write with no subsequent read anywhere
 - Related rule: [groupshared-write-then-no-barrier-read](groupshared-write-then-no-barrier-read.md) — missing barrier between write and cross-thread read
 - Related rule: [barrier-in-divergent-cf](barrier-in-divergent-cf.md) — barrier hazards that interact with this pattern
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

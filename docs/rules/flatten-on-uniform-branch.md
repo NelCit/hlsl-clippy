@@ -84,7 +84,7 @@ none
 - Related rule: [forcecase-missing-on-ps-switch](forcecase-missing-on-ps-switch.md) — `switch` analogue
 - Related rule: [redundant-computation-in-branch](redundant-computation-in-branch.md) — wasted work in branch arms
 - HLSL reference: `[flatten]` / `[branch]` attributes in the DirectX HLSL specification
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

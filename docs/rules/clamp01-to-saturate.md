@@ -76,7 +76,7 @@ none
 - Related rule: [redundant-saturate](redundant-saturate.md) — detects `saturate(saturate(x))` and drops the outer call
 - Related rule: [redundant-abs](redundant-abs.md) — drops `abs` around `saturate(x)` since the output is non-negative
 - HLSL intrinsic reference: `saturate`, `clamp` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.2.0 release_
+- Companion blog post: [saturate-redundancy overview](../blog/math-overview.md)
 
 ---
 

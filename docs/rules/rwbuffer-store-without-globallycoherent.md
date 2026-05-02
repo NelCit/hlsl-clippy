@@ -91,7 +91,7 @@ none
 - HLSL reference: `globallycoherent` qualifier in the DirectX HLSL specification
 - Vulkan equivalent: SPIR-V `Coherent` decoration, `vkCmdPipelineBarrier`
 - Metal equivalent: buffer atomics and MSL access qualifiers
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

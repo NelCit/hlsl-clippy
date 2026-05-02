@@ -95,7 +95,7 @@ the range assumption is correct.
   modification
 - HLSL reference: `pack_u8`, `pack_clamp_u8`, `pack_s8`, `pack_clamp_s8` —
   SM 6.6 packing intrinsics
-- Companion blog post: _not yet published_
+- Companion blog post: [packed-math overview](../blog/math-overview.md)
 
 ---
 

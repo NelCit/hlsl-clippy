@@ -74,7 +74,7 @@ none
 - Related rule: [rwbuffer-store-without-globallycoherent](rwbuffer-store-without-globallycoherent.md) — companion coherence rule for non-SER UAVs
 - Related rule: [barrier-in-divergent-cf](barrier-in-divergent-cf.md) — companion barrier-correctness rule
 - HLSL specification: [proposal 0027 Shader Execution Reordering](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0027-shader-execution-reordering.md)
-- Companion blog post: _not yet published_
+- Companion blog post: [ser overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

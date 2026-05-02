@@ -72,7 +72,7 @@ none
 - Related rule: [discard-after-heavy-work](discard-after-heavy-work.md) — `discard` placement that wastes already-computed work
 - Related rule: [wave-intrinsic-helper-lane-hazard](wave-intrinsic-helper-lane-hazard.md) — wave operations after `discard`
 - HLSL attribute reference: `[earlydepthstencil]` in the DirectX HLSL specification
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

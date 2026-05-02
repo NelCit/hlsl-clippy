@@ -9,7 +9,7 @@ phase: 4
 
 # redundant-computation-in-branch
 
-> **Status:** pre-v0 — rule scheduled for Phase 4; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 4) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -104,7 +104,7 @@ none
 - Related rule: [cbuffer-load-in-loop](cbuffer-load-in-loop.md) — loop-invariant cbuffer expression reloaded each iteration
 - Related rule: [loop-invariant-sample](loop-invariant-sample.md) — loop-invariant texture sample
 - Related rule: [branch-on-uniform-missing-attribute](branch-on-uniform-missing-attribute.md) — uniform branch missing [branch] attribute
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

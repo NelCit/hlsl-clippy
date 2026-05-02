@@ -69,7 +69,7 @@ psoSubobjects.push_back({ D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG,
 - Related rule: [live-state-across-traceray](live-state-across-traceray.md) — ray-stack spills compound with recursion depth
 - Related rule: [missing-accept-first-hit](missing-accept-first-hit.md) — shadow PSOs should pair `MaxTraceRecursionDepth = 1` with first-hit termination
 - DXR specification: `D3D12_RAYTRACING_PIPELINE_CONFIG` subobject documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [dxr overview](../blog/mesh-dxr-overview.md)
 
 ---
 

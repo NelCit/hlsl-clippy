@@ -9,7 +9,7 @@ phase: 4
 
 # wave-intrinsic-non-uniform
 
-> **Status:** pre-v0 — rule scheduled for Phase 4; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 4) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -101,7 +101,7 @@ none
 - Related rule: [wave-intrinsic-helper-lane-hazard](wave-intrinsic-helper-lane-hazard.md) — helper-lane participation in wave ops after `discard`
 - Related rule: [wave-active-all-equal-precheck](wave-active-all-equal-precheck.md) — using `WaveActiveAllEqual` to select the uniform fast path
 - HLSL intrinsic reference: `WaveActiveSum`, `WavePrefixSum`, `WaveActiveBallot` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

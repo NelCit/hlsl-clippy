@@ -71,7 +71,7 @@ none
 - Related rule: [omm-rayquery-force-2state-without-allow-flag](omm-rayquery-force-2state-without-allow-flag.md) — companion OMM rule
 - Related rule: [omm-traceray-force-omm-2state-without-pipeline-flag](omm-traceray-force-omm-2state-without-pipeline-flag.md) — companion OMM rule
 - HLSL specification: [proposal 0024 Opacity Micromaps](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0024-opacity-micromaps.md)
-- Companion blog post: _not yet published_
+- Companion blog post: [opacity-micromaps overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

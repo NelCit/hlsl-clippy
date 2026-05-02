@@ -67,7 +67,7 @@ none
 - Related rule: [wavesize-attribute-missing](wavesize-attribute-missing.md) — wave intrinsics without `[WaveSize]`
 - Related rule: [wavesize-fixed-on-sm68-target](wavesize-fixed-on-sm68-target.md) — fixed `[WaveSize(N)]` on SM 6.8 target
 - HLSL specification: [SM 6.8 WaveSize range form](https://microsoft.github.io/DirectX-Specs/d3d/HLSL_ShaderModel6_8.html)
-- Companion blog post: _not yet published_
+- Companion blog post: [wave-helper-lane overview](../blog/wave-helper-lane-overview.md)
 
 ---
 

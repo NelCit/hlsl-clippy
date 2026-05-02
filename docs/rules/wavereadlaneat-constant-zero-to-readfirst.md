@@ -67,7 +67,7 @@ none
 - Related rule: [wave-intrinsic-helper-lane-hazard](wave-intrinsic-helper-lane-hazard.md) — surfaces the helper-lane interaction with wave intrinsics in pixel shaders
 - Related rule: [wave-active-all-equal-precheck](wave-active-all-equal-precheck.md) — companion rule for redundant `WaveActiveAllEqual` calls before a broadcast
 - HLSL intrinsic reference: `WaveReadLaneFirst`, `WaveReadLaneAt`, `WaveGetLaneIndex` in the DirectX HLSL Wave Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

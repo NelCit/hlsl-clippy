@@ -65,7 +65,7 @@ void update_min_depth_native(uint slot, float depth) {
 - Related rule: [groupshared-stride-32-bank-conflict](groupshared-stride-32-bank-conflict.md) — groupshared bank conflicts
 - HLSL intrinsic reference: `InterlockedMin`, `InterlockedMax`, `asfloat`, `asuint` in the DirectX HLSL Intrinsics documentation
 - Microsoft DirectX docs: SM 6.6 Atomic64 and Float Atomics
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

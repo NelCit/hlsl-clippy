@@ -78,7 +78,7 @@ none
 - Related rule: [inline-rayquery-when-pipeline-better](inline-rayquery-when-pipeline-better.md) — the opposite-direction sibling rule
 - Related rule: [missing-ray-flag-cull-non-opaque](missing-ray-flag-cull-non-opaque.md) — ray-flag tightening for the same shadow-ray case
 - DXR specification: Inline ray tracing (`RayQuery`) and pipeline ray tracing (`TraceRay`) trade-offs
-- Companion blog post: _not yet published_
+- Companion blog post: [dxr overview](../blog/mesh-dxr-overview.md)
 
 ---
 

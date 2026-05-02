@@ -78,7 +78,7 @@ This rule is gated behind `[experimental] work-graph-mesh-nodes = true` in `.hls
 - Related rule: [mesh-node-missing-output-topology](mesh-node-missing-output-topology.md) — companion mesh-node validation
 - Related rule: [nodeid-implicit-mismatch](nodeid-implicit-mismatch.md) — companion work-graph validation
 - D3D12 specification: [Mesh nodes in work graphs (preview)](https://devblogs.microsoft.com/directx/d3d12-mesh-nodes-in-work-graphs/)
-- Companion blog post: _not yet published_
+- Companion blog post: [work-graphs overview](../blog/mesh-dxr-overview.md)
 
 ---
 

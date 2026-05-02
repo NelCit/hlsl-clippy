@@ -68,7 +68,7 @@ none
 - Related rule: [lerp-extremes](lerp-extremes.md) — flags `lerp(a, b, 0)` and `lerp(a, b, 1)` constant-fold opportunities
 - Related rule: [manual-mad-decomposition](manual-mad-decomposition.md) — surfaces hand-written MAD chains that should be a single `mad`
 - HLSL intrinsic reference: `lerp`, `mad` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

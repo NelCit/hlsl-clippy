@@ -83,7 +83,7 @@ none
 - Related rule: [redundant-saturate](redundant-saturate.md) — detects `saturate(saturate(x))` and is related because `abs(saturate(x))` is another form of redundant wrapping
 - Related rule: [clamp01-to-saturate](clamp01-to-saturate.md) — replaces `clamp(x, 0.0, 1.0)` with `saturate(x)`, after which this rule may fire on the `abs` wrapper
 - HLSL intrinsic reference: `abs`, `saturate`, `dot` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.2.0 release_
+- Companion blog post: [saturate-redundancy overview](../blog/math-overview.md)
 
 ---
 

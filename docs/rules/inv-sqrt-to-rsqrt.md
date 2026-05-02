@@ -9,7 +9,7 @@ phase: 2
 
 # inv-sqrt-to-rsqrt
 
-> **Status:** pre-v0 — rule scheduled for Phase 2; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 2) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -64,7 +64,7 @@ none
 
 - Related rule: [length-comparison](length-comparison.md) — avoids `length()` entirely for comparisons via `dot(v,v)`
 - HLSL intrinsic reference: `rsqrt`, `sqrt` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

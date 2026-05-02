@@ -72,7 +72,7 @@ none
 - Related rule: [meshlet-vertex-count-bad](meshlet-vertex-count-bad.md) — meshlet shape that under-utilises the slot budget
 - Related rule: [as-payload-over-16k](as-payload-over-16k.md) — amplification-payload cap
 - D3D12 specification: Mesh Shader output cap (256 vertices, 256 primitives)
-- Companion blog post: _not yet published_
+- Companion blog post: [mesh overview](../blog/mesh-dxr-overview.md)
 
 ---
 

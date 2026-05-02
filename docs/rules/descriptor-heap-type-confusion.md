@@ -9,7 +9,7 @@ phase: 3
 
 # descriptor-heap-type-confusion
 
-> **Status:** pre-v0 — rule scheduled for Phase 3; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 3) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -68,7 +68,7 @@ none
 - Related rule: [non-uniform-resource-index](non-uniform-resource-index.md) — missing `NonUniformResourceIndex` on array-of-texture parameters
 - D3D12 specification: `D3D12_DESCRIPTOR_HEAP_TYPE`, descriptor heap creation, SM 6.6 heap indexing
 - DirectX-Specs: Shader Model 6.6 — Direct Heap Access — heap type requirements
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

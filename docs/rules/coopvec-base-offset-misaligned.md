@@ -75,7 +75,7 @@ none
 - Related rule: [byteaddressbuffer-load-misaligned](byteaddressbuffer-load-misaligned.md) — same alignment principle for ByteAddressBuffer widened loads
 - Related rule: [long-vector-bytebuf-load-misaligned](long-vector-bytebuf-load-misaligned.md) — sibling alignment rule for long-vector loads
 - HLSL specification: [proposal 0029 Cooperative Vector](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0029-cooperative-vector.md)
-- Companion blog post: _not yet published_
+- Companion blog post: [cooperative-vector overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

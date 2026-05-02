@@ -72,7 +72,7 @@ none
 - Related rule: [static-sampler-when-dynamic-used](static-sampler-when-dynamic-used.md) — same descriptor-heap-vs-root-binding tradeoff for samplers
 - Related rule: [cbuffer-padding-hole](cbuffer-padding-hole.md) — cbuffer layout efficiency
 - D3D12 reference: `D3D12_ROOT_PARAMETER_TYPE_CBV` and the root-signature size budget documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

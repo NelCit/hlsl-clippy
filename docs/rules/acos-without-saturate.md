@@ -66,7 +66,7 @@ none
 - Related rule: [sqrt-of-potentially-negative](sqrt-of-potentially-negative.md) — `sqrt` of signed expressions
 - Related rule: [redundant-saturate](redundant-saturate.md) — when a `saturate` is already in place
 - HLSL intrinsic reference: `acos`, `asin`, `clamp`, `saturate` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

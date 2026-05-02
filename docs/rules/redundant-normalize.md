@@ -57,7 +57,7 @@ none
 - Related rule: [redundant-saturate](redundant-saturate.md) — detects `saturate(saturate(x))` by the same idempotence argument
 - Related rule: [redundant-transpose](redundant-transpose.md) — detects `transpose(transpose(M))` which is the matrix equivalent of this pattern
 - HLSL intrinsic reference: `normalize`, `rsqrt`, `dot` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.2.0 release_
+- Companion blog post: [saturate-redundancy overview](../blog/math-overview.md)
 
 ---
 

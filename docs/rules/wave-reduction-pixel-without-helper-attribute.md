@@ -68,7 +68,7 @@ none
 - Related rule: [wave-intrinsic-helper-lane-hazard](wave-intrinsic-helper-lane-hazard.md) — companion helper-lane rule
 - Related rule: [derivative-in-divergent-cf](derivative-in-divergent-cf.md) — companion derivative-correctness rule
 - HLSL specification: [SM 6.7 WaveOpsIncludeHelperLanes attribute](https://microsoft.github.io/DirectX-Specs/d3d/HLSL_ShaderModel6_7.html)
-- Companion blog post: _not yet published_
+- Companion blog post: [wave-helper-lane overview](../blog/wave-helper-lane-overview.md)
 
 ---
 

@@ -9,7 +9,7 @@ phase: 3
 
 # rov-without-earlydepthstencil
 
-> **Status:** pre-v0 — rule scheduled for Phase 3; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 3) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -73,7 +73,7 @@ none
 - HLSL `[earlydepthstencil]` attribute documentation in the DirectX HLSL reference
 - D3D12 specification: Rasterizer-Ordered Views — ordering semantics and depth-test interaction
 - NVIDIA developer documentation: ROV performance guidelines and `EarlyDepthStencil` interaction
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

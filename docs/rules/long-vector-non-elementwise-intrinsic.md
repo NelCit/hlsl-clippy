@@ -57,7 +57,7 @@ none
 - Related rule: [long-vector-in-cbuffer-or-signature](long-vector-in-cbuffer-or-signature.md) — long vectors not allowed at IO boundaries
 - Related rule: [long-vector-typed-buffer-load](long-vector-typed-buffer-load.md) — long vectors not allowed in typed-buffer loads
 - HLSL specification: [proposal 0030 DXIL vectors](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0030-dxil-vectors.md)
-- Companion blog post: _not yet published_
+- Companion blog post: [long-vectors overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

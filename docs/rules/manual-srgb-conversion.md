@@ -66,7 +66,7 @@ none
 - Related rule: [bgra-rgba-swizzle-mismatch](bgra-rgba-swizzle-mismatch.md) — companion format-vs-shader-math mismatch
 - Related rule: [redundant-unorm-snorm-conversion](redundant-unorm-snorm-conversion.md) — explicit `* (1.0/255.0)` after a UNORM sample
 - DXGI reference: `DXGI_FORMAT_R8G8B8A8_UNORM_SRGB` and the sRGB conversion semantics table
-- Companion blog post: _not yet published_
+- Companion blog post: [texture overview](../blog/texture-overview.md)
 
 ---
 

@@ -65,7 +65,7 @@ none
 - Related rule: [byteaddressbuffer-load-misaligned](byteaddressbuffer-load-misaligned.md) — alignment hazard for raw widened loads
 - Related rule: [structured-buffer-stride-not-cache-aligned](structured-buffer-stride-not-cache-aligned.md) — stride choice for typed structured buffers
 - HLSL intrinsic reference: `Buffer<T>`, `StructuredBuffer<T>`, `ByteAddressBuffer` resource type documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

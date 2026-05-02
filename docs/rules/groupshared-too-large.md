@@ -76,7 +76,7 @@ threshold-bytes = 32768
 - Related rule: [`numthreads-not-wave-aligned`](numthreads-not-wave-aligned.md) — thread group total not divisible by wave size
 - Related rule: [`numthreads-too-small`](numthreads-too-small.md) — thread group total smaller than minimum wave size
 - HLSL reference: `groupshared` storage class, LDS limits in the DirectX HLSL Shader Model 6.x documentation
-- Companion blog post: _not yet published — will appear alongside the v0.3.0 release_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

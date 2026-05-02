@@ -73,7 +73,7 @@ none
 - Related rule: [groupshared-write-then-no-barrier-read](groupshared-write-then-no-barrier-read.md) — partner rule for the missing-barrier-after-write case
 - Related rule: [barrier-in-divergent-cf](barrier-in-divergent-cf.md) — flags the inverse footgun (a barrier that may not be reached by all lanes)
 - HLSL reference: `groupshared` storage class, `GroupMemoryBarrier`, `GroupMemoryBarrierWithGroupSync`, `globallycoherent` in the DirectX HLSL language reference
-- Companion blog post: _not yet published_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

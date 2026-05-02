@@ -88,7 +88,7 @@ none
 - Related rule: [inline-rayquery-when-pipeline-better](inline-rayquery-when-pipeline-better.md) — choosing between inline RQ and pipeline TraceRay
 - Related rule: [wave-active-all-equal-precheck](wave-active-all-equal-precheck.md) — wave-coherent fast paths
 - Microsoft DirectX docs: DXR — `TraceRay`, payload size, register spill behaviour
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [dxr overview](../blog/mesh-dxr-overview.md)
 
 ---
 

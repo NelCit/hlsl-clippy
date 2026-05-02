@@ -9,7 +9,7 @@ phase: 2
 
 # manual-distance
 
-> **Status:** pre-v0 — rule scheduled for Phase 2; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 2) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -56,7 +56,7 @@ none
 - Related rule: [length-comparison](length-comparison.md) — further optimization: `distance(a, b) < r` → `dot(a-b, a-b) < r*r`
 - Related rule: [inv-sqrt-to-rsqrt](inv-sqrt-to-rsqrt.md) — when the reciprocal distance is needed, prefer `rsqrt(dot(d, d))` over `1.0 / distance(a, b)`
 - HLSL intrinsic reference: `distance`, `length` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

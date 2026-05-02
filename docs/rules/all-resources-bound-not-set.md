@@ -9,7 +9,7 @@ phase: 3
 
 # all-resources-bound-not-set
 
-> **Status:** pre-v0 — rule scheduled for Phase 3; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 3) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -87,7 +87,7 @@ none
 - AMD D3D12 performance guide: resource-binding completeness and the command-processor fast path
 - DXC documentation: `-all-resources-bound` compile flag
 - Slang API: `ICompileRequest` — `AllResourcesBound` session flag
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

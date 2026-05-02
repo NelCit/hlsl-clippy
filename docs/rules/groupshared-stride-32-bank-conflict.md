@@ -72,7 +72,7 @@ void cs_transpose_padded(uint3 dtid : SV_DispatchThreadID, uint gi : SV_GroupInd
 - Related rule: [interlocked-bin-without-wave-prereduce](interlocked-bin-without-wave-prereduce.md) — atomic contention on bins
 - NVIDIA CUDA C++ Best Practices Guide: shared memory bank conflicts (the canonical reference)
 - AMD GPUOpen: RDNA performance guide — LDS section
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

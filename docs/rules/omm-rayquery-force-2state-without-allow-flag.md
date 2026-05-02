@@ -72,7 +72,7 @@ none
 - Related rule: [omm-traceray-force-omm-2state-without-pipeline-flag](omm-traceray-force-omm-2state-without-pipeline-flag.md) — companion OMM rule for pipeline traces
 - Related rule: [missing-ray-flag-cull-non-opaque](missing-ray-flag-cull-non-opaque.md) — ray-flag tightening on a different axis
 - HLSL specification: [proposal 0024 Opacity Micromaps](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0024-opacity-micromaps.md)
-- Companion blog post: _not yet published_
+- Companion blog post: [opacity-micromaps overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

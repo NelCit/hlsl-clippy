@@ -77,7 +77,7 @@ none
 - Related rule: [static-sampler-when-dynamic-used](static-sampler-when-dynamic-used.md) — D3D12 root-signature hygiene
 - D3D12 reference: `D3D12_RESOURCE_BARRIER`, enhanced barriers in the D3D12 Agility SDK documentation
 - Vulkan reference: `VkImageMemoryBarrier`, `VkPipelineStageFlags` in the Vulkan synchronization documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

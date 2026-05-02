@@ -69,7 +69,7 @@ none
 - Related rule: [excess-interpolators](excess-interpolators.md) — interpolator pressure interacts with VRS savings
 - Related rule: [sv-depth-vs-conservative-depth](sv-depth-vs-conservative-depth.md) — `SV_Depth` writes interact with VRS in the same way
 - D3D12 specification: Variable Rate Shading and SV semantic compatibility table
-- Companion blog post: _not yet published_
+- Companion blog post: [vrs overview](../blog/texture-overview.md)
 
 ---
 

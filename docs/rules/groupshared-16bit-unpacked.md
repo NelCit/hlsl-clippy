@@ -72,7 +72,7 @@ none
 - Related rule: [groupshared-union-aliased](groupshared-union-aliased.md) — multiple typed views over the same groupshared offset
 - Related rule: [groupshared-too-large](groupshared-too-large.md) — groupshared occupancy thresholds
 - HLSL reference: `min16float`, `float16_t`, packed-math intrinsics in the DirectX HLSL Shader Model 6.2+ documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

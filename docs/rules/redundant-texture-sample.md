@@ -106,7 +106,7 @@ source line of the second sample; the fix is a one-line change.
   sample result adds one VGPR live range but removes the second TMU issue
 - HLSL intrinsic reference: `Sample`, `SampleLevel`, `SampleGrad` in the
   DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [memory overview](../blog/workgroup-overview.md)
 
 ---
 

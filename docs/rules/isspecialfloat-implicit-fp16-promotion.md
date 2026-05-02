@@ -63,7 +63,7 @@ none
 - Related rule: [isnormal-pre-sm69](isnormal-pre-sm69.md) — sibling SM 6.9 intrinsic
 - Related rule: [min16float-opportunity](min16float-opportunity.md) — fp16 packing perf rule
 - HLSL specification: [SM 6.9 numerical-classification intrinsics](https://microsoft.github.io/DirectX-Specs/d3d/HLSL_ShaderModel6_9.html)
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

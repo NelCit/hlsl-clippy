@@ -69,7 +69,7 @@ none
 
 - Related rule: [`samplelevel-with-zero-on-mipped-tex`](samplelevel-with-zero-on-mipped-tex.md) — related pattern where the mip level is unnecessarily pinned to zero
 - HLSL intrinsic reference: `Buffer<T>`, `StructuredBuffer<T>`, `Texture2D.Load` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.3.0 release_
+- Companion blog post: [texture overview](../blog/texture-overview.md)
 
 ---
 

@@ -80,7 +80,7 @@ void cs_soa_field0(uint gi : SV_GroupIndex) {
 - Related rule: [groupshared-16bit-unpacked](groupshared-16bit-unpacked.md) — packed-math LDS opportunities
 - NVIDIA CUDA C++ Best Practices Guide: shared memory bank conflicts
 - AMD GPUOpen: RDNA performance guide — LDS section
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

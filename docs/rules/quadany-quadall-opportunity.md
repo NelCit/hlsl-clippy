@@ -77,7 +77,7 @@ none
 - Related rule: [derivative-in-divergent-cf](derivative-in-divergent-cf.md) — the underlying hazard
 - Related rule: [wave-intrinsic-helper-lane-hazard](wave-intrinsic-helper-lane-hazard.md) — helper-lane participation issues
 - HLSL intrinsic reference: `QuadAny`, `QuadAll`, `QuadReadLaneAt` (SM 6.7+)
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

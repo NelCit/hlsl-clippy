@@ -9,7 +9,7 @@ phase: 3
 
 # structured-buffer-stride-mismatch
 
-> **Status:** pre-v0 — rule scheduled for Phase 3; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 3) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -81,7 +81,7 @@ none
 - Related rule: [rwresource-read-only-usage](rwresource-read-only-usage.md) — RW resource only ever read — should be demoted to SRV
 - HLSL `StructuredBuffer` stride requirements in the DirectX API reference
 - D3D12 `D3D12_BUFFER_SRV` `StructureByteStride` field documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

@@ -61,7 +61,7 @@ none
 - Related rule: [countbits-vs-manual-popcount](countbits-vs-manual-popcount.md) — pairs with this rule as the bit-counting companion
 - Related rule: [inv-sqrt-to-rsqrt](inv-sqrt-to-rsqrt.md) — same transcendental-unit argument applied to reciprocal square root
 - HLSL intrinsic reference: `firstbithigh`, `firstbitlow` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

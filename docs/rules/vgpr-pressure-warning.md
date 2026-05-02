@@ -108,7 +108,7 @@ the intended computation; the fix is always manual.
   eliminating redundant samples reduces peak live count
 - Related rule: [live-state-across-traceray](live-state-across-traceray.md) — ray
   stack spill from long live ranges crossing TraceRay
-- Companion blog post: _not yet published_
+- Companion blog post: [memory overview](../blog/workgroup-overview.md)
 
 ---
 

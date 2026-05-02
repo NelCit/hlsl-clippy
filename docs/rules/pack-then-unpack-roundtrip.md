@@ -104,7 +104,7 @@ a note about the precision change and applies the fix automatically.
   redundant clamping in packing
 - HLSL reference: `pack_u8`, `unpack_u8u32`, `f32tof16`, `f16tof32` — SM 6.6
   packing intrinsics in the DirectX HLSL Shader Model 6.6 documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [packed-math overview](../blog/math-overview.md)
 
 ---
 

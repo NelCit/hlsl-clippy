@@ -9,7 +9,7 @@ phase: 2
 
 # pow-integer-decomposition
 
-> **Status:** pre-v0 — rule scheduled for Phase 2; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 2) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -82,7 +82,7 @@ float gloss_highlight(float n_dot_h) {
 - Related rule: [pow-const-squared](pow-const-squared.md) — focused treatment of the exponent-2 case
 - Related rule: [pow-base-two-to-exp2](pow-base-two-to-exp2.md) — handles `pow(2.0, x)` → `exp2(x)`
 - HLSL intrinsic reference: `pow`, `exp2`, `log2` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

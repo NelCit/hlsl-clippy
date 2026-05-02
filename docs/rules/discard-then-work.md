@@ -9,7 +9,7 @@ phase: 4
 
 # discard-then-work
 
-> **Status:** pre-v0 — rule scheduled for Phase 4; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 4) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -93,7 +93,7 @@ none
 - Related rule: [wave-intrinsic-helper-lane-hazard](wave-intrinsic-helper-lane-hazard.md) — wave intrinsics in PS where helper lanes may participate
 - HLSL intrinsic reference: `discard`, `clip` in the DirectX HLSL Intrinsics documentation
 - DirectX Specification: helper-lane semantics in the SM 6.x pixel-shader execution model
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

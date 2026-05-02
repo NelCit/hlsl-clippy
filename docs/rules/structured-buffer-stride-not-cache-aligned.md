@@ -76,7 +76,7 @@ cache-line-target = 64
 - Related rule: [byteaddressbuffer-load-misaligned](byteaddressbuffer-load-misaligned.md) — alignment hazard on the raw-byte path
 - Related rule: [structured-buffer-stride-mismatch](structured-buffer-stride-mismatch.md) — HLSL packing-rule mismatch with declared stride
 - HLSL reference: structured buffer layout rules in the DirectX HLSL Shader Model 6.x documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

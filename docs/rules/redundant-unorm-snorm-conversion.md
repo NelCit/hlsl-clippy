@@ -72,7 +72,7 @@ none
 - Related rule: [unpack-then-repack](unpack-then-repack.md) — companion rule for round-trip pack/unpack of integer-typed buffer payloads
 - HLSL reference: UNORM / SNORM sampling semantics, `Texture2D.Sample`, `Texture2D.Load` in the DirectX HLSL language reference
 - DXGI format reference: `DXGI_FORMAT_R8_UNORM`, `DXGI_FORMAT_R8G8B8A8_UNORM`, `DXGI_FORMAT_R16_UNORM`, `DXGI_FORMAT_R8_SNORM`
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

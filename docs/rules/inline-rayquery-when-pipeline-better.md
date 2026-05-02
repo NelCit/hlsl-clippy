@@ -88,7 +88,7 @@ void ah_foliage(inout ShadowPayload pl, in BuiltInTriangleIntersectionAttributes
 - Related rule: [anyhit-heavy-work](anyhit-heavy-work.md) — heavy any-hit work
 - NVIDIA developer blog: SER on Ada — when pipeline RT wins
 - Microsoft DirectX docs: Inline Ray Queries (SM 6.5)
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [dxr overview](../blog/mesh-dxr-overview.md)
 
 ---
 

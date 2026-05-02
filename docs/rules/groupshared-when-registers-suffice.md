@@ -77,7 +77,7 @@ void main(uint tid : SV_GroupThreadID) {
 - Related rule: [vgpr-pressure-warning](vgpr-pressure-warning.md) — companion register-pressure rule
 - Related rule: [groupshared-too-large](groupshared-too-large.md) — companion LDS budget rule
 - Related rule: [scratch-from-dynamic-indexing](scratch-from-dynamic-indexing.md) — when register promotion fails
-- Companion blog post: _not yet published_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

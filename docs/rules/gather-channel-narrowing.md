@@ -79,7 +79,7 @@ none
 
 - Related rule: [`gather-cmp-vs-manual-pcf`](gather-cmp-vs-manual-pcf.md) — shadow-map PCF using `GatherCmp` instead of multiple `SampleCmp` calls
 - HLSL intrinsic reference: `Texture2D.Gather`, `Texture2D.GatherRed`, `Texture2D.GatherGreen`, `Texture2D.GatherBlue`, `Texture2D.GatherAlpha` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.3.0 release_
+- Companion blog post: [texture overview](../blog/texture-overview.md)
 
 ---
 

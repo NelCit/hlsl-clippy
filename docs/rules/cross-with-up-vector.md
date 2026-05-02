@@ -74,7 +74,7 @@ none
 - Related rule: [dot-on-axis-aligned-vector](dot-on-axis-aligned-vector.md) — companion rule for `dot` with axis-aligned constants
 - Related rule: [mul-identity](mul-identity.md) — broader family of multiplication-by-constant simplifications
 - HLSL intrinsic reference: `cross`, vector swizzle syntax in the DirectX HLSL language reference
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

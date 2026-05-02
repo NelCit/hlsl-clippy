@@ -9,7 +9,7 @@ phase: 2
 
 # lerp-extremes
 
-> **Status:** pre-v0 — rule scheduled for Phase 2; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 2) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -64,7 +64,7 @@ none
 
 - Related rule: [mul-identity](mul-identity.md) — analogous dead-arithmetic elimination for `x*1`, `x+0`, `x*0`
 - HLSL intrinsic reference: `lerp` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [math overview](../blog/math-overview.md)
 
 ---
 

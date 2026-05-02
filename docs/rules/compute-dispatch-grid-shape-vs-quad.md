@@ -64,7 +64,7 @@ none
 - Related rule: [numthreads-not-wave-aligned](numthreads-not-wave-aligned.md) — thread-group total vs wave size
 - Related rule: [wavesize-attribute-missing](wavesize-attribute-missing.md) — wave-size dependence in the same family
 - HLSL reference: compute-quad derivatives in the DirectX HLSL Shader Model 6.6 documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

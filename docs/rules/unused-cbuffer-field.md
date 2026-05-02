@@ -9,7 +9,7 @@ phase: 3
 
 # unused-cbuffer-field
 
-> **Status:** pre-v0 — rule scheduled for Phase 3; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 3) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -75,7 +75,7 @@ none
 - Related rule: [cbuffer-padding-hole](cbuffer-padding-hole.md) — alignment gaps that may grow after field removal
 - Related rule: [oversized-cbuffer](oversized-cbuffer.md) — cbuffer exceeds the default 4 KB threshold
 - Related rule: [cbuffer-fits-rootconstants](cbuffer-fits-rootconstants.md) — removing unused fields may shrink the cbuffer to root-constant size
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

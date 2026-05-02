@@ -9,7 +9,7 @@ phase: 3
 
 # cbuffer-divergent-index
 
-> **Status:** pre-v0 — rule scheduled for Phase 3; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 3) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -73,7 +73,7 @@ none
 - Related rule: [cbuffer-padding-hole](cbuffer-padding-hole.md) — alignment gaps in cbuffer layouts
 - NVIDIA developer documentation: "Divergent Constant Buffer Accesses" (Turing architecture optimization guide)
 - HLSL `StructuredBuffer` vs `ConstantBuffer` access pattern documentation
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

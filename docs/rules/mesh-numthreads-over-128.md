@@ -72,7 +72,7 @@ none
 - Related rule: [as-payload-over-16k](as-payload-over-16k.md) — amplification-payload cap (16 KB)
 - Related rule: [meshlet-vertex-count-bad](meshlet-vertex-count-bad.md) — meshlet shape that under-utilises the vertex slot budget
 - D3D12 specification: Mesh Shader thread-group size limits (SM 6.5)
-- Companion blog post: _not yet published_
+- Companion blog post: [mesh overview](../blog/mesh-dxr-overview.md)
 
 ---
 

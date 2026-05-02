@@ -9,7 +9,7 @@ phase: 4
 
 # small-loop-no-unroll
 
-> **Status:** pre-v0 — rule scheduled for Phase 4; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 4) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -86,7 +86,7 @@ float4 ps_box_blur_3_unrolled(float2 uv : TEXCOORD0, float4 pos : SV_Position) :
 - Related rule: [loop-invariant-sample](loop-invariant-sample.md) — texture sample inside a loop with loop-invariant UV
 - Related rule: [cbuffer-load-in-loop](cbuffer-load-in-loop.md) — loop-invariant cbuffer field reload each iteration
 - HLSL attribute reference: `[unroll]`, `[unroll(N)]`, `[loop]` in the DirectX HLSL Attributes documentation
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 

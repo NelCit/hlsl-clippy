@@ -9,7 +9,7 @@ phase: 3
 
 # rwresource-read-only-usage
 
-> **Status:** pre-v0 — rule scheduled for Phase 3; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 3) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -82,7 +82,7 @@ none
 - Related rule: [dead-store-sv-target](dead-store-sv-target.md) — `SV_Target` written and immediately overwritten
 - D3D12 resource state documentation: `D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE` vs `D3D12_RESOURCE_STATE_UNORDERED_ACCESS`
 - AMD RDNA DCC (Delta Colour Compression) — requires SRV-only usage to stay active
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

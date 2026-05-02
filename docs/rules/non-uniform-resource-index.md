@@ -9,7 +9,7 @@ phase: 3
 
 # non-uniform-resource-index
 
-> **Status:** pre-v0 — rule scheduled for Phase 3; see [ROADMAP](../../ROADMAP.md).
+> **Status:** shipped (Phase 3) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 
@@ -74,7 +74,7 @@ none
 - Related rule: [descriptor-heap-type-confusion](descriptor-heap-type-confusion.md) — sampler fetched from the wrong heap type
 - HLSL SM 5.1 specification: `NonUniformResourceIndex` intrinsic
 - DXIL specification: non-uniform resource index requirements
-- Companion blog post: _not yet published_
+- Companion blog post: [bindings overview](../blog/bindings-overview.md)
 
 ---
 

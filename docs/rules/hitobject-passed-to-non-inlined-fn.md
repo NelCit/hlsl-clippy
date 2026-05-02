@@ -73,7 +73,7 @@ none
 - Related rule: [hitobject-construct-outside-allowed-stages](hitobject-construct-outside-allowed-stages.md) — sibling rule
 - Related rule: [hitobject-invoke-after-recursion-cap](hitobject-invoke-after-recursion-cap.md) — recursion cap on the Invoke side
 - HLSL specification: [proposal 0027 Shader Execution Reordering](https://github.com/microsoft/hlsl-specs/blob/main/proposals/0027-shader-execution-reordering.md)
-- Companion blog post: _not yet published_
+- Companion blog post: [ser overview](../blog/ser-coop-vector-overview.md)
 
 ---
 

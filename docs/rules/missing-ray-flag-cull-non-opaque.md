@@ -73,7 +73,7 @@ none
 - Related rule: [missing-accept-first-hit](missing-accept-first-hit.md) — shadow rays should also accept the first hit
 - Related rule: [tracerray-conditional](tracerray-conditional.md) — `TraceRay` inside non-uniform CF
 - DXR specification: Ray flags table (`RAY_FLAG_CULL_NON_OPAQUE`)
-- Companion blog post: _not yet published_
+- Companion blog post: [dxr overview](../blog/mesh-dxr-overview.md)
 
 ---
 

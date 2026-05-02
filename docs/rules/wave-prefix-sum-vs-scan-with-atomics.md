@@ -89,7 +89,7 @@ none
 - Related rule: [manual-wave-reduction-pattern](manual-wave-reduction-pattern.md) — reduction sibling rule
 - Related rule: [interlocked-bin-without-wave-prereduce](interlocked-bin-without-wave-prereduce.md) — small-bin pre-reduce
 - HLSL intrinsic reference: `WavePrefixSum`, `WaveActiveSum`, `WaveGetLaneCount`
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [workgroup overview](../blog/workgroup-overview.md)
 
 ---
 

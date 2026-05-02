@@ -82,7 +82,7 @@ none
 - Related rule: [setmeshoutputcounts-in-divergent-cf](setmeshoutputcounts-in-divergent-cf.md) — analogous unconditional-call requirement in mesh shaders
 - Related rule: [quad-or-derivative-in-thread-launch-node](quad-or-derivative-in-thread-launch-node.md) — work-graph thread-launch-node restrictions
 - Microsoft DirectX docs: Work Graphs — `OutputComplete`, record lifetime
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [work-graphs overview](../blog/mesh-dxr-overview.md)
 
 ---
 

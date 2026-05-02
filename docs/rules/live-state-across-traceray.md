@@ -125,7 +125,7 @@ identifies the spilled variables and their sizes; the fix is always manual.
   control flow around TraceRay extends live ranges further
 - DXR specification: "Shader Execution Reordering" and payload life-cycle in
   the DirectX Raytracing specification
-- Companion blog post: _not yet published_
+- Companion blog post: [memory overview](../blog/workgroup-overview.md)
 
 ---
 

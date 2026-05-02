@@ -72,7 +72,7 @@ none
 - Related rule: [derivative-in-divergent-cf](derivative-in-divergent-cf.md) — explicit `ddx`/`ddy` in divergent CF
 - Related rule: [wave-intrinsic-helper-lane-hazard](wave-intrinsic-helper-lane-hazard.md) — quad-lane helper participation hazards
 - HLSL intrinsic reference: `Sample`, `SampleLevel`, `SampleGrad` in the DirectX HLSL Intrinsics documentation
-- Companion blog post: _not yet published — will appear alongside the v0.4.0 release_
+- Companion blog post: [control-flow overview](../blog/control-flow-overview.md)
 
 ---
 
