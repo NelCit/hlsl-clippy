@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "hlsl_clippy/diagnostic.hpp"
+#include "hlsl_clippy/language.hpp"
 #include "hlsl_clippy/rule.hpp"
 
 namespace hlsl_clippy {
@@ -79,6 +80,14 @@ struct Config {
     /// Out-of-range / non-numeric values fall back to the default and
     /// surface a `warnings` entry.
     float div_epsilon_value = k_default_div_epsilon;
+    /// `[lint] source-language` (ADR 0020 sub-phase A — v1.3.0). Selects
+    /// which frontend the orchestrator engages: `Auto` (default) infers
+    /// from the file extension, `Hlsl` forces tree-sitter-hlsl + Slang
+    /// HLSL frontend, `Slang` skips AST + CFG dispatch and runs only the
+    /// Reflection-stage rules through Slang's native Slang frontend.
+    /// Out-of-range / non-string values fall back to `Auto` and surface a
+    /// `warnings` entry.
+    SourceLanguage source_language_value = SourceLanguage::Auto;
     /// Soft warnings collected while parsing the config. Each entry is a
     /// human-readable single-line message; the driver renders them as
     /// `clippy::config` `Severity::Warning` diagnostics. Hard parse errors
@@ -108,6 +117,15 @@ struct Config {
     /// `k_default_div_epsilon` (1e-6).
     [[nodiscard]] float div_epsilon() const noexcept {
         return div_epsilon_value;
+    }
+
+    /// Configured `[lint] source-language` (ADR 0020 sub-phase A — v1.3.0).
+    /// Default `SourceLanguage::Auto`. The orchestrator passes this through
+    /// `resolve_language()` together with the file path to decide whether
+    /// AST + CFG rules dispatch (HLSL) or skip with a one-shot
+    /// `clippy::language-skip-ast` notice (Slang).
+    [[nodiscard]] SourceLanguage source_language() const noexcept {
+        return source_language_value;
     }
 };
 

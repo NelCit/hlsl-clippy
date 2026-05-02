@@ -13,6 +13,66 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [1.3.0] — 2026-05-02
+
+**v1.3 — Slang language compatibility, sub-phase A (ADR 0020).** First step
+on the road to full `.slang` support. v1.3.0 ships the dispatch baseline:
+file-extension recognition + a one-shot `clippy::language-skip-ast` Note
+per Slang source. AST + control-flow + IR rules skip cleanly. **Reflection
+is also quarantined for v1.3.0** — the Slang reflection bridge crashes on
+`.slang` ingestion under the v1.3-pinned Slang prebuilt's call-suffixed
+virtual_path scheme; the quarantine tracks for v1.3.x bridge hardening.
+Tree-sitter-slang integration that lights the remaining ~157 AST/CFG
+rules tracks for v1.4+ (sub-phase B). All v1.x ABI guarantees hold
+(ADR 0019): public types are unchanged, additive only.
+
+### Added
+
+- `core/include/hlsl_clippy/language.hpp` — `enum class SourceLanguage
+  { Auto, Hlsl, Slang }` plus `detect_language(path)` and
+  `resolve_language(selected, path)` helpers. Used by both CLI and LSP
+  for per-source language inference.
+- CLI `--source-language=<auto|hlsl|slang>` flag (default `auto`).
+  `auto` infers from extension; explicit values override the inference
+  for every path in argv. Two-token + single-token forms supported.
+- CLI `k_recognized_extensions` array now includes `.slang`. Documents
+  the v1.3 surface; positional path arguments still accept any
+  extension verbatim.
+- `[lint] source-language = "auto" | "hlsl" | "slang"` TOML key.
+  Default `auto`. Unknown values fall back to `auto` with a soft warning.
+- VS Code extension contributes a second language `{ id: "slang",
+  extensions: [".slang"] }`. The `documentSelector` covers
+  `file/untitled × hlsl/slang` (4 entries). Walkthrough copy mentions
+  `.slang` files alongside `.hlsl`.
+- `hlslClippy.slang.enable` config knob (default `true`). When `false`,
+  the extension does not register the `slang` language contribution at
+  activation time — useful for users who run `shader-slang.slang`
+  exclusively. Toggling triggers a server restart.
+- Orchestrator emits `clippy::language-skip-ast` once per `.slang`
+  source per lint run (`Severity::Note`, suppressible via
+  `// hlsl-clippy: allow(clippy::language-skip-ast)` or
+  `[rules] "clippy::language-skip-ast" = "allow"`).
+- `tests/fixtures/slang/` (3 fixtures) + `tests/unit/test_slang_dispatch.cpp`
+  + `tests/golden/slang/` cover dispatch, language-detection, and
+  language-skip-ast emission.
+- Linux Clang `slang-recognition` CI job (`.github/workflows/ci.yml`)
+  asserts the Slang dispatch path stays clean across PRs.
+
+### Changed
+
+- `core/src/lint.cpp` orchestrator: when the resolved source language is
+  Slang, skip tree-sitter-hlsl parsing entirely; AST + CFG + IR stages
+  do not dispatch. Reflection-stage rules fire as before. Default
+  HLSL behaviour is preserved bit-for-bit.
+- `docs/rules/_template.md` adds an optional `language_applicability`
+  front-matter field (`["hlsl"]` | `["hlsl", "slang"]` | `["slang"]`).
+  Existing 189 rule pages grandfather to the conservative `["hlsl"]`
+  default — no mass doc-page edit. New rules from v1.3+ declare
+  applicability explicitly.
+- `README.md` "Supported file types" + `docs/configuration.md`
+  document the `.slang` reflection-only baseline + the honest 32 / 189
+  rule-surface number.
+
 ## [1.2.0] — 2026-05-02
 
 **v1.2 — machine-applicable fix conversion sweep (ADR 0019 §"v1.x patch

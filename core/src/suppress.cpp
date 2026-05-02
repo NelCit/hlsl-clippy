@@ -32,7 +32,11 @@ constexpr std::string_view k_wildcard_rule = "*";
 
 [[nodiscard]] bool is_ident_char(char c) noexcept {
     const auto u = static_cast<unsigned char>(c);
-    return c == '-' || c == '_' || c == '*' || (std::isalnum(u) != 0);
+    // The colon is part of the `clippy::*` infrastructure-rule namespace
+    // (e.g. `clippy::language-skip-ast`, `clippy::cfg-skip`,
+    // `clippy::reflection`). Accepting it here lets users inline-suppress
+    // the engine notices the same way they suppress regular rules.
+    return c == '-' || c == '_' || c == '*' || c == ':' || (std::isalnum(u) != 0);
 }
 
 /// Skip ASCII spaces and tabs (not newlines), returning the new index.

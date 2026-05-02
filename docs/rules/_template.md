@@ -9,6 +9,24 @@ applicability: machine-applicable
 # the v0.5 line is closed.
 since-version: v0.6.0
 phase: 7
+# `language_applicability` (v1.3+, ADR 0020 sub-phase A) declares which
+# source-language frontends this rule fires on. Accepted values:
+#   - ["hlsl"]            -- HLSL only (default for any rule that consumes
+#                            tree-sitter-hlsl AST or the CFG built over it).
+#   - ["hlsl", "slang"]   -- language-agnostic; fires on both. Typical for
+#                            `Stage::Reflection` rules whose detection logic
+#                            walks `ReflectionInfo` directly (Slang
+#                            normalises HLSL and Slang sources into the same
+#                            reflection shape).
+#   - ["slang"]           -- Slang-only (e.g. v1.5+ rules diagnosing
+#                            generics / interfaces / capabilities).
+# IMPORTANT: rules without this field grandfather to ["hlsl"] only — the
+# conservative default. Existing 189 v1.2 rule pages are NOT mass-edited;
+# their language applicability is documented in ADR 0020 §"Per-rule
+# language applicability" rather than per-page. New rules from v1.3+
+# declare explicitly.
+language_applicability:
+  - hlsl
 # `references` is REQUIRED for rules landing from v0.8 onward (ADR 0018
 # §5 criterion #4). At least 2 entries — primary sources for the GPU
 # mechanism the rule detects: IHV architecture guides, HLSL specs,

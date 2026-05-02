@@ -33,7 +33,31 @@ let inlineDecorationTypes: {
     info: vscode.TextEditorDecorationType;
 } | undefined;
 
-const k_languageId = "hlsl";
+// ADR 0020 sub-phase A — v1.3.0. The extension contributes both the `hlsl`
+// and `slang` languages so users opening a `.slang` file see Reflection-stage
+// diagnostics on day one. AST + CFG rules silently skip on `.slang` sources
+// (the LSP server emits a one-shot `clippy::language-skip-ast` notice the
+// first time a Slang document opens). Users who run the official
+// `shader-slang.slang` extension exclusively can opt out via the
+// `hlslClippy.slang.enable` config knob — when `false`, the activation path
+// strips `slang` from the language-id list before the document selector
+// is built.
+const k_languageIdsAlways = ["hlsl"] as const;
+const k_languageIdSlang = "slang" as const;
+
+function getActiveLanguageIds(): readonly string[] {
+    const enableSlang = vscode.workspace
+        .getConfiguration("hlslClippy")
+        .get<boolean>("slang.enable", true);
+    return enableSlang
+        ? [...k_languageIdsAlways, k_languageIdSlang]
+        : [...k_languageIdsAlways];
+}
+
+function isClippyLanguage(languageId: string): boolean {
+    return getActiveLanguageIds().includes(languageId);
+}
+
 const k_clientId = "hlslClippy";
 const k_clientName = "HLSL Clippy";
 
@@ -219,7 +243,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(
         vscode.commands.registerCommand("hlslClippy.relintDocument", async () => {
             const editor = vscode.window.activeTextEditor;
-            if (!editor || editor.document.languageId !== k_languageId) {
+            if (!editor || !isClippyLanguage(editor.document.languageId)) {
                 void vscode.window.showInformationMessage(
                     "HLSL Clippy: open a .hlsl document to re-lint it.",
                 );
@@ -281,7 +305,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             "hlslClippy.suppressRuleForLine",
             async (ruleArg?: string, lineArg?: number) => {
                 const editor = vscode.window.activeTextEditor;
-                if (!editor || editor.document.languageId !== k_languageId) {
+                if (!editor || !isClippyLanguage(editor.document.languageId)) {
                     void vscode.window.showInformationMessage(
                         "HLSL Clippy: open a .hlsl document to suppress a rule.",
                     );
@@ -334,7 +358,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             "hlslClippy.suppressRuleForFile",
             async (ruleArg?: string) => {
                 const editor = vscode.window.activeTextEditor;
-                if (!editor || editor.document.languageId !== k_languageId) {
+                if (!editor || !isClippyLanguage(editor.document.languageId)) {
                     void vscode.window.showInformationMessage(
                         "HLSL Clippy: open a .hlsl document to suppress a rule.",
                     );
@@ -407,10 +431,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // surfaces our suppress-line / suppress-file / open-docs actions on
     // top of any quick-fix the LSP server already provides. The LSP
     // server's actions come through the language client transparently;
-    // this provider supplements them.
+    // this provider supplements them. ADR 0020 sub-phase A: registered
+    // for both `hlsl` and (when enabled) `slang` documents.
+    const codeActionSelector: vscode.DocumentSelector = getActiveLanguageIds().map(
+        (lang) => ({ scheme: "file", language: lang }),
+    );
     context.subscriptions.push(
         vscode.languages.registerCodeActionsProvider(
-            { scheme: "file", language: k_languageId },
+            codeActionSelector,
             new ClippyAuxCodeActionProvider(),
             {
                 providedCodeActionKinds: [
@@ -430,7 +458,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const fixAllKind = vscode.CodeActionKind.SourceFixAll.append("hlslClippy");
     context.subscriptions.push(
         vscode.languages.registerCodeActionsProvider(
-            { scheme: "file", language: k_languageId },
+            codeActionSelector,
             new ClippyFixAllProvider(fixAllKind),
             {
                 providedCodeActionKinds: [fixAllKind],
@@ -446,7 +474,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(
         vscode.commands.registerCommand("hlslClippy.fixAllInDocument", async () => {
             const editor = vscode.window.activeTextEditor;
-            if (!editor || editor.document.languageId !== k_languageId) {
+            if (!editor || !isClippyLanguage(editor.document.languageId)) {
                 void vscode.window.showInformationMessage(
                     "HLSL Clippy: open a .hlsl document to apply fix-all.",
                 );
@@ -505,7 +533,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 event.affectsConfiguration("hlslClippy.serverPath") ||
                 event.affectsConfiguration("hlslClippy.targetProfile") ||
                 event.affectsConfiguration("hlslClippy.enableReflection") ||
-                event.affectsConfiguration("hlslClippy.enableControlFlow")
+                event.affectsConfiguration("hlslClippy.enableControlFlow") ||
+                event.affectsConfiguration("hlslClippy.slang.enable")
             ) {
                 outputChannel?.appendLine(
                     "[hlsl-clippy] Settings changed; restarting server.",
@@ -517,10 +546,23 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     try {
         await startServer(context);
-        setStatus("ready", "HLSL Clippy: LSP server running. Open a .hlsl / .hlsli file to see diagnostics.");
-        outputChannel.appendLine(
-            "[hlsl-clippy] LSP server ready. Open a .hlsl / .hlsli file to see diagnostics in the Problems panel.",
+        const langs = getActiveLanguageIds();
+        const langSummary = langs.includes("slang")
+            ? ".hlsl / .hlsli / .slang"
+            : ".hlsl / .hlsli";
+        setStatus(
+            "ready",
+            `HLSL Clippy: LSP server running. Open a ${langSummary} file to see diagnostics.`,
         );
+        outputChannel.appendLine(
+            `[hlsl-clippy] LSP server ready. Open a ${langSummary} file to see diagnostics in the Problems panel.`,
+        );
+        if (langs.includes("slang")) {
+            outputChannel.appendLine(
+                "[hlsl-clippy] Also handling .slang files (reflection-only baseline; ADR 0020 " +
+                    "sub-phase A). Set `hlslClippy.slang.enable=false` to defer to shader-slang.slang.",
+            );
+        }
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         outputChannel.appendLine(`[hlsl-clippy] Failed to start: ${message}`);
@@ -571,11 +613,20 @@ async function startServer(context: vscode.ExtensionContext): Promise<void> {
         },
     };
 
+    // ADR 0020 sub-phase A — v1.3.0. The selector covers file/untitled URIs
+    // for every language id we currently handle (`hlsl` always; `slang`
+    // when `hlslClippy.slang.enable` is true). Activation reads the knob
+    // once; toggling it requires a server restart, which the
+    // `onDidChangeConfiguration` handler below already triggers.
+    const activeIds = getActiveLanguageIds();
+    const documentSelector: { scheme: string; language: string }[] = [];
+    for (const id of activeIds) {
+        documentSelector.push({ scheme: "file", language: id });
+        documentSelector.push({ scheme: "untitled", language: id });
+    }
+
     const clientOptions: LanguageClientOptions = {
-        documentSelector: [
-            { scheme: "file", language: k_languageId },
-            { scheme: "untitled", language: k_languageId },
-        ],
+        documentSelector,
         synchronize: {
             // Server-side file watcher will be the canonical one (per ADR 0014
             // §4 — `client/registerCapability` for `**/.hlsl-clippy.toml`),
@@ -765,7 +816,7 @@ function ensureInlineDecorationTypes(): NonNullable<typeof inlineDecorationTypes
 
 function renderInlineDecorations() {
     const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document.languageId !== k_languageId) {
+    if (!editor || !isClippyLanguage(editor.document.languageId)) {
         // Clear decorations on the previously-active editor by setting all
         // ranges to empty; cheap and correct.
         if (inlineDecorationTypes && editor) {

@@ -53,6 +53,23 @@ namespace {
     return std::nullopt;
 }
 
+/// Parse `[lint] source-language` value. Returns `SourceLanguage::Auto`
+/// for empty / unrecognised input. The unrecognised case is reported via
+/// the second tuple element (`true` -> `warnings.push_back` is in order).
+[[nodiscard]] std::pair<SourceLanguage, bool> parse_source_language(
+    std::string_view text) noexcept {
+    if (text.empty() || text == "auto") {
+        return {SourceLanguage::Auto, false};
+    }
+    if (text == "hlsl") {
+        return {SourceLanguage::Hlsl, false};
+    }
+    if (text == "slang") {
+        return {SourceLanguage::Slang, false};
+    }
+    return {SourceLanguage::Auto, true};
+}
+
 /// Parse `[experimental] target` value. Returns `ExperimentalTarget::None`
 /// for empty / unrecognised input. The unrecognised case is reported back
 /// via the second tuple element (`true` -> `warnings.push_back` is in order).
@@ -209,6 +226,39 @@ namespace {
 
         parse_epsilon("compare-epsilon", cfg.compare_epsilon_value, k_default_compare_epsilon);
         parse_epsilon("div-epsilon", cfg.div_epsilon_value, k_default_div_epsilon);
+    }
+
+    // [lint] source-language (v1.3, ADR 0020 sub-phase A).
+    //
+    // Selects which frontend the orchestrator engages for files matched by
+    // this config. Default `auto` -> per-file extension inference. Explicit
+    // `hlsl` / `slang` overrides the per-file inference. Unknown values fall
+    // back to `auto` with a soft warning so an old config never breaks the
+    // lint pipeline.
+    if (const auto* lint = root.get("lint"); lint != nullptr) {
+        const auto* tbl = lint->as_table();
+        if (tbl == nullptr) {
+            return make_error("`lint` must be a table", source);
+        }
+        if (const auto* sl = tbl->get("source-language"); sl != nullptr) {
+            const auto* str = sl->as_string();
+            if (str == nullptr) {
+                return make_error(
+                    "`lint.source-language` must be a string "
+                    "(\"auto\", \"hlsl\", or \"slang\")",
+                    source,
+                    static_cast<std::uint32_t>(sl->source().begin.line),
+                    static_cast<std::uint32_t>(sl->source().begin.column));
+            }
+            const auto [parsed, unknown] = parse_source_language(str->get());
+            cfg.source_language_value = parsed;
+            if (unknown) {
+                std::string msg = "unrecognised `lint.source-language = \"";
+                msg += str->get();
+                msg += "\"`: expected \"auto\", \"hlsl\", or \"slang\"; falling back to \"auto\"";
+                cfg.warnings.push_back(std::move(msg));
+            }
+        }
     }
 
     // [experimental] target

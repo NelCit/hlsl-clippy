@@ -31,6 +31,52 @@ clamp01-to-saturate         = "off"
 Omitting a rule from `[rules]` leaves it at its built-in default
 (shown in the [rules catalog](/rules/)).
 
+## `[lint] source-language` — frontend selection (v1.3+)
+
+Selects which language frontend the orchestrator engages for files
+matched by this config (added in v1.3.0; ADR 0020 sub-phase A).
+
+```toml
+[lint]
+source-language = "auto"   # default — infer from file extension
+# source-language = "hlsl" # force HLSL frontend on every file
+# source-language = "slang" # force Slang frontend on every file
+```
+
+| Value     | Behaviour                                                   |
+|-----------|-------------------------------------------------------------|
+| `"auto"`  | Infer from file extension. `.slang` → Slang, otherwise HLSL.|
+| `"hlsl"`  | Force tree-sitter-hlsl + Slang's HLSL frontend.             |
+| `"slang"` | Skip tree-sitter parse; only run reflection-stage rules.    |
+
+When the resolved language is Slang, the orchestrator skips AST + control-
+flow + IR rule dispatch and emits a one-shot `clippy::language-skip-ast`
+informational diagnostic per source. Tree-sitter-hlsl cannot parse Slang's
+language extensions (`__generic`, `interface`, `extension`,
+`associatedtype`, `import`); tree-sitter-slang integration tracks for
+v1.4+. **Reflection-stage rules are also quarantined for v1.3.0** because
+the Slang reflection bridge crashes on `.slang` ingestion under the
+v1.3-pinned Slang prebuilt — the quarantine lifts in v1.3.x once the
+bridge's call-suffixed virtual_path scheme is hardened. The full plan
+lives in [ADR 0020](https://github.com/NelCit/hlsl-clippy/blob/main/docs/decisions/0020-slang-language-compatibility.md).
+
+The CLI also accepts `--source-language=<auto|hlsl|slang>` per invocation;
+the flag overrides the TOML value when set.
+
+To silence the per-source notice in CI gate-mode logs, suppress
+`clippy::language-skip-ast`:
+
+```toml
+[rules]
+"clippy::language-skip-ast" = "allow"
+```
+
+Or per-source:
+
+```hlsl
+// hlsl-clippy: allow(clippy::language-skip-ast)
+```
+
 ## Severity levels
 
 | Level     | Behaviour                                              |

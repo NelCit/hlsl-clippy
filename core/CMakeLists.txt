@@ -3,6 +3,7 @@ add_library(hlsl_clippy_core STATIC
     src/source.cpp
     src/parser.cpp
     src/lint.cpp
+    src/language.cpp
     src/rule_context.cpp
     src/rewriter.cpp
     src/suppress.cpp

@@ -1,9 +1,9 @@
 {
   "name": "hlsl-clippy",
   "displayName": "HLSL Clippy",
-  "description": "Linter for HLSL — performance + correctness rules beyond what dxc catches.",
+  "description": "Linter for HLSL — performance + correctness rules beyond what dxc catches. Also recognises .slang files (reflection-only baseline; ADR 0020 sub-phase A).",
   "publisher": "nelcit",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.85.0"
@@ -47,6 +47,17 @@
           ".gsh",
           ".hsh",
           ".dsh"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "slang",
+        "aliases": [
+          "Slang",
+          "slang"
+        ],
+        "extensions": [
+          ".slang"
         ],
         "configuration": "./language-configuration.json"
       }
@@ -108,59 +119,59 @@
         {
           "command": "hlslClippy.openRuleDocs",
           "group": "9_hlslClippy@1",
-          "when": "editorLangId == hlsl"
+          "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
           "command": "hlslClippy.suppressRuleForLine",
           "group": "9_hlslClippy@2",
-          "when": "editorLangId == hlsl"
+          "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
           "command": "hlslClippy.suppressRuleForFile",
           "group": "9_hlslClippy@3",
-          "when": "editorLangId == hlsl"
+          "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
           "command": "hlslClippy.fixAllInDocument",
           "group": "9_hlslClippy@4",
-          "when": "editorLangId == hlsl"
+          "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
           "command": "hlslClippy.relintDocument",
           "group": "9_hlslClippy@5",
-          "when": "editorLangId == hlsl"
+          "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
           "command": "hlslClippy.showAllRules",
           "group": "9_hlslClippy@6",
-          "when": "editorLangId == hlsl"
+          "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
           "command": "hlslClippy.showOutput",
           "group": "9_hlslClippy@7",
-          "when": "editorLangId == hlsl"
+          "when": "editorLangId == hlsl || editorLangId == slang"
         }
       ],
       "commandPalette": [
         {
           "command": "hlslClippy.relintDocument",
-          "when": "editorLangId == hlsl"
+          "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
           "command": "hlslClippy.openRuleDocs",
-          "when": "editorLangId == hlsl"
+          "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
           "command": "hlslClippy.suppressRuleForLine",
-          "when": "editorLangId == hlsl"
+          "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
           "command": "hlslClippy.suppressRuleForFile",
-          "when": "editorLangId == hlsl"
+          "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
           "command": "hlslClippy.fixAllInDocument",
-          "when": "editorLangId == hlsl"
+          "when": "editorLangId == hlsl || editorLangId == slang"
         }
       ]
     },
@@ -169,13 +180,13 @@
         "command": "hlslClippy.relintDocument",
         "key": "ctrl+alt+l",
         "mac": "cmd+alt+l",
-        "when": "editorLangId == hlsl"
+        "when": "editorLangId == hlsl || editorLangId == slang"
       },
       {
         "command": "hlslClippy.openRuleDocs",
         "key": "ctrl+alt+d",
         "mac": "cmd+alt+d",
-        "when": "editorLangId == hlsl"
+        "when": "editorLangId == hlsl || editorLangId == slang"
       }
     ],
     "walkthroughs": [
@@ -186,10 +197,11 @@
         "steps": [
           {
             "id": "openHlslFile",
-            "title": "Open an HLSL file",
-            "description": "Open any `.hlsl`, `.hlsli`, `.fx`, `.fxh`, `.vsh`, `.psh`, `.csh`, `.gsh`, `.hsh`, or `.dsh` file in your workspace. The extension activates automatically when one is open.\n\nIf you don't have one handy, [create a new untitled file](command:workbench.action.files.newUntitledFile) and set its language to HLSL via the bottom-right language indicator.",
+            "title": "Open an HLSL or Slang file",
+            "description": "Open any `.hlsl`, `.hlsli`, `.fx`, `.fxh`, `.vsh`, `.psh`, `.csh`, `.gsh`, `.hsh`, `.dsh`, or `.slang` file in your workspace. The extension activates automatically when one is open.\n\n**`.slang` reflection-only baseline (v1.3, ADR 0020 sub-phase A):** ~32 of 189 rules fire on Slang sources today (resource-binding, cbuffer-padding, descriptor-table, format-mismatch). AST + control-flow rules wait on `tree-sitter-slang` integration in v1.4+. Set `hlslClippy.slang.enable=false` to defer to the official `shader-slang.slang` extension exclusively.\n\nIf you don't have one handy, [create a new untitled file](command:workbench.action.files.newUntitledFile) and set its language to HLSL or Slang via the bottom-right language indicator.",
             "completionEvents": [
-              "onLanguage:hlsl"
+              "onLanguage:hlsl",
+              "onLanguage:slang"
             ]
           },
           {
@@ -267,6 +279,11 @@
           "type": "boolean",
           "default": true,
           "description": "Show the HLSL Clippy badge in the status bar (severity-split diagnostic count + click for actions). Disable if your status bar is crowded."
+        },
+        "hlslClippy.slang.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Recognise `.slang` files (ADR 0020 sub-phase A — v1.3+). When `false`, the extension does not handle `.slang` documents — useful when you rely on the official `shader-slang.slang` extension exclusively. Note: `.slang` source-language support is reflection-only on v1.3 (~32 of 189 rules fire); full AST + CFG coverage tracks for v1.4+."
         }
       }
     }

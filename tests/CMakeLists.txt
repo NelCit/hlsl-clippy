@@ -320,6 +320,11 @@ add_executable(hlsl_clippy_unit_tests
     # each `[experimental] target = ...` setting surfaces ≥ 1 matching code.
     unit/test_ihv_target_snapshot.cpp
 
+    # v1.3 — Slang language compatibility, sub-phase A (ADR 0020).
+    # Covers detect_language() + resolve_language() helpers, orchestrator
+    # AST/CFG dispatch gating, and the clippy::language-skip-ast notice.
+    unit/test_slang_dispatch.cpp
+
     # Golden-snapshot regression net (drives `tests/golden/`).
     unit/test_golden_snapshots.cpp
 )

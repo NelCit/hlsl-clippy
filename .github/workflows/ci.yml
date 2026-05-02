@@ -287,6 +287,104 @@ jobs:
           fi
           echo "Smoke test passed."
 
+  # ── Slang-recognition smoke (ADR 0020 sub-phase A — v1.3+) ─────────────
+  # Verifies that `.slang` files dispatch through the reflection-only path
+  # (AST + CFG rules silently skip; `clippy::language-skip-ast` notice
+  # fires once per source). Linux-only — the dispatch logic is
+  # platform-agnostic and the cost of running it across the matrix is
+  # not justified by the marginal coverage. continue-on-error is FALSE
+  # so this is a regular merge gate.
+  slang-recognition:
+    name: Slang recognition (Linux Clang)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: build
+    continue-on-error: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: true
+
+      - name: Restore build cache (Linux)
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: build
+          key: build-ubuntu-latest-${{ hashFiles('CMakeLists.txt', '**/CMakeLists.txt', '.gitmodules', 'cmake/SlangVersion.cmake') }}
+          restore-keys: |
+            build-ubuntu-latest-
+
+      - name: Set up Ninja
+        uses: seanmiddleditch/gha-setup-ninja@96bed6edff20d1dd61ecff9b75cc519d516e6401 # v5
+
+      - name: Install Clang 18 (Linux)
+        run: |
+          wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
+          sudo apt-get install -y libc++-18-dev libc++abi-18-dev
+
+      - name: Cache Slang prebuilt
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/hlsl-clippy/slang
+          key: slang-${{ runner.os }}-${{ hashFiles('cmake/SlangVersion.cmake') }}
+
+      - name: Fetch Slang prebuilt
+        run: bash tools/fetch-slang.sh
+
+      - name: CMake configure
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=clang-18 \
+            -DCMAKE_CXX_COMPILER=clang++-18 \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++"
+
+      - name: Build
+        run: cmake --build build --target hlsl-clippy
+
+      - name: Locate hlsl-clippy binary
+        id: locate
+        run: |
+          set -euo pipefail
+          BIN=""
+          for candidate in \
+              "./build/cli/hlsl-clippy" \
+              "./build/hlsl-clippy"; do
+            if [ -x "$candidate" ]; then
+              BIN="$candidate"
+              break
+            fi
+          done
+          if [ -z "$BIN" ]; then
+            echo "ERROR: could not locate hlsl-clippy binary" >&2
+            exit 1
+          fi
+          echo "bin=$BIN" >> "$GITHUB_OUTPUT"
+
+      - name: Lint Slang fixtures
+        run: |
+          set -euo pipefail
+          BIN="${{ steps.locate.outputs.bin }}"
+          for fixture in tests/fixtures/slang/*.slang; do
+            echo "=== $fixture ==="
+            output=$("$BIN" lint "$fixture" --format=json) || true
+            echo "$output"
+            # (a) at least one diagnostic must fire per fixture (the
+            # clippy::language-skip-ast notice is guaranteed to be there).
+            count=$(echo "$output" | python3 -c "import sys, json; print(len(json.load(sys.stdin)))")
+            if [ "$count" -lt 1 ]; then
+              echo "ERROR: $fixture produced 0 diagnostics; expected >=1." >&2
+              exit 1
+            fi
+            # (b) the language-skip-ast notice MUST be present per source.
+            if ! echo "$output" | python3 -c "import sys, json; sys.exit(0 if any(d.get('rule') == 'clippy::language-skip-ast' for d in json.load(sys.stdin)) else 1)"; then
+              echo "ERROR: $fixture is missing the clippy::language-skip-ast notice." >&2
+              exit 1
+            fi
+          done
+          echo "All Slang fixtures dispatched through the reflection-only path."
+
   # ── Coverage (Linux Clang + llvm-cov + Codecov) ────────────────────────
   # ADR 0005 §"Coverage gate" promised this; CLAUDE.md status block calls
   # for 60% baseline rising to 80% by Phase 4. We instrument core/ only —

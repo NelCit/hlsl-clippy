@@ -20,6 +20,7 @@
 
 #include "hlsl_clippy/config.hpp"
 #include "hlsl_clippy/diagnostic.hpp"
+#include "hlsl_clippy/language.hpp"
 #include "hlsl_clippy/lint.hpp"
 #include "hlsl_clippy/rewriter.hpp"
 #include "hlsl_clippy/rule.hpp"
@@ -40,6 +41,26 @@ enum class OutputFormat : std::uint8_t {
 };
 // NOLINTEND(readability-identifier-naming)
 
+// File extensions the CLI recognises by default. The list is informational
+// today (positional path arguments accept any extension verbatim — no
+// whitelist filtering happens) and is consumed by `--source-language=auto`
+// inference inside `core/src/language.cpp`. Adding `.slang` here documents
+// the v1.3 surface (ADR 0020 sub-phase A) and pre-positions the list for
+// future glob-walking work (e.g. `hlsl-clippy lint --recursive shaders/`).
+constexpr std::array<std::string_view, 11> k_recognized_extensions = {
+    ".hlsl",
+    ".hlsli",
+    ".fx",
+    ".fxh",
+    ".vsh",
+    ".psh",
+    ".csh",
+    ".gsh",
+    ".hsh",
+    ".dsh",
+    ".slang",
+};
+
 void print_usage() {
     std::cout << "hlsl-clippy " << hlsl_clippy::version() << "\n"
               << "Usage: hlsl-clippy <command> [args]\n"
@@ -47,7 +68,9 @@ void print_usage() {
               << "Commands:\n"
               << "  lint <file>...  [--fix] [--config <path>] [--target-profile <p>]\n"
               << "                  [--format=<human|json|github-annotations>]\n"
-              << "                Lint one or more HLSL source files. Multi-file\n"
+              << "                  [--source-language=<auto|hlsl|slang>]\n"
+              << "                Lint one or more HLSL or Slang source files.\n"
+              << "                Multi-file\n"
               << "                invocation amortizes Slang init / rule registry\n"
               << "                / reflection cache across all files in one process\n"
               << "                (3-10x speedup vs N separate invocations on a\n"
@@ -63,6 +86,11 @@ void print_usage() {
               << "                  github-annotations     ::warning file=...:: lines\n"
               << "                When $GITHUB_ACTIONS=true and --format is unset,\n"
               << "                github-annotations is selected automatically.\n"
+              << "                With --source-language, force a frontend\n"
+              << "                (default: auto, infers from extension).\n"
+              << "                On `.slang` sources only Reflection-stage rules\n"
+              << "                fire; tree-sitter-hlsl cannot parse Slang's\n"
+              << "                language extensions (ADR 0020 sub-phase A).\n"
               << "  --help        Print this help\n"
               << "  --version     Print version\n";
 }
@@ -266,6 +294,23 @@ void render_github_annotation(const hlsl_clippy::Diagnostic& diag,
     return std::nullopt;
 }
 
+// Parse `--source-language=<auto|hlsl|slang>` (ADR 0020 sub-phase A).
+// `auto` (default) defers the decision to per-file extension inference;
+// explicit values force the corresponding frontend regardless of extension.
+[[nodiscard]] std::optional<hlsl_clippy::SourceLanguage> parse_source_language(
+    std::string_view value) noexcept {
+    if (value == "auto") {
+        return hlsl_clippy::SourceLanguage::Auto;
+    }
+    if (value == "hlsl") {
+        return hlsl_clippy::SourceLanguage::Hlsl;
+    }
+    if (value == "slang") {
+        return hlsl_clippy::SourceLanguage::Slang;
+    }
+    return std::nullopt;
+}
+
 // Auto-detect: if the user did not pass `--format`, default to
 // `github-annotations` when running inside a GitHub Actions runner so
 // `hlsl-clippy lint shader.hlsl` Just Works as a CI step. Outside Actions,
@@ -284,6 +329,10 @@ struct LintOptions {
     std::string config_path;             ///< Empty means walk-up resolution.
     std::string target_profile;          ///< Empty means per-stage default profile.
     std::optional<OutputFormat> format;  ///< std::nullopt → resolve via env at runtime.
+    /// `--source-language=<auto|hlsl|slang>` (ADR 0020 sub-phase A — v1.3).
+    /// `Auto` defers to per-file extension inference; explicit `Hlsl` or
+    /// `Slang` overrides the inference for every path passed in argv.
+    hlsl_clippy::SourceLanguage source_language = hlsl_clippy::SourceLanguage::Auto;
 };
 
 [[nodiscard]] std::string read_file(const std::filesystem::path& path) {
@@ -383,9 +432,25 @@ struct PerFileResult {
         lint_options.target_profile = opts.target_profile;
     }
 
+    // ADR 0020 sub-phase A: if the CLI passed an explicit
+    // `--source-language=<hlsl|slang>` override, plumb it through the Config
+    // surface so the orchestrator's per-file inference is bypassed for
+    // every path in this invocation. We only mutate the Config when the
+    // override is non-Auto: leaving it Auto preserves whatever the TOML
+    // declared (or, if no TOML exists, the orchestrator's default
+    // extension-based inference).
+    std::optional<hlsl_clippy::Config> effective_config = config;
+    if (opts.source_language != hlsl_clippy::SourceLanguage::Auto) {
+        if (!effective_config.has_value()) {
+            effective_config.emplace();
+        }
+        effective_config->source_language_value = opts.source_language;
+    }
+
     const auto diagnostics =
-        config.has_value() ? hlsl_clippy::lint(sources, src_id, rules, *config, path, lint_options)
-                           : hlsl_clippy::lint(sources, src_id, rules, lint_options);
+        effective_config.has_value()
+            ? hlsl_clippy::lint(sources, src_id, rules, *effective_config, path, lint_options)
+            : hlsl_clippy::lint(sources, src_id, rules, lint_options);
 
     result.diag_count = diagnostics.size();
 
@@ -535,6 +600,34 @@ struct PerFileResult {
                 return 2;
             }
             opts.target_profile = std::string{args[i + 1U]};
+            ++i;
+            continue;
+        }
+        // `--source-language=<auto|hlsl|slang>` (ADR 0020 sub-phase A).
+        // Single-token + two-token forms both supported.
+        if (a.starts_with("--source-language=")) {
+            const auto value = a.substr(std::string_view{"--source-language="}.size());
+            const auto parsed = parse_source_language(value);
+            if (!parsed) {
+                std::cerr << "hlsl-clippy: unknown --source-language value: " << value
+                          << " (expected auto|hlsl|slang)\n";
+                return 2;
+            }
+            opts.source_language = *parsed;
+            continue;
+        }
+        if (a == "--source-language") {
+            if (i + 1U >= args.size()) {
+                std::cerr << "hlsl-clippy: --source-language requires a value (auto|hlsl|slang)\n";
+                return 2;
+            }
+            const auto parsed = parse_source_language(args[i + 1U]);
+            if (!parsed) {
+                std::cerr << "hlsl-clippy: unknown --source-language value: " << args[i + 1U]
+                          << " (expected auto|hlsl|slang)\n";
+                return 2;
+            }
+            opts.source_language = *parsed;
             ++i;
             continue;
         }

@@ -100,6 +100,22 @@ configuration needed. Per-platform `.vsix` files are also attached to
 every [GitHub Release](https://github.com/NelCit/hlsl-clippy/releases)
 for sideload.
 
+## Supported file types
+
+`.hlsl`, `.hlsli`, `.fx`, `.fxh`, `.vsh`, `.psh`, `.csh`, `.gsh`, `.hsh`,
+`.dsh` — full rule pack (~189 rules in v1.3).
+
+`.slang` — **dispatch baseline (v1.3.0, ADR 0020 sub-phase A).** The
+extension is recognised; the orchestrator skips AST + control-flow + IR
+rules cleanly with a one-shot `clippy::language-skip-ast` notice per
+source. Reflection-stage rules are ALSO quarantined for v1.3.0 (the
+Slang reflection bridge crashes on `.slang` ingestion under the
+v1.3-pinned Slang prebuilt's call-suffixed virtual_path scheme); the
+quarantine is tracked for v1.3.x bridge hardening. Tree-sitter-slang
+integration that lights the remaining ~157 AST/CFG rules tracks for
+v1.4+ (sub-phase B). See ADR 0020 for the honest rule-surface
+breakdown.
+
 ## CLI usage
 
 ```sh
@@ -109,6 +125,8 @@ hlsl-clippy lint --target-profile sm_6_8 shader.hlsl  # override Slang profile
 hlsl-clippy lint --config path/.hlsl-clippy.toml shader.hlsl
 hlsl-clippy lint --format=json shader.hlsl            # flat JSON array, stable schema
 hlsl-clippy lint --format=github-annotations s.hlsl   # GitHub Actions ::warning lines
+hlsl-clippy lint shader.slang                         # Slang source (reflection-only)
+hlsl-clippy lint --source-language=slang shader.fx    # force Slang frontend on a .fx file
 ```
 
 Exit codes: `0` clean, `1` warnings, `2` errors or invocation failure.

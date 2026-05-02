@@ -16,6 +16,7 @@
 #include "hlsl_clippy/control_flow.hpp"
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/ir.hpp"
+#include "hlsl_clippy/language.hpp"
 #include "hlsl_clippy/reflection.hpp"
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
@@ -115,6 +116,15 @@ void walk(::TSNode root,
     }
 }
 
+/// True when AST + CFG + IR rule dispatch is allowed for the resolved
+/// source language (ADR 0020 sub-phase A — v1.3.0). Slang sources skip these
+/// stages because tree-sitter-hlsl cannot parse Slang's language extensions.
+/// HLSL sources keep the historical dispatch behaviour. Auto must already
+/// have been resolved upstream via `resolve_language()`.
+[[nodiscard]] bool should_dispatch_ast_stage(SourceLanguage lang) noexcept {
+    return lang != SourceLanguage::Slang;
+}
+
 /// True when at least one rule in `rules` has `stage() == Stage::Reflection`
 /// AND is enabled under the current experimental-target selection. Used by
 /// the orchestrator to short-circuit reflection-engine construction for
@@ -172,38 +182,133 @@ namespace {
                                                 std::span<const std::unique_ptr<Rule>> rules,
                                                 const LintOptions& options,
                                                 ExperimentalTarget active_target,
+                                                SourceLanguage resolved_language,
                                                 const Config* config = nullptr) {
-    auto parsed = parser::parse(sources, source);
-    if (!parsed) {
-        return {};
+    // ADR 0020 sub-phase A — when the resolved source language is Slang we
+    // skip the tree-sitter-hlsl parse entirely. Slang's language extensions
+    // (__generic, interface, extension, associatedtype, import) would surface
+    // as ERROR nodes that AST rules either misfire on or quietly skip; far
+    // cleaner to short-circuit the parser invocation and route directly to
+    // reflection. The orchestrator still emits a one-shot
+    // `clippy::language-skip-ast` notice so users see *why* AST/CFG rules
+    // were silent on this source.
+    const bool dispatch_ast = should_dispatch_ast_stage(resolved_language);
+
+    std::optional<parser::ParsedSource> parsed;
+    if (dispatch_ast) {
+        parsed = parser::parse(sources, source);
+        if (!parsed) {
+            return {};
+        }
     }
 
-    const SuppressionSet suppressions = SuppressionSet::scan(parsed->bytes);
+    // Suppression scanning is grammar-agnostic — it walks raw UTF-8 bytes —
+    // so it works equally well for `.slang` sources where we never parse.
+    const SourceFile* file = sources.get(source);
+    const std::string_view source_bytes = file != nullptr ? file->contents() : std::string_view{};
+    const SuppressionSet suppressions = SuppressionSet::scan(source_bytes);
 
     RuleContext ctx{sources, source};
     ctx.set_suppressions(&suppressions);
     ctx.set_config(config);
-    const ::TSNode root = ts_tree_root_node(parsed->tree.get());
+
+    // ADR 0020 sub-phase A — emit `clippy::language-skip-ast` exactly once
+    // per Slang source per lint run, BEFORE any rule fires, so the notice
+    // sorts to the top of the output and the suppression machinery treats
+    // it like any other rule code. Severity::Note keeps it out of CI gate-
+    // mode runs by default (ADR 0015 §"sub-phase 6a CI gate-mode polish").
+    //
+    // Anchor the diagnostic at the first non-whitespace, non-comment byte of
+    // the source so the inline-suppression scope-resolver can match a
+    // top-of-file `// hlsl-clippy: allow(clippy::language-skip-ast)` against
+    // it. Suppression scopes for specific rule ids start at the first piece
+    // of "real code" after the comment, not at byte 0; a {0,0} span would
+    // never fall inside the resolved scope.
+    if (resolved_language == SourceLanguage::Slang) {
+        std::uint32_t anchor = 0U;
+        if (!source_bytes.empty()) {
+            // Walk past leading whitespace + line comments to land on the
+            // first byte of code. Block comments are unusual at file scope
+            // but handled here for completeness.
+            std::size_t i = 0U;
+            while (i < source_bytes.size()) {
+                const char c = source_bytes[i];
+                if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+                    ++i;
+                    continue;
+                }
+                if (c == '/' && i + 1U < source_bytes.size() && source_bytes[i + 1U] == '/') {
+                    while (i < source_bytes.size() && source_bytes[i] != '\n') {
+                        ++i;
+                    }
+                    continue;
+                }
+                if (c == '/' && i + 1U < source_bytes.size() && source_bytes[i + 1U] == '*') {
+                    i += 2U;
+                    while (i + 1U < source_bytes.size() &&
+                           !(source_bytes[i] == '*' && source_bytes[i + 1U] == '/')) {
+                        ++i;
+                    }
+                    if (i + 1U < source_bytes.size()) {
+                        i += 2U;
+                    }
+                    continue;
+                }
+                break;
+            }
+            anchor = static_cast<std::uint32_t>(i);
+        }
+
+        Diagnostic skip_note;
+        skip_note.code = std::string{"clippy::language-skip-ast"};
+        skip_note.severity = Severity::Note;
+        skip_note.primary_span =
+            Span{.source = source, .bytes = ByteSpan{.lo = anchor, .hi = anchor}};
+        skip_note.message = std::string{
+            "AST, control-flow, and reflection rules disabled on Slang "
+            "source for v1.3.0 (ADR 0020 sub-phase A). Tree-sitter-hlsl "
+            "cannot parse Slang's language extensions, and the Slang "
+            "reflection bridge's virtual_path scheme breaks Slang's "
+            "native frontend ingestion -- tracked for v1.3.x bridge "
+            "hardening + sub-phase B parser integration. Suppress this "
+            "notice with `// hlsl-clippy: allow(clippy::language-skip-ast)` "
+            "or set `[rules]` `\"clippy::language-skip-ast\" = \"allow\"` "
+            "in your `.hlsl-clippy.toml`."};
+        ctx.emit(std::move(skip_note));
+    }
+
+    // The tree view + AST root are only valid when we parsed; reflection +
+    // CFG dispatch below uses these only inside `dispatch_ast`-gated blocks
+    // (CFG construction needs the parsed root) or guards against nullptr
+    // (Reflection rules don't touch the tree view today).
+    AstTree tree_view{nullptr, nullptr, source_bytes, source};
+    ::TSNode root{};
+    if (dispatch_ast) {
+        tree_view = AstTree{parsed->tree.get(), parsed->language, parsed->bytes, parsed->source};
+        root = ts_tree_root_node(parsed->tree.get());
+    }
 
     // ----- AST stage --------------------------------------------------------
     // Declarative pass: every rule's `on_tree` runs once with the whole tree.
     // Rules gated behind a non-matching `[experimental.target]` are skipped
     // silently so default builds emit zero IHV-specific noise (ADR 0018).
-    const AstTree tree_view{parsed->tree.get(), parsed->language, parsed->bytes, parsed->source};
-    for (const auto& rule : rules) {
-        if (rule->stage() != Stage::Ast) {
-            continue;
+    // Skipped entirely on Slang sources (ADR 0020 sub-phase A).
+    if (dispatch_ast) {
+        for (const auto& rule : rules) {
+            if (rule->stage() != Stage::Ast) {
+                continue;
+            }
+            if (!experimental_target_enabled(*rule, active_target)) {
+                continue;
+            }
+            rule->on_tree(tree_view, ctx);
         }
-        if (!experimental_target_enabled(*rule, active_target)) {
-            continue;
-        }
-        rule->on_tree(tree_view, ctx);
-    }
 
-    // Imperative pass: the rule walker invokes every Stage::Ast rule's
-    // `on_node` on each named node in document order. Reflection-stage rules
-    // are skipped here (they get dispatched via `on_reflection` below).
-    walk(root, rules, ctx, parsed->bytes, parsed->source, active_target);
+        // Imperative pass: the rule walker invokes every Stage::Ast rule's
+        // `on_node` on each named node in document order. Reflection-stage rules
+        // are skipped here (they get dispatched via `on_reflection` below).
+        walk(root, rules, ctx, parsed->bytes, parsed->source, active_target);
+    }
 
     // ----- Reflection stage -------------------------------------------------
     // Construct the engine only if at least one rule asked for reflection AND
@@ -211,8 +316,20 @@ namespace {
     // AST-only rule pack pays zero Slang cost. Experimental-target-gated
     // reflection rules count against the threshold only when the active
     // target matches (ADR 0018).
+    //
+    // ADR 0020 sub-phase A — v1.3.0 quarantine. The Slang prebuilt's native
+    // `.slang` ingestion path crashes with the bridge's current
+    // call-suffixed virtual_path scheme (the `.slang__N` suffix breaks
+    // Slang's source-language inference). For v1.3.0 we route around the
+    // crash by skipping reflection on `.slang` sources entirely; AST/CFG
+    // are already skipped via `dispatch_ast`. The combined effect is the
+    // honest "language-skip-ast" baseline plus a deferred reflection
+    // surface — sub-phase B (v1.4+) re-enables reflection on `.slang`
+    // once the bridge's virtual_path scheme is hardened.
+    const bool skip_reflection_for_slang = (resolved_language == SourceLanguage::Slang);
     std::optional<ReflectionInfo> reflection_for_cfg;
-    if (options.enable_reflection && any_reflection_rule(rules, active_target)) {
+    if (!skip_reflection_for_slang && options.enable_reflection &&
+        any_reflection_rule(rules, active_target)) {
         const std::string profile =
             options.target_profile.has_value() ? *options.target_profile : std::string{};
         auto& engine = reflection::ReflectionEngine::instance();
@@ -247,7 +364,12 @@ namespace {
     // tree-sitter parse of the same source -- on the public corpus the
     // reparse was ~5-15% of total lint time per source, depending on
     // whether reflection was also enabled.
-    if (options.enable_control_flow && any_control_flow_rule(rules, active_target)) {
+    //
+    // ADR 0020 sub-phase A: skipped on Slang sources because the CFG is
+    // built over the tree-sitter-hlsl AST. The one-shot
+    // `clippy::language-skip-ast` notice already announced this.
+    if (dispatch_ast && options.enable_control_flow &&
+        any_control_flow_rule(rules, active_target)) {
         auto& cfg_engine = control_flow::CfgEngine::instance();
         const ReflectionInfo* reflection_ptr =
             reflection_for_cfg.has_value() ? &reflection_for_cfg.value() : nullptr;
@@ -288,7 +410,11 @@ namespace {
     // emit a single `clippy::ir-compiled-out` Note diagnostic per source per
     // lint run so the user knows their Stage::Ir rule selection was
     // observed but no engine is available.
-    if (options.enable_ir && any_ir_rule(rules, active_target)) {
+    //
+    // ADR 0020 sub-phase A: skipped on Slang sources because IR rules
+    // consume the tree-sitter AST view alongside the IR. The one-shot
+    // `clippy::language-skip-ast` notice already announced this.
+    if (dispatch_ast && options.enable_ir && any_ir_rule(rules, active_target)) {
 #if defined(HLSL_CLIPPY_IR_DISABLED)
         Diagnostic diag;
         diag.code = std::string{"clippy::ir-compiled-out"};
@@ -343,20 +469,43 @@ namespace {
 
 }  // namespace
 
+namespace {
+
+/// Resolve the source language for one lint call. When the caller-supplied
+/// `selected` is `Auto`, look up the source file's path via the
+/// `SourceManager` and infer from its extension. The CLI / LSP both register
+/// the on-disk path verbatim via `add_file()` / `add_buffer(path, ...)` so
+/// the inference key is the same in both surfaces.
+[[nodiscard]] SourceLanguage resolve_for_source(const SourceManager& sources,
+                                                SourceId source,
+                                                SourceLanguage selected) noexcept {
+    if (selected != SourceLanguage::Auto) {
+        return selected;
+    }
+    if (const SourceFile* file = sources.get(source); file != nullptr) {
+        return detect_language(file->path());
+    }
+    return SourceLanguage::Hlsl;
+}
+
+}  // namespace
+
 std::vector<Diagnostic> lint(const SourceManager& sources,
                              SourceId source,
                              std::span<const std::unique_ptr<Rule>> rules) {
     // No config: every experimental-target-gated rule is skipped (active
     // target = `None`). This keeps default builds free of IHV-specific
     // diagnostics even when the caller forgot to wire a `Config`.
-    return run_rules(sources, source, rules, LintOptions{}, ExperimentalTarget::None);
+    const auto lang = resolve_for_source(sources, source, SourceLanguage::Auto);
+    return run_rules(sources, source, rules, LintOptions{}, ExperimentalTarget::None, lang);
 }
 
 std::vector<Diagnostic> lint(const SourceManager& sources,
                              SourceId source,
                              std::span<const std::unique_ptr<Rule>> rules,
                              const LintOptions& options) {
-    return run_rules(sources, source, rules, options, ExperimentalTarget::None);
+    const auto lang = resolve_for_source(sources, source, SourceLanguage::Auto);
+    return run_rules(sources, source, rules, options, ExperimentalTarget::None, lang);
 }
 
 std::vector<Diagnostic> lint(const SourceManager& sources,
@@ -389,8 +538,22 @@ std::vector<Diagnostic> lint(const SourceManager& sources,
     // already gated by tree-sitter queries, that's a one-pass overhead, not a
     // behaviour change.
 
+    // ADR 0020 sub-phase A: resolve the source language with the per-config
+    // `[lint] source-language` override taking priority over per-file
+    // extension inference. When the config selects `Auto` (the default and
+    // empty-config case), the resolver falls back to inference using
+    // `file_path`'s extension.
+    SourceLanguage lang = config.source_language();
+    if (lang == SourceLanguage::Auto) {
+        if (!file_path.empty()) {
+            lang = detect_language(file_path);
+        } else {
+            lang = resolve_for_source(sources, source, SourceLanguage::Auto);
+        }
+    }
+
     auto diagnostics =
-        run_rules(sources, source, rules, options, config.experimental_target(), &config);
+        run_rules(sources, source, rules, options, config.experimental_target(), lang, &config);
 
     std::vector<Diagnostic> kept;
     kept.reserve(diagnostics.size());
