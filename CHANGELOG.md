@@ -5,87 +5,117 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
 ### Changed
-- **Factor `node_kind`, `node_text`, `is_id_char` into shared
-  `core/src/rules/util/ast_helpers.{hpp,cpp}`.** These three tree-sitter
+
+### Fixed
+
+### Deprecated
+
+## [0.6.0] — 2026-05-02
+
+The v0.6 hardening release. Closes the entire post-launch backlog
+identified during the v0.5 audits: ~1500 LOC of rule-engine
+duplication factored away, lint pipeline 3× faster on CI, two new
+runtime perf wins in core + LSP, full coverage gate, nightly bench
+with delta-posting, every test green for the first time on Windows
+clang-cl, and a documentation refresh that retires every "pre-v0"
+banner in `docs/rules/`.
+
+### Added
+- Coverage gate: new `coverage` job in `ci.yml` runs Linux Clang 18
+  with `-fprofile-instr-generate -fcoverage-mapping`, merges the
+  per-process profraw via `llvm-profdata-18`, exports lcov via
+  `llvm-cov-18`, and uploads to Codecov via the v5.4.0 action.
+  Threshold-enforcement deferred until baseline data lands.
+- Nightly bench harness: new `bench.yml` runs on `cron: '17 2 * * *'`
+  across Linux + Windows + macOS, RelWithDebInfo build, 200 samples
+  per benchmark, Catch2 XML reporter uploaded as a 90-day artifact.
+- Bench-history delta-posting: `tools/bench-diff.py` parses two
+  Catch2 XML reports (current + previous nightly), renders a sorted
+  markdown table of per-benchmark mean deltas (largest |Δ%| first),
+  and posts to `$GITHUB_STEP_SUMMARY`. Soft thresholds (10 % yellow,
+  25 % red) tolerate GHA-runner noise.
+- `.gitattributes`: hard-pin LF on `tests/golden/snapshots/*.json`,
+  `tests/golden/fixtures/*.hlsl`, and `*.sh`; CRLF on `*.ps1`. Stops
+  fresh Windows checkouts (with `core.autocrlf=true`) from breaking
+  the golden harness.
+- LSP: new `hlsl_clippy_lsp_lib` STATIC library factor — both the
+  server exe and the unit tests link the same 8 LSP TUs once.
+
+### Changed
+- Factor `node_kind`, `node_text`, `is_id_char` into shared
+  `core/src/rules/util/ast_helpers.{hpp,cpp}`. These three tree-sitter
   helper functions were previously copy-pasted into every rule TU's
   anonymous namespace; with 95+ rule files the duplicates dominated
-  post-PCH compile time and any tweak (e.g. an out-of-range guard) had
-  to be applied 95 times. New header centralises the canonical
-  definition under `hlsl_clippy::rules::util`; rule TUs now do
-  `#include "rules/util/ast_helpers.hpp"` plus
-  `using util::node_kind;` etc. Net: 119 rule files modified, 1422 LOC
-  removed (1886 deletions vs 464 insertions). Behaviour-preserving —
-  662 / 662 non-golden Catch2 tests still pass on Windows clang-cl. The
-  one-shot sweeper that drove the refactor lives at
-  `tools/refactor-ast-helpers.ps1` for posterity.
+  post-PCH compile time and any tweak (e.g. an out-of-range guard)
+  had to be applied 95 times. New header centralises the canonical
+  definition under `hlsl_clippy::rules::util`. Net: 119 rule files
+  modified, **1422 LOC removed** (1886 deletions vs 464 insertions).
+- Parallelise `clang-tidy` via `run-clang-tidy-18 -j$(nproc)`. Lint
+  workflow drops from ~30 min serial to <11 min parallel on
+  `ubuntu-latest`. `HeaderFilterRegex` extended from `(cli|core|src)`
+  to `(cli|core|lsp|src)` so LSP server headers get tidied too.
+- `.clang-tidy`: broaden suppressions for clang-tidy 18 noise (~50
+  check classes that fire either as house-style conflicts or
+  codebase-pattern escapes — recursion in AST walkers, cognitive
+  complexity in rule `scan` functions). Add `EnumConstantCase:
+  CamelCase` so the public enum surface stops triggering identifier-
+  naming errors.
+- Snapshot harness in `tests/unit/test_golden_snapshots.cpp`: filter
+  `clippy::*` infrastructure diagnostics (their messages embed
+  absolute filesystem paths that vary per machine), extend the sort
+  key from (line, col, rule) to (line, col, rule, message) for
+  stable tie-breaking, and strip `\r` defensively from both expected
+  + actual before comparison.
+- 186 rule documentation pages refreshed: 134 stale "pre-v0 — rule
+  scheduled for Phase N" banners → "shipped (Phase N)"; 183
+  "Companion blog post: _not yet published_" placeholders → links to
+  the per-category overview blog posts (per-rule for
+  `pow-const-squared`). 154 `since-version:` frontmatter values
+  updated from the original phase-plan placeholders to the canonical
+  `v0.5.0` launch tag.
 
 ### Performance
-- **CFG engine reuses the parsed tree-sitter tree instead of re-parsing.**
+- CFG engine reuses the parsed tree-sitter tree instead of re-parsing.
   `lint.cpp` already parses every source once for the AST stage; the
   Phase 4 control-flow stage was calling `parser::parse(...)` a second
   time inside `CfgEngine::build`. New `CfgEngine::build_with_tree`
   overload accepts the already-parsed `::TSNode root` + bytes; the
   orchestrator now hands them across, dropping the second parse.
-  Estimated saving on the public corpus: 5–15 % of total lint time per
-  source with CFG-stage rules enabled (most pronounced on small
-  fixtures where parsing dominates).
-- **LSP serves `textDocument/hover` and `textDocument/codeAction`
-  from the cached `OpenDocument::latest_diagnostics`.** Previously
-  every hover or code-action request triggered a fresh `lint()` call —
+  Estimated saving on the public corpus: 5–15 % of total lint time
+  per source with CFG-stage rules enabled.
+- LSP serves `textDocument/hover` and `textDocument/codeAction` from
+  the cached `OpenDocument::latest_diagnostics`. Previously every
+  hover or code-action request triggered a fresh `lint()` call —
   parser + AST walk + reflection + CFG. Hover requests fire at typing
   cadence (once per cursor move) so re-linting on each one was a
-  measurable idle-CPU drain. Diagnostics already lived on the document
-  via `lint_and_publish`; now they're reused. Only `textDocument/didOpen`,
-  `textDocument/didChange`, and `textDocument/didSave` continue to
-  re-run the full pipeline.
+  measurable idle-CPU drain. Diagnostics already lived on the
+  document via `lint_and_publish`; now they're reused.
 
-### CI / build
-- **Parallelize `clang-tidy` via `run-clang-tidy-18 -j$(nproc)`.** The
-  lint workflow used a single serial `xargs clang-tidy-18` call across
-  ~160 first-party TUs, taking ~30 minutes on `ubuntu-latest`. The
-  parallel wrapper that ships with the apt llvm package brings the
-  same pass under 10 minutes on the same runner. Source-file filter
-  is a regex that excludes vendored externals; `HeaderFilterRegex` in
-  `.clang-tidy` is unchanged except for adding `lsp/` (previously only
-  `cli/` + `core/` + `src/` headers were transitively tidied).
-- **Broaden `.clang-tidy` suppressions for clang-tidy 18 noise + add
-  `EnumConstantCase: CamelCase`.** clang-tidy 18 enabled / tightened
-  ~30 distinct check classes that fire across the rule pack (style
-  preferences like `readability-braces-around-statements` plus
-  codebase-pattern escapes like `misc-no-recursion` on every AST
-  walker). Each suppression carries a one-line WHY comment; the lint
-  workflow now runs green. Three real diagnostics in `core/src/`
-  surfaced and were fixed: rename `prime` → `k_prime` in two
-  fingerprint helpers (`reflection/engine.cpp`,
-  `control_flow/engine.cpp`), and swap a C-style array for
-  `std::array<SlangUInt, 3>` at the Slang `getComputeThreadGroupSize`
-  interop site in `reflection/slang_bridge.cpp`.
-- **Hard-pin LF on golden snapshot files via `.gitattributes`.**
-  Fresh `git clone` on Windows (`core.autocrlf=true` default) checked
-  out `tests/golden/snapshots/*.json` with CRLF; the byte-compared
-  test then false-failed 6 of 10 cases on Windows. New `.gitattributes`
-  forces LF on goldens + fixtures + `*.sh`, CRLF on `*.ps1`. The
-  comparison helper in `tests/unit/test_golden_snapshots.cpp` also
-  strips `\r` defensively. Net: **668 / 672 tests pass** on Windows
-  clang-cl (was 662 / 672); the remaining 4 are documented stack-
-  buffer-overrun crashes in `tests/KNOWN_FAILURES.md`.
-- **Coverage gate: new `coverage` job in `ci.yml`.** Linux Clang 18 +
-  `-fprofile-instr-generate -fcoverage-mapping`, runs the Catch2 suite
-  (excluding the 4 known-flaky golden snapshots), merges with
-  `llvm-profdata-18`, exports lcov via `llvm-cov-18`, uploads to
-  Codecov. Filters out `external/`, `tests/`, `build/` so the
-  percentage reflects rule-engine line coverage only. ADR 0005
-  promised the gate; this lands the wiring without enforcing a
-  threshold yet (the threshold becomes the next deliverable once
-  baseline data lands).
-- **Bench harness wired to nightly CI: new `bench.yml` workflow.**
-  `tests/bench/hlsl_clippy_bench` already existed; `tests/bench/README.md`
-  outlined the planned workflow shape. New file follows that plan:
-  Linux + Windows + macOS matrix on `cron: '17 2 * * *'`, RelWithDebInfo
-  build, 200 samples per benchmark, Catch2 XML reporter uploaded as a
-  90-day artifact. Trend tracking + delta-posting deferred to v0.6+
-  once a few weeks of baseline data exist.
+### Fixed
+- All 4 `STATUS_STACK_BUFFER_OVERRUN` golden-snapshot crashes
+  (`tests/KNOWN_FAILURES.md` — phase2-misc, phase3-bindings,
+  phase4-atomics, phase4-control-flow) resolved. The "crashes" were
+  Catch2 `FAIL()` exceptions tripping `/GS` stack-canary checks on
+  snapshot mismatches; root causes were absolute-path leakage from
+  Slang reflection, non-deterministic sort tie-break, and
+  fixture/Slang-version drift. **672 / 672 tests now pass on
+  Windows clang-cl + libstdc++** (was 662 / 672 at v0.5.6).
+- Slang threadgroup interop: swap C-style array
+  (`SlangUInt thread_group[3]`) for `std::array<SlangUInt, 3>` at
+  the `getComputeThreadGroupSize` callsite, passing `.data()` to
+  preserve out-pointer interop without tripping
+  `cppcoreguidelines-avoid-c-arrays`.
+- Rename `prime` → `k_prime` in two FNV-1a fingerprint helpers
+  (`core/src/reflection/engine.cpp`,
+  `core/src/control_flow/engine.cpp`) so they obey the project's
+  `ConstexprVariablePrefix: 'k_'` convention.
+- `docs/rules/index.md` + `docs/README.md`: switch ADR cross-links
+  from VitePress-style relative paths (which produced "dead link"
+  errors during the Docs workflow build) to the absolute GitHub-URL
+  form the launch blog posts already use.
 
 ## [0.5.6] — 2026-05-01
 
@@ -499,6 +529,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.6.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.6...v0.6.0
 [0.5.6]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.5...v0.5.6
 [0.5.5]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.3...v0.5.4
