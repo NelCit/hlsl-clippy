@@ -13,6 +13,31 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [0.6.5] — 2026-05-02
+
+Hotfix release: v0.6.4's .vsix never published to the Marketplace
+because the strict-TS compile step in `release-vscode.yml` rejected
+`provideCodeActions(document, range, context)` -- the `document`
+parameter was unused (only `range` and `context` were read) and
+`tsconfig.json` has `noUnusedParameters: true`. The CLI release in
+v0.6.4 succeeded, but every Marketplace user is still on v0.6.3.
+
+### Fixed
+- **`vscode-extension/src/extension.ts`**:
+  `ClippyAuxCodeActionProvider.provideCodeActions` -- prefix the
+  unused first parameter with `_` (`_document`) so TypeScript's
+  `noUnusedParameters` strict rule passes. The body never read the
+  document because we operate on `context.diagnostics` + `range`.
+
+### Added
+- **`.github/workflows/lint.yml`**: new `vscode-extension-tsc` job
+  runs `npx tsc -p .` against `vscode-extension/` on every push +
+  PR. Catches strict-TS errors (`noUnusedParameters`,
+  `noUnusedLocals`, `noImplicitAny`, etc.) BEFORE the release
+  workflow tries to package the .vsix at tag time. Adds ~30s to
+  the lint pipeline; well worth it -- the v0.6.4 hotfix would have
+  been caught at PR time.
+
 ## [0.6.4] — 2026-05-02
 
 VS Code extension UX wave #3: inline diagnostic decorations
@@ -682,6 +707,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.6.5]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.4...v0.6.5
 [0.6.4]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.3...v0.6.4
 [0.6.3]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.1...v0.6.2

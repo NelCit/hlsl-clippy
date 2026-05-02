@@ -22,6 +22,38 @@ permissions:
   contents: read
 
 jobs:
+  # ── VS Code extension TypeScript guard ────────────────────────────────
+  # Catches strict-mode TS errors (noUnusedParameters, noUnusedLocals,
+  # noImplicitAny, etc.) BEFORE the release-vscode.yml workflow tries
+  # to package the .vsix on a tag push -- the v0.6.4 tag shipped with a
+  # broken .vsix because a `noUnusedParameters` violation only surfaced
+  # at release time when Marketplace publishing was already in flight.
+  # Cheap (~30s); runs on every push + PR alongside the C++ lint.
+  vscode-extension-tsc:
+    name: vscode-extension TypeScript compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Node 20
+        uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+
+      - name: Install npm dependencies
+        working-directory: vscode-extension
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install --no-audit --no-fund
+          fi
+
+      - name: Compile TypeScript (tsc -p)
+        working-directory: vscode-extension
+        run: npx tsc -p .
+
   lint:
     name: clang-format + clang-tidy
     runs-on: ubuntu-latest

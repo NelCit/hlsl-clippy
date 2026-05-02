@@ -681,7 +681,7 @@ async function resolveRuleAtCursor(
 /// a thin wrapper that invokes the corresponding command above.
 class ClippyAuxCodeActionProvider implements vscode.CodeActionProvider {
     provideCodeActions(
-        document: vscode.TextDocument,
+        _document: vscode.TextDocument,
         range: vscode.Range | vscode.Selection,
         context: vscode.CodeActionContext,
     ): vscode.CodeAction[] {
