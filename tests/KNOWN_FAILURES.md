@@ -1,8 +1,16 @@
 # Known test failures
 
 A first-time `ctest --test-dir build` run on `main` will report
-**4 failing tests** out of 671. They are tracked here so new
+**4 failing tests** out of 672. They are tracked here so new
 contributors aren't alarmed.
+
+(Pre-`9198d48`: a fresh Windows checkout often saw 10 / 10 goldens
+fail because the snapshot files carried CRLF line endings while the
+in-memory `actual` was LF. `.gitattributes` now hard-pins
+`tests/golden/snapshots/*.json` and `tests/golden/fixtures/*.hlsl` to
+LF, and the comparison helper in `tests/unit/test_golden_snapshots.cpp`
+strips `\r` defensively. Of the 10 cases, 6 were CRLF-only and now
+pass; the 4 listed below are real crashes.)
 
 ## 4 × `STATUS_STACK_BUFFER_OVERRUN` in `test_golden_snapshots.cpp`
 

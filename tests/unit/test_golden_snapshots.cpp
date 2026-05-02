@@ -84,6 +84,21 @@ using hlsl_clippy::SourceManager;
     return std::string{std::istreambuf_iterator<char>{stream}, std::istreambuf_iterator<char>{}};
 }
 
+/// Strip every `\r` so CRLF and LF inputs hash to the same byte sequence.
+/// Required because git on Windows may check out the snapshot files with
+/// CRLF (depending on `core.autocrlf` and `.gitattributes` history) while
+/// the in-memory `actual` is generated with LF.
+[[nodiscard]] std::string normalize_line_endings(std::string_view text) {
+    std::string out;
+    out.reserve(text.size());
+    for (const char c : text) {
+        if (c != '\r') {
+            out.push_back(c);
+        }
+    }
+    return out;
+}
+
 void write_file(const std::filesystem::path& path, std::string_view contents) {
     std::ofstream stream(path, std::ios::binary | std::ios::trunc);
     stream.write(contents.data(), static_cast<std::streamsize>(contents.size()));
@@ -188,7 +203,7 @@ void run_one_fixture(const std::filesystem::path& fixture_path,
     }
 
     const std::string expected = read_file(snapshot_path);
-    if (expected != actual) {
+    if (normalize_line_endings(expected) != normalize_line_endings(actual)) {
         const auto actual_path = snapshot_path.string() + ".actual";
         write_file(actual_path, actual);
         FAIL("snapshot mismatch for "

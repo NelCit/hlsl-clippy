@@ -3,6 +3,7 @@ build-*/
 out/
 .vs/
 .vscode/
+.claude/
 .idea/
 *.user
 CMakeUserPresets.json

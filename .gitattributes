@@ -1,0 +1,54 @@
+# Default: let Git infer text vs binary, normalise to LF in the repo, and
+# convert to the platform's native EOL on checkout. core.autocrlf can still
+# override per-clone but this attribute file is the authoritative answer
+# for files where mismatched line endings would actively break tests or
+# tooling.
+
+*           text=auto
+
+# Source / config — keep LF in the repo, convert to platform EOL on checkout.
+*.cpp       text
+*.hpp       text
+*.h         text
+*.cc        text
+*.cxx       text
+*.cmake     text
+CMakeLists.txt text
+*.yml       text
+*.yaml      text
+*.toml      text
+*.md        text
+*.json      text
+*.hlsl      text
+
+# Hard-pin LF: golden-snapshot files are byte-compared by
+# tests/unit/test_golden_snapshots.cpp; any CRLF bleed (Windows checkout
+# without core.autocrlf=input) makes 6 of the 10 snapshots false-fail. The
+# test now also normalises in-memory but `eol=lf` keeps the on-disk shape
+# canonical so a fresh checkout doesn't surprise anyone.
+tests/golden/snapshots/*.json text eol=lf
+tests/golden/fixtures/*.hlsl  text eol=lf
+tests/fixtures/**/*.hlsl       text eol=lf
+
+# Hard-pin LF: shell + bash scripts must keep LF or `bash` rejects them on
+# Linux runners ("`\r': command not found").
+*.sh        text eol=lf
+
+# Hard-pin CRLF: PowerShell scripts ship to Windows-only paths; LF works
+# but CRLF is canonical.
+*.ps1       text eol=crlf
+
+# Binary files — never touch.
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.pdf       binary
+*.zip       binary
+*.tar.gz    binary
+*.dll       binary
+*.lib       binary
+*.exe       binary
+*.so        binary
+*.dylib     binary
