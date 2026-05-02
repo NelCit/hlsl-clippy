@@ -353,7 +353,7 @@ Manual:
 
 ### Phase 7 — Stretch / research (post-1.0)
 
-IR-level analysis. Slang emits DXIL and SPIR-V; we consume them via existing parsers (DXIL reader, `spirv-tools`, `spirv-cross`) — no need to link Slang internals.
+IR-level analysis. Slang emits DXIL and SPIR-V; we consume them via existing parsers (DXIL reader, `spirv-tools`, `spirv-cross`) — no need to link Slang internals.  *(infrastructure design via [ADR 0016](docs/decisions/0016-phase-7-ir-infrastructure.md) — Proposed; v0.7 ships DXIL only, SPIR-V deferred to v0.8 follow-up ADR)*
 
 **Memory / register pressure:**
 - [ ] `vgpr-pressure-warning`: live-range based estimate; threshold per stage
