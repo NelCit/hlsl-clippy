@@ -230,6 +230,61 @@ TEST_CASE("ReflectionEngine surfaces bad HLSL as a clippy::reflection diagnostic
     CHECK(result.error().severity == hlsl_clippy::Severity::Error);
 }
 
+TEST_CASE("ReflectionEngine demotes min-precision-only Slang failures to Note severity",
+          "[reflection][engine][min-precision]") {
+    // Slang's HLSL frontend doesn't recognise DXC's `min16uint` /
+    // `min16float` / `min16int` family. Files that legitimately use those
+    // (e.g. fixtures exercising the `min16float-in-cbuffer-roundtrip` rule,
+    // or shaders ported from DXC where the developer hasn't yet migrated to
+    // `float16_t`) used to surface as red Errors in the IDE because the
+    // engine emitted Severity::Error unconditionally. Demote to
+    // Severity::Note (LSP Information) when the only thing Slang complains
+    // about is those types — AST rules still ran, the file is otherwise
+    // valid HLSL on a DXC target.
+    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    engine.clear_cache();
+
+    SourceManager sources;
+    const std::string buf = R"hlsl(
+bool min16uint_equal(min16uint a, min16uint b) {
+    return a == b;
+}
+)hlsl";
+    const auto src = sources.add_buffer("min_precision.hlsl", buf);
+    REQUIRE(src.valid());
+
+    const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"});
+    REQUIRE_FALSE(result.has_value());
+    CHECK(result.error().code == "clippy::reflection");
+    CHECK(result.error().severity == hlsl_clippy::Severity::Note);
+    // Message must call out the specific limitation so users can act on it.
+    CHECK(result.error().message.find("min16") != std::string::npos);
+    CHECK(result.error().message.find("AST-only rules still ran") != std::string::npos);
+}
+
+TEST_CASE("ReflectionEngine keeps Severity::Error for non-min-precision Slang failures",
+          "[reflection][engine][min-precision]") {
+    // Negative test for the demotion above: a file with a *real* user error
+    // (undefined identifier that's not a min-precision type) must still
+    // surface as Severity::Error so users see it in the Problems panel.
+    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    engine.clear_cache();
+
+    SourceManager sources;
+    const std::string buf = R"hlsl(
+float ps_main(float2 uv : TEXCOORD) : SV_Target {
+    return undefined_function(uv.x);
+}
+)hlsl";
+    const auto src = sources.add_buffer("user_error.hlsl", buf);
+    REQUIRE(src.valid());
+
+    const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"});
+    REQUIRE_FALSE(result.has_value());
+    CHECK(result.error().code == "clippy::reflection");
+    CHECK(result.error().severity == hlsl_clippy::Severity::Error);
+}
+
 TEST_CASE("ReflectionEngine produces multiple EntryPointInfo entries for multi-entry sources",
           "[reflection][engine][entry-points]") {
     auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();

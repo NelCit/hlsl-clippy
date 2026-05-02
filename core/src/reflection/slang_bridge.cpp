@@ -51,16 +51,82 @@ namespace {
     return std::string{data, size};
 }
 
+/// True when the Slang error blob is *only* complaining about DXC's minimum-
+/// precision type family (`min16float`, `min16uint`, `min16int`). Slang's
+/// HLSL frontend doesn't recognise these — they're DXC-specific shader-model
+/// 6.2+ types that the spec deprecated in favour of `float16_t`/`uint16_t`/
+/// `int16_t` — but several rules in this repo (e.g. `min16float-in-cbuffer-
+/// roundtrip`, `groupshared-16bit-unpacked`) need to fire on them, and the
+/// fixtures that exercise those rules naturally fail Slang reflection.
+///
+/// We don't want those fixtures (or any user shader using min-precision
+/// types intentionally) to scream as red Errors in the IDE. AST-only rules
+/// still ran on the source; the only consequence is that reflection-aware
+/// rules are skipped for this file.
+[[nodiscard]] bool is_min_precision_only_failure(std::string_view blob) noexcept {
+    // Cheap heuristic: look for at least one `'min16<X>'` mention in
+    // an undefined-identifier diagnostic, AND no other E-prefixed errors
+    // pointing at non-min16 identifiers. Slang reports each unknown
+    // identifier on its own E30015 line, so a file using `min16uint`
+    // twice produces two E30015 lines but no other errors.
+    if (blob.find("undefined identifier") == std::string_view::npos) {
+        return false;
+    }
+    bool saw_min16 = false;
+    bool saw_non_min16_undef = false;
+    std::size_t pos = 0U;
+    while (pos < blob.size()) {
+        const auto next = blob.find("undefined identifier", pos);
+        if (next == std::string_view::npos) {
+            break;
+        }
+        const auto quote = blob.find('\'', next);
+        if (quote == std::string_view::npos) {
+            break;
+        }
+        const auto end_quote = blob.find('\'', quote + 1U);
+        if (end_quote == std::string_view::npos) {
+            break;
+        }
+        const auto ident = blob.substr(quote + 1U, end_quote - quote - 1U);
+        if (ident.starts_with("min16float") || ident.starts_with("min16uint") ||
+            ident.starts_with("min16int") || ident == "min10float" ||
+            ident.starts_with("min12int")) {
+            saw_min16 = true;
+        } else {
+            saw_non_min16_undef = true;
+        }
+        pos = end_quote + 1U;
+    }
+    return saw_min16 && !saw_non_min16_undef;
+}
+
 /// Build a `Diagnostic` describing a Slang failure. The diagnostic anchors at
 /// `(source, byte 0..0)` because Slang's diagnostic blob is plain text (it
 /// embeds line/col info, but parsing it back into a precise span is left for
 /// a follow-up). The full Slang text is included in the message.
+///
+/// Severity downgrades from Error to Note (LSP "Information") when the
+/// failure is *only* DXC minimum-precision types Slang doesn't recognise.
+/// Real Slang errors (syntax errors, missing entry points, undeclared user
+/// identifiers, ...) keep Severity::Error so they still surface loudly.
 [[nodiscard]] Diagnostic make_reflection_error(SourceId source, std::string message) {
+    const bool min_precision_only = is_min_precision_only_failure(message);
     Diagnostic diag;
     diag.code = std::string{"clippy::reflection"};
-    diag.severity = Severity::Error;
+    diag.severity = min_precision_only ? Severity::Note : Severity::Error;
     diag.primary_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
-    diag.message = std::move(message);
+    if (min_precision_only) {
+        diag.message =
+            std::string{"Slang reflection skipped for this file: it uses DXC minimum-"
+                        "precision types (`min16float` / `min16uint` / `min16int`) which "
+                        "Slang's HLSL frontend doesn't accept. AST-only rules still ran. "
+                        "Migrate to `float16_t` / `uint16_t` / `int16_t` to enable "
+                        "reflection-aware rules. (Slang detail: "} +
+            std::move(message) + ")";
+    } else {
+        diag.message = std::move(message);
+    }
     return diag;
 }
 

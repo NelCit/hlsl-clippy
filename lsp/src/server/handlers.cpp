@@ -135,13 +135,10 @@ nlohmann::json build_server_capabilities() {
     caps["documentFormattingProvider"] = false;
     caps["documentRangeFormattingProvider"] = false;
 
-    // Notification capabilities — `publishDiagnostics` is implicit (it is a
-    // server-to-client notification), but we still surface it here so
-    // clients that introspect `serverCapabilities` see it.
-    nlohmann::json diagnostics = nlohmann::json::object();
-    diagnostics["interFileDependencies"] = false;
-    diagnostics["workspaceDiagnostics"] = false;
-    caps["diagnosticProvider"] = std::move(diagnostics);
+    // We push diagnostics via the `textDocument/publishDiagnostics`
+    // notification (implicit; no capability to advertise). Do NOT advertise
+    // `diagnosticProvider` — that is the LSP 3.17 *pull* model and would
+    // make clients send `textDocument/diagnostic` requests we don't handle.
 
     // workspace block — multi-root support (lazy: we resolve config per-doc
     // anyway).

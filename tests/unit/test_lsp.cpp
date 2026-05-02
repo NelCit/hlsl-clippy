@@ -3,8 +3,8 @@
 // Covers:
 //   1. Framing — Content-Length-prefixed message parses correctly.
 //   2. DocumentManager — open / change / close round-trip.
-//   3. initialize — returns ServerCapabilities with textDocumentSync /
-//      diagnosticProvider.
+//   3. initialize — returns ServerCapabilities with textDocumentSync and
+//      no diagnosticProvider (we use push diagnostics, not pull).
 //   4. didOpen — triggers a publishDiagnostics notification.
 //   5. Diagnostic conversion — Diagnostic → LSP Diagnostic preserves range,
 //      severity, code, and source.
@@ -119,8 +119,10 @@ TEST_CASE("initialize returns ServerCapabilities with the expected shape", "[lsp
     REQUIRE(sync["openClose"].get<bool>() == true);
     REQUIRE(sync["change"].get<int>() == 2);  // Incremental
 
-    REQUIRE(caps.contains("diagnosticProvider"));
-    REQUIRE(caps["diagnosticProvider"].is_object());
+    // We use push diagnostics (publishDiagnostics notification). Advertising
+    // `diagnosticProvider` would put LSP 3.17 clients into pull mode and
+    // they'd send `textDocument/diagnostic` requests we don't handle.
+    REQUIRE(!caps.contains("diagnosticProvider"));
 
     // Sub-phase 5b — codeAction + hover are now advertised as on.
     REQUIRE(caps["codeActionProvider"].get<bool>() == true);
@@ -451,4 +453,211 @@ TEST_CASE("hover: diagnostic at cursor returns markdown with rule-id link", "[ls
 TEST_CASE("docs_url_for_rule produces the canonical pre-Phase-6 URL", "[lsp][hover]") {
     REQUIRE(lsp_server::docs_url_for_rule("pow-const-squared") ==
             "https://github.com/NelCit/hlsl-clippy/blob/main/docs/rules/pow-const-squared.md");
+}
+
+// ─── End-to-end fix-all path (regression guard) ──────────────────────────────
+//
+// These tests exist because both regressions we hit shortly before v0.6.8 lived
+// at the LSP↔editor boundary and slipped past the unit tests above:
+//
+//   1. The server briefly advertised `diagnosticProvider` it didn't implement,
+//      causing vscode-languageclient to spam `Document pull failed` errors.
+//   2. The VS Code extension's "Fix All in Document" gathered fixes via a
+//      per-diagnostic loop that round-tripped to the LSP N times and could
+//      drop edits or accumulate duplicates.
+//
+// The first is now guarded by the capabilities test above; the cases below
+// guard the second by exercising the same shape of request the extension
+// actually sends after the v0.6.8 refactor: one full-document
+// textDocument/codeAction request, kind=quickfix, expecting one CodeAction
+// per fix with a populated `edit.changes[uri]`.
+
+namespace {
+
+/// Build a fresh server wired into a captured-notifications sink. Returns
+/// the trio so each test can drive its own request stream without sharing
+/// state with siblings.
+struct ServerHarness {
+    lsp_rpc::JsonRpcDispatcher dispatcher;
+    lsp_doc::DocumentManager docs;
+    std::vector<nlohmann::json> outbound;
+    std::unique_ptr<lsp_server::Server> server;
+
+    ServerHarness() {
+        auto sink = [this](const nlohmann::json& env) { outbound.push_back(env); };
+        server = std::make_unique<lsp_server::Server>(dispatcher, docs, sink);
+        server->register_handlers();
+
+        nlohmann::json init = nlohmann::json::object();
+        init["jsonrpc"] = "2.0";
+        init["id"] = 1;
+        init["method"] = "initialize";
+        init["params"] = nlohmann::json::object();
+        (void)dispatcher.dispatch(init);
+    }
+
+    void did_open(const std::string& uri, const std::string& text, std::int32_t version = 1) {
+        nlohmann::json open_msg = nlohmann::json::object();
+        open_msg["jsonrpc"] = "2.0";
+        open_msg["method"] = "textDocument/didOpen";
+        nlohmann::json td = nlohmann::json::object();
+        td["uri"] = uri;
+        td["languageId"] = "hlsl";
+        td["version"] = version;
+        td["text"] = text;
+        nlohmann::json params = nlohmann::json::object();
+        params["textDocument"] = std::move(td);
+        open_msg["params"] = std::move(params);
+        (void)dispatcher.dispatch(open_msg);
+    }
+
+    [[nodiscard]] nlohmann::json published_diagnostics_for(const std::string& uri) const {
+        for (const auto& env : outbound) {
+            if (env.value("method", std::string{}) != "textDocument/publishDiagnostics") {
+                continue;
+            }
+            if (env["params"]["uri"].get<std::string>() == uri) {
+                return env["params"]["diagnostics"];
+            }
+        }
+        return nlohmann::json::array();
+    }
+
+    [[nodiscard]] nlohmann::json code_action_full_document(const std::string& uri,
+                                                           std::int32_t end_line,
+                                                           std::int32_t end_char,
+                                                           int request_id) {
+        nlohmann::json req = nlohmann::json::object();
+        req["jsonrpc"] = "2.0";
+        req["id"] = request_id;
+        req["method"] = "textDocument/codeAction";
+        nlohmann::json p = nlohmann::json::object();
+        nlohmann::json td = nlohmann::json::object();
+        td["uri"] = uri;
+        p["textDocument"] = std::move(td);
+        nlohmann::json range = nlohmann::json::object();
+        nlohmann::json start = nlohmann::json::object();
+        start["line"] = 0;
+        start["character"] = 0;
+        range["start"] = std::move(start);
+        nlohmann::json end = nlohmann::json::object();
+        end["line"] = end_line;
+        end["character"] = end_char;
+        range["end"] = std::move(end);
+        p["range"] = std::move(range);
+        nlohmann::json ctx = nlohmann::json::object();
+        ctx["diagnostics"] = nlohmann::json::array();
+        ctx["only"] = nlohmann::json::array({"quickfix"});
+        p["context"] = std::move(ctx);
+        req["params"] = std::move(p);
+
+        const auto wire = dispatcher.dispatch(req);
+        REQUIRE(!wire.empty());
+        return nlohmann::json::parse(wire);
+    }
+};
+
+}  // namespace
+
+TEST_CASE(
+    "didOpen on `pow(x, 2.0)` publishes a non-empty diagnostics list "
+    "(regression: must not be silently empty)",
+    "[lsp][handlers][regression]") {
+    ServerHarness h;
+    constexpr const char* k_uri = "file:///tmp/pow_x.hlsl";
+    // Bare-identifier base — pow-to-mul fires with machine_applicable=true and
+    // attaches a TextEdit fix. pow-const-squared also fires but does not
+    // attach a fix (Phase 0 design; fixes deferred). At least one of the two
+    // must be in the published list, otherwise the LSP plumbing is broken.
+    h.did_open(k_uri, "float pow_squared(float x) { return pow(x, 2.0); }\n");
+
+    const auto diags = h.published_diagnostics_for(k_uri);
+    REQUIRE(diags.is_array());
+    REQUIRE(!diags.empty());
+
+    bool saw_pow_to_mul = false;
+    for (const auto& d : diags) {
+        if (d.value("code", std::string{}) == "pow-to-mul") {
+            saw_pow_to_mul = true;
+            break;
+        }
+    }
+    REQUIRE(saw_pow_to_mul);
+}
+
+TEST_CASE(
+    "textDocument/codeAction over the full document returns a quickfix "
+    "with edit.changes[uri] populated",
+    "[lsp][handlers][regression]") {
+    ServerHarness h;
+    constexpr const char* k_uri = "file:///tmp/fix_all.hlsl";
+    const std::string text = "float pow_squared(float x) { return pow(x, 2.0); }\n";
+    h.did_open(k_uri, text);
+
+    // Sanity: at least one diagnostic landed before we ask for actions.
+    REQUIRE(!h.published_diagnostics_for(k_uri).empty());
+
+    // Ask for code actions over the full document (line 0, char 0) →
+    // (line 1, char 0). This is exactly what the v0.6.8 fix-all helper in the
+    // VS Code extension sends.
+    const auto reply = h.code_action_full_document(k_uri, /*end_line=*/1, /*end_char=*/0, 42);
+    REQUIRE(reply.is_object());
+    REQUIRE(reply.value("id", -1) == 42);
+    REQUIRE(reply.contains("result"));
+    const auto& actions = reply["result"];
+    REQUIRE(actions.is_array());
+    REQUIRE(!actions.empty());
+
+    // At least one action must be a quickfix carrying a TextEdit on this URI.
+    // This is the contract the fix-all gather depends on -- a regression here
+    // (e.g. dropping `edit` from build_code_action) silently breaks fix-all.
+    bool saw_quickfix_with_edit = false;
+    for (const auto& a : actions) {
+        if (a.value("kind", std::string{}) != "quickfix") {
+            continue;
+        }
+        if (!a.contains("edit") || !a["edit"].is_object()) {
+            continue;
+        }
+        const auto& changes = a["edit"]["changes"];
+        if (!changes.is_object() || !changes.contains(k_uri)) {
+            continue;
+        }
+        const auto& edits = changes[k_uri];
+        if (!edits.is_array() || edits.empty()) {
+            continue;
+        }
+        REQUIRE(edits[0].contains("range"));
+        REQUIRE(edits[0].contains("newText"));
+        // pow-to-mul rewrites `pow(x, 2.0)` to repeated multiplication of `x`.
+        const auto new_text = edits[0]["newText"].get<std::string>();
+        REQUIRE(new_text.find('x') != std::string::npos);
+        REQUIRE(new_text != "pow(x, 2.0)");
+        saw_quickfix_with_edit = true;
+    }
+    REQUIRE(saw_quickfix_with_edit);
+}
+
+TEST_CASE("textDocument/diagnostic (pull) is not handled — guards against "
+          "re-introducing the bogus diagnosticProvider capability",
+          "[lsp][handlers][regression]") {
+    ServerHarness h;
+    constexpr const char* k_uri = "file:///tmp/pull.hlsl";
+    h.did_open(k_uri, "float f(float x) { return pow(x, 2.0); }\n");
+
+    nlohmann::json req = nlohmann::json::object();
+    req["jsonrpc"] = "2.0";
+    req["id"] = 7;
+    req["method"] = "textDocument/diagnostic";
+    nlohmann::json p = nlohmann::json::object();
+    nlohmann::json td = nlohmann::json::object();
+    td["uri"] = k_uri;
+    p["textDocument"] = std::move(td);
+    req["params"] = std::move(p);
+
+    const auto wire = h.dispatcher.dispatch(req);
+    REQUIRE(!wire.empty());
+    const auto reply = nlohmann::json::parse(wire);
+    REQUIRE(reply.contains("error"));
+    REQUIRE(reply["error"]["code"].get<int>() == lsp_rpc::error_code::k_method_not_found);
 }
