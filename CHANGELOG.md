@@ -13,6 +13,98 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [0.8.0] — 2026-05-02
+
+**Phase 8 — Research-driven expansion.** 21 new rules (17 LOCKED + 4
+DEFERRED per ADR 0018) covering SM 6.10 surfaces (`linalg::Matrix`,
+`[GroupSharedLimit]`, cluster-geometry, `getGroupWaveIndex`),
+re-classified VRS rules, ray-tracing patterns inspired by Nsight /
+RGA, and IHV-experimental rules gated behind a new
+`[experimental.target]` config surface. Total registered rule count:
+169 → **190**.
+
+This release is the first to land a per-IHV gate. Default builds emit
+zero IHV-specific diagnostics; users opt in via `.hlsl-clippy.toml`:
+
+```toml
+[experimental]
+target = "rdna4"  # or "blackwell" | "xe2"
+```
+
+Stub burndown: `numthreads-not-wave-aligned` and `dot4add-opportunity`
+were docs-only stubs from earlier ADRs (0007 / 0011); now fully
+implemented.
+
+### Added
+
+- **Pack v0.8 — SM 6.10 + stub burndown (8 rules)**:
+  - `linalg-matrix-non-optimal-layout` — `linalg::*Mul` calls with
+    `MATRIX_LAYOUT_ROW_MAJOR` / `_COLUMN_MAJOR` instead of `OPTIMAL`.
+  - `linalg-matrix-element-type-mismatch` — low-precision matrix
+    elements with high-precision accumulators (silent widening).
+  - `getgroupwaveindex-without-wavesize-attribute` — SM 6.10
+    intrinsic without `[WaveSize(N)]`.
+  - `groupshared-over-32k-without-attribute` — total groupshared
+    > 32 KB without `[GroupSharedLimit(N)]`. Machine-applicable fix.
+  - `triangle-object-positions-without-allow-data-access-flag` —
+    every call site (project-side BLAS flag invisible from shader).
+  - `numthreads-not-wave-aligned` — stub-burndown: total threads
+    not a multiple of 32.
+  - `dispatchmesh-grid-too-small-for-wave` — `DispatchMesh` constant
+    args with product < 32.
+  - `dot4add-opportunity` — stub-burndown: 4-component swizzle-
+    product chain matches `dot4add_*`.
+- **Pack v0.9 — VRS + DXR + Nsight-gap (5 rules)**:
+  - `vrs-rate-conflict-with-target` — PS writes `SV_ShadingRate` AND
+    a coarse-rate marker is present.
+  - `vrs-without-perprimitive-or-screenspace-source` — PS emits
+    `SV_ShadingRate` without an upstream VRS source.
+  - `ray-flag-force-opaque-with-anyhit` — `TraceRay`
+    `RAY_FLAG_FORCE_OPAQUE` in TU defining `[shader("anyhit")]`.
+  - `ser-coherence-hint-bits-overflow` — `MaybeReorderThread` bits
+    arg above spec cap (16 / 8 for HitObject variant).
+  - `sample-use-no-interleave` — `Sample()` result consumed within
+    ≤3 statements (Nsight L1-Long-Scoreboard pattern).
+- **Pack v0.10 — IHV-experimental, all gated (4 rules)**:
+  - `wave64-on-rdna4-compute-misses-dynamic-vgpr` — gated `Rdna4`.
+  - `coopvec-fp4-fp6-blackwell-layout` — gated `Blackwell`.
+  - `wavesize-32-on-xe2-misses-simd16` — gated `Xe2`
+    (suggestion-grade).
+  - `cluster-id-without-cluster-geometry-feature-check` — SM 6.10+
+    only. Calls without `IsClusteredGeometrySupported()` guard.
+- **DEFERRED candidates — implemented defensively (4 rules)**:
+  - `oriented-bbox-not-set-on-rdna4` — gated `Rdna4`. Once-per-source
+    informational when RT calls are present.
+  - `numwaves-anchored-cap` — `[numthreads(...)]` total > 1024
+    (defensive for HLSL specs proposal 0054).
+  - `reference-data-type-not-supported-pre-sm610` — `<qual> ref
+    <type>` patterns under target < SM 6.10.
+  - `rga-pressure-bridge-stub` — once-per-source informational on
+    RDNA targets noting `tools/rga-bridge` would yield more accurate
+    VGPR counts (placeholder for v0.10 infrastructure investment).
+
+### Added (infrastructure)
+
+- **`Rule::experimental_target()` virtual** + **`ExperimentalTarget`
+  enum** in `<hlsl_clippy/rule.hpp>`. Rules opt into the gate by
+  overriding the virtual; default `None` keeps them always-on.
+- **`Config::experimental_target()`** parsed from `[experimental]
+  target = ...`. Recognised tokens: `"rdna4"`, `"blackwell"`, `"xe2"`.
+  Unrecognised values fall back to `None` with a warning.
+- **`core/src/rules/util/sm6_10.{hpp,cpp}`** — shared SM 6.10 helpers:
+  `target_is_sm610_or_later()`, `is_linalg_matrix_type()`,
+  `parse_groupshared_limit_attribute()`, `expected_wave_size_for_target()`.
+
+### Changed
+
+- ADR 0018 §4 specced 13 of the 21 rules as `Stage::Reflection`. Slang
+  2026.7.1's HLSL frontend rejects synthetic test sources containing
+  `linalg::Matrix<...>`, payload structs, or `inout ref` syntax (the
+  pinned Slang doesn't yet recognise SM 6.10 + reference types). Those
+  rules ship as `Stage::Ast` with self-gating on textual source markers.
+  The `[experimental.target]` gating works correctly via
+  `Rule::experimental_target()` regardless of stage.
+
 ## [0.7.0] — 2026-05-02
 
 **Phase 7 — IR-level / stretch rule pack.** 15 new rules covering DXR
@@ -931,6 +1023,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.8.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.8...v0.7.0
 [0.6.8]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.7...v0.6.8
 [0.6.7]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.6...v0.6.7
