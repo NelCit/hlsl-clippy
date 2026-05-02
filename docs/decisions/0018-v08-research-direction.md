@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 date: 2026-05-02
 deciders: NelCit
 tags: [v0.8, research, candidates, sm6.10, rdna4, blackwell, xe2, competitive-landscape, v1.0-criteria]

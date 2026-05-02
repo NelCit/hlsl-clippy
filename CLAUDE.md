@@ -480,7 +480,7 @@ Silicon) or `slang-<version>-macos-x86_64.tar.gz` (Intel) into the same
 
 ## ADR index
 
-All 17 ADRs are in MADR 4.0 format under `docs/decisions/`. Each ADR's
+All 18 ADRs are in MADR 4.0 format under `docs/decisions/`. Each ADR's
 `status` field is the canonical authority — read it before assuming a
 decision is settled.
 
@@ -503,6 +503,7 @@ decision is settled.
 | [0015](docs/decisions/0015-phase-6-launch-plan.md) | Phase 6 launch plan — v0.5.0 release | Accepted |
 | [0016](docs/decisions/0016-phase-7-ir-infrastructure.md) | Phase 7 IR-level analysis infrastructure — DXIL engine + liveness + register-pressure | Accepted (superseded by 0017 for sub-phase 7a.2-step2 + 7b) |
 | [0017](docs/decisions/0017-phase-7-revised-no-ir-bridge.md) | Phase 7 revised: no DXIL/SPIR-V bridge — AST + reflection + Phase 4 CFG cover the surface | Accepted |
+| [0018](docs/decisions/0018-v08-research-direction.md) | v0.8+ research direction — 17 LOCKED + 4 DEFERRED rules across v0.8/v0.9/v0.10 | Accepted |
 
 "Proposed" ADRs represent plans that are approved in principle but not yet
 fully implemented. "Accepted" ADRs represent shipped decisions. Do not
