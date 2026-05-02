@@ -13,6 +13,53 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [0.6.3] — 2026-05-02
+
+VS Code extension UX wave: inline right-click commands (no more
+submenu nesting), severity-split status bar with click-to-quick-pick,
+client-side code actions for suppress-line / suppress-file /
+open-docs, "Show All Rules" webview, plus the
+`vscode.workspace.save()` API-version compatibility fix that was
+masking the v0.6.1 / v0.6.2 "command not found" report.
+
+### Fixed
+- **`HLSL Clippy: Re-lint Active Document` no longer throws on VS
+  Code 1.85.** v0.6.1 used `vscode.workspace.save()` which is a 1.86+
+  API; on 1.85 the call was a TypeError. Replaced with
+  `vscode.commands.executeCommand("workbench.action.files.save")`
+  which has been stable since 1.0 and operates on the active editor.
+
+### Added
+- **Editor right-click menu**: the four user-facing commands now
+  appear directly inline (no submenu nesting) when right-clicking
+  inside an HLSL file. Order: Open Rule Docs → Suppress for Line →
+  Suppress for File → Re-lint → Show All Rules → Show Output.
+- **Code actions** (`Ctrl+.` / lightbulb on any HLSL Clippy
+  diagnostic):
+  - `HLSL Clippy: suppress '<rule>' for this line` -- inserts
+    `// hlsl-clippy: allow(rule-id)` at the end of the offending
+    line. If a comment already exists, extends its rule list.
+  - `HLSL Clippy: suppress '<rule>' for entire file` -- inserts
+    (or extends) a top-of-file `// hlsl-clippy: allow(rule-id)`.
+  - `HLSL Clippy: open '<rule>' docs` -- opens the per-rule docs
+    page on github.com.
+  These actions sit alongside the LSP server's existing quick-fixes;
+  one diagnostic with a machine-applicable fix now offers four
+  lightbulb actions: the fix + the three above.
+- **Status-bar severity split**: `$(check) HLSL Clippy $(error) 2
+  $(warning) 5 $(info) 1` instead of one flat count. Severity tiers
+  with zero count are omitted to save real estate.
+- **Status-bar click → quick-pick** (`HLSL Clippy: Quick Actions...`)
+  lists every extension command with icons + descriptions. Replaces
+  the click-jumps-to-output behaviour from v0.6.1 / v0.6.2; output
+  is still on the menu, just not the only option.
+- **`HLSL Clippy: Show All Rules`** -- opens a webview side panel
+  listing every rule category with a deep link to its docs section.
+- **`HLSL Clippy: Open Welcome Walkthrough`** -- re-opens the
+  first-install guided tour for users who closed the Welcome tab.
+- **Suppress-line / Suppress-file / Quick-Actions / Walkthrough**
+  commands also appear in the Command Palette.
+
 ## [0.6.2] — 2026-05-02
 
 VS Code extension follow-up to v0.6.1: surface the four extension
@@ -600,6 +647,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.6.3]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.6...v0.6.0

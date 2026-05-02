@@ -3,7 +3,7 @@
   "displayName": "HLSL Clippy",
   "description": "Linter for HLSL — performance + correctness rules beyond what dxc catches.",
   "publisher": "nelcit",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.85.0"
@@ -71,32 +71,64 @@
         "command": "hlslClippy.openRuleDocs",
         "title": "Open Rule Docs",
         "category": "HLSL Clippy"
+      },
+      {
+        "command": "hlslClippy.suppressRuleForLine",
+        "title": "Suppress Rule for This Line",
+        "category": "HLSL Clippy"
+      },
+      {
+        "command": "hlslClippy.suppressRuleForFile",
+        "title": "Suppress Rule for Entire File",
+        "category": "HLSL Clippy"
+      },
+      {
+        "command": "hlslClippy.showAllRules",
+        "title": "Show All Rules",
+        "category": "HLSL Clippy"
+      },
+      {
+        "command": "hlslClippy.quickActions",
+        "title": "Quick Actions...",
+        "category": "HLSL Clippy"
+      },
+      {
+        "command": "hlslClippy.openWalkthrough",
+        "title": "Open Welcome Walkthrough",
+        "category": "HLSL Clippy"
       }
     ],
     "menus": {
       "editor/context": [
         {
-          "submenu": "hlslClippy.editorContext",
-          "group": "1_modification@99",
-          "when": "editorLangId == hlsl"
-        }
-      ],
-      "hlslClippy.editorContext": [
-        {
           "command": "hlslClippy.openRuleDocs",
-          "group": "1_diagnostic@1"
+          "group": "9_hlslClippy@1",
+          "when": "editorLangId == hlsl"
+        },
+        {
+          "command": "hlslClippy.suppressRuleForLine",
+          "group": "9_hlslClippy@2",
+          "when": "editorLangId == hlsl"
+        },
+        {
+          "command": "hlslClippy.suppressRuleForFile",
+          "group": "9_hlslClippy@3",
+          "when": "editorLangId == hlsl"
         },
         {
           "command": "hlslClippy.relintDocument",
-          "group": "2_action@1"
+          "group": "9_hlslClippy@4",
+          "when": "editorLangId == hlsl"
+        },
+        {
+          "command": "hlslClippy.showAllRules",
+          "group": "9_hlslClippy@5",
+          "when": "editorLangId == hlsl"
         },
         {
           "command": "hlslClippy.showOutput",
-          "group": "3_diagnostic@1"
-        },
-        {
-          "command": "hlslClippy.restart",
-          "group": "3_diagnostic@2"
+          "group": "9_hlslClippy@6",
+          "when": "editorLangId == hlsl"
         }
       ],
       "commandPalette": [
@@ -107,15 +139,17 @@
         {
           "command": "hlslClippy.openRuleDocs",
           "when": "editorLangId == hlsl"
+        },
+        {
+          "command": "hlslClippy.suppressRuleForLine",
+          "when": "editorLangId == hlsl"
+        },
+        {
+          "command": "hlslClippy.suppressRuleForFile",
+          "when": "editorLangId == hlsl"
         }
       ]
     },
-    "submenus": [
-      {
-        "id": "hlslClippy.editorContext",
-        "label": "HLSL Clippy"
-      }
-    ],
     "keybindings": [
       {
         "command": "hlslClippy.relintDocument",
