@@ -220,6 +220,31 @@ add_library(hlsl_clippy_core STATIC
     src/rules/quadany_replaceable_with_derivative_uniform_branch.cpp
 )
 
+# Phase 7 — IR-level analysis infrastructure (ADR 0016, sub-phase 7a.1).
+#
+# Gated behind `HLSL_CLIPPY_ENABLE_IR` (default ON). Sub-phase 7a.1 ships the
+# public API surface + a stub engine that always returns
+# `clippy::ir-not-implemented`; sub-phase 7a.2 adds the DXC submodule, the
+# real `dxil_bridge.cpp` parser, and `cmake/UseDxc.cmake`. The `target_sources`
+# call below lands the 7a.1 skeleton; 7a.2 will append `dxil_bridge.cpp` +
+# `debug_info.cpp` to the same conditional block.
+#
+# When the option is OFF, `core/src/ir/` is excluded from the build entirely
+# AND `HLSL_CLIPPY_IR_DISABLED` is defined on `hlsl_clippy_core`'s public
+# compile flags so the orchestrator can stub `IrEngine::analyze` to return a
+# permanent "compiled-out" diagnostic without linking the engine TU.
+option(HLSL_CLIPPY_ENABLE_IR
+       "Build the Phase 7 IR-level analysis engine (ADR 0016). Default ON."
+       ON)
+
+if(HLSL_CLIPPY_ENABLE_IR)
+    target_sources(hlsl_clippy_core PRIVATE
+        src/ir/engine.cpp
+    )
+else()
+    target_compile_definitions(hlsl_clippy_core PUBLIC HLSL_CLIPPY_IR_DISABLED)
+endif()
+
 target_include_directories(hlsl_clippy_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>

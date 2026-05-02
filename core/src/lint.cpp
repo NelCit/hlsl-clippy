@@ -15,11 +15,22 @@
 #include "hlsl_clippy/config.hpp"
 #include "hlsl_clippy/control_flow.hpp"
 #include "hlsl_clippy/diagnostic.hpp"
+#include "hlsl_clippy/ir.hpp"
 #include "hlsl_clippy/reflection.hpp"
 #include "hlsl_clippy/rule.hpp"
 #include "hlsl_clippy/source.hpp"
 #include "hlsl_clippy/suppress.hpp"
 #include "reflection/engine.hpp"
+
+// Phase 7 (ADR 0016): the IR engine TU is built only when
+// `HLSL_CLIPPY_ENABLE_IR=ON` (the default). When OFF, `core/src/ir/engine.cpp`
+// is excluded from the link and `HLSL_CLIPPY_IR_DISABLED` is defined; we
+// guard the include + the dispatch block here so the orchestrator still
+// builds and emits a one-shot "compiled out" diagnostic for any Stage::Ir
+// rule the caller enabled.
+#if !defined(HLSL_CLIPPY_IR_DISABLED)
+#include "ir/engine.hpp"
+#endif
 
 #include "parser_internal.hpp"
 
@@ -104,6 +115,20 @@ void walk(::TSNode root,
 [[nodiscard]] bool any_control_flow_rule(std::span<const std::unique_ptr<Rule>> rules) noexcept {
     for (const auto& rule : rules) {
         if (rule && rule->stage() == Stage::ControlFlow) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/// True when at least one rule in `rules` has `stage() == Stage::Ir`. Used
+/// by the orchestrator to short-circuit IR-engine construction for AST-only
+/// / reflection-only / CFG-only rule packs (ADR 0016). When this returns
+/// false the IR engine is never touched and the (eventual) DXC bridge never
+/// runs.
+[[nodiscard]] bool any_ir_rule(std::span<const std::unique_ptr<Rule>> rules) noexcept {
+    for (const auto& rule : rules) {
+        if (rule && rule->stage() == Stage::Ir) {
             return true;
         }
     }
@@ -201,6 +226,52 @@ namespace {
                 ctx.emit(std::move(diag));
             }
         }
+    }
+
+    // ----- IR stage ---------------------------------------------------------
+    // Construct the IR engine only if at least one rule asked for IR AND the
+    // caller didn't disable it via options (ADR 0016). The engine reuses the
+    // Slang ISession pool from ADR 0012 (a future 7a.2 will additionally call
+    // `getEntryPointCode` inside the same compile path); 7a.1 ships a stub
+    // engine that always returns the `clippy::ir-not-implemented` Note
+    // diagnostic. Either way the routing logic is the same and is locked in
+    // by tests so 7a.2 only changes the engine internals, not this dispatch.
+    //
+    // When the engine TU is compiled out via `HLSL_CLIPPY_ENABLE_IR=OFF`, we
+    // emit a single `clippy::ir-compiled-out` Note diagnostic per source per
+    // lint run so the user knows their Stage::Ir rule selection was
+    // observed but no engine is available.
+    if (options.enable_ir && any_ir_rule(rules)) {
+#if defined(HLSL_CLIPPY_IR_DISABLED)
+        Diagnostic diag;
+        diag.code = std::string{"clippy::ir-compiled-out"};
+        diag.severity = Severity::Note;
+        diag.primary_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
+        diag.message = std::string{
+            "IR-stage rule selected but this build was configured with "
+            "`HLSL_CLIPPY_ENABLE_IR=OFF` (ADR 0016). Re-build with the option "
+            "ON to enable Phase 7 IR-level analysis. AST / reflection / "
+            "control-flow rules are unaffected."};
+        ctx.emit(std::move(diag));
+#else
+        const std::string profile =
+            options.target_profile.has_value() ? *options.target_profile : std::string{};
+        auto& ir_engine = ir::IrEngine::instance();
+        auto ir_or_error = ir_engine.analyze(sources, source, profile);
+        if (!ir_or_error.has_value()) {
+            // Surface the engine's diagnostic (e.g. the 7a.1 not-implemented
+            // notice, or in 7a.2 a real DXIL-parse failure) and skip IR rules
+            // for this source. AST / reflection / CFG rules already fired.
+            ctx.emit(std::move(ir_or_error.error()));
+        } else {
+            const IrInfo& ir_info = ir_or_error.value();
+            for (const auto& rule : rules) {
+                if (rule->stage() == Stage::Ir) {
+                    rule->on_ir(tree_view, ir_info, ctx);
+                }
+            }
+        }
+#endif
     }
 
     auto diagnostics = ctx.take_diagnostics();

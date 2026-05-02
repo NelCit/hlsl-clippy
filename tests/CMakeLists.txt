@@ -190,6 +190,9 @@ add_executable(hlsl_clippy_unit_tests
     # Phase 5 sub-phase 5a — LSP server scaffolding (ADR 0014).
     unit/test_lsp.cpp
 
+    # Phase 7 sub-phase 7a.1 — IR-level analysis API + orchestrator routing (ADR 0016).
+    unit/test_ir.cpp
+
     # Phase 4 sub-phase 4a — control-flow / data-flow infrastructure (ADR 0013).
     unit/test_cfg.cpp
 

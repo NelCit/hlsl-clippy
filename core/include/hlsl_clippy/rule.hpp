@@ -13,12 +13,14 @@ class SuppressionSet;
 /// Phase 3 (ADR 0012) introduces `Reflection` for rules that need Slang
 /// reflection data (resource bindings, cbuffer layouts, entry-point shape);
 /// Phase 4 (ADR 0013) introduces `ControlFlow` for rules that need the
-/// per-source CFG + uniformity oracle.
+/// per-source CFG + uniformity oracle; Phase 7 (ADR 0016) introduces `Ir`
+/// for rules that need a post-codegen DXIL view (liveness, register
+/// pressure, DXR / SM 6.9 / mesh-shader intrinsics).
 enum class Stage {
     Ast,          ///< AST-only (default; Phase 0/1/2).
     Reflection,   ///< Needs `ReflectionInfo` (Phase 3).
     ControlFlow,  ///< Needs `ControlFlowInfo` (Phase 4).
-    // future: Ir (Phase 7).
+    Ir,           ///< Needs `IrInfo` (Phase 7 -- ADR 0016).
 };
 
 /// Forward declaration of the tree-sitter node wrapper. The full definition
@@ -41,6 +43,11 @@ struct ReflectionInfo;
 /// const reference so this header does not need to pull the (heavier)
 /// control-flow header into every rule TU.
 struct ControlFlowInfo;
+
+/// Forward declaration of the public IR aggregate. The full definition lives
+/// in `hlsl_clippy/ir.hpp`; `Rule::on_ir` takes a const reference so this
+/// header does not need to pull the (heavier) IR header into every rule TU.
+struct IrInfo;
 
 /// Context passed to rule hooks. Owns the diagnostic sink for the in-progress
 /// lint pass and exposes the source under analysis.
@@ -132,6 +139,18 @@ public:
     /// both sides: the CFG tells them "what path", the AST tells them "what
     /// syntactic shape". Default implementation does nothing.
     virtual void on_cfg(const AstTree& tree, const ControlFlowInfo& cfg, RuleContext& ctx);
+
+    /// IR-stage hook called once per parsed source per target profile for
+    /// rules with `stage() == Stage::Ir` (ADR 0016). The orchestrator runs
+    /// the IR engine at most once per `(SourceId, target_profile)` tuple per
+    /// lint run -- it reuses the existing Slang `ISession` pool from ADR
+    /// 0012 and additionally captures the DXIL blob that Slang emits, then
+    /// parses the blob into an `IrInfo`. Rules retain access to the
+    /// `AstTree` because diagnostic anchoring sometimes prefers the source
+    /// declaration over an IR debug-info span (e.g. `oversized-ray-payload`
+    /// anchors to the payload `struct` declaration in source, not the
+    /// `OpStore` in IR). Default implementation does nothing.
+    virtual void on_ir(const AstTree& tree, const IrInfo& ir, RuleContext& ctx);
 };
 
 }  // namespace hlsl_clippy

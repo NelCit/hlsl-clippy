@@ -47,6 +47,19 @@ struct LintOptions {
     /// facts at higher build-time cost; rules that need deeper reasoning are
     /// explicitly Phase 7. Ignored when CFG construction is not invoked.
     std::uint32_t cfg_inlining_depth = 3;
+
+    /// When false, the IR stage is skipped entirely even if IR-stage rules
+    /// are enabled (ADR 0016). Useful for CI runs that want to isolate
+    /// Phase 7 cost, or for downstream consumers built with
+    /// `HLSL_CLIPPY_ENABLE_IR=OFF` where the engine simply isn't linked in.
+    /// Ignored when no enabled rule has `stage() == Stage::Ir`.
+    bool enable_ir = true;
+
+    /// Per-instruction live-value count above which `vgpr-pressure-warning`
+    /// fires (ADR 0016 §"Shared utilities"). Default 64 (~RDNA wave32 ×2).
+    /// Per-arch refinement is a v0.8+ follow-up. Ignored when no enabled
+    /// rule consumes the register-pressure estimator.
+    std::uint32_t vgpr_pressure_threshold = 64;
 };
 
 /// Run every rule against the source and return the accumulated diagnostics
