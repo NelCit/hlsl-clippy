@@ -379,6 +379,12 @@ IR-level analysis. Slang emits DXIL and SPIR-V; we consume them via existing par
 
 These are research-grade and gated on real adoption. Don't pre-build them.
 
+### Phase status
+
+| Phase | State | Notes |
+|---|---|---|
+| 8 — Research-driven expansion (v0.8+) | PLANNED | See [ADR 0018](docs/decisions/0018-v08-research-direction.md) |
+
 ## Candidate rule expansion (research, adjudicated by ADR 0011)
 
 The rules listed below are **candidates** sourced from a research pass dated 2026-05-01, surfacing surfaces that the prior locked plan under-covered (groupshared / LDS micro-architecture, ByteAddressBuffer alignment, root-signature ergonomics, mesh / amplification edge cases, helper-lane / quad subtleties, texture-format swizzle traps, and divergence hint mistakes). **All 63 candidates have been adjudicated by [ADR 0011](docs/decisions/0011-candidate-rule-adoption.md)** — 41 LOCKED to specific phases (and inlined into Phases 2 / 3 / 4 / 7 above with a `*(via ADR 0011)*` marker), 20 DEFERRED with one-line reasons, 2 DROPPED as duplicates of already-locked rules. Per-candidate verdicts appear as a suffix on each line below. Future expansions add a successor ADR rather than amending ADR 0011. Surface groupings below (h3) match the rule-pack catalog vocabulary in ADR 0007 / ADR 0010 wherever possible; new categories (`buffer-access`, `root-signature`, `texture-format`, `divergence-hints`, `wave-quad-extras`, `precision`) are proposed alongside the rules that populate them.
