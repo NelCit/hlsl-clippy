@@ -13,6 +13,89 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [0.6.8] — 2026-05-02
+
+Editor experience + rule-pack maintenance release. Two LSP plumbing bugs
+that made VS Code feel broken are gone, fix-all now actually works, and
+10 rules previously emitting Fix-less diagnostics now carry a TextEdit.
+
+### Fixed
+- **LSP `diagnosticProvider` capability**: the server advertised LSP 3.17
+  pull diagnostics it never implemented, so vscode-languageclient v9
+  spammed `Document pull failed` (-32601 method-not-found) for every
+  open `.hlsl` file. We push diagnostics via `publishDiagnostics`;
+  removed the bogus capability advertisement and added a regression
+  test that asserts the pull method stays unimplemented.
+- **LSP min-precision Slang failures surfaced as Error**: any file
+  using DXC's minimum-precision types (`min16float` / `min16uint` /
+  `min16int`) — which Slang's HLSL frontend doesn't accept — emitted a
+  red `clippy::reflection` Error in the IDE even though AST-only rules
+  ran cleanly. Now demoted to `Severity::Note` (LSP Information) when
+  the failure is *only* min-precision-related, with a message pointing
+  the user at the spec'd 16-bit type alternatives. Real Slang errors
+  (syntax errors, user-defined undefined identifiers) keep
+  `Severity::Error`.
+- **VS Code "Fix All in Document"**: the `ClippyFixAllProvider` walked
+  diagnostics one at a time, calling `executeCodeActionProvider`
+  recursively per diagnostic; this hit the LSP N times, returned fixes
+  for *every* overlapping diagnostic on each pass, and raced the outer
+  CancellationToken on large files. Replaced with a single
+  `gatherFixAllEdit(document)` helper that does one full-document
+  QuickFix gather, filters aux suppress/open-docs actions, and merges
+  every TextEdit into one WorkspaceEdit. The
+  `hlslClippy.fixAllInDocument` command and the
+  `source.fixAll.hlslClippy` provider both call it.
+
+### Added
+- **TextEdit fixes on 10 previously fix-less rules**, after a full
+  154-rule audit. Each rule's fix is single-span, side-effect-aware,
+  and gated on operand simplicity for the `machine_applicable` flag:
+  - `pow-const-squared` — `pow(x, N.0)` → repeated multiplication
+    (matches `pow-to-mul` on overlapping exponents; covers exponent 5).
+  - `samplegrad-with-constant-grads` — `<tex>.SampleGrad(s, uv, 0, 0)`
+    → `<tex>.SampleLevel(s, uv, 0.0)`.
+  - `coherence-hint-redundant-bits` — clamp `hintBits` literal to the
+    SER spec ceiling (32).
+  - `gather-channel-narrowing` — `Gather(...).<ch>` →
+    `Gather<Channel>(...).r` (machine-applicable only on `.r`/`.x`).
+  - `descriptor-heap-no-non-uniform-marker` — wrap heap index in
+    `NonUniformResourceIndex(...)`.
+  - `flatten-on-uniform-branch` — `[flatten]` → `[branch]`.
+  - `missing-ray-flag-cull-non-opaque` — OR
+    `RAY_FLAG_CULL_NON_OPAQUE` into the existing flag expression.
+  - `quadany-replaceable-with-derivative-uniform-branch` — unwrap
+    `QuadAny(cond)` to bare `cond` (machine-applicable; non-duplicating).
+  - `non-uniform-resource-index` — wrap captured index in
+    `NonUniformResourceIndex(...)`.
+  - `omm-rayquery-force-2state-without-allow-flag` — append
+    `| RAY_FLAG_ALLOW_OPACITY_MICROMAPS` to the `RayQuery<...>` flag
+    template arg.
+- **LSP regression test suite** for the fix-all path: full-pipeline
+  `didOpen` → `publishDiagnostics` carries non-empty diagnostics on
+  fixable buffers, full-document `textDocument/codeAction` returns a
+  quickfix with populated `edit.changes[uri]`, and
+  `textDocument/diagnostic` (pull) returns method-not-found.
+
+### Changed
+- **5 rule docs `applicability:` tags realigned to reality** (no code
+  change beyond what shipped above):
+  - `unused-cbuffer-field`: machine-applicable → suggestion. Deleting
+    a cbuffer field shifts every subsequent field's offset and shrinks
+    the cbuffer's declared size; CPU-side struct mirrors and aliased
+    bindings would silently misalign.
+  - `dead-store-sv-target`: machine-applicable → suggestion.
+    Declaration-vs-assignment ambiguity, and the RHS may have
+    observable side effects (UAV writes, atomics) that the structural
+    detector cannot see through.
+  - `gather-cmp-vs-manual-pcf`: machine-applicable → suggestion.
+    Multi-statement rewrite that needs invented blend-variable
+    identifiers and depends on a project-specific texel-size cbuffer
+    field; the cluster detector also doesn't prove the input is
+    actually a 2×2 axis-aligned kernel.
+  - `non-uniform-resource-index`: none → suggestion (Fix shipped above).
+  - `omm-rayquery-force-2state-without-allow-flag`: none → suggestion
+    (Fix shipped above).
+
 ## [0.6.7] — 2026-05-02
 
 **Critical hotfix**: v0.6.6's .vsix activation crashed in VS Code with
@@ -767,6 +850,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.6.8]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.7...v0.6.8
 [0.6.7]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.6...v0.6.7
 [0.6.6]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.5...v0.6.6
 [0.6.5]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.4...v0.6.5
