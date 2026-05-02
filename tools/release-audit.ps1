@@ -107,8 +107,23 @@ foreach ($chunk in ($rawLog -split [char]0x1e)) {
 Write-Host "[1/6] DCO sign-off (every commit since $prevLabel)"
 $dcoFails = 0
 foreach ($r in $records) {
-    $expected = "Signed-off-by:.*<$([regex]::Escape($r.Email))>"
-    if ($r.Body -match $expected) { continue }
+    # Use `git interpret-trailers --parse` to extract Signed-off-by trailers
+    # from the commit body. The previous regex-on-the-body approach was
+    # fragile against line-ending variations (CRLF on Windows, mixed
+    # endings in the git-log output) and would false-fail on commits with
+    # the trailer present. `interpret-trailers` is the canonical parser.
+    $trailers = & git -C $RepoRoot show -s --format=%B $r.Sha 2>$null |
+        & git -C $RepoRoot interpret-trailers --parse 2>$null
+    if (-not $trailers) { $trailers = '' }
+    $expected = "<$($r.Email)>"
+    $found = $false
+    foreach ($line in ($trailers -split "`n")) {
+        if ($line -match '^Signed-off-by:' -and $line -like "*$expected*") {
+            $found = $true
+            break
+        }
+    }
+    if ($found) { continue }
     Write-Host "    missing/mismatched sign-off: $($r.Sha.Substring(0,12)) by $($r.Email)"
     $dcoFails++
 }

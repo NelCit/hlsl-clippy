@@ -13,6 +13,82 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [1.0.0] — 2026-05-02
+
+**v1.0 — graduated from research preview to stable release.** 190
+registered rules, API stability commitment, v1.x maintenance contract.
+
+The pre-v1 / v0.x labels signalled "we reserve the right to break
+things." v1.0 freezes the public API: `core/include/hlsl_clippy/*.hpp`
+types, CLI flags + output formats, LSP wire protocol (engine
+diagnostic codes plus standard LSP). A v1.0 → v1.x bump may not change
+the binary shape of those surfaces. Removing or renaming a public type
+is a v2.0 break.
+
+See [docs/decisions/0019-v1-release-plan.md](docs/decisions/0019-v1-release-plan.md)
+for the per-criterion v1.0 disposition table and the v1.x maintenance
+contract (4-week minor cadence, 1-week security/regression patch SLA,
+deprecation policy, Slang submodule cadence policy).
+
+### Added
+
+- **`docs/api-stability.md`** — the public-API contract. Tables of
+  stable surface (public headers + CLI + LSP), explicitly non-stable
+  surface (private headers, dev-shell scripts, exact diagnostic
+  message wording), and a regression-reporting note.
+- **3 new CI gates**:
+  - `api-symbol-diff` — extracts `nm` symbols from `hlsl_clippy_core`
+    and uploads as artefact. The `diff` step against the v1.0
+    baseline is a v1.0.x patch follow-up.
+  - `slang-bump-regression` — nightly cron, bumps `HLSL_CLIPPY_SLANG_VERSION`
+    one patch, builds + tests. Catches Slang-side breakages before
+    user-visible bumps.
+  - `ihv-target-snapshot` — runs `hlsl-clippy lint tests/corpus/`
+    once per `[experimental.target]` value. Default-config snapshot
+    must contain zero IHV-target-coded diagnostics.
+- **`tests/unit/test_ihv_target_snapshot.cpp`** — in-tree complement
+  to the CI snapshot job; 4 cases / 12 assertions.
+- **`tools/release-audit.{ps1,sh}`** — pre-tag audit. 6 checks: DCO
+  trailer on every commit since previous tag, Conventional-Commits
+  subject on every commit, CHANGELOG entry exists for the new
+  version, version strings synced across `core/src/version.cpp` /
+  `vscode-extension/package.json` / CHANGELOG / git tag, ADR index
+  consistency, public-header guard.
+- **`tools/fp-rate-baseline.ps1`** — runs `hlsl-clippy lint --format=json`
+  across `tests/corpus/`, aggregates per-rule firing counts, generates
+  `tests/corpus/FP_RATES.md` for human triage. Initial baseline: 39
+  rules fire / 211 diagnostics across the 27-shader corpus.
+- **`docs/rules/_template.md`** — required `references:` front-matter
+  field (≥ 2 entries) for v0.8+ rules. Pre-v0.8 rules grandfathered.
+- **`docs/blog/<id>.md`** — per-rule blog post stubs for every rule.
+  204 stubs generated; the existing `pow-const-squared.md` full post
+  + 8 category-overview launch posts + 1 preface kept untouched.
+  Full-length per-rule prose ships incrementally over v1.x; target
+  ≥ 80% by v1.6.
+- **ADR 0019** — v1.0 release plan. Closes 10 of 12 ADR 0018 §5
+  readiness criteria; criteria #7 (Marketplace install count) and
+  #8 (downstream-integration count) deferred to v1.1 readiness review.
+- **4 machine-applicable fix conversions** (criterion #5 sweep):
+  `acos-without-saturate` → `clamp(x, -1.0, 1.0)`,
+  `sqrt-of-potentially-negative` → `max(0.0, x)`,
+  `select-vs-lerp-of-constant` → `mad(t, K2 - K1, K1)`,
+  `ser-coherence-hint-bits-overflow` → clamp bits literal to spec cap.
+  Final ratio: 42 / 159 = 26.4% (was 23.9% pre-sweep). The 50% target
+  in ADR 0018 §5 #5 is honestly out of reach without infrastructure
+  that doesn't exist yet (side-effect-purity oracle, DXGI format
+  reflection, configurable epsilons); criterion #5 is **lifted to v1.2**
+  alongside that infrastructure (per ADR 0019).
+
+### Changed
+
+- ROADMAP.md — Phase 8 marked DONE; Phase 9 (v1.0 release) added
+  IN PROGRESS.
+- CLAUDE.md ADR index → 19 ADRs.
+
+### Deprecated
+
+- _(none — v1.0 is a clean baseline; deprecations only land in v1.x.)_
+
 ## [0.8.0] — 2026-05-02
 
 **Phase 8 — Research-driven expansion.** 21 new rules (17 LOCKED + 4
@@ -1023,6 +1099,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[1.0.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.8.0...v1.0.0
 [0.8.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.8...v0.7.0
 [0.6.8]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.7...v0.6.8
