@@ -1230,6 +1230,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[1.2.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.8.0...v1.0.0
 [0.8.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.7.0...v0.8.0
