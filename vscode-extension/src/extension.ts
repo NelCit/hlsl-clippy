@@ -22,14 +22,71 @@ import { readSettings, toInitializationOptions, getTraceLevel } from "./settings
 
 let client: LanguageClient | undefined;
 let outputChannel: vscode.OutputChannel | undefined;
+let statusBarItem: vscode.StatusBarItem | undefined;
 
 const k_languageId = "hlsl";
 const k_clientId = "hlslClippy";
 const k_clientName = "HLSL Clippy";
 
+// Visible signal in the status bar so users can tell at a glance whether
+// the extension activated, is in the middle of starting, or failed
+// silently. Without this, a working install and a broken install (e.g.
+// missing Slang DLLs on Windows -- the hlsl-clippy-lsp.exe load fails
+// before the JSON-RPC handshake) look identical from the editor.
+// Most recent state, kept around so the diagnostic-count refresh can rebuild
+// the status text without losing the last health signal.
+let lastState: "starting" | "ready" | "error" = "starting";
+let lastTooltip = "HLSL Clippy: starting...";
+
+function renderStatus() {
+    if (!statusBarItem) {
+        return;
+    }
+    const icon =
+        lastState === "ready" ? "$(check)"
+            : lastState === "starting" ? "$(sync~spin)"
+            : "$(error)";
+
+    let count = 0;
+    if (lastState === "ready" && vscode.window.activeTextEditor) {
+        const uri = vscode.window.activeTextEditor.document.uri;
+        if (uri.scheme === "file" || uri.scheme === "untitled") {
+            count = vscode.languages.getDiagnostics(uri)
+                .filter((d) => d.source === undefined || d.source === "hlsl-clippy")
+                .length;
+        }
+    }
+    const countLabel = lastState === "ready" && count > 0 ? ` ${count}` : "";
+    statusBarItem.text = `${icon} HLSL Clippy${countLabel}`;
+    statusBarItem.tooltip =
+        `${lastTooltip}\n\nClick to open the HLSL Clippy output channel.`;
+    statusBarItem.backgroundColor =
+        lastState === "error"
+            ? new vscode.ThemeColor("statusBarItem.errorBackground")
+            : undefined;
+}
+
+function setStatus(state: "starting" | "ready" | "error", tooltip: string) {
+    if (!statusBarItem) {
+        statusBarItem = vscode.window.createStatusBarItem(
+            vscode.StatusBarAlignment.Right,
+            100,
+        );
+        statusBarItem.command = "hlslClippy.showOutput";
+        statusBarItem.show();
+    }
+    lastState = state;
+    lastTooltip = tooltip;
+    renderStatus();
+}
+
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     outputChannel = vscode.window.createOutputChannel(k_clientName);
     context.subscriptions.push(outputChannel);
+    setStatus("starting", "HLSL Clippy: starting LSP server...");
+    context.subscriptions.push({
+        dispose: () => statusBarItem?.dispose(),
+    });
 
     context.subscriptions.push(
         vscode.commands.registerCommand("hlslClippy.restart", async () => {
@@ -40,6 +97,67 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         vscode.commands.registerCommand("hlslClippy.showOutput", () => {
             outputChannel?.show(true);
         }),
+    );
+    // Force a re-lint of the active document. Useful after editing
+    // .hlsl-clippy.toml or after enabling/disabling a rule via settings,
+    // when the user wants to see the new behaviour without typing.
+    context.subscriptions.push(
+        vscode.commands.registerCommand("hlslClippy.relintDocument", async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor || editor.document.languageId !== k_languageId) {
+                void vscode.window.showInformationMessage(
+                    "HLSL Clippy: open a .hlsl document to re-lint it.",
+                );
+                return;
+            }
+            // The LSP server re-lints on didSave, so the cheapest "force a
+            // re-lint" trigger is a no-op save. We round-trip a synthetic
+            // didChange + didSave through the language client.
+            await vscode.workspace.save(editor.document.uri);
+            outputChannel?.appendLine(
+                `[hlsl-clippy] Re-lint requested for ${editor.document.uri.fsPath}`,
+            );
+        }),
+    );
+    // Surface the per-rule docs page for the diagnostic at the cursor.
+    // VS Code's diagnostic.code can be either a string or a {value, target}
+    // pair; we accept both. Falls back to listing all diagnostics if the
+    // cursor isn't on one.
+    context.subscriptions.push(
+        vscode.commands.registerCommand("hlslClippy.openRuleDocs", async (ruleArg?: string) => {
+            let ruleId: string | undefined = typeof ruleArg === "string" ? ruleArg : undefined;
+            if (!ruleId) {
+                const editor = vscode.window.activeTextEditor;
+                if (editor) {
+                    const diags = vscode.languages.getDiagnostics(editor.document.uri);
+                    const here = diags.find((d) => d.range.contains(editor.selection.active));
+                    if (here && here.code) {
+                        const code = here.code;
+                        ruleId = typeof code === "string"
+                            ? code
+                            : typeof code === "number"
+                                ? String(code)
+                                : code.value.toString();
+                    }
+                }
+            }
+            if (!ruleId || ruleId.startsWith("clippy::")) {
+                void vscode.window.showInformationMessage(
+                    "HLSL Clippy: place the cursor on a diagnostic to open its rule docs.",
+                );
+                return;
+            }
+            const url = `https://github.com/NelCit/hlsl-clippy/blob/main/docs/rules/${ruleId}.md`;
+            await vscode.env.openExternal(vscode.Uri.parse(url));
+        }),
+    );
+
+    // Refresh the status-bar diagnostic count whenever the active editor or
+    // its diagnostics change. Cheap (status bar render is constant work);
+    // covers the typing-cadence case + the cursor-moves-to-other-file case.
+    context.subscriptions.push(
+        vscode.window.onDidChangeActiveTextEditor(() => renderStatus()),
+        vscode.languages.onDidChangeDiagnostics(() => renderStatus()),
     );
 
     // React to settings changes that affect the server: settings forwarded as
@@ -63,9 +181,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     try {
         await startServer(context);
+        setStatus("ready", "HLSL Clippy: LSP server running. Open a .hlsl / .hlsli file to see diagnostics.");
+        outputChannel.appendLine(
+            "[hlsl-clippy] LSP server ready. Open a .hlsl / .hlsli file to see diagnostics in the Problems panel.",
+        );
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         outputChannel.appendLine(`[hlsl-clippy] Failed to start: ${message}`);
+        setStatus("error", `HLSL Clippy: failed to start LSP server.\n${message}`);
         if (err instanceof ServerResolutionError) {
             void vscode.window.showErrorMessage(
                 `HLSL Clippy: ${err.message} ` +
@@ -148,14 +271,17 @@ async function startServer(context: vscode.ExtensionContext): Promise<void> {
 }
 
 async function restartServer(context: vscode.ExtensionContext): Promise<void> {
+    setStatus("starting", "HLSL Clippy: restarting LSP server...");
     if (client !== undefined && client.state !== State.Stopped) {
         await client.stop();
         client = undefined;
     }
     try {
         await startServer(context);
+        setStatus("ready", "HLSL Clippy: LSP server running.");
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
+        setStatus("error", `HLSL Clippy: restart failed.\n${message}`);
         void vscode.window.showErrorMessage(
             `HLSL Clippy restart failed: ${message}`,
         );

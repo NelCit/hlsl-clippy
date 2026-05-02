@@ -7,6 +7,27 @@ powered by the [`hlsl-clippy`](https://github.com/NelCit/hlsl-clippy) linter.
 This extension is a thin wrapper around the `hlsl-clippy-lsp` JSON-RPC
 server (see ADR 0014).
 
+## How it works (in 30 seconds)
+
+1. Install the extension. The matching `.vsix` for your OS+arch ships
+   the `hlsl-clippy-lsp` server binary inside it — no extra download.
+2. Open any `.hlsl` / `.hlsli` / `.fx` / `.fxh` / `.vsh` / `.psh` /
+   `.csh` / `.gsh` / `.hsh` / `.dsh` file in VS Code.
+3. The extension activates automatically and spawns the LSP server.
+   You'll see a **"$(check) HLSL Clippy"** badge in the bottom-right
+   status bar once the server is ready.
+4. Squiggles appear under any line that triggers a rule, and matching
+   entries land in the **Problems panel** (`Ctrl+Shift+M` on
+   Windows/Linux, `Cmd+Shift+M` on macOS).
+5. Hover a squiggle for an explanation + a link to the per-rule docs.
+   Click the lightbulb (or `Ctrl+.`) to apply a quick-fix when the
+   rule is `machine-applicable`.
+
+If the status-bar badge shows **"$(error) HLSL Clippy"** — click it to
+open the **HLSL Clippy** Output channel and see the failure reason
+(usually a missing binary or a permissions error). See the
+[Troubleshooting](#troubleshooting) section below for the common cases.
+
 ## Features
 
 - Inline diagnostics as you type, with the same rule ids the CI gate emits.
@@ -97,6 +118,32 @@ in the repo root.
 This extension bundles `vscode-languageclient` (MIT, Microsoft Corp.) and
 `@types/vscode` (MIT). Third-party license texts are reproduced in
 [`THIRD_PARTY_LICENSES.md`](https://github.com/NelCit/hlsl-clippy/blob/main/THIRD_PARTY_LICENSES.md).
+
+## Troubleshooting
+
+**No diagnostics when opening a `.hlsl` file?** Three checks:
+
+1. **Status-bar badge.** Look at the bottom-right corner of the VS
+   Code window. You should see one of:
+   - **$(check) HLSL Clippy** → server running. If you still see no
+     diagnostics, the file may not contain anything the rule pack
+     flags. Try a known-bad pattern like `pow(x, 2.0);`.
+   - **$(sync~spin) HLSL Clippy** → still starting. Wait 1–2 seconds.
+   - **$(error) HLSL Clippy** → activation failed. Click the badge
+     to open the Output channel; the failure reason is at the top.
+   - No badge at all → the extension didn't activate. Check the
+     editor's bottom-right language indicator: it must say "HLSL".
+     Click it and pick "HLSL" if it says "Plain Text".
+
+2. **Output channel.** `Ctrl+Shift+P` → "HLSL Clippy: Show Output
+   Channel". The first lines tell you which binary the resolver
+   picked and whether the LSP started cleanly.
+
+3. **Manual `serverPath`.** If the bundled binary is missing or
+   broken on your platform, download `hlsl-clippy-lsp` from the
+   matching [GitHub Release](https://github.com/NelCit/hlsl-clippy/releases),
+   extract it (Windows: keep all 7 sibling `.dll` files in the same
+   directory!), and set `hlslClippy.serverPath` to its absolute path.
 
 ## Reporting issues
 

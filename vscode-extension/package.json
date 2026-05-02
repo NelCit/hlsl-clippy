@@ -3,7 +3,7 @@
   "displayName": "HLSL Clippy",
   "description": "Linter for HLSL — performance + correctness rules beyond what dxc catches.",
   "publisher": "nelcit",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.85.0"
@@ -61,6 +61,53 @@
         "command": "hlslClippy.showOutput",
         "title": "Show Output Channel",
         "category": "HLSL Clippy"
+      },
+      {
+        "command": "hlslClippy.relintDocument",
+        "title": "Re-lint Active Document",
+        "category": "HLSL Clippy"
+      },
+      {
+        "command": "hlslClippy.openRuleDocs",
+        "title": "Open Rule Docs",
+        "category": "HLSL Clippy"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "hlslClippy.gettingStarted",
+        "title": "Get started with HLSL Clippy",
+        "description": "Squiggle-by-squiggle introduction to the HLSL linter.",
+        "steps": [
+          {
+            "id": "openHlslFile",
+            "title": "Open an HLSL file",
+            "description": "Open any `.hlsl`, `.hlsli`, `.fx`, `.fxh`, `.vsh`, `.psh`, `.csh`, `.gsh`, `.hsh`, or `.dsh` file in your workspace. The extension activates automatically when one is open.\n\nIf you don't have one handy, [create a new untitled file](command:workbench.action.files.newUntitledFile) and set its language to HLSL via the bottom-right language indicator.",
+            "completionEvents": [
+              "onLanguage:hlsl"
+            ]
+          },
+          {
+            "id": "checkStatus",
+            "title": "Check the status bar",
+            "description": "Look at the bottom-right of the VS Code window. The HLSL Clippy status badge tells you whether the LSP server is running:\n\n- $(check) HLSL Clippy → ready, will lint on every edit\n- $(sync~spin) HLSL Clippy → starting up\n- $(error) HLSL Clippy → failed to start; click the badge to see why\n\n[Show the output channel](command:hlslClippy.showOutput) for the full activation log."
+          },
+          {
+            "id": "seeDiagnostics",
+            "title": "Trigger a rule",
+            "description": "Type a known-bad pattern into your HLSL file to see the linter fire. For example:\n\n```hlsl\nfloat squared(float x) { return pow(x, 2.0); }\n```\n\nA squiggle should appear under `pow(x, 2.0)` and the diagnostic lands in the [Problems panel](command:workbench.actions.view.problems) (`Ctrl+Shift+M` / `Cmd+Shift+M`)."
+          },
+          {
+            "id": "applyQuickFix",
+            "title": "Apply a quick-fix",
+            "description": "Hover over a squiggle and click the lightbulb (or press `Ctrl+.` / `Cmd+.`) to see machine-applicable fixes. For `pow-const-squared` the fix rewrites `pow(x, 2.0)` to `x * x` automatically.\n\nNot every rule has a quick-fix; rules tagged `applicability: suggestion` show a description without an automatic edit."
+          },
+          {
+            "id": "configureProject",
+            "title": "Configure the linter",
+            "description": "Drop a `.hlsl-clippy.toml` next to your shaders to override severity per rule, exclude paths, or pin a target Slang profile. Example:\n\n```toml\n[rules]\n\"pow-const-squared\" = \"deny\"\n\"redundant-saturate\" = \"warn\"\n\"min16float-in-cbuffer-roundtrip\" = \"allow\"\n```\n\nFull schema: [Configuration docs](https://github.com/NelCit/hlsl-clippy/blob/main/docs/configuration.md). Run [HLSL Clippy: Re-lint Active Document](command:hlslClippy.relintDocument) after edits to apply changes immediately."
+          }
+        ]
       }
     ],
     "configuration": {

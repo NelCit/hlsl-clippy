@@ -183,7 +183,19 @@ jobs:
       # `currentPlatform()` returns `linux-x86_64` / `windows-x86_64` /
       # `macos-aarch64`. Match the path exactly so first-activation finds
       # the bundled binary without network access.
-      - name: Stage LSP binary (POSIX)
+      # Stage the LSP binary AND every shared library it loads at runtime
+      # into vscode-extension/server/<platform>/ so the .vsix is fully
+       # self-contained. Without the sibling shared libs (slang.dll +
+      # 6 transitive Slang runtime DLLs on Windows; .so / .dylib on
+      # POSIX) the spawned LSP exits before the JSON-RPC handshake and
+      # the user sees an empty Problems panel with no diagnostic.
+      #
+      # The cmake POST_BUILD helper `hlsl_clippy_deploy_slang_dlls`
+      # already drops every needed DLL next to hlsl-clippy-lsp.exe in
+      # build/lsp/, so a `cp build/lsp/* dest/` after locating the EXE
+      # picks them up. Same pattern as the standalone CLI release zip
+      # in release.yml -- we just hadn't ported it to the .vsix path.
+      - name: Stage LSP binary + runtime libs (POSIX)
         if: runner.os != 'Windows'
         shell: bash
         env:
@@ -193,21 +205,36 @@ jobs:
           set -euo pipefail
           dest="vscode-extension/server/${PLATFORM}"
           mkdir -p "$dest"
+          src=""
           for c in \
               "./build/lsp/hlsl-clippy-lsp${SUFFIX}" \
               "./build/hlsl-clippy-lsp${SUFFIX}"; do
             if [ -f "$c" ]; then
-              cp "$c" "${dest}/hlsl-clippy-lsp${SUFFIX}"
-              chmod +x "${dest}/hlsl-clippy-lsp${SUFFIX}"
-              echo "Staged $c → ${dest}/"
-              ls -la "$dest"
-              exit 0
+              src="$c"
+              break
             fi
           done
-          echo "::error::could not locate built hlsl-clippy-lsp binary"
-          exit 1
+          if [ -z "$src" ]; then
+            echo "::error::could not locate built hlsl-clippy-lsp binary"
+            exit 1
+          fi
+          cp "$src" "${dest}/hlsl-clippy-lsp${SUFFIX}"
+          chmod +x "${dest}/hlsl-clippy-lsp${SUFFIX}"
+          # Copy any sibling shared libs (.so* / .dylib) the build placed
+          # next to the EXE. Slang on Linux/macOS may be statically linked
+          # or rely on rpath, in which case this loop is a no-op -- still
+          # safer to copy if anything was deployed.
+          src_dir=$(dirname "$src")
+          for lib in "$src_dir"/*.so "$src_dir"/*.so.* "$src_dir"/*.dylib; do
+            if [ -f "$lib" ]; then
+              cp "$lib" "$dest/"
+              echo "Bundled runtime lib: $(basename "$lib")"
+            fi
+          done
+          echo "Staged $src + sibling libs into $dest"
+          ls -la "$dest"
 
-      - name: Stage LSP binary (Windows)
+      - name: Stage LSP binary + runtime DLLs (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         env:
@@ -220,16 +247,34 @@ jobs:
             ".\build\lsp\Release\hlsl-clippy-lsp.exe",
             ".\build\hlsl-clippy-lsp.exe"
           )
+          $src = $null
           foreach ($c in $candidates) {
-            if (Test-Path $c) {
-              Copy-Item $c "$dest/hlsl-clippy-lsp.exe"
-              Write-Host "Staged $c -> $dest/"
-              Get-ChildItem $dest
-              exit 0
-            }
+            if (Test-Path $c) { $src = $c; break }
           }
-          Write-Error "could not locate built hlsl-clippy-lsp.exe"
-          exit 1
+          if (-not $src) {
+            Write-Error "could not locate built hlsl-clippy-lsp.exe"
+            exit 1
+          }
+          Copy-Item $src "$dest/hlsl-clippy-lsp.exe"
+          Write-Host "Staged $src -> $dest/"
+
+          # Copy every sibling .dll (the cmake POST_BUILD helper drops
+          # the full Slang runtime constellation: slang.dll, gfx.dll,
+          # slang-compiler.dll, slang-glsl-module.dll, slang-glslang.dll,
+          # slang-llvm.dll, slang-rt.dll). Without these the LSP can
+          # spawn but immediately exits on slang.dll load failure, so
+          # VS Code shows no diagnostics. ~150 MB of DLL adds up but
+          # there is no other portable runtime path on Windows.
+          $srcDir = Split-Path -Parent $src
+          $dlls = Get-ChildItem -Path $srcDir -Filter '*.dll' -File -ErrorAction SilentlyContinue
+          foreach ($dll in $dlls) {
+            Copy-Item $dll.FullName "$dest/"
+            Write-Host "Bundled runtime DLL: $($dll.Name)"
+          }
+          if ($dlls.Count -eq 0) {
+            Write-Warning "No DLLs found next to hlsl-clippy-lsp.exe; the resulting .vsix will likely fail to start the LSP at runtime."
+          }
+          Get-ChildItem $dest
 
       # ── Bundle the .vsix ─────────────────────────────────────────────────
       - name: Set up Node 20

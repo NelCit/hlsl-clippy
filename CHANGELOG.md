@@ -13,6 +13,50 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [0.6.1] — 2026-05-02
+
+VS Code extension UX patch release. v0.6.0's `.vsix` shipped
+`hlsl-clippy-lsp.exe` without its 7 required Slang runtime DLLs, so
+the LSP subprocess crashed on Windows before the JSON-RPC handshake
+and users saw an empty Problems panel with no error feedback. This
+release fixes the bundling, makes activation status visible, and adds
+a guided walkthrough for first-time users.
+
+### Fixed
+- **`.vsix` bundling: ship the full Slang runtime alongside
+  `hlsl-clippy-lsp[.exe]`.** `release-vscode.yml`'s "Stage LSP binary"
+  step copied only the EXE; on Windows that meant 7 missing DLLs
+  (`slang.dll`, `gfx.dll`, `slang-compiler.dll`,
+  `slang-glsl-module.dll`, `slang-glslang.dll`, `slang-llvm.dll`,
+  `slang-rt.dll`). The fixed step copies every sibling `.dll` (Windows)
+  / `.so*` / `.dylib` (POSIX) the cmake POST_BUILD helper deployed
+  next to the EXE in `build/lsp/`. `.vsix` size grows from ~5 MB to
+  ~150 MB on Windows but the LSP now actually starts.
+
+### Added
+- **Status-bar indicator.** Bottom-right badge shows live LSP health:
+  `$(check) HLSL Clippy <count>` when the server is running (with
+  diagnostic count for the active document), `$(sync~spin) HLSL Clippy`
+  while starting, `$(error) HLSL Clippy` when activation failed (red
+  background, click to open the Output channel).
+- **VS Code Walkthrough** (`HLSL Clippy: Get started`) — shows on
+  first install via Welcome → Walkthroughs. Five steps: open file →
+  check status → trigger a rule → apply a quick-fix → configure via
+  `.hlsl-clippy.toml`. Each step has command links for one-click
+  navigation.
+- **`HLSL Clippy: Re-lint Active Document`** command — forces a
+  re-lint via a save round-trip. Useful after editing
+  `.hlsl-clippy.toml` or toggling settings, when you want the new
+  behaviour without typing.
+- **`HLSL Clippy: Open Rule Docs`** command — opens the per-rule docs
+  page on github.com for the diagnostic at the cursor (or any rule
+  ID passed as the argument). Falls back to a friendly message when
+  the cursor isn't on a diagnostic.
+- **README "How it works in 30 seconds"** + **Troubleshooting**
+  section. The Marketplace listing now opens with a five-bullet
+  walkthrough of expected behaviour and a three-step diagnostic for
+  when something goes wrong.
+
 ## [0.6.0] — 2026-05-02
 
 The v0.6 hardening release. Closes the entire post-launch backlog
@@ -529,6 +573,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.6.1]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.6...v0.6.0
 [0.5.6]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.5...v0.5.6
 [0.5.5]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.4...v0.5.5
