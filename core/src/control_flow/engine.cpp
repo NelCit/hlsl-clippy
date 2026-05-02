@@ -36,10 +36,10 @@ namespace {
 /// entries whose `SourceId.value` collides across SourceManagers.
 [[nodiscard]] std::uint64_t fingerprint(std::string_view contents) noexcept {
     std::uint64_t hash = 14695981039346656037ULL;
-    constexpr std::uint64_t prime = 1099511628211ULL;
+    constexpr std::uint64_t k_prime = 1099511628211ULL;
     for (const char c : contents) {
         hash ^= static_cast<std::uint64_t>(static_cast<unsigned char>(c));
-        hash *= prime;
+        hash *= k_prime;
     }
     return hash;
 }

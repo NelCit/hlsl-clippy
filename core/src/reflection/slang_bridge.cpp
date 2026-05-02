@@ -555,8 +555,12 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManag
         epi.name = raw_name != nullptr ? std::string{raw_name} : std::string{"<anonymous>"};
         epi.stage = stage_name(ep->getStage());
 
-        SlangUInt thread_group[3] = {0U, 0U, 0U};
-        ep->getComputeThreadGroupSize(3, thread_group);
+        // Slang's API takes a `SlangUInt[]` out-pointer; std::array decays
+        // cleanly so we pass `.data()` to keep clang-tidy's
+        // `cppcoreguidelines-avoid-c-arrays` happy without losing the
+        // contiguous-storage interop.
+        std::array<SlangUInt, 3> thread_group{0U, 0U, 0U};
+        ep->getComputeThreadGroupSize(3, thread_group.data());
         if (thread_group[0] != 0U || thread_group[1] != 0U || thread_group[2] != 0U) {
             epi.numthreads = std::array<std::uint32_t, 3>{
                 static_cast<std::uint32_t>(thread_group[0]),
