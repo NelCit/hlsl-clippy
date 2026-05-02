@@ -5,6 +5,7 @@ severity: error
 applicability: none
 since-version: v0.4.0
 phase: 4
+language_applicability: ["hlsl"]
 ---
 
 # outputcomplete-missing

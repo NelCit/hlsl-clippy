@@ -8,3 +8,6 @@
 	path = external/nlohmann_json
 	url = https://github.com/nlohmann/json.git
 	branch = master
+[submodule "external/tree-sitter-slang"]
+	path = external/tree-sitter-slang
+	url = https://github.com/tree-sitter-grammars/tree-sitter-slang

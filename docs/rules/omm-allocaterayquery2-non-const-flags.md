@@ -5,6 +5,7 @@ severity: error
 applicability: none
 since-version: v0.5.0
 phase: 3
+language_applicability: ["hlsl", "slang"]
 ---
 
 # omm-allocaterayquery2-non-const-flags

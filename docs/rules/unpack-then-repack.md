@@ -5,6 +5,7 @@ severity: warn
 applicability: suggestion
 since-version: v0.7.0
 phase: 7
+language_applicability: ["hlsl", "slang"]
 ---
 
 # unpack-then-repack

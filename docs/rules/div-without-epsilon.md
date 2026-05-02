@@ -5,6 +5,7 @@ severity: warn
 applicability: machine-applicable
 since-version: v0.5.0
 phase: 4
+language_applicability: ["hlsl", "slang"]
 ---
 
 # div-without-epsilon

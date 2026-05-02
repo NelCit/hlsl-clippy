@@ -5,6 +5,7 @@ severity: note
 applicability: none
 since-version: v0.8.0
 phase: 8
+language_applicability: ["hlsl", "slang"]
 ---
 
 # rga-pressure-bridge-stub

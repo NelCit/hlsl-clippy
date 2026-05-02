@@ -287,16 +287,23 @@ jobs:
           fi
           echo "Smoke test passed."
 
-  # ── Slang-recognition smoke (ADR 0020 sub-phase A — v1.3+) ─────────────
-  # Verifies that `.slang` files dispatch through the lit-up reflection
-  # path (AST + CFG + IR rules silently skip; `clippy::language-skip-ast`
-  # notice fires once per source; reflection-stage rules now fire as of
-  # v1.3.1 via the hardened virtual_path scheme in the Slang bridge).
+  # ── Slang AST coverage (ADR 0021 sub-phase B — v1.4+) ─────────────────
+  # Verifies that `.slang` files dispatch through tree-sitter-slang and
+  # that AST-stage rules fire on Slang sources. Pre-v1.4 the same job
+  # asserted the inverse (AST/CFG silent on `.slang`, language-skip-ast
+  # notice fires once); sub-phase B lights up the AST surface, so the
+  # contract flips: AST-stage rules MUST fire on the smoke fixture, and
+  # `clippy::language-skip-ast` MUST NOT fire on any sub-phase B fixture.
+  #
+  # Reflection-stage rule coverage is preserved (the v1.3.1 bridge fix
+  # still applies, and the same `oversized_cbuffer_via_reflection.slang`
+  # fixture still asserts `oversized-cbuffer` fires).
+  #
   # Linux-only — the dispatch logic is platform-agnostic and the cost of
   # running it across the matrix is not justified by the marginal
   # coverage. continue-on-error is FALSE so this is a regular merge gate.
-  slang-recognition:
-    name: Slang recognition (Linux Clang)
+  slang-ast-coverage:
+    name: Slang AST coverage (Linux Clang)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: build
@@ -363,7 +370,7 @@ jobs:
           fi
           echo "bin=$BIN" >> "$GITHUB_OUTPUT"
 
-      - name: Lint Slang fixtures
+      - name: Lint Slang fixtures (sub-phase B contract)
         run: |
           set -euo pipefail
           BIN="${{ steps.locate.outputs.bin }}"
@@ -371,20 +378,45 @@ jobs:
             echo "=== $fixture ==="
             output=$("$BIN" lint "$fixture" --format=json) || true
             echo "$output"
-            # (a) at least one diagnostic must fire per fixture (the
-            # clippy::language-skip-ast notice is guaranteed to be there).
-            count=$(echo "$output" | python3 -c "import sys, json; print(len(json.load(sys.stdin)))")
-            if [ "$count" -lt 1 ]; then
-              echo "ERROR: $fixture produced 0 diagnostics; expected >=1." >&2
-              exit 1
-            fi
-            # (b) the language-skip-ast notice MUST be present per source.
-            if ! echo "$output" | python3 -c "import sys, json; sys.exit(0 if any(d.get('rule') == 'clippy::language-skip-ast' for d in json.load(sys.stdin)) else 1)"; then
-              echo "ERROR: $fixture is missing the clippy::language-skip-ast notice." >&2
+            # (a) NO `clippy::language-skip-ast` notice — sub-phase B's
+            # parser dispatch lights up AST + CFG on every `.slang`
+            # source. The notice is preserved as a code path for
+            # future un-parseable languages but never fires today.
+            if echo "$output" | python3 -c "import sys, json; sys.exit(1 if any(d.get('rule') == 'clippy::language-skip-ast' for d in json.load(sys.stdin)) else 0)"; then
+              echo "ERROR: $fixture emitted clippy::language-skip-ast (sub-phase B should suppress this)." >&2
               exit 1
             fi
           done
-          echo "All Slang fixtures dispatched through the lit-up reflection path."
+          echo "All Slang fixtures cleared the sub-phase B contract: no language-skip-ast notice."
+
+      # ADR 0021 sub-phase B.4 — AST coverage gate. The smoke fixture
+      # `tests/fixtures/slang/ast_smoke.slang` carries HLSL-syntax-level
+      # patterns that fire ~5 distinct AST-stage rules. The gate asserts
+      # at least one AST-stage diagnostic fires on the smoke fixture
+      # (i.e. the parser dispatch lit up the AST stage and rule patterns
+      # match Slang's grammar nodes). The list below intentionally
+      # over-enumerates so the test stays green if any single rule
+      # changes its node-kind requirements between versions; the
+      # contract is "≥ 1 AST rule, not zero," not "exactly this set."
+      - name: AST coverage on ast_smoke.slang
+        run: |
+          set -euo pipefail
+          BIN="${{ steps.locate.outputs.bin }}"
+          fixture="tests/fixtures/slang/ast_smoke.slang"
+          output=$("$BIN" lint "$fixture" --format=json) || true
+          echo "$output"
+          # B.4 contract: at least one canonical AST-stage rule must fire
+          # on the smoke fixture. The list below over-enumerates so any
+          # single rule's node-kind change between versions doesn't break
+          # the gate; the contract is ">= 1 AST rule, not zero," not
+          # "exactly this set." We use grep on rule-id substrings to keep
+          # the YAML one-liner-friendly.
+          ast_rule_ids="pow-const-squared|pow-to-mul|pow-base-two-to-exp2|pow-integer-decomposition|inv-sqrt-to-rsqrt|manual-distance|compare-equal-float|comparison-with-nan-literal|length-comparison|manual-reflect|manual-step|manual-smoothstep|sin-cos-pair|mul-identity|lerp-extremes"
+          if ! echo "$output" | python3 -c "import sys, json, re; pat=re.compile('^(' + sys.argv[1] + ')$'); rules={d.get('rule') for d in json.load(sys.stdin)}; fired=[r for r in rules if pat.match(r or '')]; print('AST rules fired on .slang smoke fixture:', sorted(fired), file=sys.stderr); sys.exit(0 if fired else 1)" "$ast_rule_ids"; then
+            echo "ERROR: $fixture fired zero AST-stage rules; tree-sitter-slang dispatch may be broken." >&2
+            exit 1
+          fi
+          echo "AST coverage gate passed -- at least one AST rule fires on .slang."
 
       # v1.3.1 (ADR 0020 sub-phase A "Risks & mitigations") — verify the
       # bridge fix actually lights up reflection-stage rules on `.slang`.

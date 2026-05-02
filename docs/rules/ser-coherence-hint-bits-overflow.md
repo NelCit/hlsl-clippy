@@ -5,6 +5,7 @@ severity: warn
 applicability: machine-applicable
 since-version: v0.8.0
 phase: 8
+language_applicability: ["hlsl", "slang"]
 ---
 
 # ser-coherence-hint-bits-overflow

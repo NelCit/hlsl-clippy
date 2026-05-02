@@ -5,6 +5,7 @@ severity: warn
 applicability: machine-applicable
 since-version: v0.7.0
 phase: 7
+language_applicability: ["hlsl"]
 ---
 
 # pack-then-unpack-roundtrip

@@ -5,6 +5,7 @@ severity: warn
 applicability: suggestion
 since-version: v0.8.0
 phase: 8
+language_applicability: ["hlsl", "slang"]
 ---
 
 # reference-data-type-not-supported-pre-sm610

@@ -5,6 +5,7 @@ severity: warn
 applicability: none
 since-version: v0.7.0
 phase: 7
+language_applicability: ["hlsl", "slang"]
 ---
 
 # scratch-from-dynamic-indexing

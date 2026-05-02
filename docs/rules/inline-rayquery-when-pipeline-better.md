@@ -5,6 +5,7 @@ severity: warn
 applicability: suggestion
 since-version: v0.4.0
 phase: 4
+language_applicability: ["hlsl"]
 ---
 
 # inline-rayquery-when-pipeline-better

@@ -117,12 +117,16 @@ void walk(::TSNode root,
 }
 
 /// True when AST + CFG + IR rule dispatch is allowed for the resolved
-/// source language (ADR 0020 sub-phase A — v1.3.0). Slang sources skip these
-/// stages because tree-sitter-hlsl cannot parse Slang's language extensions.
-/// HLSL sources keep the historical dispatch behaviour. Auto must already
-/// have been resolved upstream via `resolve_language()`.
+/// source language. ADR 0020 sub-phase A (v1.3.0) returned `false` for
+/// `Slang` because tree-sitter-hlsl couldn't parse Slang's language
+/// extensions. ADR 0021 sub-phase B (v1.4.0) lit up tree-sitter-slang for
+/// `.slang` paths via the parser dispatch in `core/src/parser.cpp`, so the
+/// AST + CFG stages now run for both languages — every recognised source
+/// language has a parser. Auto must already have been resolved upstream via
+/// `resolve_language()`.
 [[nodiscard]] bool should_dispatch_ast_stage(SourceLanguage lang) noexcept {
-    return lang != SourceLanguage::Slang;
+    (void)lang;
+    return true;
 }
 
 /// True when at least one rule in `rules` has `stage() == Stage::Reflection`
@@ -212,77 +216,15 @@ namespace {
     ctx.set_suppressions(&suppressions);
     ctx.set_config(config);
 
-    // ADR 0020 sub-phase A — emit `clippy::language-skip-ast` exactly once
-    // per Slang source per lint run, BEFORE any rule fires, so the notice
-    // sorts to the top of the output and the suppression machinery treats
-    // it like any other rule code. Severity::Note keeps it out of CI gate-
-    // mode runs by default (ADR 0015 §"sub-phase 6a CI gate-mode polish").
-    //
-    // Anchor the diagnostic at the first non-whitespace, non-comment byte of
-    // the source so the inline-suppression scope-resolver can match a
-    // top-of-file `// hlsl-clippy: allow(clippy::language-skip-ast)` against
-    // it. Suppression scopes for specific rule ids start at the first piece
-    // of "real code" after the comment, not at byte 0; a {0,0} span would
-    // never fall inside the resolved scope.
-    //
-    // v1.3.1 (ADR 0020 sub-phase A "Risks & mitigations"): the bridge has
-    // been hardened so reflection now works on `.slang` sources too. The
-    // notice's wording reflects the new reality — only AST + CFG + IR
-    // dispatch is gated on the language; reflection rules fire on both
-    // HLSL and Slang. Sub-phase B revisits AST/CFG via tree-sitter-slang.
-    if (resolved_language == SourceLanguage::Slang) {
-        std::uint32_t anchor = 0U;
-        if (!source_bytes.empty()) {
-            // Walk past leading whitespace + line comments to land on the
-            // first byte of code. Block comments are unusual at file scope
-            // but handled here for completeness.
-            std::size_t i = 0U;
-            while (i < source_bytes.size()) {
-                const char c = source_bytes[i];
-                if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
-                    ++i;
-                    continue;
-                }
-                if (c == '/' && i + 1U < source_bytes.size() && source_bytes[i + 1U] == '/') {
-                    while (i < source_bytes.size() && source_bytes[i] != '\n') {
-                        ++i;
-                    }
-                    continue;
-                }
-                if (c == '/' && i + 1U < source_bytes.size() && source_bytes[i + 1U] == '*') {
-                    i += 2U;
-                    while (i + 1U < source_bytes.size() &&
-                           !(source_bytes[i] == '*' && source_bytes[i + 1U] == '/')) {
-                        ++i;
-                    }
-                    if (i + 1U < source_bytes.size()) {
-                        i += 2U;
-                    }
-                    continue;
-                }
-                break;
-            }
-            anchor = static_cast<std::uint32_t>(i);
-        }
-
-        Diagnostic skip_note;
-        skip_note.code = std::string{"clippy::language-skip-ast"};
-        skip_note.severity = Severity::Note;
-        skip_note.primary_span =
-            Span{.source = source, .bytes = ByteSpan{.lo = anchor, .hi = anchor}};
-        skip_note.message = std::string{
-            "AST, control-flow, and IR rules disabled on Slang "
-            "source (ADR 0020 sub-phase A). Tree-sitter-hlsl cannot "
-            "parse Slang's language extensions; reflection-stage rules "
-            "still fire as of v1.3.1 because Slang's native frontend "
-            "ingests `.slang` directly. Tree-sitter-slang integration "
-            "to light up the remaining ~157 AST/CFG rules tracks for "
-            "sub-phase B (v1.4+). Suppress this notice with "
-            "`// hlsl-clippy: allow(clippy::language-skip-ast)` or set "
-            "`[rules]` `\"clippy::language-skip-ast\" = \"allow\"` "
-            "in your `.hlsl-clippy.toml`."};
-        ctx.emit(std::move(skip_note));
-    }
+    // ADR 0021 sub-phase B (v1.4.0) — `clippy::language-skip-ast` is no
+    // longer emitted on `.slang` sources because tree-sitter-slang now
+    // handles them via the parser dispatch in `core/src/parser.cpp`. The
+    // diagnostic code itself is preserved (still suppressible / configurable
+    // for forward compatibility) but the orchestrator never raises it under
+    // sub-phase B's "every recognised language has a parser" invariant.
+    // Should a future language land without a parser, this is the place to
+    // emit the notice; reuse the wording in CHANGELOG / docs at that point.
+    (void)resolved_language;
 
     // The tree view + AST root are only valid when we parsed; reflection +
     // CFG dispatch below uses these only inside `dispatch_ast`-gated blocks

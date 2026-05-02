@@ -46,7 +46,6 @@ constexpr std::array<std::string_view, 5> k_sample_names{
 
 [[nodiscard]] bool callee_is_sample(::TSNode call, std::string_view bytes) noexcept {
     const auto fn = ::ts_node_child_by_field_name(call, "function", 8);
-    const auto fn_text = node_text(fn, bytes);
     // Sample calls are `<texture>.Sample*(...)`. The function field is a
     // `field_expression` whose `field` is the name; pull it out.
     if (node_kind(fn) == "field_expression") {

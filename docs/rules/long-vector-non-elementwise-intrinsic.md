@@ -5,6 +5,7 @@ severity: error
 applicability: none
 since-version: v0.5.0
 phase: 2
+language_applicability: ["hlsl", "slang"]
 ---
 
 # long-vector-non-elementwise-intrinsic

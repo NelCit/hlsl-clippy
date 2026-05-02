@@ -13,6 +13,94 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [1.4.0] — 2026-05-03
+
+**v1.4.0 — Slang sub-phase B (ADR 0021): tree-sitter-slang AST + CFG
+dispatch.** Minor release that lights up the ~157 AST + control-flow
+rules on `.slang` sources via a vendored
+[tree-sitter-grammars/tree-sitter-slang](https://github.com/tree-sitter-grammars/tree-sitter-slang)
+grammar (which extends tree-sitter-hlsl). The empirical pass-through
+rate measured across the project's `.hlsl` fixture corpus, renamed to
+`.slang`, is **98 of 99 rule ids fire identically (~99%)** — well
+above ADR 0021's projected 92%, because the upstream grammar
+literally inherits tree-sitter-hlsl's grammar.js so node-kinds for
+HLSL-syntax-level constructs are preserved by construction. The 1
+HLSL-only outlier is a Stage::Reflection rule
+(`structured-buffer-stride-not-cache-aligned`) whose Slang reflection
+shape differs from HLSL's; sub-phase B's AST/CFG contract is unaffected.
+
+### Added
+
+- **`external/tree-sitter-slang`** — new git submodule pinned to
+  `tree-sitter-grammars/tree-sitter-slang` HEAD
+  (`1dbcc4abc7b3cdd663eb03d93031167d6ed19f56`). Built as a sibling
+  OBJECT lib to `tree-sitter-hlsl` against the shared
+  `tree_sitter_core` runtime.
+- **`cmake/UseTreeSitterSlang.cmake`** + **`cmake/TreeSitterSlangVersion.cmake`** —
+  new cmake plumbing mirroring `cmake/UseTreeSitter.cmake` /
+  `cmake/SlangVersion.cmake`. Exposes `tree_sitter::slang` as an
+  imported library that `core` links.
+- **`tests/fixtures/slang/ast_smoke.slang`** — B.4 coverage fixture
+  carrying ~5 AST-rule triggers that fire under tree-sitter-slang
+  dispatch. Empirically 6 diagnostics fire (4 distinct rule ids:
+  `pow-const-squared`, `pow-to-mul`, `inv-sqrt-to-rsqrt`,
+  `manual-distance`); CI gates on at least one fire.
+- **CI: `slang-ast-coverage` job** — replaces the v1.3.x
+  `slang-recognition` job's contract. Asserts (a) no
+  `clippy::language-skip-ast` notice on any `tests/fixtures/slang/*.slang`
+  fixture, and (b) at least one canonical AST-stage rule fires on
+  `ast_smoke.slang`. Linux-only (the dispatch is platform-agnostic);
+  failure is a merge gate.
+- **`docs/rules/<rule>.md` `language_applicability` field** — set on
+  every rule page (157 shipped rules → `["hlsl", "slang"]`; 17
+  doc-only stubs → `["hlsl"]`; 32 rules already had the field — those
+  are preserved verbatim). Coarse default; fine-grained per-rule
+  audit + `["hlsl"]` demotions for empirically-divergent rules
+  ships in v1.4.x patches per ADR 0021 §"Sub-phasing within B".
+- **`tools/b3_set_language_applicability.ps1`** + **`tools/b4_passthrough_probe.ps1`** —
+  maintainer scripts for B.3 coarse / B.4 empirical measurement.
+  Re-runnable; idempotent on already-set rules.
+- **3 new unit tests** in `tests/unit/test_slang_dispatch.cpp`
+  (`[b4][ast-coverage]`, `[b4][regression]`, `[b4][parser]`) bringing
+  the test count from 837 → 840 and the assertion count from 2200
+  → 2210.
+
+### Changed
+
+- **`core/src/parser.cpp`** — parser dispatch by source language. The
+  `parse()` entry point consults `detect_language(file->path())` and
+  invokes `tree_sitter_slang()` for `.slang` paths,
+  `tree_sitter_hlsl()` for everything else. Slang's `__generic`,
+  `interface`, `extension`, `import`, and attribute-family
+  productions parse without crashing the parser; AST rule dispatch
+  proceeds over the resulting tree.
+- **`core/src/lint.cpp`** — `should_dispatch_ast_stage()` now returns
+  `true` for every recognised source language. The
+  `clippy::language-skip-ast` Note is no longer emitted on
+  `.slang` sources (the diagnostic code is preserved as a
+  forward-compatibility hook for future un-parseable languages).
+- **`tests/fixtures/slang/plain_hlsl_in_slang_file.slang`** —
+  annotation flipped from `// SHOULD-NOT-HIT(pow-const-squared)`
+  (v1.3.x AST quarantine) to `// HIT(pow-const-squared)` (v1.4
+  parser dispatch).
+- **`tests/fixtures/slang/slang_only_constructs.slang`** —
+  annotation comment updated; the test accepts 0 or 1 fires here
+  while the fine-grained audit catalogues the AST shape Slang's
+  grammar produces around `let` / generic syntax.
+- **`tests/unit/test_slang_dispatch.cpp`** — flipped the v1.3.x
+  AST-quarantine assertions to the sub-phase B "AST runs on .slang"
+  contract. Existing 7 tests retained; 3 new B.4 tests added.
+
+### Fixed
+
+- **`core/src/rules/sample_use_no_interleave.cpp`** — drop unused
+  `fn_text` local that was tripping `-Werror,-Wunused-variable` on
+  clang-cl 22.1.4 (pre-existing local-build wart, unrelated to
+  sub-phase B but blocking the implementation-agent build).
+- **`cli/src/main.cpp`** — mark `k_recognized_extensions`
+  `[[maybe_unused]]` (same root cause: `-Werror,-Wunused-const-variable`
+  on clang-cl 22.1.4).
+
 ## [1.3.1] — 2026-05-03
 
 **v1.3.1 — Slang reflection bridge fix (ADR 0020 sub-phase A

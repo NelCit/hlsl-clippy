@@ -5,6 +5,7 @@ severity: error
 applicability: none
 since-version: v0.3.0
 phase: 3
+language_applicability: ["hlsl"]
 ---
 
 # quadany-quadall-non-quad-stage

@@ -97,6 +97,12 @@ endif()
 # tree-sitter must be available before the core library that links it.
 include(cmake/UseTreeSitter.cmake)
 
+# tree-sitter-slang grammar (ADR 0021, sub-phase B.1 — v1.4.0). Builds the
+# Slang grammar's parser.c + scanner.c into `tree_sitter::slang` against
+# the same `tree_sitter_core` runtime as the HLSL grammar. Parser dispatch
+# in `core/src/parser.cpp` selects between the two by `detect_language()`.
+include(cmake/UseTreeSitterSlang.cmake)
+
 # Slang must be available before the core library that links it (Phase 3 —
 # reflection infrastructure, ADR 0012). Previously only `tools/slang-smoke`
 # included this; promote to unconditional so `core` always sees `slang::slang`.

@@ -47,7 +47,7 @@ enum class OutputFormat : std::uint8_t {
 // inference inside `core/src/language.cpp`. Adding `.slang` here documents
 // the v1.3 surface (ADR 0020 sub-phase A) and pre-positions the list for
 // future glob-walking work (e.g. `hlsl-clippy lint --recursive shaders/`).
-constexpr std::array<std::string_view, 11> k_recognized_extensions = {
+[[maybe_unused]] constexpr std::array<std::string_view, 11> k_recognized_extensions = {
     ".hlsl",
     ".hlsli",
     ".fx",

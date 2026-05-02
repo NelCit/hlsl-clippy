@@ -5,6 +5,7 @@ severity: error
 applicability: machine-applicable
 since-version: v0.3.0
 phase: 3
+language_applicability: ["hlsl"]
 ---
 
 # waveops-include-helper-lanes-on-non-pixel

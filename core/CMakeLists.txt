@@ -329,6 +329,12 @@ target_link_libraries(hlsl_clippy_core
         hlsl_clippy_warnings
         tree_sitter::tree_sitter
         tree_sitter::hlsl
+        # ADR 0021 sub-phase B.1 (v1.4.0) — tree-sitter-slang grammar. Linked
+        # into core unconditionally; parser dispatch in `core/src/parser.cpp`
+        # routes `.slang` paths through `tree_sitter_slang()`. The C symbol
+        # is namespace-distinct from `tree_sitter_hlsl()` so the two grammars
+        # coexist in the same binary without collision.
+        tree_sitter::slang
         tomlplusplus::tomlplusplus
         # Phase 3 — reflection infrastructure (ADR 0012). Slang stays PRIVATE
         # so it never appears in the public include path; only

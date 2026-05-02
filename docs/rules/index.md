@@ -1,6 +1,7 @@
 ---
 title: Rules catalog
 outline: [2, 2]
+language_applicability: ["hlsl"]
 ---
 
 <script setup>

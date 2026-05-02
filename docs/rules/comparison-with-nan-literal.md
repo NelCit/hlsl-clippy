@@ -5,6 +5,7 @@ severity: error
 applicability: machine-applicable
 since-version: v0.5.0
 phase: 2
+language_applicability: ["hlsl", "slang"]
 ---
 
 # comparison-with-nan-literal

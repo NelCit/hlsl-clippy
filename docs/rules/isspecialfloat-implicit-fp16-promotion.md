@@ -5,6 +5,7 @@ severity: warn
 applicability: suggestion
 since-version: v0.3.0
 phase: 3
+language_applicability: ["hlsl"]
 ---
 
 # isspecialfloat-implicit-fp16-promotion

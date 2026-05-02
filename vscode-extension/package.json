@@ -1,9 +1,9 @@
 {
   "name": "hlsl-clippy",
   "displayName": "HLSL Clippy",
-  "description": "Linter for HLSL — performance + correctness rules beyond what dxc catches. Also recognises .slang files (reflection-only baseline; ADR 0020 sub-phase A).",
+  "description": "Linter for HLSL — performance + correctness rules beyond what dxc catches. Lints .slang files end-to-end (AST + CFG + reflection) via tree-sitter-slang; ADR 0021 sub-phase B.",
   "publisher": "nelcit",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.85.0"

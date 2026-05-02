@@ -5,6 +5,7 @@ severity: error
 applicability: machine-applicable
 since-version: v0.2.0
 phase: 2
+language_applicability: ["hlsl"]
 ---
 
 # wavesize-range-disordered

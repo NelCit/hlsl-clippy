@@ -5,6 +5,7 @@ severity: note
 applicability: suggestion
 since-version: v0.5.0
 phase: 3
+language_applicability: ["hlsl", "slang"]
 ---
 
 # texture-array-known-slice-uniform

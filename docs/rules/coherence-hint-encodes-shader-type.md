@@ -5,6 +5,7 @@ severity: warn
 applicability: suggestion
 since-version: v0.5.0
 phase: 4
+language_applicability: ["hlsl", "slang"]
 ---
 
 # coherence-hint-encodes-shader-type

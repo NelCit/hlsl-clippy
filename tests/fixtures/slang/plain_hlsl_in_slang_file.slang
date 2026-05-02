@@ -1,16 +1,17 @@
-// Fixture (a) per ADR 0020 sub-phase A: plain-HLSL content with `.slang`
-// extension. Demonstrates that AST-rule patterns inside the file do NOT
-// fire (the orchestrator skips tree-sitter-hlsl dispatch on `.slang`),
-// even though the same pattern would fire on `.hlsl`.
+// Fixture (a) per ADR 0020 sub-phase A, updated for ADR 0021 sub-phase B
+// (v1.4.0): plain-HLSL content with `.slang` extension. Under sub-phase B
+// the orchestrator routes `.slang` files through tree-sitter-slang. That
+// grammar inherits tree-sitter-hlsl, so plain-HLSL bodies parse identically
+// and AST-rule patterns DO fire — the v1.3.x quarantine is lifted.
 //
-// `pow(x, 2.0)` would normally fire pow-const-squared on a `.hlsl` file.
-// Here we expect ZERO `pow-const-squared` diagnostics on this fixture
-// because the AST stage is skipped.
+// `pow(x, 2.0)` fires pow-const-squared on this fixture under tree-
+// sitter-slang dispatch, identically to the `.hlsl` path.
 //
-// Expected output: exactly one `clippy::language-skip-ast` Note plus any
-// reflection-stage diagnostics Slang's frontend can compute on this file.
+// Expected output: zero `clippy::language-skip-ast` notices (parser
+// dispatch lit up the AST stage) and exactly one `pow-const-squared`
+// diagnostic from the body below.
 
-// SHOULD-NOT-HIT(pow-const-squared) -- AST stage skipped on .slang
+// HIT(pow-const-squared) -- AST runs on .slang under tree-sitter-slang
 float squared(float x) {
     return pow(x, 2.0);
 }
