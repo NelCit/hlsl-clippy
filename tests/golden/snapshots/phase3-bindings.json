@@ -20,14 +20,14 @@
       "line": 1,
       "col": 1,
       "severity": "warning",
-      "message": "cbuffer `Tiny` is 8 bytes -- fits in a D3D12 root-constant slot (<= 32 bytes / 8 DWORDs); promote to root constants to skip the descriptor-table indirection"
+      "message": "cbuffer `StraddleCB` is 32 bytes -- fits in a D3D12 root-constant slot (<= 32 bytes / 8 DWORDs); promote to root constants to skip the descriptor-table indirection"
     },
     {
       "rule": "cbuffer-fits-rootconstants",
       "line": 1,
       "col": 1,
       "severity": "warning",
-      "message": "cbuffer `StraddleCB` is 32 bytes -- fits in a D3D12 root-constant slot (<= 32 bytes / 8 DWORDs); promote to root constants to skip the descriptor-table indirection"
+      "message": "cbuffer `Tiny` is 8 bytes -- fits in a D3D12 root-constant slot (<= 32 bytes / 8 DWORDs); promote to root constants to skip the descriptor-table indirection"
     },
     {
       "rule": "cbuffer-large-fits-rootcbv-not-table",
@@ -41,14 +41,14 @@
       "line": 1,
       "col": 1,
       "severity": "warning",
-      "message": "cbuffer `Unused` (48 bytes) is too large for root constants but well under the 64 KB cbuffer limit -- consider binding as a root CBV to dodge the descriptor-table indirection on every dispatch"
+      "message": "cbuffer `Huge` (4112 bytes) is too large for root constants but well under the 64 KB cbuffer limit -- consider binding as a root CBV to dodge the descriptor-table indirection on every dispatch"
     },
     {
       "rule": "cbuffer-large-fits-rootcbv-not-table",
       "line": 1,
       "col": 1,
       "severity": "warning",
-      "message": "cbuffer `Huge` (4112 bytes) is too large for root constants but well under the 64 KB cbuffer limit -- consider binding as a root CBV to dodge the descriptor-table indirection on every dispatch"
+      "message": "cbuffer `Unused` (48 bytes) is too large for root constants but well under the 64 KB cbuffer limit -- consider binding as a root CBV to dodge the descriptor-table indirection on every dispatch"
     },
     {
       "rule": "cbuffer-padding-hole",

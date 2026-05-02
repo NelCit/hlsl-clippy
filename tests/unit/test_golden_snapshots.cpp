@@ -125,6 +125,15 @@ void write_file(const std::filesystem::path& path, std::string_view contents) {
     std::vector<Row> rows;
     rows.reserve(diagnostics.size());
     for (const auto& d : diagnostics) {
+        // Filter out engine-infrastructure diagnostics (`clippy::reflection`,
+        // `clippy::cfg`, `clippy::cfg-skip`, `clippy::malformed-suppression`).
+        // Their messages contain absolute filesystem paths that vary per
+        // machine, and they tell us about Slang/CFG plumbing rather than
+        // about a rule's behaviour. The snapshot is a rule-pack regression
+        // gate; infrastructure noise belongs in a separate harness.
+        if (d.code.starts_with("clippy::")) {
+            continue;
+        }
         const auto loc = sources.resolve(d.primary_span.source, d.primary_span.bytes.lo);
         rows.push_back(Row{
             .rule = d.code,
@@ -134,12 +143,22 @@ void write_file(const std::filesystem::path& path, std::string_view contents) {
             .message = d.message,
         });
     }
+    // Sort key: (line, col, rule, message). The four-key sort guarantees a
+    // stable order even when two diagnostics share a line/col/rule (e.g.
+    // `cbuffer-fits-rootconstants` firing on two cbuffers both spanning
+    // 1:1). Without the message tiebreaker the order was implementation-
+    // defined and snapshots flapped on adjacent commits.
     std::ranges::sort(rows, [](const Row& a, const Row& b) {
-        if (a.line != b.line)
+        if (a.line != b.line) {
             return a.line < b.line;
-        if (a.column != b.column)
+        }
+        if (a.column != b.column) {
             return a.column < b.column;
-        return a.rule < b.rule;
+        }
+        if (a.rule != b.rule) {
+            return a.rule < b.rule;
+        }
+        return a.message < b.message;
     });
 
     nlohmann::ordered_json out;

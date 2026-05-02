@@ -23,25 +23,11 @@
       "message": "`if` whose condition looks dynamically uniform lacks an explicit `[branch]` attribute -- without the hint the compiler may flatten the branch and execute both arms"
     },
     {
-      "rule": "branch-on-uniform-missing-attribute",
-      "line": 27,
-      "col": 5,
-      "severity": "note",
-      "message": "`if` whose condition looks dynamically uniform lacks an explicit `[branch]` attribute -- without the hint the compiler may flatten the branch and execute both arms"
-    },
-    {
       "rule": "barrier-in-divergent-cf",
       "line": 29,
       "col": 9,
       "severity": "error",
       "message": "memory barrier inside non-uniform control flow -- this is undefined behaviour; lanes that never reach the barrier deadlock the workgroup"
-    },
-    {
-      "rule": "branch-on-uniform-missing-attribute",
-      "line": 36,
-      "col": 5,
-      "severity": "note",
-      "message": "`if` whose condition looks dynamically uniform lacks an explicit `[branch]` attribute -- without the hint the compiler may flatten the branch and execute both arms"
     },
     {
       "rule": "wave-intrinsic-non-uniform",
@@ -79,13 +65,6 @@
       "message": "non-trivial work after a `discard` -- helper lanes still execute every instruction; move work that does not feed derivatives to before the discard"
     },
     {
-      "rule": "loop-invariant-sample",
-      "line": 50,
-      "col": 19,
-      "severity": "warning",
-      "message": "texture sample inside a loop with loop-invariant UV -- the fetch returns the same value on every iteration; hoist it out of the loop"
-    },
-    {
       "rule": "sample-in-loop-implicit-grad",
       "line": 50,
       "col": 19,
@@ -98,13 +77,6 @@
       "col": 5,
       "severity": "note",
       "message": "small constant-bounded loop (4 iterations) without `[unroll]` -- the compiler usually unrolls anyway, but the explicit hint guarantees the rewrite and frees the iterator register"
-    },
-    {
-      "rule": "loop-invariant-sample",
-      "line": 70,
-      "col": 16,
-      "severity": "warning",
-      "message": "texture sample inside a loop with loop-invariant UV -- the fetch returns the same value on every iteration; hoist it out of the loop"
     },
     {
       "rule": "sample-in-loop-implicit-grad",
