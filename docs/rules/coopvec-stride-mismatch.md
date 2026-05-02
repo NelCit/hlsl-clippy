@@ -3,7 +3,7 @@ id: coopvec-stride-mismatch
 category: cooperative-vector
 severity: error
 applicability: none
-since-version: v0.3.0
+since-version: v0.5.0
 phase: 3
 ---
 

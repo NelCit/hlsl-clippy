@@ -3,7 +3,7 @@ id: bool-straddles-16b
 category: bindings
 severity: error
 applicability: suggestion
-since-version: v0.3.0
+since-version: v0.5.0
 phase: 3
 ---
 

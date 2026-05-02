@@ -3,7 +3,7 @@ id: clip-from-non-uniform-cf
 category: control-flow
 severity: warn
 applicability: suggestion
-since-version: v0.4.0
+since-version: v0.5.0
 phase: 4
 ---
 

@@ -3,7 +3,7 @@ id: gather-channel-narrowing
 category: texture
 severity: note
 applicability: machine-applicable
-since-version: "v0.3.0"
+since-version: v0.5.0
 phase: 3
 ---
 

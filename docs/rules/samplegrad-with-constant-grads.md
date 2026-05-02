@@ -3,7 +3,7 @@ id: samplegrad-with-constant-grads
 category: texture
 severity: warn
 applicability: machine-applicable
-since-version: "v0.3.0"
+since-version: v0.5.0
 phase: 3
 ---
 

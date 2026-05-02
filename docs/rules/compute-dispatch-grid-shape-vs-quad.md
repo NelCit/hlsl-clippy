@@ -3,7 +3,7 @@ id: compute-dispatch-grid-shape-vs-quad
 category: workgroup
 severity: warn
 applicability: suggestion
-since-version: v0.3.0
+since-version: v0.5.0
 phase: 3
 ---
 

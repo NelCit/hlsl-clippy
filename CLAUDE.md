@@ -27,19 +27,20 @@ reputation goal.
 
 ---
 
-## Current status (as of 2026-05-01, v0.5.3 shipped)
+## Current status (as of 2026-05-02, v0.5.6 shipped + Phase 6+ hardening landed)
 
-- **Phases 0 → 5 complete.** `cli/`, `core/`, `lsp/`, `vscode-extension/`
+- **Phases 0 → 6 complete.** `cli/`, `core/`, `lsp/`, `vscode-extension/`
   all ship; CI matrix on Linux + Windows + macOS; binary release pipeline
-  fully green on v0.5.3 (Linux/Windows/macOS CLI+LSP archives + per-platform
-  `.vsix` for VS Code Marketplace).
+  fully green on v0.5.6 (Linux/Windows/macOS CLI+LSP archives + per-platform
+  `.vsix` for VS Code Marketplace). All four GitHub Actions workflows (CI,
+  Lint, Docs, CodeQL) green on tip-of-main `8d44934`.
 - **154 rules registered + tested.** 154 `.cpp` rule files, 154
   `registry.cpp` factory entries, 154 `tests/unit/test_*.cpp` per-rule
-  tests. ctest baseline 667/671 (4 known golden-snapshot
-  STATUS_STACK_BUFFER_OVERRUN flakes — pre-existing, deferred to v0.6).
-  Documentation surface is wider: 186 rule pages under `docs/rules/`,
-  of which 31 are doc-only stubs (rule pages for Phase 6+ work that
-  hasn't shipped yet — see audit 2026-05-01 for the list).
+  tests. **ctest baseline 672 / 672** on Windows clang-cl + libstdc++
+  (resolved 2026-05-02; see `tests/KNOWN_FAILURES.md` for the historical
+  CRLF + snapshot-drift triage chain). 186 rule pages under `docs/rules/`,
+  of which 32 are doc-only stubs (rule pages for ADR 0007 / 0010 / 0011
+  rules queued for Phase 7+).
 - **15 ADRs landed** (`docs/decisions/0001`–`0015`). ADR 0010 queues 36
   SM 6.7/6.8/6.9 rules (SER, Cooperative Vectors, Long Vectors, OMM,
   Mesh Nodes) — most have shipped through Phase 3 sub-phase 3c. ADR
@@ -49,14 +50,39 @@ reputation goal.
   `CMakeLists.txt` line 10 sets `CMAKE_CXX_STANDARD 23`; per-target
   `target_compile_features(... PUBLIC cxx_std_23)` so vendored Slang
   / tree-sitter keep their own standard.
-- **Phase 6 (launch — v0.5) in progress.** v0.5.0/0.5.1/0.5.2/0.5.3
-  tags shipped same day (release-pipeline triage chain — see
-  CHANGELOG); v0.5.3 is the first fully-green release. Docs site
-  live at https://nelcit.github.io/hlsl-clippy/; 9 launch blog posts
-  shipped (preface + 8 category overviews + 1 per-rule); per-platform
-  `.vsix` bundling lands in v0.5.3. Slang submodule retired in commit
-  73c0322 — Slang is now consumed via the prebuilt cache populated by
-  `tools/fetch-slang.{sh,ps1}` (or `Slang_ROOT` for power users).
+- **Phase 6+ hardening (v0.6 prep) burned down 2026-05-02.** Shipped this
+  pass (commits `7afe88b` → `8d44934`):
+  - `core/src/rules/util/ast_helpers.{hpp,cpp}` factor — 1422 LOC removed
+    across 119 rule TUs.
+  - LSP static-lib factor (`hlsl_clippy_lsp_lib`).
+  - Slang prebuilt cache step in every workflow.
+  - Parallel `clang-tidy` via `run-clang-tidy-18 -j$(nproc)`; lint went
+    from ~30 min serial to ~10 min parallel.
+  - `.clang-tidy` suppressions broadened for clang-tidy 18 noise +
+    `EnumConstantCase: CamelCase`.
+  - Coverage gate (Linux Clang + `llvm-cov` + Codecov) — `ci.yml`
+    `coverage` job; threshold deferred until baseline data lands.
+  - Nightly bench harness (`bench.yml`); trend-comparison artifact
+    diffing deferred.
+  - `.gitattributes` LF-pin on goldens + CRLF-tolerant test compare.
+  - CFG engine `build_with_tree` overload — reuses parsed tree-sitter
+    tree, ~5–15 % lint-time saving per source.
+  - LSP serves hover + code-action from `OpenDocument::latest_diagnostics`
+    instead of re-running `lint()` per request.
+  - All 4 STATUS_STACK_BUFFER_OVERRUN goldens resolved (root causes:
+    Slang reflection emitting absolute paths in messages, sort-key
+    tie-break, fixture/Slang version drift). Snapshot harness now
+    filters `clippy::*` infrastructure diagnostics + uses 4-key sort.
+  - `docs/rules/*.md` banner refresh — 134 pages updated from
+    "pre-v0 — scheduled" / "Pre-v0 status" to "shipped (Phase N)";
+    183 companion-blog-link placeholders linked to the shipped per-
+    category overview posts.
+  - Docs site live at https://nelcit.github.io/hlsl-clippy/; 9 launch
+    blog posts shipped (preface + 8 category overviews + 1 per-rule);
+    per-platform `.vsix` bundling lands in v0.5.3. Slang submodule
+    retired in commit 73c0322 — Slang is now consumed via the prebuilt
+    cache populated by `tools/fetch-slang.{sh,ps1}` (or `Slang_ROOT`
+    for power users).
 
 ---
 

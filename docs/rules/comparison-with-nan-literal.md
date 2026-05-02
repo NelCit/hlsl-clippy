@@ -3,7 +3,7 @@ id: comparison-with-nan-literal
 category: misc
 severity: error
 applicability: machine-applicable
-since-version: "v0.2.0"
+since-version: v0.5.0
 phase: 2
 ---
 

@@ -3,7 +3,7 @@ id: redundant-computation-in-branch
 category: control-flow
 severity: warn
 applicability: machine-applicable
-since-version: v0.4.0
+since-version: v0.5.0
 phase: 4
 ---
 

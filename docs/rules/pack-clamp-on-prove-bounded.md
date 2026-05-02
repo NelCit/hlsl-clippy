@@ -3,7 +3,7 @@ id: pack-clamp-on-prove-bounded
 category: packed-math
 severity: warn
 applicability: suggestion
-since-version: v0.7.0
+since-version: v0.5.0
 phase: 7
 ---
 

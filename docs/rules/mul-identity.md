@@ -3,7 +3,7 @@ id: mul-identity
 category: math
 severity: warn
 applicability: machine-applicable
-since-version: "v0.2.0"
+since-version: v0.5.0
 phase: 2
 ---
 

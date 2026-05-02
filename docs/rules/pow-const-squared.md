@@ -3,7 +3,7 @@ id: pow-const-squared
 category: math
 severity: warn
 applicability: machine-applicable
-since-version: "0.1"
+since-version: v0.5.0
 phase: 2
 ---
 

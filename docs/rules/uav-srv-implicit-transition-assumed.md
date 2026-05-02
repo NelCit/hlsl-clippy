@@ -3,7 +3,7 @@ id: uav-srv-implicit-transition-assumed
 category: bindings
 severity: warn
 applicability: none
-since-version: v0.3.0
+since-version: v0.5.0
 phase: 3
 ---
 

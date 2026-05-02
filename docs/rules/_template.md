@@ -3,13 +3,27 @@ id: rule-id-here
 category: math
 severity: warn
 applicability: machine-applicable
-since-version: "0.1"
-phase: 2
+# `since-version` is the FIRST tagged release that will ship the rule. For
+# rules landing in v0.6.x set `v0.6.0`; bump to `v0.7.0` for v0.7-cycle rules
+# and so on. Do not invent a `v0.5.x` value retroactively for new rules --
+# the v0.5 line is closed.
+since-version: v0.6.0
+phase: 7
 ---
 
 # rule-id-here
 
-<!-- Replace this title with the rule ID. Keep the YAML front-matter above accurate. -->
+<!-- Replace this title with the rule ID. Keep the YAML front-matter above accurate.
+     `phase` is the implementation tier the rule belongs to (per ADR 0007 / 0010 /
+     0011): 2 = AST-only, 3 = reflection-aware, 4 = control-flow / uniformity-aware,
+     7 = IR-level / stretch. -->
+
+> **Pre-v0.6 status:** this rule page is published ahead of the implementation. Behaviour described here reflects the design intent; the rule is not yet enforced by the tool.
+
+<!-- Once the rule ships, replace the banner above with:
+> **Status:** shipped (Phase N) — see [CHANGELOG](../../CHANGELOG.md).
+-->
+
 
 ## What it detects
 
@@ -65,7 +79,9 @@ semantic change. `hlsl-clippy fix` applies it automatically.
 
 - Related rule: [other-rule](other-rule.md)
 - HLSL intrinsic reference: [link or description]
-- Companion blog post: _not yet published_
+- Companion blog post: link to the relevant per-category overview under
+  `../blog/<category>-overview.md` if one exists; otherwise leave as
+  `_not yet published_` until a per-rule post lands.
 
 ---
 

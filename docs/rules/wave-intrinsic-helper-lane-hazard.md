@@ -3,7 +3,7 @@ id: wave-intrinsic-helper-lane-hazard
 category: control-flow
 severity: warn
 applicability: none
-since-version: v0.4.0
+since-version: v0.5.0
 phase: 4
 ---
 

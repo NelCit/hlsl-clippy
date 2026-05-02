@@ -3,7 +3,7 @@ id: rwbuffer-store-without-globallycoherent
 category: bindings
 severity: error
 applicability: none
-since-version: v0.4.0
+since-version: v0.5.0
 phase: 4
 ---
 
