@@ -78,6 +78,32 @@ constexpr std::string_view k_flatten_attr = "[flatten]";
     return bytes.substr(i - k_flatten_attr.size(), k_flatten_attr.size()) == k_flatten_attr;
 }
 
+/// Locate the `[flatten]` byte range immediately preceding `if_lo`. Returns
+/// `{0, 0}` when the attribute is not found via the bytes-scan path. Mirrors
+/// `preceded_by_flatten`'s logic so the fix's edit span matches what that
+/// guard already accepted.
+[[nodiscard]] ByteSpan flatten_attr_span(std::string_view bytes, std::uint32_t if_lo) noexcept {
+    if (if_lo == 0U || if_lo > bytes.size()) {
+        return ByteSpan{0U, 0U};
+    }
+    std::uint32_t i = if_lo;
+    while (i > 0U) {
+        const char c = bytes[i - 1U];
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+            --i;
+            continue;
+        }
+        break;
+    }
+    if (i < k_flatten_attr.size()) {
+        return ByteSpan{0U, 0U};
+    }
+    if (bytes.substr(i - k_flatten_attr.size(), k_flatten_attr.size()) != k_flatten_attr) {
+        return ByteSpan{0U, 0U};
+    }
+    return ByteSpan{static_cast<std::uint32_t>(i - k_flatten_attr.size()), i};
+}
+
 /// True when the parent of `node` is an `attributed_statement` and the
 /// attribute text contains `[flatten]`. tree-sitter-hlsl wraps attributed
 /// statements with a sibling attribute node in some grammar versions; we
@@ -135,6 +161,30 @@ void scan_ifs(::TSNode node,
                         "execute every wave when `[branch]` (or no attribute) would let the wave "
                         "skip the inactive arm entirely; switch to `[branch]` to recover the dead "
                         "arm's instructions"};
+
+                    // Replace the `[flatten]` attribute literal with `[branch]`.
+                    // The token swap is purely textual within a single span the
+                    // rule already located via `preceded_by_flatten`. Marked
+                    // suggestion-grade because the doc page notes the swap
+                    // may surface compiler-version differences in lowering.
+                    const auto if_lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
+                    const auto attr_span = flatten_attr_span(bytes, if_lo);
+                    if (attr_span.lo < attr_span.hi) {
+                        Fix fix;
+                        fix.machine_applicable = false;
+                        fix.description = std::string{
+                            "replace `[flatten]` with `[branch]` to let the wave skip the "
+                            "inactive arm"};
+                        TextEdit edit;
+                        edit.span = Span{
+                            .source = tree.source_id(),
+                            .bytes = attr_span,
+                        };
+                        edit.replacement = std::string{"[branch]"};
+                        fix.edits.push_back(std::move(edit));
+                        diag.fixes.push_back(std::move(fix));
+                    }
+
                     ctx.emit(std::move(diag));
                 }
             }

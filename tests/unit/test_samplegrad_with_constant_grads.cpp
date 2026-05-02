@@ -67,3 +67,36 @@ float4 ps_main(float2 uv : TEXCOORD0) : SV_Target {
 )hlsl";
     CHECK_FALSE(has_rule(lint_buffer(hlsl, sources), "samplegrad-with-constant-grads"));
 }
+
+TEST_CASE("samplegrad-with-constant-grads attaches a SampleLevel rewrite Fix",
+          "[rules][samplegrad-with-constant-grads][fix]") {
+    // Regression for v0.6.8: rule was tagged `applicability: machine-applicable`
+    // in docs but emitted a Fix-less diagnostic. Verify the rewrite reconstructs
+    // a well-formed `<tex>.SampleLevel(<sampler>, <uv>, 0.0)` call.
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+Texture2D    t : register(t0);
+SamplerState s : register(s0);
+
+[shader("pixel")]
+float4 ps_main(float2 uv : TEXCOORD0) : SV_Target {
+    return t.SampleGrad(s, uv, float2(0,0), float2(0,0));
+}
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    bool saw = false;
+    for (const auto& d : diags) {
+        if (d.code != "samplegrad-with-constant-grads") {
+            continue;
+        }
+        saw = true;
+        REQUIRE(d.fixes.size() == 1U);
+        const auto& fix = d.fixes.front();
+        // tex/sampler/uv are all bare identifiers → machine-applicable.
+        CHECK(fix.machine_applicable);
+        REQUIRE(fix.edits.size() == 1U);
+        const auto& replacement = fix.edits.front().replacement;
+        CHECK(replacement == "t.SampleLevel(s, uv, 0.0)");
+    }
+    CHECK(saw);
+}

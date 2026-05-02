@@ -74,3 +74,32 @@ float4 ps_main() : SV_Target {
 )hlsl";
     CHECK_FALSE(has_rule(lint_buffer(hlsl, sources), "descriptor-heap-no-non-uniform-marker"));
 }
+
+TEST_CASE("descriptor-heap-no-non-uniform-marker attaches a wrap Fix",
+          "[rules][descriptor-heap-no-non-uniform-marker][fix]") {
+    // The wrap is suggestion-grade because the rule cannot prove the index is
+    // divergent at every call site; wrapping a uniform index is harmless but
+    // may slow the uniform path slightly.
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+[shader("pixel")]
+float4 ps_main(uint matId : TEXCOORD0) : SV_Target {
+    Texture2D tex = ResourceDescriptorHeap[matId];
+    return float4(0, 0, 0, 1);
+}
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    bool saw = false;
+    for (const auto& d : diags) {
+        if (d.code != "descriptor-heap-no-non-uniform-marker") {
+            continue;
+        }
+        saw = true;
+        REQUIRE(d.fixes.size() == 1U);
+        const auto& fix = d.fixes.front();
+        CHECK_FALSE(fix.machine_applicable);
+        REQUIRE(fix.edits.size() == 1U);
+        CHECK(fix.edits.front().replacement == "NonUniformResourceIndex(matId)");
+    }
+    CHECK(saw);
+}

@@ -156,6 +156,28 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                             "ceiling (32) -- the SER scheduler ignores bits above "
                             "the ceiling and the unused width dilutes lane "
                             "bucketing (proposal 0027)"};
+
+                        // Clamp the literal to the spec ceiling. The SER scheduler
+                        // masks `coherenceHint` to the low `min(hintBits, 32)` bits
+                        // already, so dropping the literal from `>32` to `32` is
+                        // semantics-preserving at the runtime; the only thing it
+                        // changes is what the source reads as. This is the tightest
+                        // bound we can prove without the bit-range domain — the
+                        // doc page calls out that a tighter (e.g. 4-bit) value
+                        // requires the analyzer to land. The arg is already a
+                        // numeric literal (the only shape the rule fires on), so
+                        // the rewrite has no side effects to repeat.
+                        Fix fix;
+                        fix.machine_applicable = true;
+                        fix.description =
+                            std::string{"clamp `hintBits` literal to the SER spec ceiling (32)"};
+                        TextEdit edit;
+                        edit.span =
+                            Span{.source = tree.source_id(), .bytes = tree.byte_range(arg)};
+                        edit.replacement = std::string{"32"};
+                        fix.edits.push_back(std::move(edit));
+                        diag.fixes.push_back(std::move(fix));
+
                         ctx.emit(std::move(diag));
                     }
                 }

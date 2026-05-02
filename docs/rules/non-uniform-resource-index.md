@@ -2,7 +2,7 @@
 id: non-uniform-resource-index
 category: bindings
 severity: warn
-applicability: none
+applicability: suggestion
 since-version: v0.5.0
 phase: 3
 ---
@@ -66,7 +66,7 @@ none
 
 ## Fix availability
 
-**none** — Adding `NonUniformResourceIndex` is a one-line textual change, but the rule cannot determine with certainty whether a given call site is always divergent. Applying the marker on a uniform index is correct (it may impose a small waterfall overhead where none is needed) but it is not a pure no-op on all drivers. The diagnostic explains the pattern and the fix; the author must verify call-site uniformity before applying.
+**suggestion** — `--fix` wraps the captured index expression in `NonUniformResourceIndex(...)`. The wrap evaluates the index exactly once (no duplication), so it is side-effect-safe even when the index is a non-trivial expression. The fix is marked `machine_applicable = false` because the rule cannot prove the index is actually divergent at every call site: applying the marker on a known-uniform index is harmless on most drivers but may impose a small waterfall overhead where none is needed. Verify call-site uniformity before accepting the fix in bulk.
 
 ## See also
 

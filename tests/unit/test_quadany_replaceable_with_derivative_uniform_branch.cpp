@@ -109,3 +109,34 @@ float4 main(float2 uv : TEXCOORD0) : SV_Target0 {
         CHECK(d.code != "quadany-replaceable-with-derivative-uniform-branch");
     }
 }
+
+TEST_CASE("quadany-replaceable-with-derivative-uniform-branch attaches an unwrap Fix",
+          "[rules][quadany-replaceable-with-derivative-uniform-branch][fix]") {
+    // The wrapper has no derivative consumer in its body, so the unwrap
+    // `QuadAny(cond)` -> `cond` is semantics-preserving; the inner expression
+    // executes once before and once after the rewrite, so duplication concerns
+    // do not apply. Mark machine-applicable.
+    const std::string hlsl = R"hlsl(
+float4 main(float2 uv : TEXCOORD0) : SV_Target0 {
+    float4 c = float4(0, 0, 0, 0);
+    if (QuadAny(uv.y > 0.5)) {
+        c = float4(1, 1, 1, 1);
+    }
+    return c;
+}
+)hlsl";
+    const auto diags = lint_buffer(hlsl);
+    bool saw = false;
+    for (const auto& d : diags) {
+        if (d.code != "quadany-replaceable-with-derivative-uniform-branch") {
+            continue;
+        }
+        saw = true;
+        REQUIRE(d.fixes.size() == 1U);
+        const auto& fix = d.fixes.front();
+        CHECK(fix.machine_applicable);
+        REQUIRE(fix.edits.size() == 1U);
+        CHECK(fix.edits.front().replacement == "uv.y > 0.5");
+    }
+    CHECK(saw);
+}

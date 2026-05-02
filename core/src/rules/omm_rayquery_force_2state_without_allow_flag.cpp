@@ -67,6 +67,68 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                         "`RAY_FLAG_ALLOW_OPACITY_MICROMAPS` to be set on the "
                         "same RayQuery; without the allow flag the OMM "
                         "blocks are never consulted (DXR 1.2 OMM spec)"};
+
+                    // OR the missing allow flag into the existing template-arg
+                    // expression. The flag list is the substring between
+                    // `RayQuery<` and the matching `>`; we replace it in place
+                    // with `<existing> | RAY_FLAG_ALLOW_OPACITY_MICROMAPS`. The
+                    // existing flag expression is not duplicated so the rewrite
+                    // has no side-effect concerns. Marked
+                    // `machine_applicable = false` per the doc page: adding the
+                    // allow flag changes the trace's semantics and the
+                    // developer must confirm the BVH has OMM blocks attached.
+                    const auto node_lo =
+                        static_cast<std::uint32_t>(::ts_node_start_byte(node));
+                    const std::uint32_t arg_lo = node_lo +
+                        static_cast<std::uint32_t>(rq_pos +
+                                                   std::string_view{"RayQuery<"}.size());
+                    const std::uint32_t arg_hi =
+                        node_lo + static_cast<std::uint32_t>(end);
+                    if (arg_lo < arg_hi) {
+                        // Trim trailing whitespace so the inserted ` | ...`
+                        // lands flush against the last non-space character.
+                        std::uint32_t trim_hi = arg_hi;
+                        while (trim_hi > arg_lo) {
+                            const char c = bytes[trim_hi - 1U];
+                            if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+                                --trim_hi;
+                            } else {
+                                break;
+                            }
+                        }
+                        std::uint32_t trim_lo = arg_lo;
+                        while (trim_lo < trim_hi) {
+                            const char c = bytes[trim_lo];
+                            if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+                                ++trim_lo;
+                            } else {
+                                break;
+                            }
+                        }
+                        if (trim_lo < trim_hi) {
+                            const auto flag_text =
+                                bytes.substr(trim_lo, trim_hi - trim_lo);
+                            Fix fix;
+                            fix.machine_applicable = false;
+                            fix.description = std::string{
+                                "OR `RAY_FLAG_ALLOW_OPACITY_MICROMAPS` into the "
+                                "RayQuery template-flag argument; verify the "
+                                "BVH has OMM blocks attached"};
+                            TextEdit edit;
+                            edit.span = Span{
+                                .source = tree.source_id(),
+                                .bytes = ByteSpan{trim_lo, trim_hi},
+                            };
+                            std::string replacement;
+                            replacement.reserve(flag_text.size() + 36U);
+                            replacement.append(flag_text);
+                            replacement.append(" | RAY_FLAG_ALLOW_OPACITY_MICROMAPS");
+                            edit.replacement = std::move(replacement);
+                            fix.edits.push_back(std::move(edit));
+                            diag.fixes.push_back(std::move(fix));
+                        }
+                    }
+
                     ctx.emit(std::move(diag));
                 }
             }

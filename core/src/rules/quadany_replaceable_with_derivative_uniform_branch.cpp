@@ -148,6 +148,42 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                         "wave-shuffle without keeping helpers alive for any "
                         "derivative consumer -- the bare condition suffices "
                         "(SM 6.7 quad intrinsics)"};
+
+                    // Unwrap `QuadAny(cond)` / `QuadAll(cond)` to the bare
+                    // `cond`. The wrapper is a `call_expression` with a
+                    // single argument; we replace the entire wrapper span
+                    // with the inner argument's source text. The inner
+                    // expression is not duplicated, so this is safe even
+                    // when `cond` itself is a non-trivial expression. Since
+                    // the rule already proved the body has no derivative
+                    // consumers, the unwrap is semantics-preserving on the
+                    // syntactic shape that fires today.
+                    const ::TSNode args =
+                        ::ts_node_child_by_field_name(wrapper, "arguments", 9);
+                    if (!::ts_node_is_null(args) &&
+                        ::ts_node_named_child_count(args) == 1U) {
+                        const ::TSNode inner = ::ts_node_named_child(args, 0);
+                        if (!::ts_node_is_null(inner)) {
+                            const auto inner_text = node_text(inner, bytes);
+                            if (!inner_text.empty()) {
+                                Fix fix;
+                                fix.machine_applicable = true;
+                                fix.description = std::string{
+                                    "drop `QuadAny`/`QuadAll`; body has no "
+                                    "derivative-bearing consumer to keep "
+                                    "helpers alive for"};
+                                TextEdit edit;
+                                edit.span = Span{
+                                    .source = tree.source_id(),
+                                    .bytes = tree.byte_range(wrapper),
+                                };
+                                edit.replacement = std::string{inner_text};
+                                fix.edits.push_back(std::move(edit));
+                                diag.fixes.push_back(std::move(fix));
+                            }
+                        }
+                    }
+
                     ctx.emit(std::move(diag));
                 }
             }

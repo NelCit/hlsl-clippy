@@ -117,6 +117,40 @@ void scan_for_heap(const AstTree& tree,
                        "SM 6.6 dynamic-resource access requires the marker when the index can "
                        "vary across lanes (otherwise the driver may broadcast lane 0's "
                        "descriptor)";
+
+        // Wrap the captured index expression in `NonUniformResourceIndex(...)`.
+        // The wrap evaluates the index exactly once (no duplication), so this
+        // is safe even when the index is a non-trivial expression with side
+        // effects. Marked suggestion-grade because the doc page notes that
+        // some call sites may already be uniform, where wrapping is harmless
+        // but may slow the uniform path slightly on some drivers.
+        const auto trimmed = trim(inside);
+        if (!trimmed.empty()) {
+            // Replace the exact `[...]` content (between `[` and `]`) so
+            // any surrounding whitespace inside the brackets is preserved
+            // by the wrap.
+            const std::uint32_t inside_lo = static_cast<std::uint32_t>(i + 1U);
+            const std::uint32_t inside_hi = static_cast<std::uint32_t>(j);
+            Fix fix;
+            fix.machine_applicable = false;
+            fix.description = std::string{
+                "wrap descriptor-heap index in `NonUniformResourceIndex(...)`; "
+                "verify the index is actually divergent at this call site"};
+            TextEdit edit;
+            edit.span = Span{
+                .source = tree.source_id(),
+                .bytes = ByteSpan{inside_lo, inside_hi},
+            };
+            std::string replacement;
+            replacement.reserve(trimmed.size() + 28U);
+            replacement.append("NonUniformResourceIndex(");
+            replacement.append(trimmed);
+            replacement.append(")");
+            edit.replacement = std::move(replacement);
+            fix.edits.push_back(std::move(edit));
+            diag.fixes.push_back(std::move(fix));
+        }
+
         ctx.emit(std::move(diag));
         pos = j + 1U;
     }

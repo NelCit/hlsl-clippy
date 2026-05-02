@@ -160,6 +160,38 @@ public:
                     "` is not wrapped in `NonUniformResourceIndex(...)` -- if the index can vary "
                     "per lane the DXIL spec calls this UB and the driver may broadcast lane 0's "
                     "descriptor across the wave";
+
+                // Wrap the captured index expression in `NonUniformResourceIndex(...)`.
+                // The wrap evaluates the index exactly once (no duplication), so this
+                // is safe even when the index is a non-trivial expression with side
+                // effects. Marked suggestion-grade because the rule cannot prove the
+                // index is actually divergent at every call site -- wrapping a
+                // uniform index is harmless but may slow the uniform path slightly
+                // on some drivers.
+                const auto trimmed = trim(inside);
+                if (!trimmed.empty()) {
+                    const std::uint32_t inside_lo = static_cast<std::uint32_t>(i + 1U);
+                    const std::uint32_t inside_hi = static_cast<std::uint32_t>(j);
+                    Fix fix;
+                    fix.machine_applicable = false;
+                    fix.description = std::string{
+                        "wrap resource-array index in `NonUniformResourceIndex(...)`; "
+                        "verify the index is actually divergent at this call site"};
+                    TextEdit edit;
+                    edit.span = Span{
+                        .source = tree.source_id(),
+                        .bytes = ByteSpan{inside_lo, inside_hi},
+                    };
+                    std::string replacement;
+                    replacement.reserve(trimmed.size() + 28U);
+                    replacement.append("NonUniformResourceIndex(");
+                    replacement.append(trimmed);
+                    replacement.append(")");
+                    edit.replacement = std::move(replacement);
+                    fix.edits.push_back(std::move(edit));
+                    diag.fixes.push_back(std::move(fix));
+                }
+
                 ctx.emit(std::move(diag));
                 pos = j + 1U;
             }

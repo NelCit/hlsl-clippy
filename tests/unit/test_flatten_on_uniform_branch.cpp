@@ -123,3 +123,33 @@ void cs_main(uint3 tid : SV_DispatchThreadID)
     const auto diags = lint_buffer(hlsl, sources);
     CHECK_FALSE(has_rule(diags, "flatten-on-uniform-branch"));
 }
+
+TEST_CASE("flatten-on-uniform-branch attaches an attribute-swap Fix when it fires",
+          "[rules][flatten-on-uniform-branch][fix]") {
+    // The uniformity oracle's classification of literal `true` is best-effort
+    // today; if the rule fires, the diagnostic must carry a Fix that swaps
+    // `[flatten]` for `[branch]`. Mark suggestion-grade because the swap may
+    // surface compiler-version differences in lowering.
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float4 ps_main(float2 uv : TEXCOORD0) : SV_Target
+{
+    [flatten]
+    if (true) {
+        return float4(1, 0, 0, 1);
+    }
+    return float4(0, 0, 0, 1);
+}
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    for (const auto& d : diags) {
+        if (d.code != "flatten-on-uniform-branch") {
+            continue;
+        }
+        REQUIRE(d.fixes.size() == 1U);
+        const auto& fix = d.fixes.front();
+        CHECK_FALSE(fix.machine_applicable);
+        REQUIRE(fix.edits.size() == 1U);
+        CHECK(fix.edits.front().replacement == "[branch]");
+    }
+}

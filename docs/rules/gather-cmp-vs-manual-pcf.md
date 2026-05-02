@@ -2,7 +2,7 @@
 id: gather-cmp-vs-manual-pcf
 category: texture
 severity: warn
-applicability: machine-applicable
+applicability: suggestion
 since-version: v0.5.0
 phase: 3
 ---
@@ -69,7 +69,13 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Replacing four `SampleCmpLevelZero` calls in a recognised 2x2 offset pattern with a single `GatherCmp` plus bilinear reconstruction is a pure semantic equivalence for the standard 2x2 PCF filter. The gather-component ordering follows the HLSL specification (counter-clockwise starting from lower-left), and `hlsl-clippy fix` emits the correct index mapping. The fix is applied without human confirmation.
+**suggestion** — The end-state rewrite (one `GatherCmp` plus a `lerp`-based bilinear reconstruction) is semantically equivalent to the source 2x2 PCF, but the rewrite is *not* safely automatable in the current detector for three reasons:
+
+1. **Multi-statement, multi-variable rewrite.** The fix has to delete the four `SampleCmp*` calls and their named results (`s00`/`s10`/`s01`/`s11` in the canonical example), insert a single `GatherCmp` call, and rewrite the downstream `lerp` math against the new component-order convention (`cmp.x` = (0,1), `cmp.y` = (1,1), `cmp.z` = (1,0), `cmp.w` = (0,0) per the HLSL spec). The current detector reports a *cluster* of `SampleCmp*` calls in a small source window without verifying the offset pattern or identifying the downstream blend variables, so a mechanical rewrite would have to invent identifier names and is not provably correct on arbitrary call shapes.
+2. **Texel-size dependency must be supplied.** Reconstructing the bilinear filter requires `frac(uv * textureSize)` (or `frac(uv / texelSize)`); the detector cannot derive the texel-size constant from source alone — it lives in a cbuffer field whose name varies per project. A machine-applicable rewrite would need a project-wide convention (e.g. always `ShadowTexelSize`) that the rule does not enforce.
+3. **Per-tap UV-offset shape varies.** Real-world PCF kernels include 3x3 and 4x4 variants, gaussian-weighted variants, and rotated-disc variants. The rule fires on >=4 calls in a window as a coarse heuristic; collapsing to `GatherCmp` is only correct for the 2x2 axis-aligned pattern, and the detector does not currently prove the input is that shape.
+
+The lint surfaces the perf opportunity; the rewrite needs the developer to confirm the kernel shape and supply the texel-size source. If you want the rule to emit a `GatherCmp`-based code action you can review-and-apply by hand, that is tracked as a follow-up.
 
 ## See also
 

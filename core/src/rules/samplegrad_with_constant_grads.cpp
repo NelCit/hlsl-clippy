@@ -31,9 +31,12 @@ namespace {
 
 constexpr std::string_view k_rule_id = "samplegrad-with-constant-grads";
 constexpr std::string_view k_category = "texture";
+// `tex` captures the field-expression LHS (the texture object); we need it to
+// reconstruct the SampleLevel call when emitting the fix.
 constexpr std::string_view k_pattern = R"(
     (call_expression
         function: (field_expression
+            argument: (_) @tex
             field: (field_identifier) @method)
         arguments: (argument_list
             (_) @sampler
@@ -126,12 +129,17 @@ public:
         engine.run(compiled.value(),
                    ::ts_tree_root_node(tree.raw_tree()),
                    [&](const query::QueryMatch& match) {
+                       const ::TSNode tex = match.capture("tex");
                        const ::TSNode method = match.capture("method");
+                       const ::TSNode sampler = match.capture("sampler");
+                       const ::TSNode uv = match.capture("uv");
                        const ::TSNode ddx = match.capture("ddx");
                        const ::TSNode ddy = match.capture("ddy");
                        const ::TSNode call = match.capture("call");
-                       if (::ts_node_is_null(method) || ::ts_node_is_null(ddx) ||
-                           ::ts_node_is_null(ddy) || ::ts_node_is_null(call))
+                       if (::ts_node_is_null(tex) || ::ts_node_is_null(method) ||
+                           ::ts_node_is_null(sampler) || ::ts_node_is_null(uv) ||
+                           ::ts_node_is_null(ddx) || ::ts_node_is_null(ddy) ||
+                           ::ts_node_is_null(call))
                            return;
                        if (tree.text(method) != "SampleGrad")
                            return;
@@ -147,6 +155,49 @@ public:
                            "`SampleGrad(s, uv, 0, 0)` is equivalent to `SampleLevel(s, uv, 0)` -- "
                            "the explicit-gradient TMU path costs extra issue cycles versus the "
                            "explicit-LOD path"};
+
+                       // Reconstruct the call as `<tex>.SampleLevel(<sampler>, <uv>, 0.0)`.
+                       // Texture/sampler/uv expressions in HLSL are conventionally
+                       // side-effect-free (resource references, varyings, member
+                       // accesses), so we mark the fix machine-applicable when all
+                       // three captures are simple identifiers or field accesses.
+                       const auto kind_simple = [](const std::string_view k) {
+                           return k == "identifier" || k == "field_expression" ||
+                                  k == "subscript_expression";
+                       };
+                       const auto* tex_kind = ::ts_node_type(tex);
+                       const auto* sampler_kind = ::ts_node_type(sampler);
+                       const auto* uv_kind = ::ts_node_type(uv);
+                       const bool all_simple =
+                           tex_kind != nullptr && sampler_kind != nullptr && uv_kind != nullptr &&
+                           kind_simple(tex_kind) && kind_simple(sampler_kind) && kind_simple(uv_kind);
+
+                       Fix fix;
+                       fix.machine_applicable = all_simple;
+                       fix.description =
+                           all_simple
+                               ? std::string{"replace SampleGrad with SampleLevel"}
+                               : std::string{
+                                     "replace SampleGrad with SampleLevel; verify the texture, "
+                                     "sampler, and UV expressions are side-effect-free first"};
+                       std::string replacement;
+                       const auto tex_text = tree.text(tex);
+                       const auto sampler_text = tree.text(sampler);
+                       const auto uv_text = tree.text(uv);
+                       replacement.reserve(tex_text.size() + sampler_text.size() + uv_text.size() +
+                                           24U);
+                       replacement.append(tex_text);
+                       replacement.append(".SampleLevel(");
+                       replacement.append(sampler_text);
+                       replacement.append(", ");
+                       replacement.append(uv_text);
+                       replacement.append(", 0.0)");
+                       TextEdit edit;
+                       edit.span = Span{.source = tree.source_id(), .bytes = range};
+                       edit.replacement = std::move(replacement);
+                       fix.edits.push_back(std::move(edit));
+                       diag.fixes.push_back(std::move(fix));
+
                        ctx.emit(std::move(diag));
                    });
     }

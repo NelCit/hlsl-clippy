@@ -2,7 +2,7 @@
 id: unused-cbuffer-field
 category: bindings
 severity: warn
-applicability: machine-applicable
+applicability: suggestion
 since-version: v0.5.0
 phase: 3
 ---
@@ -68,7 +68,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Deleting an unused field declaration is a safe textual deletion within the HLSL source file. The field is not read by the shader, so removing it has no observable effect on the GPU computation. The CPU-side code that fills the field is unaffected at the GPU level (the field's bytes become padding or are simply no longer uploaded, depending on whether the CPU fill uses the Slang-reflected layout). `hlsl-clippy fix` removes the field declaration automatically. Note: the CPU-side fill code should also be cleaned up manually, but that is outside the scope of this HLSL-only fix.
+**suggestion** — Deleting an unused field is a one-line edit in the HLSL source, but the rewrite is *not* safe to auto-apply because removing a field shifts the byte offsets of every subsequent field in the cbuffer and shrinks the cbuffer's declared size. CPU-side struct mirrors that `memcpy` into the binding will silently write into the wrong offsets after the change, and any other shader that aliases the same cbuffer slot will read garbage. The lint surfaces the dead field; the deletion needs to land alongside the matching CPU-side cleanup, which is outside this rule's scope. If you want the rule to emit a TextEdit you can review-and-apply by hand, that is tracked as a follow-up.
 
 ## See also
 

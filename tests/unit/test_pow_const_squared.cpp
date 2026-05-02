@@ -136,3 +136,73 @@ TEST_CASE("pow-const-squared diagnostic resolves to the correct line", "[rules][
     // pow(2.0, -t * 8.0) at line 12 must NOT be reported by this rule.
     CHECK_FALSE(contains(12U));
 }
+
+TEST_CASE("pow-const-squared attaches a machine-applicable Fix on bare-identifier base",
+          "[rules][pow][fix]") {
+    // Regression for v0.6.8: pow-const-squared used to emit a diagnostic with
+    // no Fix at all (Phase 0 deferred fixes to Phase 1 and never circled back),
+    // breaking the editor's fix-all flow on the canonical demo rule. The Fix
+    // mirrors pow-to-mul on overlapping exponents so the two rules' fixes
+    // collapse to one identical replace under WorkspaceEdit.
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float pow_squared(float x) { return pow(x, 2.0); }
+float pow_pent(float x) { return pow(x, 5.0); }
+)hlsl";
+    const auto src = sources.add_buffer("synthetic.hlsl", hlsl);
+    REQUIRE(src.valid());
+
+    auto rules = make_default_rules();
+    const auto diagnostics = lint(sources, src, rules);
+
+    // Filter to pow-const-squared.
+    std::vector<Diagnostic> pow_diags;
+    for (const auto& d : diagnostics) {
+        if (d.code == "pow-const-squared") {
+            pow_diags.push_back(d);
+        }
+    }
+    REQUIRE(pow_diags.size() == 2U);
+
+    for (const auto& d : pow_diags) {
+        REQUIRE(d.fixes.size() == 1U);
+        const auto& fix = d.fixes.front();
+        // Bare identifier `x` -> machine-applicable.
+        CHECK(fix.machine_applicable);
+        REQUIRE(fix.edits.size() == 1U);
+        // Replacement targets the entire `pow(x, N.0)` call expression.
+        CHECK(fix.edits.front().span.bytes.lo == d.primary_span.bytes.lo);
+        CHECK(fix.edits.front().span.bytes.hi == d.primary_span.bytes.hi);
+        // Replacement text is repeated multiplication of `x`.
+        CHECK(fix.edits.front().replacement.find('x') != std::string::npos);
+        CHECK(fix.edits.front().replacement.find("pow") == std::string::npos);
+    }
+}
+
+TEST_CASE("pow-const-squared downgrades Fix to suggestion-grade on non-identifier base",
+          "[rules][pow][fix]") {
+    // Schlick Fresnel is the canonical case: `pow(1.0 - n_dot_v, 5.0)`. The
+    // base is a binary expression, not a simple identifier; repeating it
+    // would re-evaluate, so machine_applicable must be false.
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float schlick(float n_dot_v) { return pow(1.0 - n_dot_v, 5.0); }
+)hlsl";
+    const auto src = sources.add_buffer("synthetic.hlsl", hlsl);
+    REQUIRE(src.valid());
+
+    auto rules = make_default_rules();
+    const auto diagnostics = lint(sources, src, rules);
+
+    bool saw = false;
+    for (const auto& d : diagnostics) {
+        if (d.code != "pow-const-squared") {
+            continue;
+        }
+        saw = true;
+        REQUIRE(d.fixes.size() == 1U);
+        CHECK_FALSE(d.fixes.front().machine_applicable);
+        CHECK(d.fixes.front().edits.size() == 1U);
+    }
+    CHECK(saw);
+}

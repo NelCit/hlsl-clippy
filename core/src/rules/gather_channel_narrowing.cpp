@@ -141,6 +141,47 @@ public:
             diag.message = std::string{"`Gather(...)."} + std::string{1U, ch} +
                            "` consumes only one channel -- replace with `" + std::string{method} +
                            "` to encode the channel at TMU instruction level and drop the swizzle";
+
+            // Build the rewrite. Span covers `Gather(<args>).<channel>`; the
+            // replacement keeps the argument list verbatim, swaps the method
+            // name, and rewrites the swizzle.
+            //
+            // Semantics caveat:
+            //   * `Gather(...).r/.x`  -> first-texel red. `GatherRed(...).r` is
+            //     bit-identical: machine-applicable.
+            //   * `Gather(...).g/.y`  -> second-texel red (the y-component of
+            //     the gather4-red return). The intent the rule documents is
+            //     "the developer wanted the green channel", so the rewrite
+            //     becomes `GatherGreen(...).r` -- first-texel green. That is a
+            //     semantic shift on `Gather`'s return, so the fix is
+            //     suggestion-grade for non-red channels.
+            //   * Same applies to `.b/.z` and `.a/.w`.
+            const std::string_view args =
+                bytes.substr(found + std::string_view{".Gather"}.size(),
+                             i - (found + std::string_view{".Gather"}.size()) + 1U);
+            std::string replacement;
+            replacement.reserve(method.size() + args.size() + 3U);
+            replacement.append(method);
+            replacement.append(args);
+            replacement.append(".r");
+
+            const bool is_red_channel = (ch == 'r' || ch == 'x');
+            Fix fix;
+            fix.machine_applicable = is_red_channel;
+            fix.description =
+                is_red_channel
+                    ? std::string{"replace `Gather(...).r` with `GatherRed(...).r`"}
+                    : std::string{"replace `Gather(...).<channel>` with the channel-"
+                                  "specific gather; verify the original swizzle was "
+                                  "intended to mean the channel name (not a texel index)"};
+            TextEdit edit;
+            edit.span = Span{.source = tree.source_id(),
+                             .bytes = ByteSpan{static_cast<std::uint32_t>(call_lo),
+                                               static_cast<std::uint32_t>(swizzle_hi)}};
+            edit.replacement = std::move(replacement);
+            fix.edits.push_back(std::move(edit));
+            diag.fixes.push_back(std::move(fix));
+
             ctx.emit(std::move(diag));
             pos = swizzle_hi;
         }

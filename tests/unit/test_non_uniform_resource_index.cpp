@@ -69,3 +69,34 @@ float4 ps_main(float2 uv : TEXCOORD0, uint matId : TEXCOORD1) : SV_Target {
 )hlsl";
     CHECK_FALSE(has_rule(lint_buffer(hlsl, sources), "non-uniform-resource-index"));
 }
+
+TEST_CASE("non-uniform-resource-index attaches a wrap Fix",
+          "[rules][non-uniform-resource-index][fix]") {
+    // The wrap is suggestion-grade: the rule cannot prove the index is
+    // divergent at every call site. Wrapping a uniform index is harmless
+    // but may impose a small waterfall overhead on some drivers.
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+Texture2D textures[8] : register(t0, space1);
+SamplerState s        : register(s0);
+
+[shader("pixel")]
+float4 ps_main(float2 uv : TEXCOORD0, uint matId : TEXCOORD1) : SV_Target {
+    return textures[matId].Sample(s, uv);
+}
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    bool saw = false;
+    for (const auto& d : diags) {
+        if (d.code != "non-uniform-resource-index") {
+            continue;
+        }
+        saw = true;
+        REQUIRE(d.fixes.size() == 1U);
+        const auto& fix = d.fixes.front();
+        CHECK_FALSE(fix.machine_applicable);
+        REQUIRE(fix.edits.size() == 1U);
+        CHECK(fix.edits.front().replacement == "NonUniformResourceIndex(matId)");
+    }
+    CHECK(saw);
+}

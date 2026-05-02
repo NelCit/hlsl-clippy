@@ -5,7 +5,14 @@
 // guard is because `pow(2.0, x)` is the territory of `pow-base-two-to-exp2`
 // (a separate Phase 2 rule); we don't want to fire on it twice.
 //
-// Phase 0 emits a single diagnostic per match. Fixes are deferred to Phase 1.
+// Carries a TextEdit fix per the docs (`applicability: machine-applicable`).
+// The fix is machine-applicable when the base is a bare identifier — naively
+// repeating a non-trivial expression would re-evaluate any side effects and
+// is therefore downgraded to suggestion-grade. Exponent 5 produces
+// `(x * x) * (x * x) * x` (pow-by-squaring); 2/3/4 mirror the rewrites
+// pow-to-mul performs on the same call sites. When both rules fire, fix-all
+// collapses to a single replace because both rules pick the same target span
+// and the same replacement text.
 
 #include <cstddef>
 #include <cstdint>
@@ -142,6 +149,63 @@ constexpr std::string_view k_pow_name = "pow";
     return type != nullptr && std::string_view{type} == expected;
 }
 
+/// Build the textual replacement for `pow(x, N)` with N in {2, 3, 4, 5}.
+/// Matches pow-to-mul's spelling on overlapping exponents so fix-all
+/// collapses duplicate edits into one.
+[[nodiscard]] std::string make_replacement(std::string_view base, int exponent) {
+    switch (exponent) {
+        case 2: {
+            std::string r;
+            r.reserve(base.size() * 2 + 3);
+            r.append(base);
+            r.append(" * ");
+            r.append(base);
+            return r;
+        }
+        case 3: {
+            std::string r;
+            r.reserve(base.size() * 3 + 6);
+            r.append(base);
+            r.append(" * ");
+            r.append(base);
+            r.append(" * ");
+            r.append(base);
+            return r;
+        }
+        case 4: {
+            std::string r;
+            r.reserve(base.size() * 4 + 12);
+            r.append("(");
+            r.append(base);
+            r.append(" * ");
+            r.append(base);
+            r.append(") * (");
+            r.append(base);
+            r.append(" * ");
+            r.append(base);
+            r.append(")");
+            return r;
+        }
+        case 5: {
+            std::string r;
+            r.reserve(base.size() * 5 + 16);
+            r.append("(");
+            r.append(base);
+            r.append(" * ");
+            r.append(base);
+            r.append(") * (");
+            r.append(base);
+            r.append(" * ");
+            r.append(base);
+            r.append(") * ");
+            r.append(base);
+            return r;
+        }
+        default:
+            return std::string{base};
+    }
+}
+
 [[nodiscard]] std::string make_message(int exponent) {
     std::string msg = "`pow(x, ";
     msg += static_cast<char>('0' + exponent);
@@ -195,15 +259,40 @@ public:
         diag.code = std::string{k_rule_id};
         diag.severity = Severity::Warning;
         diag.primary_span = Span{.source = cursor.source_id(), .bytes = cursor.byte_range()};
-        diag.message = make_message(*match);
+        diag.message = make_message(match->exponent);
+
+        // Attach a Fix when the base text is non-empty (always true after
+        // matching). machine-applicable iff the base is a bare identifier;
+        // otherwise suggestion-grade because repeating an arbitrary
+        // expression re-evaluates side effects (e.g. `pow(load(p), 5.0)`).
+        Fix fix;
+        fix.machine_applicable = match->base_is_simple_identifier;
+        fix.description = match->base_is_simple_identifier
+                              ? std::string{"replace `pow(x, N.0)` with repeated multiplication"}
+                              : std::string{
+                                    "replace with repeated multiplication; verify the base "
+                                    "expression is side-effect-free before applying"};
+        TextEdit edit;
+        edit.span = Span{.source = cursor.source_id(), .bytes = cursor.byte_range()};
+        edit.replacement = make_replacement(match->base_text, match->exponent);
+        fix.edits.push_back(std::move(edit));
+        diag.fixes.push_back(std::move(fix));
+
         ctx.emit(std::move(diag));
     }
 
 private:
+    struct PowMatch {
+        int exponent;
+        std::string_view base_text;
+        bool base_is_simple_identifier;
+    };
+
     /// If `call` is a `pow(x, N.0)` site whose exponent is in {2, 3, 4, 5} and
-    /// whose base is *not* a literal 2, return the integer exponent.
-    [[nodiscard]] static std::optional<int> match_pow_call(::TSNode call,
-                                                           std::string_view bytes) noexcept {
+    /// whose base is *not* a literal 2, return the integer exponent and the
+    /// base's source-text view.
+    [[nodiscard]] static std::optional<PowMatch> match_pow_call(::TSNode call,
+                                                                std::string_view bytes) noexcept {
         const ::TSNode fn = ts_node_child_by_field_name(call, "function", 8);
         if (!node_kind_is(fn, "identifier") || node_text(fn, bytes) != k_pow_name) {
             return std::nullopt;
@@ -233,7 +322,15 @@ private:
             }
         }
 
-        return exponent;
+        const auto base_text = node_text(arg0, bytes);
+        if (base_text.empty()) {
+            return std::nullopt;
+        }
+        return PowMatch{
+            .exponent = *exponent,
+            .base_text = base_text,
+            .base_is_simple_identifier = node_kind_is(arg0, "identifier"),
+        };
     }
 };
 

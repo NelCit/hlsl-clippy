@@ -2,7 +2,7 @@
 id: dead-store-sv-target
 category: bindings
 severity: warn
-applicability: machine-applicable
+applicability: suggestion
 since-version: v0.5.0
 phase: 3
 ---
@@ -58,7 +58,12 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Removing a dead store that is always overwritten before use is a safe deletion with no observable semantic change: the output of the shader is determined solely by the surviving write. `hlsl-clippy fix` deletes the dead assignment (and the entire initializer statement if it is the declaration) automatically. It does not remove code that feeds the dead store if that code has other uses.
+**suggestion** — Conceptually a dead-store fix is a one-line deletion, but the rewrite is *not* safe to auto-apply for two reasons:
+
+1. **Multi-statement, multi-line edit with leading whitespace.** Mechanically removing only the assignment-byte-range leaves a dangling line of indentation and (when the dead store is the variable's *declaration with initializer*) elides the type, breaking the surviving write. The detector flags the assignment span; cleanly excising the statement requires walking back to the previous statement boundary and forward through trailing whitespace, which the current pattern-match detector does not do.
+2. **Right-hand side may have side effects.** The detection is structural — it counts adjacent writes at the same brace depth — and does not inspect the RHS expression. A dead store of the form `o.color = expensive_call();` is dead with respect to the output, but `expensive_call()` may have observable side effects (UAV writes, atomics, `printf`-style debug intrinsics) that the developer relied on. Auto-removing the statement would silently drop those calls.
+
+The lint surfaces the dead write; the deletion needs human review to confirm the RHS is side-effect-free and to clean up the surrounding whitespace. If you want the rule to emit a TextEdit you can review-and-apply by hand, that is tracked as a follow-up.
 
 ## See also
 

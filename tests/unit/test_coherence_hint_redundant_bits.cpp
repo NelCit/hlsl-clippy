@@ -79,3 +79,34 @@ void f(dx::HitObject hit, uint hg) {
         CHECK(d.code != "coherence-hint-redundant-bits");
     }
 }
+
+TEST_CASE("coherence-hint-redundant-bits attaches a clamp-to-32 Fix",
+          "[rules][coherence-hint-redundant-bits][fix]") {
+    // Regression for v0.6.8: rule was tagged `applicability: machine-applicable`
+    // in docs but emitted a Fix-less diagnostic. The over-ceiling literal is
+    // ignored by the SER scheduler at runtime, so clamping the source literal
+    // to 32 is semantics-preserving.
+    const std::string hlsl = R"hlsl(
+void f(dx::HitObject hit, uint hg) {
+    dx::MaybeReorderThread(hit, hg, 64);
+}
+)hlsl";
+    const auto diags = lint_buffer(hlsl);
+    bool saw = false;
+    for (const auto& d : diags) {
+        if (d.code != "coherence-hint-redundant-bits") {
+            continue;
+        }
+        saw = true;
+        REQUIRE(d.fixes.size() == 1U);
+        const auto& fix = d.fixes.front();
+        CHECK(fix.machine_applicable);
+        REQUIRE(fix.edits.size() == 1U);
+        CHECK(fix.edits.front().replacement == "32");
+        // The edit targets the third-argument span, which is the same as the
+        // primary diagnostic span.
+        CHECK(fix.edits.front().span.bytes.lo == d.primary_span.bytes.lo);
+        CHECK(fix.edits.front().span.bytes.hi == d.primary_span.bytes.hi);
+    }
+    CHECK(saw);
+}

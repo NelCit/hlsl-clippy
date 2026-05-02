@@ -72,3 +72,38 @@ void RayGen() {
 )hlsl";
     CHECK_FALSE(has_rule(lint_buffer(hlsl, sources), "missing-ray-flag-cull-non-opaque"));
 }
+
+TEST_CASE("missing-ray-flag-cull-non-opaque attaches an OR-into-flag Fix",
+          "[rules][missing-ray-flag-cull-non-opaque][fix]") {
+    // Suggestion-grade: the rule cannot prove the application doesn't expect
+    // this trace to visit alpha-tested geometry. The textual rewrite ORs the
+    // missing flag into whatever the existing flag expression spells.
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+RaytracingAccelerationStructure g_BVH;
+
+struct ShadowPayload { float v; };
+
+[shader("raygeneration")]
+void RayGen() {
+    RayDesc ray;
+    ShadowPayload p = { 1.0 };
+    TraceRay(g_BVH, RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH, 0xFF, 0, 1, 0, ray, p);
+}
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    bool saw = false;
+    for (const auto& d : diags) {
+        if (d.code != "missing-ray-flag-cull-non-opaque") {
+            continue;
+        }
+        saw = true;
+        REQUIRE(d.fixes.size() == 1U);
+        const auto& fix = d.fixes.front();
+        CHECK_FALSE(fix.machine_applicable);
+        REQUIRE(fix.edits.size() == 1U);
+        CHECK(fix.edits.front().replacement ==
+              "RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | RAY_FLAG_CULL_NON_OPAQUE");
+    }
+    CHECK(saw);
+}

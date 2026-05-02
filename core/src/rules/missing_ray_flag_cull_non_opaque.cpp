@@ -118,6 +118,61 @@ void scan_call(std::string_view bytes,
                        "` ray-flag argument omits `RAY_FLAG_CULL_NON_OPAQUE` -- with no "
                        "`[shader(\"anyhit\")]` in this translation unit, every potentially-non-"
                        "opaque BVH leaf bounces back to SIMT for an empty any-hit invocation";
+
+        // OR the missing flag into the existing flag expression. The flag
+        // argument is captured as a sub-string of `args`; we recover its
+        // absolute byte span by adding the call's argument-list base
+        // (`end + 1U`). The rewrite does not duplicate the flag expression
+        // -- it simply appends `| RAY_FLAG_CULL_NON_OPAQUE` -- so it is
+        // side-effect-safe for any shape the rule fires on. Marked
+        // suggestion-grade per the doc page: the linter cannot prove the
+        // application doesn't rely on alpha-tested geometry being visited
+        // by this trace.
+        const std::uint32_t flag_lo =
+            static_cast<std::uint32_t>(end + 1U + spans[flag_arg_index].first);
+        const std::uint32_t flag_hi =
+            static_cast<std::uint32_t>(end + 1U + spans[flag_arg_index].second);
+        if (flag_lo < flag_hi) {
+            // Trim trailing whitespace so the inserted ` | ...` lands flush
+            // against the last non-space character of the flag expression.
+            std::uint32_t trim_hi = flag_hi;
+            while (trim_hi > flag_lo) {
+                const char c = bytes[trim_hi - 1U];
+                if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+                    --trim_hi;
+                } else {
+                    break;
+                }
+            }
+            std::uint32_t trim_lo = flag_lo;
+            while (trim_lo < trim_hi) {
+                const char c = bytes[trim_lo];
+                if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+                    ++trim_lo;
+                } else {
+                    break;
+                }
+            }
+            const auto flag_text = bytes.substr(trim_lo, trim_hi - trim_lo);
+            Fix fix;
+            fix.machine_applicable = false;
+            fix.description = std::string{
+                "OR `RAY_FLAG_CULL_NON_OPAQUE` into the ray-flag argument; "
+                "verify the trace is not expected to visit alpha-tested geometry"};
+            TextEdit edit;
+            edit.span = Span{
+                .source = tree.source_id(),
+                .bytes = ByteSpan{trim_lo, trim_hi},
+            };
+            std::string replacement;
+            replacement.reserve(flag_text.size() + 32U);
+            replacement.append(flag_text);
+            replacement.append(" | RAY_FLAG_CULL_NON_OPAQUE");
+            edit.replacement = std::move(replacement);
+            fix.edits.push_back(std::move(edit));
+            diag.fixes.push_back(std::move(fix));
+        }
+
         ctx.emit(std::move(diag));
         pos = i + 1U;
     }

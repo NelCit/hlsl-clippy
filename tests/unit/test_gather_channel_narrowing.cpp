@@ -66,3 +66,70 @@ float4 ps_main(float2 uv : TEXCOORD0) : SV_Target {
 )hlsl";
     CHECK_FALSE(has_rule(lint_buffer(hlsl, sources), "gather-channel-narrowing"));
 }
+
+TEST_CASE("gather-channel-narrowing attaches a machine-applicable Fix on `.r`",
+          "[rules][gather-channel-narrowing][fix]") {
+    // Regression for v0.6.8: rule was tagged `applicability: machine-applicable`
+    // in docs but emitted a Fix-less diagnostic. `.r/.x` rewrites are
+    // bit-identical (Gather returns red[LL..UL]; GatherRed is the same
+    // intrinsic semantically) so we mark the Fix machine-applicable.
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+Texture2D    t : register(t0);
+SamplerState s : register(s0);
+
+[shader("pixel")]
+float4 ps_main(float2 uv : TEXCOORD0) : SV_Target {
+    float r = t.Gather(s, uv).r;
+    return float4(r, 0, 0, 1);
+}
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    bool saw = false;
+    for (const auto& d : diags) {
+        if (d.code != "gather-channel-narrowing") {
+            continue;
+        }
+        saw = true;
+        REQUIRE(d.fixes.size() == 1U);
+        const auto& fix = d.fixes.front();
+        CHECK(fix.machine_applicable);
+        REQUIRE(fix.edits.size() == 1U);
+        CHECK(fix.edits.front().replacement == "GatherRed(s, uv).r");
+    }
+    CHECK(saw);
+}
+
+TEST_CASE("gather-channel-narrowing downgrades Fix to suggestion-grade on `.g`",
+          "[rules][gather-channel-narrowing][fix]") {
+    // `.g` on a `Gather` result is the second-texel red value, NOT a
+    // green-channel sample; the rule heuristically rewrites to
+    // `GatherGreen(...).r` (first-texel green) because that is what the
+    // developer most likely meant. This is a semantic shift, so the Fix is
+    // suggestion-grade.
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+Texture2D    t : register(t0);
+SamplerState s : register(s0);
+
+[shader("pixel")]
+float4 ps_main(float2 uv : TEXCOORD0) : SV_Target {
+    float g = t.Gather(s, uv).g;
+    return float4(g, 0, 0, 1);
+}
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    bool saw = false;
+    for (const auto& d : diags) {
+        if (d.code != "gather-channel-narrowing") {
+            continue;
+        }
+        saw = true;
+        REQUIRE(d.fixes.size() == 1U);
+        const auto& fix = d.fixes.front();
+        CHECK_FALSE(fix.machine_applicable);
+        REQUIRE(fix.edits.size() == 1U);
+        CHECK(fix.edits.front().replacement == "GatherGreen(s, uv).r");
+    }
+    CHECK(saw);
+}

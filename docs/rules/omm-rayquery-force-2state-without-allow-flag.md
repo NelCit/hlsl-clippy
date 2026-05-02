@@ -2,7 +2,7 @@
 id: omm-rayquery-force-2state-without-allow-flag
 category: opacity-micromaps
 severity: error
-applicability: none
+applicability: suggestion
 since-version: v0.5.0
 phase: 3
 ---
@@ -64,7 +64,7 @@ none
 
 ## Fix availability
 
-**none** — Adding the allow flag changes the trace's semantics; the developer must confirm the BVH has OMM blocks attached. The diagnostic emits the recommended rewrite as a comment.
+**suggestion** — `--fix` ORs `RAY_FLAG_ALLOW_OPACITY_MICROMAPS` into the existing `RayQuery<...>` template-flag argument. The rewrite does not duplicate the existing expression — it appends ` | RAY_FLAG_ALLOW_OPACITY_MICROMAPS` to the end of the flag list — so it is side-effect-safe regardless of how the original flag bundle was assembled. The fix is marked `machine_applicable = false` because adding the allow flag changes the trace's semantics: the developer must confirm the BVH actually has OMM blocks attached before accepting the fix in bulk.
 
 ## See also
 

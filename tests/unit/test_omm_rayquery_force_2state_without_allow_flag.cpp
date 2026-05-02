@@ -64,3 +64,30 @@ void f() {
         CHECK(d.code != "omm-rayquery-force-2state-without-allow-flag");
     }
 }
+
+TEST_CASE("omm-rayquery-force-2state-without-allow-flag attaches an OR Fix",
+          "[rules][omm-rayquery-force-2state-without-allow-flag][fix]") {
+    // The rewrite is suggestion-grade: adding the allow flag changes the
+    // trace's semantics; the developer must confirm the BVH has OMM blocks
+    // attached before accepting the fix in bulk.
+    const std::string hlsl = R"hlsl(
+void f() {
+    RayQuery<RAY_FLAG_FORCE_OMM_2_STATE> q;
+}
+)hlsl";
+    const auto diags = lint_buffer(hlsl);
+    bool saw = false;
+    for (const auto& d : diags) {
+        if (d.code != "omm-rayquery-force-2state-without-allow-flag") {
+            continue;
+        }
+        saw = true;
+        REQUIRE(d.fixes.size() == 1U);
+        const auto& fix = d.fixes.front();
+        CHECK_FALSE(fix.machine_applicable);
+        REQUIRE(fix.edits.size() == 1U);
+        CHECK(fix.edits.front().replacement ==
+              "RAY_FLAG_FORCE_OMM_2_STATE | RAY_FLAG_ALLOW_OPACITY_MICROMAPS");
+    }
+    CHECK(saw);
+}
