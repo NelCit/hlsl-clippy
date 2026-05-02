@@ -3,6 +3,10 @@ build-*/
 out/
 .vs/
 .vscode/
+# Track the extension's .vscode/ explicitly: launch.json + tasks.json
+# wire up the F5 Extension Development Host so contributors can run
+# the extension locally without hand-writing a debug config.
+!vscode-extension/.vscode/
 .claude/
 .idea/
 *.user

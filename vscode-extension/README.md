@@ -167,6 +167,14 @@ This extension bundles `vscode-languageclient` (MIT, Microsoft Corp.) and
    extract it (Windows: keep all 7 sibling `.dll` files in the same
    directory!), and set `hlslClippy.serverPath` to its absolute path.
 
+## Contributing / local testing
+
+See [DEVELOPMENT.md](https://github.com/NelCit/hlsl-clippy/blob/main/vscode-extension/DEVELOPMENT.md)
+for the F5 dev loop and `tools/build-vsix-local.{ps1,sh}` workflow
+that lets contributors verify changes BEFORE tagging a release. The
+local workflow uses the exact same packaging steps as
+`release-vscode.yml`.
+
 ## Reporting issues
 
 File bugs at
