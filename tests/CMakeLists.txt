@@ -199,6 +199,10 @@ add_executable(hlsl_clippy_unit_tests
     # Phase 4 sub-phase 4b — shared utilities for control-flow / data-flow rules (ADR 0013).
     unit/test_cfg_util.cpp
 
+    # Phase 7 sub-phase 7b — liveness + register-pressure heuristic (ADR 0017).
+    unit/test_liveness.cpp
+    unit/test_register_pressure_ast.cpp
+
     # Phase 4 — Pack A (groupshared microarch).
     unit/test_groupshared_stride_non_32_bank_conflict.cpp
     unit/test_groupshared_dead_store.cpp

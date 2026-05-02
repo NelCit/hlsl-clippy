@@ -166,6 +166,11 @@ add_library(hlsl_clippy_core STATIC
     src/rules/util/light_dataflow.cpp
     src/rules/util/helper_lane_analyzer.cpp
 
+    # Phase 7 — liveness + register-pressure heuristic over the Phase 4 CFG
+    # (ADR 0017 sub-phases 7b.1 + 7b.2).
+    src/rules/util/liveness.cpp
+    src/rules/util/register_pressure_ast.cpp
+
     # Phase 4 — Pack A (groupshared microarch).
     src/rules/groupshared_stride_non_32_bank_conflict.cpp
     src/rules/groupshared_dead_store.cpp
