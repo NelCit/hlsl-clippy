@@ -16,11 +16,14 @@ quick-fix rewrite.
 
 > **Status:** v0.5.6 shipped — 154 rules ship end-to-end across the
 > categories below. The catalog also lists ~30 doc-only stubs for
-> rules queued in [ADR 0007](/decisions/0007-rule-pack-expansion) /
-> [ADR 0010](/decisions/0010-sm69-rule-expansion) /
-> [ADR 0011](/decisions/0011-candidate-rule-adoption) that have not
-> landed yet — those pages document design intent ahead of code.
-> See [ROADMAP](/roadmap) for the phase-by-phase plan.
+> rules queued in
+> [ADR 0007](https://github.com/NelCit/hlsl-clippy/blob/main/docs/decisions/0007-rule-pack-expansion.md) /
+> [ADR 0010](https://github.com/NelCit/hlsl-clippy/blob/main/docs/decisions/0010-sm69-rule-expansion.md) /
+> [ADR 0011](https://github.com/NelCit/hlsl-clippy/blob/main/docs/decisions/0011-candidate-rule-adoption.md)
+> that have not landed yet — those pages document design intent
+> ahead of code. See
+> [ROADMAP](https://github.com/NelCit/hlsl-clippy/blob/main/ROADMAP.md)
+> for the phase-by-phase plan.
 
 **Total rules documented:** {{ catalog.total }}
 
