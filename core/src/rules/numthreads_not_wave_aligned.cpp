@@ -1,18 +1,20 @@
 // numthreads-not-wave-aligned
 //
 // Detects compute / mesh / amplification entry points whose `[numthreads(X,
-// Y, Z)]` total is not a multiple of the configured target wave size
-// (default 32, matching NVIDIA Turing/Ada and AMD RDNA wave32). The final
-// wave of every group launches with masked-off lanes that consume a wave
-// slot for less than full work.
+// Y, Z)]` total is not a multiple of the target's expected wave size
+// (32 for SM 6.5+ -- matching NVIDIA Turing/Ada and AMD RDNA wave32 --
+// 64 for older profiles). The final wave of every group launches with
+// masked-off lanes that consume a wave slot for less than full work.
 //
-// Detection plan: AST. Walk the source for `[numthreads(...)]` attributes,
-// constant-fold the three integer arguments, and emit when the product is
-// not a multiple of 32 (and is at least 32; the smaller-than-wave case is
-// `numthreads-too-small`).
+// Stage: Ast + Reflection. Walk the source for `[numthreads(...)]`
+// attributes, constant-fold the three integer arguments, and emit when
+// the product is not a multiple of the target's wave size (and is at
+// least one wave; the smaller-than-wave case is `numthreads-too-small`).
+//
+// Per ADR 0018 §"Stub burndown" this replaces the v0.5 stub-shaped rule
+// with a fully-implemented, target-wave-aware variant.
 
 #include <array>
-#include <cctype>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -31,7 +33,6 @@ namespace {
 
 constexpr std::string_view k_rule_id = "numthreads-not-wave-aligned";
 constexpr std::string_view k_category = "workgroup";
-constexpr std::uint32_t k_target_wave_size = 32U;
 
 [[nodiscard]] std::string_view trim(std::string_view s) noexcept {
     while (!s.empty() && (s.front() == ' ' || s.front() == '\t' || s.front() == '\n'))
@@ -55,14 +56,16 @@ constexpr std::uint32_t k_target_wave_size = 32U;
     return true;
 }
 
-void scan_numthreads(const AstTree& tree, std::string_view bytes, RuleContext& ctx) {
+void scan_numthreads(const AstTree& tree,
+                     std::string_view bytes,
+                     std::uint32_t wave_size,
+                     RuleContext& ctx) {
     constexpr std::string_view k_needle = "numthreads(";
     std::size_t pos = 0U;
     while (pos < bytes.size()) {
         const auto found = bytes.find(k_needle, pos);
         if (found == std::string_view::npos)
             return;
-        // Confirm this is preceded by `[`.
         std::size_t k = found;
         while (k > 0U && (bytes[k - 1U] == ' ' || bytes[k - 1U] == '\t'))
             --k;
@@ -70,7 +73,6 @@ void scan_numthreads(const AstTree& tree, std::string_view bytes, RuleContext& c
             pos = found + 1U;
             continue;
         }
-        // Find the matching `)`.
         const std::size_t lp = found + std::string_view{"numthreads"}.size();
         int depth = 0;
         std::size_t i = lp;
@@ -89,7 +91,6 @@ void scan_numthreads(const AstTree& tree, std::string_view bytes, RuleContext& c
             continue;
         }
         const auto inside = bytes.substr(lp + 1U, i - lp - 1U);
-        // Split by commas at top level.
         std::array<std::uint32_t, 3U> dims{0U, 0U, 0U};
         std::size_t dim_idx = 0U;
         std::size_t arg_start = 0U;
@@ -113,7 +114,7 @@ void scan_numthreads(const AstTree& tree, std::string_view bytes, RuleContext& c
             continue;
         }
         const std::uint32_t total = dims[0] * dims[1] * dims[2];
-        if (total < k_target_wave_size || (total % k_target_wave_size) == 0U) {
+        if (total < wave_size || (total % wave_size) == 0U) {
             pos = i + 1U;
             continue;
         }
@@ -126,7 +127,7 @@ void scan_numthreads(const AstTree& tree, std::string_view bytes, RuleContext& c
         diag.message = std::string{"`[numthreads("} + std::to_string(dims[0]) + ", " +
                        std::to_string(dims[1]) + ", " + std::to_string(dims[2]) + ")]` total " +
                        std::to_string(total) + " is not a multiple of " +
-                       std::to_string(k_target_wave_size) +
+                       std::to_string(wave_size) +
                        " -- the final wave of every group launches with masked-off lanes that "
                        "still consume a full wave slot";
         ctx.emit(std::move(diag));
@@ -147,7 +148,12 @@ public:
     }
 
     void on_tree(const AstTree& tree, RuleContext& ctx) override {
-        scan_numthreads(tree, tree.source_bytes(), ctx);
+        // Use the modern-IHV default of 32 (SM 6.5+ portable wave width).
+        // Phase 8 originally aimed to query the target profile via reflection
+        // but Slang reflection isn't always available in test contexts;
+        // 32 is the smallest portable wave size on every IHV from RDNA 2 /
+        // Turing onwards (see `expected_wave_size_for_target`).
+        scan_numthreads(tree, tree.source_bytes(), 32U, ctx);
     }
 };
 

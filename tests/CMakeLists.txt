@@ -284,6 +284,34 @@ add_executable(hlsl_clippy_unit_tests
     unit/test_groupshared_when_registers_suffice.cpp
     unit/test_buffer_load_width_vs_cache_line.cpp
 
+    # Phase 8 — Pack v0.8 SM 6.10 + stub burndown (ADR 0018).
+    unit/test_linalg_matrix_non_optimal_layout.cpp
+    unit/test_linalg_matrix_element_type_mismatch.cpp
+    unit/test_getgroupwaveindex_without_wavesize_attribute.cpp
+    unit/test_groupshared_over_32k_without_attribute.cpp
+    unit/test_triangle_object_positions_without_allow_data_access_flag.cpp
+    unit/test_dispatchmesh_grid_too_small_for_wave.cpp
+    unit/test_dot4add_opportunity.cpp
+
+    # Phase 8 — Pack v0.9 VRS + DXR + Nsight-gap (ADR 0018).
+    unit/test_vrs_rate_conflict_with_target.cpp
+    unit/test_vrs_without_perprimitive_or_screenspace_source.cpp
+    unit/test_ray_flag_force_opaque_with_anyhit.cpp
+    unit/test_ser_coherence_hint_bits_overflow.cpp
+    unit/test_sample_use_no_interleave.cpp
+
+    # Phase 8 — Pack v0.10 IHV-experimental (ADR 0018).
+    unit/test_wave64_on_rdna4_compute_misses_dynamic_vgpr.cpp
+    unit/test_coopvec_fp4_fp6_blackwell_layout.cpp
+    unit/test_wavesize_32_on_xe2_misses_simd16.cpp
+    unit/test_cluster_id_without_cluster_geometry_feature_check.cpp
+
+    # Phase 8 — Pack DEFERRED candidates (ADR 0018).
+    unit/test_oriented_bbox_not_set_on_rdna4.cpp
+    unit/test_numwaves_anchored_cap.cpp
+    unit/test_reference_data_type_not_supported_pre_sm610.cpp
+    unit/test_rga_pressure_bridge_stub.cpp
+
     # Golden-snapshot regression net (drives `tests/golden/`).
     unit/test_golden_snapshots.cpp
 )

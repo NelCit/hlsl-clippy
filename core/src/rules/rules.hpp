@@ -212,4 +212,32 @@ namespace hlsl_clippy::rules {
 [[nodiscard]] std::unique_ptr<Rule> make_groupshared_when_registers_suffice();
 [[nodiscard]] std::unique_ptr<Rule> make_buffer_load_width_vs_cache_line();
 
+// Phase 8 — Pack v0.8 SM 6.10 + stub burndown (ADR 0018).
+[[nodiscard]] std::unique_ptr<Rule> make_linalg_matrix_non_optimal_layout();
+[[nodiscard]] std::unique_ptr<Rule> make_linalg_matrix_element_type_mismatch();
+[[nodiscard]] std::unique_ptr<Rule> make_getgroupwaveindex_without_wavesize_attribute();
+[[nodiscard]] std::unique_ptr<Rule> make_groupshared_over_32k_without_attribute();
+[[nodiscard]] std::unique_ptr<Rule> make_triangle_object_positions_without_allow_data_access_flag();
+[[nodiscard]] std::unique_ptr<Rule> make_dispatchmesh_grid_too_small_for_wave();
+[[nodiscard]] std::unique_ptr<Rule> make_dot4add_opportunity();
+
+// Phase 8 — Pack v0.9 VRS + DXR + Nsight-gap (ADR 0018).
+[[nodiscard]] std::unique_ptr<Rule> make_vrs_rate_conflict_with_target();
+[[nodiscard]] std::unique_ptr<Rule> make_vrs_without_perprimitive_or_screenspace_source();
+[[nodiscard]] std::unique_ptr<Rule> make_ray_flag_force_opaque_with_anyhit();
+[[nodiscard]] std::unique_ptr<Rule> make_ser_coherence_hint_bits_overflow();
+[[nodiscard]] std::unique_ptr<Rule> make_sample_use_no_interleave();
+
+// Phase 8 — Pack v0.10 IHV-experimental (ADR 0018).
+[[nodiscard]] std::unique_ptr<Rule> make_wave64_on_rdna4_compute_misses_dynamic_vgpr();
+[[nodiscard]] std::unique_ptr<Rule> make_coopvec_fp4_fp6_blackwell_layout();
+[[nodiscard]] std::unique_ptr<Rule> make_wavesize_32_on_xe2_misses_simd16();
+[[nodiscard]] std::unique_ptr<Rule> make_cluster_id_without_cluster_geometry_feature_check();
+
+// Phase 8 — Pack DEFERRED candidates (ADR 0018).
+[[nodiscard]] std::unique_ptr<Rule> make_oriented_bbox_not_set_on_rdna4();
+[[nodiscard]] std::unique_ptr<Rule> make_numwaves_anchored_cap();
+[[nodiscard]] std::unique_ptr<Rule> make_reference_data_type_not_supported_pre_sm610();
+[[nodiscard]] std::unique_ptr<Rule> make_rga_pressure_bridge_stub();
+
 }  // namespace hlsl_clippy::rules

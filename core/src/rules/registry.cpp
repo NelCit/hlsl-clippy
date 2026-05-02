@@ -196,6 +196,30 @@ std::vector<std::unique_ptr<Rule>> make_default_rules() {
     rules.push_back(rules::make_redundant_texture_sample());
     rules.push_back(rules::make_groupshared_when_registers_suffice());
     rules.push_back(rules::make_buffer_load_width_vs_cache_line());
+    // Phase 8 — Pack v0.8 SM 6.10 + stub burndown (ADR 0018).
+    rules.push_back(rules::make_linalg_matrix_non_optimal_layout());
+    rules.push_back(rules::make_linalg_matrix_element_type_mismatch());
+    rules.push_back(rules::make_getgroupwaveindex_without_wavesize_attribute());
+    rules.push_back(rules::make_groupshared_over_32k_without_attribute());
+    rules.push_back(rules::make_triangle_object_positions_without_allow_data_access_flag());
+    rules.push_back(rules::make_dispatchmesh_grid_too_small_for_wave());
+    rules.push_back(rules::make_dot4add_opportunity());
+    // Phase 8 — Pack v0.9 VRS + DXR + Nsight-gap (ADR 0018).
+    rules.push_back(rules::make_vrs_rate_conflict_with_target());
+    rules.push_back(rules::make_vrs_without_perprimitive_or_screenspace_source());
+    rules.push_back(rules::make_ray_flag_force_opaque_with_anyhit());
+    rules.push_back(rules::make_ser_coherence_hint_bits_overflow());
+    rules.push_back(rules::make_sample_use_no_interleave());
+    // Phase 8 — Pack v0.10 IHV-experimental (ADR 0018).
+    rules.push_back(rules::make_wave64_on_rdna4_compute_misses_dynamic_vgpr());
+    rules.push_back(rules::make_coopvec_fp4_fp6_blackwell_layout());
+    rules.push_back(rules::make_wavesize_32_on_xe2_misses_simd16());
+    rules.push_back(rules::make_cluster_id_without_cluster_geometry_feature_check());
+    // Phase 8 — Pack DEFERRED candidates (ADR 0018).
+    rules.push_back(rules::make_oriented_bbox_not_set_on_rdna4());
+    rules.push_back(rules::make_numwaves_anchored_cap());
+    rules.push_back(rules::make_reference_data_type_not_supported_pre_sm610());
+    rules.push_back(rules::make_rga_pressure_bridge_stub());
     return rules;
 }
 

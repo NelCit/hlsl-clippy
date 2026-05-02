@@ -44,6 +44,13 @@
       "message": "`if` whose condition looks dynamically uniform lacks an explicit `[branch]` attribute -- without the hint the compiler may flatten the branch and execute both arms"
     },
     {
+      "rule": "sample-use-no-interleave",
+      "line": 103,
+      "col": 21,
+      "severity": "warning",
+      "message": "(suggestion) `Sample()` result `albedo` is consumed within the next 1 statement(s) -- interleave compute between sample and use to hide the texture-cache miss latency (Nsight: \"Warp Stalled by L1 Long Scoreboard\")"
+    },
+    {
       "rule": "samplelevel-with-zero-on-mipped-tex",
       "line": 103,
       "col": 21,

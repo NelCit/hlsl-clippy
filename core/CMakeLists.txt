@@ -252,6 +252,34 @@ add_library(hlsl_clippy_core STATIC
     src/rules/redundant_texture_sample.cpp
     src/rules/groupshared_when_registers_suffice.cpp
     src/rules/buffer_load_width_vs_cache_line.cpp
+
+    # Phase 8 — Pack v0.8 SM 6.10 + stub burndown (ADR 0018).
+    src/rules/linalg_matrix_non_optimal_layout.cpp
+    src/rules/linalg_matrix_element_type_mismatch.cpp
+    src/rules/getgroupwaveindex_without_wavesize_attribute.cpp
+    src/rules/groupshared_over_32k_without_attribute.cpp
+    src/rules/triangle_object_positions_without_allow_data_access_flag.cpp
+    src/rules/dispatchmesh_grid_too_small_for_wave.cpp
+    src/rules/dot4add_opportunity.cpp
+
+    # Phase 8 — Pack v0.9 VRS + DXR + Nsight-gap (ADR 0018).
+    src/rules/vrs_rate_conflict_with_target.cpp
+    src/rules/vrs_without_perprimitive_or_screenspace_source.cpp
+    src/rules/ray_flag_force_opaque_with_anyhit.cpp
+    src/rules/ser_coherence_hint_bits_overflow.cpp
+    src/rules/sample_use_no_interleave.cpp
+
+    # Phase 8 — Pack v0.10 IHV-experimental (ADR 0018).
+    src/rules/wave64_on_rdna4_compute_misses_dynamic_vgpr.cpp
+    src/rules/coopvec_fp4_fp6_blackwell_layout.cpp
+    src/rules/wavesize_32_on_xe2_misses_simd16.cpp
+    src/rules/cluster_id_without_cluster_geometry_feature_check.cpp
+
+    # Phase 8 — Pack DEFERRED candidates (ADR 0018).
+    src/rules/oriented_bbox_not_set_on_rdna4.cpp
+    src/rules/numwaves_anchored_cap.cpp
+    src/rules/reference_data_type_not_supported_pre_sm610.cpp
+    src/rules/rga_pressure_bridge_stub.cpp
 )
 
 # Phase 7 — IR-level analysis infrastructure (ADR 0016, sub-phase 7a.1).

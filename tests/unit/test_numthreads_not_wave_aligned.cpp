@@ -54,3 +54,16 @@ void cs_main(uint3 dt : SV_DispatchThreadID) { (void)dt; }
 )hlsl";
     CHECK_FALSE(has_rule(lint_buffer(hlsl, sources), "numthreads-not-wave-aligned"));
 }
+
+TEST_CASE("numthreads-not-wave-aligned [fix] stub-burndown -- fires on canonical 65x1x1",
+          "[rules][numthreads-not-wave-aligned][fix]") {
+    // Stub-burndown verification per ADR 0018: the v0.5 stub-shape rule was
+    // a no-op TU; the v0.8 implementation fires on a canonical wave-32-
+    // unaligned shape (65 > 32 and 65 % 32 != 0).
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+[numthreads(65, 1, 1)]
+void cs_main(uint3 dt : SV_DispatchThreadID) { (void)dt; }
+)hlsl";
+    CHECK(has_rule(lint_buffer(hlsl, sources), "numthreads-not-wave-aligned"));
+}

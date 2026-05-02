@@ -1,17 +1,15 @@
 ---
 id: dot4add-opportunity
-category: packed-math
+category: math
 severity: warn
 applicability: suggestion
-since-version: v0.7.0
-phase: 7
+since-version: v0.8.0
+phase: 8
 ---
 
 # dot4add-opportunity
 
-> **Pre-v0 status:** this rule is documented ahead of implementation. Matching
-> the 8-operation unpack-multiply-accumulate idiom requires an expression-tree
-> pattern that spans multiple statements; implementation is planned for Phase 7.
+> **Status:** shipped (Phase 8) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 

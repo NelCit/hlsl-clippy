@@ -2,6 +2,13 @@
   "fixture": "phase3-workgroup.hlsl",
   "diagnostics": [
     {
+      "rule": "groupshared-over-32k-without-attribute",
+      "line": 1,
+      "col": 1,
+      "severity": "warning",
+      "message": "total `groupshared` allocation is 65536 bytes (> 32 KB SM 6.10 default) but the entry point lacks `[GroupSharedLimit(N)]` -- compile-errors on SM 6.10 retail and silently truncates on SM <= 6.9"
+    },
+    {
       "rule": "groupshared-too-large",
       "line": 5,
       "col": 1,
