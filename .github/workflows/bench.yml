@@ -33,6 +33,9 @@ on:
 
 permissions:
   contents: read
+  # Required by the "Fetch previous nightly artifact" step so `gh run
+  # download` can list + download artifacts from prior workflow runs.
+  actions: read
 
 concurrency:
   group: bench-${{ github.ref }}
@@ -163,3 +166,68 @@ jobs:
           name: bench-${{ runner.os }}-${{ github.run_id }}
           path: bench-out/bench-${{ runner.os }}.xml
           retention-days: 90
+
+      # ── Compare to the previous successful nightly + post a summary ────
+      # Pulls the previous successful Bench workflow's artifact for the
+      # same OS via `gh run download`, runs `tools/bench-diff.py` to
+      # compute per-benchmark mean deltas, appends a markdown table to
+      # `$GITHUB_STEP_SUMMARY`. No-op (and not a failure) when no
+      # previous artifact exists -- e.g. the very first run after this
+      # workflow lands.
+      - name: Fetch previous nightly artifact
+        id: fetch-previous
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p bench-prev
+          # Find the most recent successful run of *this* workflow that
+          # is older than the current run.
+          prev_run=$(gh run list \
+            --workflow="${{ github.workflow }}" \
+            --branch="${{ github.ref_name }}" \
+            --status=success \
+            --limit=20 \
+            --json databaseId,createdAt \
+            | python3 -c "
+          import json, sys
+          runs = json.load(sys.stdin)
+          # Drop the current run + anything after it; pick the newest remainder.
+          current = ${{ github.run_id }}
+          older = [r for r in runs if r['databaseId'] != current]
+          older.sort(key=lambda r: r['createdAt'], reverse=True)
+          print(older[0]['databaseId'] if older else '')
+          ")
+          if [ -z "$prev_run" ]; then
+            echo "No previous successful nightly to diff against."
+            echo "previous_artifact=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Found previous run: $prev_run"
+          # Each leg of the matrix uploads its own bench-<OS>-<run> artifact.
+          if gh run download "$prev_run" \
+              --name "bench-${{ runner.os }}-${prev_run}" \
+              --dir bench-prev 2>/dev/null; then
+            echo "previous_artifact=bench-prev/bench-${{ runner.os }}.xml" >> "$GITHUB_OUTPUT"
+          else
+            echo "Previous run had no bench-${{ runner.os }} artifact."
+            echo "previous_artifact=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post bench delta to job summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${{ steps.fetch-previous.outputs.previous_artifact }}" ]; then
+            python3 tools/bench-diff.py \
+              --current "bench-out/bench-${{ runner.os }}.xml" \
+              --previous "${{ steps.fetch-previous.outputs.previous_artifact }}" \
+              --output "$GITHUB_STEP_SUMMARY"
+          else
+            python3 tools/bench-diff.py \
+              --current "bench-out/bench-${{ runner.os }}.xml" \
+              --output "$GITHUB_STEP_SUMMARY"
+          fi

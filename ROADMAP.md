@@ -170,7 +170,7 @@ Rules needing Slang's reflection API for binding / layout / type data, married t
 - [x] `rwresource-read-only-usage`: `RWBuffer` / `RWTexture` only ever read → demote to SRV
 - [x] `descriptor-heap-no-non-uniform-marker`: `ResourceDescriptorHeap[i]` / `SamplerDescriptorHeap[i]` without `NonUniformResourceIndex` when divergent (SM 6.6+)
 - [x] `descriptor-heap-type-confusion`: sampler assigned to CBV/SRV/UAV slot via wrong heap (SM 6.6+)
-- [ ] `all-resources-bound-not-set` (project-level): compiles without `-all-resources-bound` while declaring fully-populated root signatures (driver opts unlocked by the flag)
+- [x] `all-resources-bound-not-set` (project-level): compiles without `-all-resources-bound` while declaring fully-populated root signatures (driver opts unlocked by the flag)
 - [x] `rov-without-earlydepthstencil`: `RasterizerOrdered*` in PS without `[earlydepthstencil]` and without depth/discard hazards
 - [x] `byteaddressbuffer-load-misaligned`: `Load2`/`Load3`/`Load4` on `ByteAddressBuffer` at constant offset failing the natural-alignment check (8/12/16)  *(via ADR 0011)*
 - [x] `byteaddressbuffer-narrow-when-typed-fits`: `ByteAddressBuffer.Load4` of a POD that exactly matches a `Buffer<float4>` / `StructuredBuffer<T>` view (cache-path mismatch)  *(via ADR 0011)*
@@ -304,23 +304,23 @@ Build a CFG over the tree-sitter AST. Add basic uniformity / loop-invariance ana
 - [x] `flatten-on-uniform-branch`: `[flatten]` on an `if` whose condition is dynamically uniform (use `[branch]`)  *(via ADR 0011)*
 - [x] `forcecase-missing-on-ps-switch`: `switch` in PS whose cases each contain texture sampling and that lacks `[forcecase]`  *(via ADR 0011)*
 
-### Phase 5 — Ergonomics: LSP + IDE (2-3 weeks)
+### Phase 5 — Ergonomics: LSP + IDE (2-3 weeks) — COMPLETE
 
-**Gating dependency:** [ADR 0014](docs/decisions/0014-phase-5-lsp-architecture.md) (Proposed) — the JSON-RPC LSP-server + VS Code extension architecture (separate `lsp/` C++ binary thin-wrapping `core` via nlohmann/json, TypeScript extension under `vscode-extension/`, macOS CI bringup) must land first. See ADR 0014 §"Implementation sub-phases" for the 5a (server scaffolding) → 5b (code actions) → 5c (VS Code extension, parallel-after-5a) → 5d (macOS CI, parallel-after-5a) → 5e (distribution) sequence.
+**Gating dependency:** [ADR 0014](docs/decisions/0014-phase-5-lsp-architecture.md) (Accepted) — the JSON-RPC LSP-server + VS Code extension architecture (separate `lsp/` C++ binary thin-wrapping `core` via nlohmann/json, TypeScript extension under `vscode-extension/`, macOS CI bringup) shipped in the v0.5 launch chain.
 
-- [ ] LSP server (small JSON-RPC layer; reuse the diagnostic + fix engine)
-- [ ] VS Code extension (thin wrapper around LSP)
-- [ ] Quick-fix surfaced as VS Code code actions
-- [ ] Workspace-aware: respects `.hlsl-clippy.toml`, multi-root projects
-- [ ] Slang module / `#include` resolution wired into LSP (cross-file rules need it; Slang handles include paths natively)
+- [x] LSP server (small JSON-RPC layer; reuse the diagnostic + fix engine) — `lsp/` binary `hlsl_clippy_lsp`
+- [x] VS Code extension (thin wrapper around LSP) — `vscode-extension/`, `nelcit.hlsl-clippy` on Marketplace
+- [x] Quick-fix surfaced as VS Code code actions — `lsp/src/server/code_actions.cpp`
+- [x] Workspace-aware: respects `.hlsl-clippy.toml`, multi-root projects — `lsp/src/config_resolver.cpp`
+- [x] Slang module / `#include` resolution wired into LSP (cross-file rules need it; Slang handles include paths natively) — handled via `core::lint()`'s reflection stage
 
-### Phase 6 — Launch (v0.5)
+### Phase 6 — Launch (v0.5) — COMPLETE
 
-- [ ] CI gate mode: exit codes, JSON output, GitHub Actions reporter (annotation format)
-- [ ] Documentation site: one page per rule with *why it matters*, before/after, generated DXIL diff where instructive
-- [ ] Rule-pack catalog: `math`, `bindings`, `texture`, `workgroup`, `control-flow`, `vrs`, `sampler-feedback`, `mesh`, `dxr`, `work-graphs` togglable in config
-- [ ] Launch posts: graphics-programming Discord, r/GraphicsProgramming, Hacker News, Twitter
-- [ ] Aggregate the blog posts into a "Why your HLSL is slower than it has to be" series
+- [ ] CI gate mode: exit codes, JSON output, GitHub Actions reporter (annotation format) *(deferred to v0.6)*
+- [x] Documentation site: one page per rule with *why it matters*, before/after, generated DXIL diff where instructive — live at https://nelcit.github.io/hlsl-clippy/
+- [x] Rule-pack catalog: `math`, `bindings`, `texture`, `workgroup`, `control-flow`, `vrs`, `sampler-feedback`, `mesh`, `dxr`, `work-graphs` togglable in config — per-rule severity in `.hlsl-clippy.toml` covers it
+- [ ] Launch posts: graphics-programming Discord, r/GraphicsProgramming, Hacker News, Twitter *(maintainer-driven)*
+- [x] Aggregate the blog posts into a "Why your HLSL is slower than it has to be" series — preface + 8 category overviews under `docs/blog/`
 
 ### Phase 6+ — Hardening (v0.5.x → v0.6, in progress 2026-05-02)
 
@@ -335,14 +335,14 @@ CI:
 - [x] ✅ Parallel `clang-tidy` via `run-clang-tidy-18 -j$(nproc)` (commit `e4f9db4`); ~30 min → <10 min
 - [x] ✅ `.clang-tidy` suppressions broadened for clang-tidy 18 noise + `EnumConstantCase: CamelCase` (commits `5cc9ff4` + `9198d48`)
 - [x] ✅ Coverage gate (Linux Clang + `llvm-cov` + Codecov) wired into `ci.yml` (commit `e4f9db4`); threshold-enforcement deferred until baseline data lands
-- [x] ✅ Bench harness wired to nightly CI (`bench.yml`, commit `e4f9db4`); trend-comparison artifact diffing deferred
+- [x] ✅ Bench harness wired to nightly CI (`bench.yml`, commit `e4f9db4`)
+- [x] ✅ Bench-history delta-posting against the previous nightly artifact — `tools/bench-diff.py` parses Catch2 XML from the current + previous run, computes per-benchmark mean delta, posts a markdown table to `$GITHUB_STEP_SUMMARY`. Soft thresholds (10 % yellow, 25 % red) tolerate GHA-runner noise; new benches show as 🆕 and removed ones list under "Benchmarks removed since last run"
 - [x] ✅ `.gitattributes` hard-pin LF on goldens; `normalize_line_endings` in `test_golden_snapshots.cpp` so 6 of 10 previously-CRLF-flaky goldens pass (commit `dd10071`)
 
 Runtime:
 - [x] ✅ CFG engine reuses parsed tree-sitter tree (`build_with_tree`); 5–15 % lint-time saving per source (commit `e4f9db4`)
 - [x] ✅ LSP serves hover + code-action from `OpenDocument::latest_diagnostics` instead of re-running `lint()` per request (commit `e4f9db4`)
-- [ ] ◻ Investigate the 4 remaining `STATUS_STACK_BUFFER_OVERRUN` golden-snapshot crashes (`tests/KNOWN_FAILURES.md`)
-- [ ] ◻ Bench-history delta-posting against the previous nightly artifact
+- [x] ✅ All 4 `STATUS_STACK_BUFFER_OVERRUN` golden-snapshot crashes resolved — the "crashes" were Catch2 `FAIL()` exceptions tripping `/GS` stack-canary checks on snapshot mismatches; root causes were absolute-path leakage from Slang reflection diagnostics, non-deterministic sort tie-break, and fixture/Slang-version drift. Snapshot harness now filters `clippy::*` infrastructure diagnostics + uses 4-key sort. **672 / 672 tests pass.** (commit `4430fa9`)
 
 Manual:
 - [ ] ◻ Publish v0.5.6 GitHub Release draft (auto-created by `release.yml`)
