@@ -49,6 +49,27 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
   is a regex that excludes vendored externals; `HeaderFilterRegex` in
   `.clang-tidy` is unchanged except for adding `lsp/` (previously only
   `cli/` + `core/` + `src/` headers were transitively tidied).
+- **Broaden `.clang-tidy` suppressions for clang-tidy 18 noise + add
+  `EnumConstantCase: CamelCase`.** clang-tidy 18 enabled / tightened
+  ~30 distinct check classes that fire across the rule pack (style
+  preferences like `readability-braces-around-statements` plus
+  codebase-pattern escapes like `misc-no-recursion` on every AST
+  walker). Each suppression carries a one-line WHY comment; the lint
+  workflow now runs green. Three real diagnostics in `core/src/`
+  surfaced and were fixed: rename `prime` → `k_prime` in two
+  fingerprint helpers (`reflection/engine.cpp`,
+  `control_flow/engine.cpp`), and swap a C-style array for
+  `std::array<SlangUInt, 3>` at the Slang `getComputeThreadGroupSize`
+  interop site in `reflection/slang_bridge.cpp`.
+- **Hard-pin LF on golden snapshot files via `.gitattributes`.**
+  Fresh `git clone` on Windows (`core.autocrlf=true` default) checked
+  out `tests/golden/snapshots/*.json` with CRLF; the byte-compared
+  test then false-failed 6 of 10 cases on Windows. New `.gitattributes`
+  forces LF on goldens + fixtures + `*.sh`, CRLF on `*.ps1`. The
+  comparison helper in `tests/unit/test_golden_snapshots.cpp` also
+  strips `\r` defensively. Net: **668 / 672 tests pass** on Windows
+  clang-cl (was 662 / 672); the remaining 4 are documented stack-
+  buffer-overrun crashes in `tests/KNOWN_FAILURES.md`.
 - **Coverage gate: new `coverage` job in `ci.yml`.** Linux Clang 18 +
   `-fprofile-instr-generate -fcoverage-mapping`, runs the Catch2 suite
   (excluding the 4 known-flaky golden snapshots), merges with
