@@ -7,6 +7,22 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Deprecated
+
+## [1.1.0] — 2026-05-02
+
+**v1.1 — release-quality maintenance.** Closes the v1.1 ship list
+from [ADR 0019](docs/decisions/0019-v1-release-plan.md) §"v1.x patch
+trajectory": branch-coverage gate, full FP-rate triage, Marketplace +
+downstream-integration metrics polling. No new rules; this release is
+infrastructure + governance.
+
+### Added
+
 - **Branch-coverage CI gate** (v1.1, ADR 0019 §"v1.x patch trajectory") —
   the `coverage` job in `.github/workflows/ci.yml` now parses
   `llvm-cov-18 report --show-branch-summary` and fails when line coverage
@@ -1136,6 +1152,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[1.1.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.8.0...v1.0.0
 [0.8.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.8...v0.7.0
