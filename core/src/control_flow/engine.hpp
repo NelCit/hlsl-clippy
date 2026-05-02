@@ -40,6 +40,10 @@ using CfgCacheMap = std::map<K, V>;
 }  // namespace hlsl_clippy::control_flow::detail
 #endif
 
+#include <string_view>
+
+#include <tree_sitter/api.h>
+
 #include "hlsl_clippy/control_flow.hpp"
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/reflection.hpp"
@@ -60,9 +64,27 @@ public:
     /// its bindings to seed additional divergent sources (resource indices
     /// flagged NonUniform). Cache hits are O(log N) without re-walking the
     /// AST.
+    ///
+    /// Internally re-parses the source via `parser::parse`. Prefer the
+    /// `build_with_tree` overload below from `lint.cpp`, which already
+    /// owns a parsed tree from the AST stage and can hand it to the engine
+    /// to avoid a second parse.
     [[nodiscard]] std::expected<ControlFlowInfo, Diagnostic> build(
         const SourceManager& sources,
         SourceId source,
+        const ReflectionInfo* reflection_or_null,
+        std::uint32_t cfg_inlining_depth);
+
+    /// Identical to `build()` but reuses an already-parsed tree-sitter
+    /// root. The orchestrator in `lint.cpp` parses every source once for
+    /// the AST stage, then hands the same tree to the CFG engine via this
+    /// overload. Without it, every source with a CFG-stage rule paid for
+    /// a second tree-sitter parse (~5-15% of total lint time on the
+    /// public corpus).
+    [[nodiscard]] std::expected<ControlFlowInfo, Diagnostic> build_with_tree(
+        SourceId source,
+        ::TSNode root,
+        std::string_view source_bytes,
         const ReflectionInfo* reflection_or_null,
         std::uint32_t cfg_inlining_depth);
 

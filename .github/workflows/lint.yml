@@ -138,36 +138,33 @@ jobs:
         # benefit from it.
 
       # ── 5. clang-tidy ─────────────────────────────────────────────────────
-      # Same file set as clang-format; warnings promoted to errors.
+      # Drives `run-clang-tidy-18` (parallel wrapper that ships with the
+      # apt llvm package) instead of a single serial `xargs clang-tidy`
+      # call. With ~160 first-party TUs the serial pass took ~30 minutes
+      # on `ubuntu-latest`; `run-clang-tidy -j$(nproc)` brings that under
+      # 10 minutes on the same runner.
+      #
+      # Source-file filter is a regex matched against the absolute path
+      # of every entry in `compile_commands.json`. We keep it permissive
+      # but anchored so externals (vendored Slang / tree-sitter / etc.)
+      # do not get tidied. `HeaderFilterRegex` in `.clang-tidy` still
+      # applies to `#include`d headers transitively.
       - name: clang-tidy check
         run: |
           set -euo pipefail
-          FILES=$(git ls-files -- \
-              'cli/*.cpp' 'cli/*.hpp' 'cli/*.h' \
-              'core/*.cpp' 'core/*.hpp' 'core/*.h' \
-              'lsp/*.cpp' 'lsp/*.hpp' 'lsp/*.h' \
-              'tools/*.cpp' 'tools/*.hpp' 'tools/*.h' \
-              'cli/**/*.cpp' 'cli/**/*.hpp' 'cli/**/*.h' \
-              'core/**/*.cpp' 'core/**/*.hpp' 'core/**/*.h' \
-              'lsp/**/*.cpp' 'lsp/**/*.hpp' 'lsp/**/*.h' \
-              'tools/**/*.cpp' 'tools/**/*.hpp' 'tools/**/*.h' \
-              ':(exclude)external/' \
-          )
-          if [ -z "$FILES" ]; then
-            FILES=$(git ls-files -- \
-                'src/*.cpp' 'src/*.hpp' 'src/*.h' \
-                ':(exclude)external/' \
-            )
+          if ! command -v run-clang-tidy-18 >/dev/null; then
+            echo "ERROR: run-clang-tidy-18 not on PATH (apt llvm install incomplete?)"
+            exit 1
           fi
-          if [ -z "$FILES" ]; then
-            echo "No C++ source files found to tidy-check."
-            exit 0
-          fi
-          echo "Files to check:"
-          echo "$FILES"
-          # -p build      — point at the compile_commands.json directory
-          # -warnings-as-errors='*'  — any diagnostic is a hard failure
-          echo "$FILES" | xargs clang-tidy-18 \
+          PATTERN='/(cli|core|lsp|tools)/.*\.(cpp|cc|cxx)$'
+          # `-quiet` suppresses the per-file "n warnings generated" line
+          # noise; failing diagnostics still surface (and `set -e` halts
+          # on non-zero exit). `-warnings-as-errors='*'` mirrors the
+          # serial-pass behaviour the project shipped with.
+          run-clang-tidy-18 \
             -p build \
-            -warnings-as-errors='*'
+            -j "$(nproc)" \
+            -quiet \
+            -warnings-as-errors='*' \
+            "$PATTERN"
           echo "clang-tidy check passed."

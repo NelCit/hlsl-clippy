@@ -173,12 +173,18 @@ namespace {
     // flow AND the caller didn't disable it via options (ADR 0013). The
     // engine reuses the reflection result from the same lint run when one
     // is available, so the uniformity analyzer can see resource bindings.
+    //
+    // We pass the already-parsed tree-sitter root + bytes via
+    // `build_with_tree` so the CFG engine doesn't pay for a second
+    // tree-sitter parse of the same source -- on the public corpus the
+    // reparse was ~5-15% of total lint time per source, depending on
+    // whether reflection was also enabled.
     if (options.enable_control_flow && any_control_flow_rule(rules)) {
         auto& cfg_engine = control_flow::CfgEngine::instance();
         const ReflectionInfo* reflection_ptr =
             reflection_for_cfg.has_value() ? &reflection_for_cfg.value() : nullptr;
-        auto cfg_or_error =
-            cfg_engine.build(sources, source, reflection_ptr, options.cfg_inlining_depth);
+        auto cfg_or_error = cfg_engine.build_with_tree(
+            source, root, parsed->bytes, reflection_ptr, options.cfg_inlining_depth);
         if (!cfg_or_error.has_value()) {
             ctx.emit(std::move(cfg_or_error.error()));
         } else {

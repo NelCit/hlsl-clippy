@@ -1,0 +1,165 @@
+# Nightly perf bench — walks the public 27-shader corpus through `lint()`
+# and reports per-file + aggregate timings via Catch2's BENCHMARK macros.
+# Catches per-rule regressions before they reach a release.
+#
+# Why nightly + not per-PR (per tests/bench/README.md "CI integration"):
+#   * RelWithDebInfo build adds ~3 minutes vs the Debug PR build.
+#   * 200-sample bench run adds another ~5 minutes per platform.
+#   * Catch2 chronometer numbers are noisy on shared GH runners; running
+#     once-per-day amortises that into a more stable trend.
+#
+# Output: `bench-<os>.xml` artifact (Catch2 XML reporter), retained 90
+# days. The follow-up tracking story — comparing today's run vs the
+# previous artifact and posting a delta to a GitHub issue — is deferred
+# to v0.6+ once we've collected a few weeks of baseline data.
+#
+# Pinned SHAs (as of 2026-04-30):
+#   actions/checkout@v4.2.2            → 11bd71901bbe5b1630ceea73d27597364c9af683
+#   actions/cache@v4.2.3               → 5a3ec84eff668545956fd18022155c47e93e2684
+#   actions/upload-artifact@v4.4.3     → b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+#   seanmiddleditch/gha-setup-ninja@v5 → 96bed6edff20d1dd61ecff9b75cc519d516e6401
+#   ilammy/msvc-dev-cmd@v1.13.0        → 0b201ec74fa43914dc39ae48a89fd1d8cb592756
+
+name: Bench
+
+on:
+  schedule:
+    # 02:17 UTC daily — off-peak, dodges the 00:00 / 06:00 cron-burst that
+    # GitHub-hosted runners sometimes queue behind.
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+    # Manual trigger so a maintainer can re-run when investigating a
+    # suspected regression without waiting for the next nightly tick.
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bench-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bench:
+    name: Bench (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-14]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: true
+
+      - name: Set up Ninja
+        uses: seanmiddleditch/gha-setup-ninja@96bed6edff20d1dd61ecff9b75cc519d516e6401 # v5
+
+      # ── Toolchain (mirrors ci.yml so the bench numbers track the same
+      #    compiler the smoke build uses) ─────────────────────────────────
+      - name: Install Clang 18 (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
+          sudo apt-get install -y libc++-18-dev libc++abi-18-dev
+
+      - name: Set up MSVC dev environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+
+      - name: Install Clang 18 (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          brew install llvm@18
+          echo "/opt/homebrew/opt/llvm@18/bin" >> "$GITHUB_PATH"
+
+      # ── Slang prebuilt cache (same key shape as ci.yml) ─────────────────
+      - name: Cache Slang prebuilt (Linux + macOS)
+        if: runner.os != 'Windows'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/hlsl-clippy/slang
+          key: slang-${{ runner.os }}-${{ hashFiles('cmake/SlangVersion.cmake') }}
+
+      - name: Cache Slang prebuilt (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ env.LOCALAPPDATA }}\hlsl-clippy\slang
+          key: slang-${{ runner.os }}-${{ hashFiles('cmake/SlangVersion.cmake') }}
+
+      - name: Fetch Slang prebuilt (Linux + macOS)
+        if: runner.os != 'Windows'
+        run: bash tools/fetch-slang.sh
+
+      - name: Fetch Slang prebuilt (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: pwsh tools/fetch-slang.ps1
+
+      # ── Configure + build the bench target only ────────────────────────
+      # RelWithDebInfo (not Release) so profilers can attribute hot paths
+      # to source if a regression triggers a follow-up investigation.
+      - name: CMake configure (Linux)
+        if: runner.os == 'Linux'
+        env:
+          CC: clang-18
+          CXX: clang++-18
+          CXXFLAGS: "-stdlib=libc++"
+          LDFLAGS: "-stdlib=libc++"
+        run: cmake -B build-bench -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+      - name: CMake configure (Windows)
+        if: runner.os == 'Windows'
+        env:
+          CC: clang-cl
+          CXX: clang-cl
+        run: cmake -B build-bench -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+      - name: CMake configure (macOS)
+        if: runner.os == 'macOS'
+        env:
+          CC: clang
+          CXX: clang++
+          CXXFLAGS: "-stdlib=libc++"
+          LDFLAGS: "-stdlib=libc++"
+        run: cmake -B build-bench -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+      - name: Build bench target
+        run: cmake --build build-bench --target hlsl_clippy_bench
+
+      # ── Run the bench, capture XML for trend tracking ──────────────────
+      # 200 samples per benchmark gives a stable median on shared runners.
+      # `--reporter=xml` produces a parseable artifact; we add a console
+      # summary via Catch2's compact reporter for the GHA log.
+      - name: Run bench (Linux + macOS)
+        if: runner.os != 'Windows'
+        run: |
+          set -euo pipefail
+          mkdir -p bench-out
+          ./build-bench/tests/bench/hlsl_clippy_bench \
+            --reporter=xml --out=bench-out/bench-${{ runner.os }}.xml \
+            --reporter=compact \
+            --benchmark-samples=200
+
+      - name: Run bench (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path bench-out | Out-Null
+          & .\build-bench\tests\bench\hlsl_clippy_bench.exe `
+            --reporter=xml --out=bench-out/bench-${{ runner.os }}.xml `
+            --reporter=compact `
+            --benchmark-samples=200
+
+      - name: Upload bench artifact
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: bench-${{ runner.os }}-${{ github.run_id }}
+          path: bench-out/bench-${{ runner.os }}.xml
+          retention-days: 90

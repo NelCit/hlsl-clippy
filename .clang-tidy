@@ -24,7 +24,7 @@ Checks: >
   -clang-diagnostic-unused-command-line-argument
 
 WarningsAsErrors: '*'
-HeaderFilterRegex: '^(cli|core|src)/.*\.(h|hpp)$'
+HeaderFilterRegex: '^(cli|core|lsp|src)/.*\.(h|hpp)$'
 FormatStyle: file
 
 CheckOptions:

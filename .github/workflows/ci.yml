@@ -279,3 +279,113 @@ jobs:
             exit 1
           fi
           echo "Smoke test passed."
+
+  # ── Coverage (Linux Clang + llvm-cov + Codecov) ────────────────────────
+  # ADR 0005 §"Coverage gate" promised this; CLAUDE.md status block calls
+  # for 60% baseline rising to 80% by Phase 4. We instrument core/ only —
+  # CLI / LSP get exercised end-to-end by the test corpus but the bar we
+  # care about is rule-engine line coverage. Codecov uploads run on push
+  # to main and PRs from forks; the action handles tokenless OIDC for
+  # public repos.
+  #
+  # Why this is its own job and not folded into the Linux build leg:
+  #   * the coverage build needs different compile flags
+  #     (`-fprofile-instr-generate -fcoverage-mapping`) and a different
+  #     CMAKE_BUILD_TYPE; mixing them with the Release build would defeat
+  #     the build-cache key that the Linux leg shares with release.yml.
+  #   * we want the coverage job to fail loudly without taking down the
+  #     other CI legs.
+  coverage:
+    name: Coverage (Linux Clang + llvm-cov)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: true
+
+      - name: Install Clang 18 + llvm-cov
+        run: |
+          set -euo pipefail
+          wget -qO- https://apt.llvm.org/llvm.sh | sudo bash -s -- 18 all
+          sudo apt-get install -y libc++-18-dev libc++abi-18-dev cmake ninja-build
+          # llvm-profdata-18 / llvm-cov-18 ship with the `all` apt component.
+          llvm-cov-18 --version
+          llvm-profdata-18 --version
+
+      - name: Cache Slang prebuilt
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/hlsl-clippy/slang
+          key: slang-Linux-${{ hashFiles('cmake/SlangVersion.cmake') }}
+
+      - name: Fetch Slang prebuilt
+        run: bash tools/fetch-slang.sh
+
+      - name: CMake configure (instrumented Debug)
+        env:
+          CC: clang-18
+          CXX: clang++-18
+          CXXFLAGS: "-stdlib=libc++ -fprofile-instr-generate -fcoverage-mapping -O0 -g"
+          LDFLAGS: "-stdlib=libc++ -fprofile-instr-generate"
+        run: |
+          cmake -B build-cov -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DHLSL_CLIPPY_USE_PCH=OFF \
+            -DHLSL_CLIPPY_USE_LTO=OFF
+
+      - name: Build core + tests
+        run: cmake --build build-cov --target hlsl_clippy_unit_tests
+
+      - name: Run tests with profile output
+        env:
+          # Each test invocation writes to the templated path; %m expands
+          # to a unique per-process suffix so parallel ctest workers do not
+          # clobber each other.
+          LLVM_PROFILE_FILE: "${{ github.workspace }}/build-cov/profraw/cov-%p-%m.profraw"
+        run: |
+          set -euo pipefail
+          mkdir -p build-cov/profraw
+          # `~[golden]` excludes the 4 known-flaky golden-snapshot tests
+          # (per tests/KNOWN_FAILURES.md). They occasionally
+          # STATUS_STACK_BUFFER_OVERRUN on Windows + occasionally trip
+          # CRLF/LF mismatches — neither is meaningful for coverage.
+          ./build-cov/tests/hlsl_clippy_unit_tests "~[golden]"
+
+      - name: Merge profile data
+        run: |
+          set -euo pipefail
+          llvm-profdata-18 merge -sparse build-cov/profraw/*.profraw \
+            -o build-cov/coverage.profdata
+
+      - name: Generate lcov report (core/ only)
+        run: |
+          set -euo pipefail
+          # `-instr-profile` consumes the merged profdata; the binary is
+          # the unit-test exe (which links hlsl_clippy_core statically).
+          # `--ignore-filename-regex` drops vendored / test code so the
+          # percentage reflects rule-engine coverage.
+          llvm-cov-18 export \
+            -format=lcov \
+            -instr-profile=build-cov/coverage.profdata \
+            -ignore-filename-regex='(external|tests|build|/usr/)' \
+            ./build-cov/tests/hlsl_clippy_unit_tests \
+            > build-cov/coverage.lcov
+          # Quick console summary so the failure mode in PR review is
+          # legible without downloading the lcov.
+          llvm-cov-18 report \
+            -instr-profile=build-cov/coverage.profdata \
+            -ignore-filename-regex='(external|tests|build|/usr/)' \
+            ./build-cov/tests/hlsl_clippy_unit_tests \
+            | tail -20
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
+        with:
+          files: build-cov/coverage.lcov
+          # No token needed for public repos using tokenless OIDC; the
+          # action falls back gracefully if Codecov isn't configured for
+          # the repo (PR comment + status check just don't post).
+          fail_ci_if_error: false

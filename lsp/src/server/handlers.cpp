@@ -240,37 +240,40 @@ namespace {
     return {line, character};
 }
 
-/// Re-run the lint pipeline against the open document and return the
-/// (sources, diagnostics) pair. Both pieces are returned by value so the
-/// caller's SourceManager outlives any SourceId lookups against it. Returns
-/// `std::nullopt` if the document is unknown.
-struct LintSnapshot {
+/// View into an open document for hover / code-action handlers. Holds a
+/// freshly-constructed `SourceManager` so byte→line/col lookups against the
+/// stored `latest_diagnostics` resolve correctly, but reuses the cached
+/// diagnostics from the most recent `lint_and_publish` instead of re-running
+/// the lint pipeline.
+///
+/// Pre-refactor, every textDocument/hover and textDocument/codeAction
+/// request triggered a fresh `lint()` call -- parser + AST walk + reflection
+/// + CFG, on the order of tens of ms per source on warm caches and hundreds
+/// of ms cold. Hover requests in particular are sent at IDE typing cadence
+/// (often once per cursor move) and re-linting per request was a measurable
+/// idle-CPU drain.
+///
+/// SourceManager construction is cheap (one unique_ptr allocation + a copy
+/// of `doc->contents`); the diagnostics already live on the OpenDocument.
+struct DocumentView {
     hlsl_clippy::SourceManager sources;
-    std::vector<hlsl_clippy::Diagnostic> diagnostics;
+    const std::vector<hlsl_clippy::Diagnostic>* diagnostics = nullptr;
     hlsl_clippy::SourceId src_id;
 };
 
-[[nodiscard]] std::optional<LintSnapshot> run_lint_for(document::DocumentManager& docs,
-                                                       const std::string& uri) {
+[[nodiscard]] std::optional<DocumentView> view_for(document::DocumentManager& docs,
+                                                   const std::string& uri) {
     auto* doc = docs.find(uri);
     if (doc == nullptr) {
         return std::nullopt;
     }
-    LintSnapshot snap;
-    snap.src_id = snap.sources.add_buffer(doc->path.string(), doc->contents);
-    if (!snap.src_id.valid()) {
+    DocumentView view;
+    view.src_id = view.sources.add_buffer(doc->path.string(), doc->contents);
+    if (!view.src_id.valid()) {
         return std::nullopt;
     }
-    auto rules = hlsl_clippy::make_default_rules();
-    auto config = lsp::resolve_config_for(doc->path);
-    hlsl_clippy::LintOptions options;
-    if (config.has_value()) {
-        snap.diagnostics =
-            hlsl_clippy::lint(snap.sources, snap.src_id, rules, *config, doc->path, options);
-    } else {
-        snap.diagnostics = hlsl_clippy::lint(snap.sources, snap.src_id, rules, options);
-    }
-    return snap;
+    view.diagnostics = &doc->latest_diagnostics;
+    return view;
 }
 
 }  // namespace
@@ -296,12 +299,12 @@ std::expected<nlohmann::json, rpc::ErrorObject> Server::on_code_action(
     const auto [s_line, s_char] = extract_position(*start_it);
     const auto [e_line, e_char] = extract_position(*end_it);
 
-    auto snap = run_lint_for(*docs_, uri);
-    if (!snap.has_value()) {
+    auto view = view_for(*docs_, uri);
+    if (!view.has_value() || view->diagnostics == nullptr) {
         return nlohmann::json::array();
     }
     return code_actions_for_range(
-        snap->diagnostics, snap->sources, uri, s_line, s_char, e_line, e_char);
+        *view->diagnostics, view->sources, uri, s_line, s_char, e_line, e_char);
 }
 
 std::expected<nlohmann::json, rpc::ErrorObject> Server::on_hover(const nlohmann::json& params) {
@@ -318,11 +321,11 @@ std::expected<nlohmann::json, rpc::ErrorObject> Server::on_hover(const nlohmann:
     }
     const auto [line, character] = extract_position(*pos_it);
 
-    auto snap = run_lint_for(*docs_, uri);
-    if (!snap.has_value()) {
+    auto view = view_for(*docs_, uri);
+    if (!view.has_value() || view->diagnostics == nullptr) {
         return nlohmann::json{};
     }
-    return hover_for_position(snap->diagnostics, snap->sources, line, character);
+    return hover_for_position(*view->diagnostics, view->sources, line, character);
 }
 
 void Server::on_initialized(const nlohmann::json& /*params*/) {

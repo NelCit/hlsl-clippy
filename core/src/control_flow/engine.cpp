@@ -56,17 +56,6 @@ std::expected<ControlFlowInfo, Diagnostic> CfgEngine::build(
     SourceId source,
     const ReflectionInfo* reflection_or_null,
     std::uint32_t cfg_inlining_depth) {
-    const SourceFile* file = sources.get(source);
-    const std::uint64_t fp = file != nullptr ? fingerprint(file->contents()) : 0ULL;
-    const CacheKey key{source.value, fp};
-    {
-        std::shared_lock<std::shared_mutex> read_lock(cache_mu_);
-        const auto it = cache_.find(key);
-        if (it != cache_.end()) {
-            return it->second->info;
-        }
-    }
-
     auto parsed = parser::parse(sources, source);
     if (!parsed) {
         Diagnostic diag;
@@ -76,9 +65,36 @@ std::expected<ControlFlowInfo, Diagnostic> CfgEngine::build(
         diag.message = std::string{"failed to parse source for CFG construction"};
         return std::unexpected{std::move(diag)};
     }
-
     const ::TSNode root = ::ts_tree_root_node(parsed->tree.get());
-    auto build_result = build_cfg(root, source, parsed->bytes);
+    return build_with_tree(source, root, parsed->bytes, reflection_or_null, cfg_inlining_depth);
+}
+
+std::expected<ControlFlowInfo, Diagnostic> CfgEngine::build_with_tree(
+    SourceId source,
+    ::TSNode root,
+    std::string_view source_bytes,
+    const ReflectionInfo* reflection_or_null,
+    std::uint32_t cfg_inlining_depth) {
+    const std::uint64_t fp = fingerprint(source_bytes);
+    const CacheKey key{source.value, fp};
+    {
+        std::shared_lock<std::shared_mutex> read_lock(cache_mu_);
+        const auto it = cache_.find(key);
+        if (it != cache_.end()) {
+            return it->second->info;
+        }
+    }
+
+    if (::ts_node_is_null(root)) {
+        Diagnostic diag;
+        diag.code = std::string{"clippy::cfg"};
+        diag.severity = Severity::Error;
+        diag.primary_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
+        diag.message = std::string{"null tree-sitter root passed to CFG engine"};
+        return std::unexpected{std::move(diag)};
+    }
+
+    auto build_result = build_cfg(root, source, source_bytes);
     if (build_result.storage == nullptr) {
         Diagnostic diag;
         diag.code = std::string{"clippy::cfg"};
@@ -110,7 +126,7 @@ std::expected<ControlFlowInfo, Diagnostic> CfgEngine::build(
     auto uni_impl = std::make_shared<UniformityImpl>();
     uni_impl->data.storage = build_result.storage;
     analyse_uniformity(
-        root, source, parsed->bytes, reflection_or_null, cfg_inlining_depth, uni_impl->data);
+        root, source, source_bytes, reflection_or_null, cfg_inlining_depth, uni_impl->data);
     info.uniformity.impl = uni_impl;
 
     auto entry = std::make_shared<Entry>();

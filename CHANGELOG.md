@@ -20,6 +20,52 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
   one-shot sweeper that drove the refactor lives at
   `tools/refactor-ast-helpers.ps1` for posterity.
 
+### Performance
+- **CFG engine reuses the parsed tree-sitter tree instead of re-parsing.**
+  `lint.cpp` already parses every source once for the AST stage; the
+  Phase 4 control-flow stage was calling `parser::parse(...)` a second
+  time inside `CfgEngine::build`. New `CfgEngine::build_with_tree`
+  overload accepts the already-parsed `::TSNode root` + bytes; the
+  orchestrator now hands them across, dropping the second parse.
+  Estimated saving on the public corpus: 5–15 % of total lint time per
+  source with CFG-stage rules enabled (most pronounced on small
+  fixtures where parsing dominates).
+- **LSP serves `textDocument/hover` and `textDocument/codeAction`
+  from the cached `OpenDocument::latest_diagnostics`.** Previously
+  every hover or code-action request triggered a fresh `lint()` call —
+  parser + AST walk + reflection + CFG. Hover requests fire at typing
+  cadence (once per cursor move) so re-linting on each one was a
+  measurable idle-CPU drain. Diagnostics already lived on the document
+  via `lint_and_publish`; now they're reused. Only `textDocument/didOpen`,
+  `textDocument/didChange`, and `textDocument/didSave` continue to
+  re-run the full pipeline.
+
+### CI / build
+- **Parallelize `clang-tidy` via `run-clang-tidy-18 -j$(nproc)`.** The
+  lint workflow used a single serial `xargs clang-tidy-18` call across
+  ~160 first-party TUs, taking ~30 minutes on `ubuntu-latest`. The
+  parallel wrapper that ships with the apt llvm package brings the
+  same pass under 10 minutes on the same runner. Source-file filter
+  is a regex that excludes vendored externals; `HeaderFilterRegex` in
+  `.clang-tidy` is unchanged except for adding `lsp/` (previously only
+  `cli/` + `core/` + `src/` headers were transitively tidied).
+- **Coverage gate: new `coverage` job in `ci.yml`.** Linux Clang 18 +
+  `-fprofile-instr-generate -fcoverage-mapping`, runs the Catch2 suite
+  (excluding the 4 known-flaky golden snapshots), merges with
+  `llvm-profdata-18`, exports lcov via `llvm-cov-18`, uploads to
+  Codecov. Filters out `external/`, `tests/`, `build/` so the
+  percentage reflects rule-engine line coverage only. ADR 0005
+  promised the gate; this lands the wiring without enforcing a
+  threshold yet (the threshold becomes the next deliverable once
+  baseline data lands).
+- **Bench harness wired to nightly CI: new `bench.yml` workflow.**
+  `tests/bench/hlsl_clippy_bench` already existed; `tests/bench/README.md`
+  outlined the planned workflow shape. New file follows that plan:
+  Linux + Windows + macOS matrix on `cron: '17 2 * * *'`, RelWithDebInfo
+  build, 200 samples per benchmark, Catch2 XML reporter uploaded as a
+  90-day artifact. Trend tracking + delta-posting deferred to v0.6+
+  once a few weeks of baseline data exist.
+
 ## [0.5.6] — 2026-05-01
 
 Same-day continuation. v0.5.5 binary Release failed on Windows due to a
