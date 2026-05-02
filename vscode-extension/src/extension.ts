@@ -439,7 +439,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
 
     // Explicit "fix all in document" command for users who want the
-    // operation without enabling codeActionsOnSave.
+    // operation without enabling codeActionsOnSave. Goes straight through
+    // gatherFixAllEdit instead of round-tripping via the `source.fixAll`
+    // code-action kind: that path adds a layer of provider re-entry but
+    // doesn't add any edits the QuickFix gather doesn't already see.
     context.subscriptions.push(
         vscode.commands.registerCommand("hlslClippy.fixAllInDocument", async () => {
             const editor = vscode.window.activeTextEditor;
@@ -449,34 +452,24 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 );
                 return;
             }
-            const range = new vscode.Range(
-                new vscode.Position(0, 0),
-                editor.document.lineAt(editor.document.lineCount - 1).range.end,
-            );
-            const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
-                "vscode.executeCodeActionProvider",
-                editor.document.uri,
-                range,
-                fixAllKind.value,
-            );
-            if (!actions || actions.length === 0) {
+            const result = await gatherFixAllEdit(editor.document);
+            if (!result) {
                 void vscode.window.showInformationMessage(
                     "HLSL Clippy: no auto-applicable fixes in this document.",
                 );
                 return;
             }
-            // Take the first matching SourceFixAll action and apply its edit.
-            const action = actions.find((a) => a.kind?.contains(fixAllKind));
-            if (!action || !action.edit) {
-                void vscode.window.showInformationMessage(
-                    "HLSL Clippy: no auto-applicable fixes available.",
-                );
-                return;
-            }
-            await vscode.workspace.applyEdit(action.edit);
+            const ok = await vscode.workspace.applyEdit(result.edit);
+            const verb = ok ? "applied" : "rejected";
             outputChannel?.appendLine(
-                `[hlsl-clippy] Applied fix-all to ${editor.document.uri.fsPath}.`,
+                `[hlsl-clippy] Fix-all on ${editor.document.uri.fsPath}: ${result.count} ` +
+                    `fix${result.count === 1 ? "" : "es"} ${verb}.`,
             );
+            if (!ok) {
+                void vscode.window.showWarningMessage(
+                    "HLSL Clippy: fix-all edit was rejected by VS Code (likely an overlap or stale range). Re-lint and try again.",
+                );
+            }
         }),
     );
 
@@ -834,13 +827,57 @@ function renderInlineDecorations() {
     editor.setDecorations(types.info, infoRanges);
 }
 
-/// `source.fixAll.hlslClippy` provider. When VS Code asks for fix-all
-/// actions on save (or via the command palette), we walk every
-/// HLSL Clippy diagnostic in the document, ask the LSP for its
-/// code actions, and merge the machine-applicable ones into a single
-/// WorkspaceEdit. Diagnostics whose only fix is `suggestion`-grade are
-/// skipped -- we only auto-apply edits the user can re-apply by hand
-/// without surprise.
+/// Gather every machine-applicable LSP-provided quick-fix for `document`
+/// and merge their edits into a single WorkspaceEdit. One
+/// `executeCodeActionProvider` call covers the whole file -- a per-
+/// diagnostic loop hits the LSP server N times, returns fixes for every
+/// overlapping diagnostic on every pass (so you accumulate duplicate
+/// edits or re-pick the same first fix), and the outer
+/// CancellationToken can race the inner calls on large files.
+///
+/// Aux actions ("HLSL Clippy: suppress ...", "HLSL Clippy: open ... docs")
+/// don't carry edits today, but the title-prefix guard keeps them out
+/// in case a future aux action does carry one.
+async function gatherFixAllEdit(
+    document: vscode.TextDocument,
+): Promise<{ edit: vscode.WorkspaceEdit; count: number } | undefined> {
+    const fullRange = new vscode.Range(
+        new vscode.Position(0, 0),
+        document.lineAt(document.lineCount - 1).range.end,
+    );
+    const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+        "vscode.executeCodeActionProvider",
+        document.uri,
+        fullRange,
+        vscode.CodeActionKind.QuickFix.value,
+    );
+    if (!actions || actions.length === 0) {
+        return undefined;
+    }
+    const fixes = actions.filter(
+        (a) =>
+            a.kind?.contains(vscode.CodeActionKind.QuickFix) === true &&
+            a.edit !== undefined &&
+            !a.title.startsWith("HLSL Clippy: suppress") &&
+            !a.title.startsWith("HLSL Clippy: open"),
+    );
+    if (fixes.length === 0) {
+        return undefined;
+    }
+    const merged = new vscode.WorkspaceEdit();
+    for (const fix of fixes) {
+        if (!fix.edit) continue;
+        for (const [uri, edits] of fix.edit.entries()) {
+            for (const e of edits) {
+                merged.replace(uri, e.range, e.newText);
+            }
+        }
+    }
+    return { edit: merged, count: fixes.length };
+}
+
+/// `source.fixAll.hlslClippy` provider. Backs the `editor.codeActionsOnSave`
+/// flow plus any caller that asks VS Code for a SourceFixAll action.
 class ClippyFixAllProvider implements vscode.CodeActionProvider {
     constructor(private readonly fixAllKind: vscode.CodeActionKind) {}
 
@@ -854,47 +891,15 @@ class ClippyFixAllProvider implements vscode.CodeActionProvider {
         if (context.only && !context.only.contains(this.fixAllKind)) {
             return [];
         }
-        const all = vscode.languages.getDiagnostics(document.uri).filter(
-            (d) => d.source === undefined || d.source === "hlsl-clippy" || d.source === "HLSL Clippy",
-        );
-        if (all.length === 0) {
-            return [];
-        }
-        const merged = new vscode.WorkspaceEdit();
-        let appliedCount = 0;
-        for (const diag of all) {
-            const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
-                "vscode.executeCodeActionProvider",
-                document.uri,
-                diag.range,
-                vscode.CodeActionKind.QuickFix.value,
-            );
-            if (!actions) continue;
-            // Pick the first action that has an edit (LSP-provided
-            // machine-applicable fixes always carry an edit; client-side
-            // suppress actions carry a command rather than an edit and
-            // get filtered out here).
-            const fix = actions.find(
-                (a) => a.kind?.contains(vscode.CodeActionKind.QuickFix)
-                    && a.edit !== undefined
-                    && !a.title.startsWith("HLSL Clippy: suppress"),
-            );
-            if (!fix || !fix.edit) continue;
-            for (const [uri, edits] of fix.edit.entries()) {
-                for (const e of edits) {
-                    merged.replace(uri, e.range, e.newText);
-                }
-            }
-            appliedCount++;
-        }
-        if (appliedCount === 0) {
+        const result = await gatherFixAllEdit(document);
+        if (!result) {
             return [];
         }
         const action = new vscode.CodeAction(
-            `HLSL Clippy: apply ${appliedCount} fix${appliedCount === 1 ? "" : "es"}`,
+            `HLSL Clippy: apply ${result.count} fix${result.count === 1 ? "" : "es"}`,
             this.fixAllKind,
         );
-        action.edit = merged;
+        action.edit = result.edit;
         return [action];
     }
 }
