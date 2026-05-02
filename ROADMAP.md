@@ -388,6 +388,7 @@ These are research-grade and gated on real adoption. Don't pre-build them.
 | 9.1 — v1.1 readiness | IN PROGRESS | branch-coverage CI gate (>=80% line / >=70% branch on `core/`, currently `continue-on-error` until tests catch up); deterministic full FP-rate triage via `tools/fp-rate-triage.ps1` (1 above-budget rule flagged: `vgpr-pressure-warning`); Marketplace + downstream-integration metrics polling via `tools/adoption-poll.{ps1,sh}` writing `docs/adoption-metrics.md` per ADR 0019 §"v1.x patch trajectory" |
 | 10 — Slang language compatibility, sub-phase A (v1.3.0) | DONE | `.slang` extension recognition + dispatch baseline; AST/CFG/IR + reflection skipped on Slang sources with one-shot `clippy::language-skip-ast` Note. Reflection quarantine tracks for v1.3.x bridge hardening. Tree-sitter-slang integration deferred to sub-phase B (v1.4+). See [ADR 0020](docs/decisions/0020-slang-language-compatibility.md) |
 | 10b — Slang sub-phase B (v1.4+) | PLANNED | tree-sitter-slang parser integration. Demand-gated; depends on v1.3.x adoption telemetry. |
+| 10.B — Slang sub-phase B (tree-sitter integration, v1.4+) | PLANNED | See [ADR 0021](docs/decisions/0021-slang-sub-phase-b-tree-sitter.md) |
 
 ## Candidate rule expansion (research, adjudicated by ADR 0011)
 

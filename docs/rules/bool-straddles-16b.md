@@ -5,6 +5,7 @@ severity: error
 applicability: suggestion
 since-version: v0.5.0
 phase: 3
+language_applicability: ["hlsl", "slang"]
 ---
 
 # bool-straddles-16b

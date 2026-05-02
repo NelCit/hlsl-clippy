@@ -293,6 +293,12 @@ bool target_supports_sm(std::string_view target_profile, std::uint32_t required_
 
 std::optional<std::pair<std::uint32_t, std::uint32_t>> wave_size_for_entry_point(
     const AstTree& tree, const EntryPointInfo& ep) noexcept {
+    // ADR 0020 sub-phase A v1.3.1 — `.slang` sources reach this helper via
+    // reflection-stage rules even though no tree-sitter parse ran. Bail
+    // quietly when the AST is unavailable.
+    if (tree.raw_tree() == nullptr) {
+        return std::nullopt;
+    }
     const ::TSNode root = ::ts_tree_root_node(tree.raw_tree());
     if (::ts_node_is_null(root)) {
         return std::nullopt;

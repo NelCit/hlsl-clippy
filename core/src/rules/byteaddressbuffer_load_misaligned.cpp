@@ -150,6 +150,14 @@ public:
     void on_reflection(const AstTree& tree,
                        const ReflectionInfo& reflection,
                        RuleContext& ctx) override {
+        // ADR 0020 sub-phase A v1.3.1 — this rule needs an AST to disambiguate
+        // the receiver of `.Load*` calls. On `.slang` sources the orchestrator
+        // skips tree-sitter parsing (reflection still runs) so the AST is
+        // unavailable. Bail silently; the rule re-engages on `.hlsl` and on
+        // `.slang` once sub-phase B lands tree-sitter-slang.
+        if (tree.raw_tree() == nullptr) {
+            return;
+        }
         const auto bytes = tree.source_bytes();
         walk(::ts_tree_root_node(tree.raw_tree()), bytes, tree, reflection, ctx);
     }

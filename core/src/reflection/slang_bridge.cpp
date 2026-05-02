@@ -709,6 +709,20 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManag
     // This is essential for correctness, not just hygiene -- without it a
     // `RWStructuredBuffer`-bound shader will inherit a previous shader's
     // `ByteAddressBuffer` reflection.
+    //
+    // ADR 0020 sub-phase A v1.3.1 fix: previously the call-suffix was
+    // appended verbatim to the END of `virtual_path`, e.g. `synthetic.hlsl`
+    // became `synthetic.hlsl__7`. Slang 2026.7.1 infers source-language
+    // from `virtual_path`'s file extension (`.hlsl` -> HLSL frontend,
+    // `.slang` -> Slang frontend). The trailing `__N` corrupted the
+    // extension; for `.hlsl` paths Slang's parser still happened to fall
+    // back to HLSL by name-prefix match, but for `.slang` paths the
+    // frontend ingestion crashed inside `loadModuleFromSourceString`. The
+    // fix splices the call counter BEFORE the extension instead of after
+    // it: `synthetic.hlsl` -> `synthetic__7.hlsl`, `foo.slang` ->
+    // `foo__7.slang`. Both Slang frontends now classify correctly, and
+    // the path remains process-unique so the module-dictionary collision
+    // covered by `[reflection][engine][regression]` is still avoided.
     static std::atomic<std::uint64_t> s_call_counter{0U};
     const std::uint64_t call_id = s_call_counter.fetch_add(1U, std::memory_order_relaxed);
     const std::string call_suffix = std::string{"__"} + std::to_string(call_id);
@@ -718,9 +732,30 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManag
                                              ? std::string{"hlsl_clippy_module"}
                                              : file->path().stem().string();
     const std::string module_name = base_module_name + call_suffix;
-    const std::string base_virtual_path =
-        file->path().string().empty() ? std::string{"<buffer>"} : file->path().string();
-    const std::string virtual_path = base_virtual_path + call_suffix;
+
+    // Splice the per-call suffix BEFORE the extension so Slang's extension-
+    // based source-language inference still matches `.hlsl` / `.slang`.
+    // For path-less sources we fall back to a `<buffer>` stem with the
+    // counter appended (no extension is present to disrupt language
+    // inference, and the `<buffer>` form is what Slang already saw pre-fix
+    // for path-less inputs).
+    std::string virtual_path;
+    {
+        const std::string raw_path = file->path().string();
+        if (raw_path.empty()) {
+            virtual_path = std::string{"<buffer>"} + call_suffix;
+        } else {
+            const std::string stem = file->path().stem().string();
+            const std::string ext = file->path().extension().string();
+            const std::string parent = file->path().parent_path().string();
+            std::string filename = stem + call_suffix + ext;
+            if (parent.empty()) {
+                virtual_path = std::move(filename);
+            } else {
+                virtual_path = parent + std::string{"/"} + filename;
+            }
+        }
+    }
 
     Slang::ComPtr<slang::IBlob> load_diag;
     slang::IModule* raw_module = session->loadModuleFromSourceString(

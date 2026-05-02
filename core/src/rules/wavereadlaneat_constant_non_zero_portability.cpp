@@ -216,6 +216,12 @@ public:
     void on_reflection(const AstTree& tree,
                        const ReflectionInfo& reflection,
                        RuleContext& ctx) override {
+        // ADR 0020 sub-phase A v1.3.1 — needs the AST to find WaveReadLaneAt
+        // call sites. Bail silently when no tree is available (`.slang` until
+        // sub-phase B).
+        if (tree.raw_tree() == nullptr) {
+            return;
+        }
         const std::string_view bytes = tree.source_bytes();
         const ::TSNode root = ::ts_tree_root_node(tree.raw_tree());
         if (::ts_node_is_null(root)) {

@@ -224,6 +224,12 @@ namespace {
     // it. Suppression scopes for specific rule ids start at the first piece
     // of "real code" after the comment, not at byte 0; a {0,0} span would
     // never fall inside the resolved scope.
+    //
+    // v1.3.1 (ADR 0020 sub-phase A "Risks & mitigations"): the bridge has
+    // been hardened so reflection now works on `.slang` sources too. The
+    // notice's wording reflects the new reality — only AST + CFG + IR
+    // dispatch is gated on the language; reflection rules fire on both
+    // HLSL and Slang. Sub-phase B revisits AST/CFG via tree-sitter-slang.
     if (resolved_language == SourceLanguage::Slang) {
         std::uint32_t anchor = 0U;
         if (!source_bytes.empty()) {
@@ -265,14 +271,15 @@ namespace {
         skip_note.primary_span =
             Span{.source = source, .bytes = ByteSpan{.lo = anchor, .hi = anchor}};
         skip_note.message = std::string{
-            "AST, control-flow, and reflection rules disabled on Slang "
-            "source for v1.3.0 (ADR 0020 sub-phase A). Tree-sitter-hlsl "
-            "cannot parse Slang's language extensions, and the Slang "
-            "reflection bridge's virtual_path scheme breaks Slang's "
-            "native frontend ingestion -- tracked for v1.3.x bridge "
-            "hardening + sub-phase B parser integration. Suppress this "
-            "notice with `// hlsl-clippy: allow(clippy::language-skip-ast)` "
-            "or set `[rules]` `\"clippy::language-skip-ast\" = \"allow\"` "
+            "AST, control-flow, and IR rules disabled on Slang "
+            "source (ADR 0020 sub-phase A). Tree-sitter-hlsl cannot "
+            "parse Slang's language extensions; reflection-stage rules "
+            "still fire as of v1.3.1 because Slang's native frontend "
+            "ingests `.slang` directly. Tree-sitter-slang integration "
+            "to light up the remaining ~157 AST/CFG rules tracks for "
+            "sub-phase B (v1.4+). Suppress this notice with "
+            "`// hlsl-clippy: allow(clippy::language-skip-ast)` or set "
+            "`[rules]` `\"clippy::language-skip-ast\" = \"allow\"` "
             "in your `.hlsl-clippy.toml`."};
         ctx.emit(std::move(skip_note));
     }
@@ -317,19 +324,15 @@ namespace {
     // reflection rules count against the threshold only when the active
     // target matches (ADR 0018).
     //
-    // ADR 0020 sub-phase A — v1.3.0 quarantine. The Slang prebuilt's native
-    // `.slang` ingestion path crashes with the bridge's current
-    // call-suffixed virtual_path scheme (the `.slang__N` suffix breaks
-    // Slang's source-language inference). For v1.3.0 we route around the
-    // crash by skipping reflection on `.slang` sources entirely; AST/CFG
-    // are already skipped via `dispatch_ast`. The combined effect is the
-    // honest "language-skip-ast" baseline plus a deferred reflection
-    // surface — sub-phase B (v1.4+) re-enables reflection on `.slang`
-    // once the bridge's virtual_path scheme is hardened.
-    const bool skip_reflection_for_slang = (resolved_language == SourceLanguage::Slang);
+    // ADR 0020 sub-phase A v1.3.1: reflection now runs on `.slang` sources
+    // too — the bridge's virtual_path scheme was hardened so Slang's
+    // native frontend can ingest `.slang` directly (the per-call
+    // uniquification suffix moved off the user-visible extension into the
+    // module name only; see `core/src/reflection/slang_bridge.cpp`).
+    // AST + CFG + IR remain gated on `dispatch_ast` because tree-sitter-hlsl
+    // still cannot parse Slang's language extensions; sub-phase B revisits.
     std::optional<ReflectionInfo> reflection_for_cfg;
-    if (!skip_reflection_for_slang && options.enable_reflection &&
-        any_reflection_rule(rules, active_target)) {
+    if (options.enable_reflection && any_reflection_rule(rules, active_target)) {
         const std::string profile =
             options.target_profile.has_value() ? *options.target_profile : std::string{};
         auto& engine = reflection::ReflectionEngine::instance();

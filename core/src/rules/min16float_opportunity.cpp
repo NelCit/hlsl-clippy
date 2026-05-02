@@ -138,6 +138,12 @@ public:
     void on_reflection(const AstTree& tree,
                        const ReflectionInfo& reflection,
                        RuleContext& ctx) override {
+        // ADR 0020 sub-phase A v1.3.1 — needs the AST to find use sites of
+        // half-typed identifiers. Bail silently when no tree is available
+        // (`.slang` until sub-phase B).
+        if (tree.raw_tree() == nullptr) {
+            return;
+        }
         const auto bytes = tree.source_bytes();
         // Collect every cbuffer field whose type is half / min16; identifier
         // text in the source matches that field name will trigger the rule.

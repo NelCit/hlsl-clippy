@@ -3,7 +3,7 @@
   "displayName": "HLSL Clippy",
   "description": "Linter for HLSL — performance + correctness rules beyond what dxc catches. Also recognises .slang files (reflection-only baseline; ADR 0020 sub-phase A).",
   "publisher": "nelcit",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.85.0"

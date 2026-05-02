@@ -207,6 +207,12 @@ public:
     void on_reflection(const AstTree& tree,
                        [[maybe_unused]] const ReflectionInfo& reflection,
                        RuleContext& ctx) override {
+        // ADR 0020 sub-phase A v1.3.1 — needs the AST to inspect TraceRay
+        // payload struct definitions. Bail silently when no tree is available
+        // (`.slang` until sub-phase B).
+        if (tree.raw_tree() == nullptr) {
+            return;
+        }
         const auto bytes = tree.source_bytes();
         // Only fire when the source actually has DXR markers; avoid spurious
         // firings on plain compute / pixel shaders that happen to declare

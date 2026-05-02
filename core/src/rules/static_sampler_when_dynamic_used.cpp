@@ -132,6 +132,12 @@ public:
         if (reflection.entry_points.empty() || reflection.bindings.empty()) {
             return;
         }
+        // ADR 0020 sub-phase A v1.3.1 — needs the AST to inspect entry-point
+        // bodies for static-sampler use sites. Bail silently when no tree is
+        // available (`.slang` until sub-phase B).
+        if (tree.raw_tree() == nullptr) {
+            return;
+        }
         const auto bytes = tree.source_bytes();
         const ::TSNode root = ::ts_tree_root_node(tree.raw_tree());
 

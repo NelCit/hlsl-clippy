@@ -13,6 +13,75 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [1.3.1] — 2026-05-03
+
+**v1.3.1 — Slang reflection bridge fix (ADR 0020 sub-phase A
+"Risks & mitigations").** Patch release that hardens the Slang reflection
+bridge so `.slang` sources route through Slang's native frontend
+correctly, lighting up the ~32 reflection-stage rules that v1.3.0 had
+silently quarantined. AST + control-flow + IR rules continue to skip on
+`.slang` (tree-sitter-slang lands in sub-phase B / v1.4+); only the
+language-quarantine line in the orchestrator changes.
+
+### Fixed
+
+- **`core/src/reflection/slang_bridge.cpp`** — splice the per-call
+  uniquification suffix BEFORE the file extension instead of after it.
+  Pre-fix, `synthetic.hlsl` became `synthetic.hlsl__7` and `foo.slang`
+  became `foo.slang__7`; the trailing `__N` corrupted Slang 2026.7.1's
+  source-language inference and caused a SIGSEGV inside
+  `loadModuleFromSourceString` for `.slang` paths. Post-fix the path
+  becomes `synthetic__7.hlsl` / `foo__7.slang`, both of which Slang
+  classifies correctly. The HLSL-side multi-call regression covered by
+  `[reflection][engine][regression]` continues to hold (the path is
+  still process-unique).
+- **`core/src/lint.cpp`** — drop the v1.3.0 reflection-stage quarantine
+  on `.slang` sources. Stage::Reflection rules now run on `.slang`
+  identically to `.hlsl`. Stage::Ast / Stage::ControlFlow / Stage::Ir
+  remain gated on `dispatch_ast` because tree-sitter-hlsl still cannot
+  parse Slang's language extensions. The `clippy::language-skip-ast`
+  Note's text was updated to reflect the new reality (only AST/CFG/IR
+  are gated; reflection fires).
+- **10 reflection-stage rules** — added a single-line
+  `if (tree.raw_tree() == nullptr) return;` guard to bail silently
+  when reached on a `.slang` source where tree-sitter parsing was
+  skipped. The affected rules (`byteaddressbuffer-load-misaligned`,
+  `byteaddressbuffer-narrow-when-typed-fits`,
+  `compute-dispatch-grid-shape-vs-quad`,
+  `groupshared-when-registers-suffice`, `min16float-opportunity`,
+  `oversized-ray-payload`, `static-sampler-when-dynamic-used`,
+  `structured-buffer-stride-not-cache-aligned`,
+  `wavereadlaneat-constant-non-zero-portability`,
+  `wavesize-attribute-missing`) consume the AST alongside reflection
+  and re-engage on `.slang` once sub-phase B lands tree-sitter-slang.
+  `core/src/rules/util/reflect_stage.cpp::wave_size_for_entry_point`
+  picked up the same guard.
+
+### Changed
+
+- **`docs/rules/<rule-id>.md`** — added explicit
+  `language_applicability: ["hlsl", "slang"]` front-matter to the 32
+  Stage::Reflection rules whose detection logic walks `ReflectionInfo`
+  directly (Slang normalises HLSL and Slang sources into the same
+  reflection shape). The remaining ~157 AST / CFG / IR rules continue
+  to grandfather to the conservative `["hlsl"]` default per ADR 0020
+  §"Per-rule language applicability".
+- **`tests/unit/test_slang_dispatch.cpp`** — 3 new test cases:
+  (i) direct bridge regression on a `.slang` source containing a
+  cbuffer + entry point; (ii) bridge regression on a `.slang`
+  source containing only a free function (the v1.3.0 segfault repro);
+  (iii) end-to-end Stage::Reflection rule (`oversized-cbuffer`) firing
+  on a `.slang` source through `lint()` + `make_default_rules()`. The
+  existing dispatch + suppression + fixture tests had their narrative
+  comments updated to describe v1.3.1's lit-up reflection surface;
+  the assertions are unchanged.
+- **`.github/workflows/ci.yml` `slang-recognition` job** — extended
+  the assertion to verify a Stage::Reflection rule (`oversized-cbuffer`)
+  fires on a fixture engineered to trip it, in addition to the
+  pre-existing `clippy::language-skip-ast` notice check. v1.3.0's
+  job only verified the skip notice; v1.3.1's job locks the
+  reflection lit-up behaviour into CI.
+
 ## [1.3.0] — 2026-05-02
 
 **v1.3 — Slang language compatibility, sub-phase A (ADR 0020).** First step
@@ -1290,6 +1359,8 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[1.3.1]: https://github.com/NelCit/hlsl-clippy/compare/v1.3.0...v1.3.1
+[1.3.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.8.0...v1.0.0

@@ -5,6 +5,7 @@ severity: note
 applicability: suggestion
 since-version: v0.7.0
 phase: 7
+language_applicability: ["hlsl", "slang"]
 ---
 
 # min16float-opportunity
