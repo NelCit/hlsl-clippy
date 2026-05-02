@@ -1,10 +1,12 @@
 ---
-status: Proposed
+status: Accepted
 date: 2026-05-02
 decision-makers: maintainers
 consulted: ADR 0012, ADR 0013
 tags: [phase-7, ir, dxil, spirv, register-pressure, liveness, ray-tracing, mesh, infrastructure, planning]
 ---
+
+> **Implementation note (added 2026-05-02 post-acceptance):** Sub-phase 7a is split into two reviewable PRs to keep scope manageable. **7a.1** lands the public API surface, the orchestrator wiring, and a skeleton `IrEngine` that returns a `clippy::ir-not-implemented` warn-severity diagnostic for any Stage::Ir rule (no DXC dep yet). **7a.2** lands the DXC submodule, `cmake/UseDxc.cmake`, the per-user prebuilt cache, and the real DXIL parser in `dxil_bridge.cpp`. Sub-phase 7b (shared utilities) and 7c (rule packs) cannot dispatch until 7a.2 is also merged — but Pack B/C/D agents can prototype rule logic against the 7a.1 API surface in worktrees while 7a.2 is in flight.
 
 # Phase 7 IR-level analysis infrastructure — DXIL/SPIR-V consumer engine + liveness + register-pressure estimator
 

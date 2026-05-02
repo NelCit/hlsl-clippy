@@ -501,7 +501,7 @@ decision is settled.
 | [0013](docs/decisions/0013-phase-4-control-flow-infrastructure.md) | Phase 4 control-flow / data-flow infrastructure — CFG + uniformity oracle | Accepted |
 | [0014](docs/decisions/0014-phase-5-lsp-architecture.md) | Phase 5 LSP + IDE architecture — JSON-RPC server + VS Code extension | Accepted |
 | [0015](docs/decisions/0015-phase-6-launch-plan.md) | Phase 6 launch plan — v0.5.0 release | Accepted |
-| [0016](docs/decisions/0016-phase-7-ir-infrastructure.md) | Phase 7 IR-level analysis infrastructure — DXIL engine + liveness + register-pressure | Proposed |
+| [0016](docs/decisions/0016-phase-7-ir-infrastructure.md) | Phase 7 IR-level analysis infrastructure — DXIL engine + liveness + register-pressure | Accepted |
 
 "Proposed" ADRs represent plans that are approved in principle but not yet
 fully implemented. "Accepted" ADRs represent shipped decisions. Do not
