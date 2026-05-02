@@ -7,7 +7,44 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Branch-coverage CI gate** (v1.1, ADR 0019 §"v1.x patch trajectory") —
+  the `coverage` job in `.github/workflows/ci.yml` now parses
+  `llvm-cov-18 report --show-branch-summary` and fails when line coverage
+  drops below 80% or branch coverage drops below 70% on `core/`. The
+  job is currently `continue-on-error: true` so the gate stays honest
+  while the test suite catches up to the new floor (pre-v1.1 baseline
+  was ~62% branch per ADR 0019). Threshold lift to merge-blocking is a
+  v1.1.x patch follow-up.
+- **`tools/fp-rate-triage.ps1`** (v1.1) — deterministic FP-rate triage
+  pass over `tests/corpus/FP_RATES.md`. Maps each firing rule to a list
+  of natural-domain corpus prefixes (compute / pixel / raytracing / …);
+  classifies firings as TP / FP / MIXED / NEEDS-HUMAN; renders a new
+  "Above-budget rules (FP rate > 5%)" section at the top of FP_RATES.md.
+  Preserves maintainer-edited rows on re-run (only `TODO` entries are
+  rewritten). v1.1 baseline triage finds 1 above-budget rule:
+  `vgpr-pressure-warning` (static estimate unreliable on small shaders;
+  needs threshold-tuning patch).
+- **`tools/adoption-poll.{ps1,sh}`** (v1.1) — polls the VS Code
+  Marketplace listing for `nelcit.hlsl-clippy` (installs / rating /
+  version) via `vsce show --json` and counts public GitHub repos
+  referencing `hlsl-clippy` from a workflow file via `gh search code`.
+  Appends one dated row per invocation to `docs/adoption-metrics.md`.
+  Suggested cadence: monthly. Captures data only — the maintainer
+  reviews the install / downstream thresholds (ADR 0018 §5 #7, #8) at
+  each release.
+- **`docs/adoption-metrics.md`** — created on first `adoption-poll` run;
+  documents the v1.1.x review cadence and thresholds.
+- **`tools/README.md`** — inventory of maintainer scripts; called out
+  the v1.1 entries (`fp-rate-triage.ps1`, `adoption-poll.{ps1,sh}`)
+  alongside the existing build / smoke / release / doc tooling.
+
 ### Changed
+
+- **`tests/corpus/FP_RATES.md`** — populated by the v1.1 deterministic
+  triage. 39 of 40 firing rules now classify as `TP`; 1 (`vgpr-pressure-warning`)
+  classifies as `FP` and lands in the new "Above-budget rules" section
+  at the top of the file. Two `clippy::*` infrastructure diagnostics
+  flagged `NEEDS-HUMAN` for maintainer review.
 
 ### Fixed
 
