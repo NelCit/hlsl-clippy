@@ -9,7 +9,7 @@ phase: 2
 
 # firstbit-vs-log2-trick
 
-> **Pre-v0 status:** this rule page is published ahead of the implementation. Behaviour described here reflects the design intent; the rule is not yet enforced by the tool.
+> **Status:** shipped (Phase 2) — see [CHANGELOG](../../CHANGELOG.md).
 
 ## What it detects
 

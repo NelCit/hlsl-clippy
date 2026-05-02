@@ -8,7 +8,7 @@ license: CC-BY-4.0
 ---
 
 > Companion post for the [pow-const-squared](../../rules/pow-const-squared) rule.
-> Project status: pre-v0; the rule lands as part of the v0.1 release.
+> Shipped in v0.5.6 (Phase 0); see [CHANGELOG](../../../CHANGELOG.md) for the release history.
 
 You wrote `pow(x, 2.0)` because it reads cleaner than `x * x`, the intent is
 self-documenting, and surely the compiler handles this. It often does — and

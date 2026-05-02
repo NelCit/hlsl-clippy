@@ -2,7 +2,7 @@
 
 Reference documentation for `hlsl-clippy` — a linter for HLSL that catches performance and correctness issues beyond what `dxc` reports.
 
-> **Status:** pre-v0 — documentation is being written ahead of feature shipping. See [ROADMAP](../ROADMAP.md).
+> **Status:** v0.5.6 shipped — 154 rules + LSP + VS Code extension. The handful of doc pages whose underlying rule is still queued (per [ADR 0007](decisions/0007-rule-pack-expansion.md) / [ADR 0010](decisions/0010-sm69-rule-expansion.md) / [ADR 0011](decisions/0011-candidate-rule-adoption.md)) still carry their original "Pre-v0 status:" banner. See [ROADMAP](../ROADMAP.md) for the phase-by-phase plan.
 
 ## Contents
 
