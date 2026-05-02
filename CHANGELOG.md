@@ -13,6 +13,87 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [0.7.0] — 2026-05-02
+
+**Phase 7 — IR-level / stretch rule pack.** 15 new rules covering DXR
+ray-tracing patterns, mesh-shader output budgets, packed-math precision,
+and register-pressure / memory-coalescing heuristics. Total registered
+rule count rises 154 → **169**.
+
+Phase 7 originally specced (ADR 0016) a DXIL bridge built on a vendored
+DXC submodule + LLVM bitcode reader. A mid-implementation review (ADR
+0017) found that the existing AST + reflection + Phase 4 CFG
+infrastructure covers every Phase 7 rule's actual question — the
+"IR-level" framing was over-conservative, drafted before Phase 4's CFG
++ uniformity oracle existed. v0.7 ships with **zero new external
+dependencies**: no DXC, no spirv-tools, no LLVM. Two new shared
+utilities back the rules (`liveness` over the Phase 4 CFG,
+`register_pressure_ast` heuristic over reflection types).
+
+If a future rule turns out to genuinely need post-codegen IR access,
+ADR 0016's `Stage::Ir` + `<hlsl_clippy/ir.hpp>` are still in force as
+the dispatch hook (currently used for stage-gating only); a v0.8+
+follow-up ADR can re-introduce the bridge cleanly.
+
+### Added
+
+- **Pack DXR (5 rules)**:
+  - `oversized-ray-payload` — payload struct > 32 bytes (ray-stack
+    pressure on every IHV).
+  - `missing-accept-first-hit` — `TraceRay(...)` flag-arg lacks
+    `RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH` inside shadow / occlusion
+    named functions.
+  - `recursion-depth-not-declared` — raygen entry calls `TraceRay`
+    without `MaxRecursionDepth` / `[shader_recursion_depth]`.
+  - `live-state-across-traceray` — > 2 locals live across a `TraceRay`
+    call site (will spill to the ray stack).
+  - `maybereorderthread-without-payload-shrink` — same shape, SM 6.9
+    SER reorder anchored at `MaybeReorderThread` call sites.
+- **Pack Mesh (2 rules)**:
+  - `meshlet-vertex-count-bad` — `out vertices arr[N]` with N > 128 OR
+    N % 32 != 0 (RDNA optimal / NVIDIA wave-aligned).
+  - `output-count-overrun` — `SetMeshOutputCounts(v, p)` literal
+    exceeds `[outputtopology(...)]` declared ceilings.
+- **Pack Precision/Packing (3 rules)**:
+  - `min16float-opportunity` — `(float)<half> * <16-bit literal>`
+    chains where reverting to half saves ALU throughput.
+  - `unpack-then-repack` — `pack(unpack(x))` round-trips on the same
+    lanes (8 outer / inner pack-pair signatures recognised).
+  - `manual-f32tof16` — bit-twiddling lowering of `f32tof16`
+    (`asuint(x) >> 13` etc.).
+- **Pack Pressure/Memory (5 rules)**:
+  - `vgpr-pressure-warning` — per-block live-AST-value × bit-width
+    estimate exceeds `LintOptions::vgpr_pressure_threshold` (default 64).
+  - `scratch-from-dynamic-indexing` — local array indexed by a
+    non-literal expression (falls back to scratch on most IHVs).
+  - `redundant-texture-sample` — identical `Sample(s, uv)` calls
+    within one basic block.
+  - `groupshared-when-registers-suffice` — `groupshared T arr[N]`
+    with N ≤ 8 + thread-id-like access pattern.
+  - `buffer-load-width-vs-cache-line` — 2-4 scalar `.Load` calls
+    within a 16-byte offset window (coalesces to `Load4`).
+- **Liveness analysis** (`core/src/rules/util/liveness.{hpp,cpp}`) —
+  backward dataflow fixed-point iteration over the Phase 4
+  `ControlFlowInfo`. Public API: `compute_liveness(cfg)`,
+  `live_in_at(block)`, `live_out_at(block)`. Used by 3 of the 5 DXR
+  rules and by the SM 6.9 reorder rule.
+- **Register-pressure heuristic**
+  (`core/src/rules/util/register_pressure_ast.{hpp,cpp}`) — per-block
+  estimate `Σ (live_value_bit_width / 32)`, with bit-width from
+  reflection cbuffer/parameter types or declaration-site lexeme scan
+  fallback (`min16float`, `half`, `double`, `uint16_t`, vector / matrix
+  shapes). Used by `vgpr-pressure-warning` and
+  `groupshared-when-registers-suffice`.
+
+### Changed
+
+- ADR 0016 sub-phase 7a.2-step2 (DXC submodule + DXIL parser) and 7b's
+  IR-based shared utilities — **superseded by ADR 0017**. ADR 0016's
+  shipped pieces (`Stage::Ir` enum, `<hlsl_clippy/ir.hpp>`, metadata-
+  only `IrEngine` from 7a.2-step1, `LintOptions::enable_ir`) stay in
+  force as a stage-gating dispatch hook; the v0.7 rules that use
+  `Stage::Ir` use it for stage gating only.
+
 ## [0.6.8] — 2026-05-02
 
 Editor experience + rule-pack maintenance release. Two LSP plumbing bugs
@@ -850,6 +931,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.7.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.8...v0.7.0
 [0.6.8]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.7...v0.6.8
 [0.6.7]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.6...v0.6.7
 [0.6.6]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.5...v0.6.6
