@@ -59,6 +59,20 @@ private:
     ::TSTreeCursor cursor_;
 };
 
+/// True when `rule` is enabled under the current experimental-target
+/// selection. Rules with `experimental_target() == None` are always
+/// enabled; targeted rules fire only when `active` matches the rule's
+/// declared target. Per ADR 0018, mismatches are silent (no diagnostic)
+/// so default builds emit zero IHV-specific noise.
+[[nodiscard]] bool experimental_target_enabled(const Rule& rule,
+                                               ExperimentalTarget active) noexcept {
+    const auto required = rule.experimental_target();
+    if (required == ExperimentalTarget::None) {
+        return true;
+    }
+    return required == active;
+}
+
 /// Iterative depth-first walk of the tree-sitter CST. Calls each AST-stage
 /// rule's `on_node` for every named node in document order. Reflection-stage
 /// rules are skipped here -- they fire later via `on_reflection`.
@@ -66,7 +80,8 @@ void walk(::TSNode root,
           std::span<const std::unique_ptr<Rule>> rules,
           RuleContext& ctx,
           std::string_view source_bytes,
-          SourceId source_id) {
+          SourceId source_id,
+          ExperimentalTarget active_target) {
     if (ts_node_is_null(root)) {
         return;
     }
@@ -78,6 +93,9 @@ void walk(::TSNode root,
             const AstCursor ast{node, source_bytes, source_id};
             for (const auto& rule : rules) {
                 if (rule->stage() != Stage::Ast) {
+                    continue;
+                }
+                if (!experimental_target_enabled(*rule, active_target)) {
                     continue;
                 }
                 rule->on_node(ast, ctx);
@@ -97,38 +115,48 @@ void walk(::TSNode root,
     }
 }
 
-/// True when at least one rule in `rules` has `stage() == Stage::Reflection`.
-/// Used by the orchestrator to short-circuit reflection-engine construction
-/// for AST-only rule packs.
-[[nodiscard]] bool any_reflection_rule(std::span<const std::unique_ptr<Rule>> rules) noexcept {
+/// True when at least one rule in `rules` has `stage() == Stage::Reflection`
+/// AND is enabled under the current experimental-target selection. Used by
+/// the orchestrator to short-circuit reflection-engine construction for
+/// AST-only rule packs (or for packs whose only reflection rules are gated
+/// behind an inactive experimental target).
+[[nodiscard]] bool any_reflection_rule(std::span<const std::unique_ptr<Rule>> rules,
+                                       ExperimentalTarget active_target) noexcept {
     for (const auto& rule : rules) {
-        if (rule && rule->stage() == Stage::Reflection) {
+        if (rule && rule->stage() == Stage::Reflection &&
+            experimental_target_enabled(*rule, active_target)) {
             return true;
         }
     }
     return false;
 }
 
-/// True when at least one rule in `rules` has `stage() == Stage::ControlFlow`.
-/// Used by the orchestrator to short-circuit CFG-engine construction for
-/// AST-only / reflection-only rule packs (ADR 0013).
-[[nodiscard]] bool any_control_flow_rule(std::span<const std::unique_ptr<Rule>> rules) noexcept {
+/// True when at least one rule in `rules` has `stage() == Stage::ControlFlow`
+/// AND is enabled under the current experimental-target selection. Used by
+/// the orchestrator to short-circuit CFG-engine construction for AST-only /
+/// reflection-only rule packs (ADR 0013).
+[[nodiscard]] bool any_control_flow_rule(std::span<const std::unique_ptr<Rule>> rules,
+                                         ExperimentalTarget active_target) noexcept {
     for (const auto& rule : rules) {
-        if (rule && rule->stage() == Stage::ControlFlow) {
+        if (rule && rule->stage() == Stage::ControlFlow &&
+            experimental_target_enabled(*rule, active_target)) {
             return true;
         }
     }
     return false;
 }
 
-/// True when at least one rule in `rules` has `stage() == Stage::Ir`. Used
-/// by the orchestrator to short-circuit IR-engine construction for AST-only
-/// / reflection-only / CFG-only rule packs (ADR 0016). When this returns
-/// false the IR engine is never touched and the (eventual) DXC bridge never
-/// runs.
-[[nodiscard]] bool any_ir_rule(std::span<const std::unique_ptr<Rule>> rules) noexcept {
+/// True when at least one rule in `rules` has `stage() == Stage::Ir` AND
+/// is enabled under the current experimental-target selection. Used by the
+/// orchestrator to short-circuit IR-engine construction for AST-only /
+/// reflection-only / CFG-only rule packs (ADR 0016). When this returns
+/// false the IR engine is never touched and the (eventual) DXC bridge
+/// never runs.
+[[nodiscard]] bool any_ir_rule(std::span<const std::unique_ptr<Rule>> rules,
+                               ExperimentalTarget active_target) noexcept {
     for (const auto& rule : rules) {
-        if (rule && rule->stage() == Stage::Ir) {
+        if (rule && rule->stage() == Stage::Ir &&
+            experimental_target_enabled(*rule, active_target)) {
             return true;
         }
     }
@@ -142,7 +170,8 @@ namespace {
 [[nodiscard]] std::vector<Diagnostic> run_rules(const SourceManager& sources,
                                                 SourceId source,
                                                 std::span<const std::unique_ptr<Rule>> rules,
-                                                const LintOptions& options) {
+                                                const LintOptions& options,
+                                                ExperimentalTarget active_target) {
     auto parsed = parser::parse(sources, source);
     if (!parsed) {
         return {};
@@ -156,24 +185,32 @@ namespace {
 
     // ----- AST stage --------------------------------------------------------
     // Declarative pass: every rule's `on_tree` runs once with the whole tree.
+    // Rules gated behind a non-matching `[experimental.target]` are skipped
+    // silently so default builds emit zero IHV-specific noise (ADR 0018).
     const AstTree tree_view{parsed->tree.get(), parsed->language, parsed->bytes, parsed->source};
     for (const auto& rule : rules) {
-        if (rule->stage() == Stage::Ast) {
-            rule->on_tree(tree_view, ctx);
+        if (rule->stage() != Stage::Ast) {
+            continue;
         }
+        if (!experimental_target_enabled(*rule, active_target)) {
+            continue;
+        }
+        rule->on_tree(tree_view, ctx);
     }
 
     // Imperative pass: the rule walker invokes every Stage::Ast rule's
     // `on_node` on each named node in document order. Reflection-stage rules
     // are skipped here (they get dispatched via `on_reflection` below).
-    walk(root, rules, ctx, parsed->bytes, parsed->source);
+    walk(root, rules, ctx, parsed->bytes, parsed->source, active_target);
 
     // ----- Reflection stage -------------------------------------------------
     // Construct the engine only if at least one rule asked for reflection AND
     // the caller didn't disable reflection via options. Per ADR 0012, an
-    // AST-only rule pack pays zero Slang cost.
+    // AST-only rule pack pays zero Slang cost. Experimental-target-gated
+    // reflection rules count against the threshold only when the active
+    // target matches (ADR 0018).
     std::optional<ReflectionInfo> reflection_for_cfg;
-    if (options.enable_reflection && any_reflection_rule(rules)) {
+    if (options.enable_reflection && any_reflection_rule(rules, active_target)) {
         const std::string profile =
             options.target_profile.has_value() ? *options.target_profile : std::string{};
         auto& engine = reflection::ReflectionEngine::instance();
@@ -185,9 +222,13 @@ namespace {
         } else {
             const ReflectionInfo& reflection = reflection_or_error.value();
             for (const auto& rule : rules) {
-                if (rule->stage() == Stage::Reflection) {
-                    rule->on_reflection(tree_view, reflection, ctx);
+                if (rule->stage() != Stage::Reflection) {
+                    continue;
                 }
+                if (!experimental_target_enabled(*rule, active_target)) {
+                    continue;
+                }
+                rule->on_reflection(tree_view, reflection, ctx);
             }
             reflection_for_cfg = reflection;
         }
@@ -204,7 +245,7 @@ namespace {
     // tree-sitter parse of the same source -- on the public corpus the
     // reparse was ~5-15% of total lint time per source, depending on
     // whether reflection was also enabled.
-    if (options.enable_control_flow && any_control_flow_rule(rules)) {
+    if (options.enable_control_flow && any_control_flow_rule(rules, active_target)) {
         auto& cfg_engine = control_flow::CfgEngine::instance();
         const ReflectionInfo* reflection_ptr =
             reflection_for_cfg.has_value() ? &reflection_for_cfg.value() : nullptr;
@@ -215,9 +256,13 @@ namespace {
         } else {
             const ControlFlowInfo& cfg_info = cfg_or_error.value();
             for (const auto& rule : rules) {
-                if (rule->stage() == Stage::ControlFlow) {
-                    rule->on_cfg(tree_view, cfg_info, ctx);
+                if (rule->stage() != Stage::ControlFlow) {
+                    continue;
                 }
+                if (!experimental_target_enabled(*rule, active_target)) {
+                    continue;
+                }
+                rule->on_cfg(tree_view, cfg_info, ctx);
             }
             // Surface any per-function `clippy::cfg-skip` warnings the
             // builder collected (ERROR-tolerance path; see ADR 0013
@@ -241,7 +286,7 @@ namespace {
     // emit a single `clippy::ir-compiled-out` Note diagnostic per source per
     // lint run so the user knows their Stage::Ir rule selection was
     // observed but no engine is available.
-    if (options.enable_ir && any_ir_rule(rules)) {
+    if (options.enable_ir && any_ir_rule(rules, active_target)) {
 #if defined(HLSL_CLIPPY_IR_DISABLED)
         Diagnostic diag;
         diag.code = std::string{"clippy::ir-compiled-out"};
@@ -266,9 +311,13 @@ namespace {
         } else {
             const IrInfo& ir_info = ir_or_error.value();
             for (const auto& rule : rules) {
-                if (rule->stage() == Stage::Ir) {
-                    rule->on_ir(tree_view, ir_info, ctx);
+                if (rule->stage() != Stage::Ir) {
+                    continue;
                 }
+                if (!experimental_target_enabled(*rule, active_target)) {
+                    continue;
+                }
+                rule->on_ir(tree_view, ir_info, ctx);
             }
         }
 #endif
@@ -295,14 +344,17 @@ namespace {
 std::vector<Diagnostic> lint(const SourceManager& sources,
                              SourceId source,
                              std::span<const std::unique_ptr<Rule>> rules) {
-    return run_rules(sources, source, rules, LintOptions{});
+    // No config: every experimental-target-gated rule is skipped (active
+    // target = `None`). This keeps default builds free of IHV-specific
+    // diagnostics even when the caller forgot to wire a `Config`.
+    return run_rules(sources, source, rules, LintOptions{}, ExperimentalTarget::None);
 }
 
 std::vector<Diagnostic> lint(const SourceManager& sources,
                              SourceId source,
                              std::span<const std::unique_ptr<Rule>> rules,
                              const LintOptions& options) {
-    return run_rules(sources, source, rules, options);
+    return run_rules(sources, source, rules, options, ExperimentalTarget::None);
 }
 
 std::vector<Diagnostic> lint(const SourceManager& sources,
@@ -335,7 +387,7 @@ std::vector<Diagnostic> lint(const SourceManager& sources,
     // already gated by tree-sitter queries, that's a one-pass overhead, not a
     // behaviour change.
 
-    auto diagnostics = run_rules(sources, source, rules, options);
+    auto diagnostics = run_rules(sources, source, rules, options, config.experimental_target());
 
     std::vector<Diagnostic> kept;
     kept.reserve(diagnostics.size());

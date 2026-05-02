@@ -187,6 +187,11 @@ add_executable(hlsl_clippy_unit_tests
     # Phase 3 — shared utilities for reflection-aware rules (ADR 0012 sub-phase 3b).
     unit/test_reflect_util.cpp
 
+    # Phase 8 — shared utilities + experimental-target dispatch for v0.8+
+    # rules (ADR 0018).
+    unit/test_sm6_10_util.cpp
+    unit/test_experimental_target.cpp
+
     # Phase 5 sub-phase 5a — LSP server scaffolding (ADR 0014).
     unit/test_lsp.cpp
 

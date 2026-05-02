@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string_view>
 
 #include "hlsl_clippy/diagnostic.hpp"
@@ -8,6 +9,35 @@
 namespace hlsl_clippy {
 
 class SuppressionSet;
+
+/// Experimental IHV target gate selectable from `.hlsl-clippy.toml` via
+/// `[experimental] target = "rdna4" | "blackwell" | "xe2"`. Per ADR 0018,
+/// vendor-specific rules ship behind this gate so default builds emit zero
+/// IHV-specific diagnostics. Rules opt in by overriding
+/// `Rule::experimental_target()`; the orchestrator skips them silently when
+/// the rule's target does not match `Config::experimental_target()`.
+///
+/// The enum lives here (rather than in `hlsl_clippy/config.hpp`) so that
+/// rule TUs can reference `ExperimentalTarget::Rdna4` without pulling in
+/// the heavier config header (`<filesystem>` / `<unordered_map>` /
+/// `<variant>`). `hlsl_clippy/config.hpp` includes this header to get the
+/// enum back.
+enum class ExperimentalTarget : std::uint8_t {
+    /// Default — no experimental target selected. Every rule whose
+    /// `experimental_target()` is non-`None` is skipped.
+    None,
+    /// AMD RDNA 4 (Radeon RX 9070 / 9070 XT, Feb 2025). Gates rules anchored
+    /// on dynamic-VGPR mode, the read/write coalescing buffer, and the
+    /// 2nd-gen AI accelerator's FP8 cooperative-matrix layouts.
+    Rdna4,
+    /// NVIDIA Blackwell / RTX 50 (early 2025). Gates rules anchored on
+    /// FP4 / FP6 cooperative matrix layouts that differ from Hopper FP8.
+    Blackwell,
+    /// Intel Xe2 / Battlemage (B580, late 2024). Gates rules anchored on
+    /// SIMD16 native execution and the dispatch-shape interactions with
+    /// `[WaveSize(32)]` declarations.
+    Xe2,
+};
 
 /// Pipeline stage at which a rule's hook fires. Phase 0/1/2 ships `Ast`;
 /// Phase 3 (ADR 0012) introduces `Reflection` for rules that need Slang
@@ -108,6 +138,17 @@ public:
     /// Stage at which the rule fires.
     [[nodiscard]] virtual Stage stage() const noexcept {
         return Stage::Ast;
+    }
+
+    /// Override to mark a rule as gated behind `[experimental.target = X]`.
+    /// Default `ExperimentalTarget::None` keeps the rule always-on (subject
+    /// to the usual rule-selection / severity dials). When the override
+    /// returns a non-`None` target, the orchestrator only invokes the rule
+    /// when `Config::experimental_target()` matches; otherwise it is
+    /// skipped silently with no diagnostic so default builds remain free
+    /// of IHV-specific noise (ADR 0018).
+    [[nodiscard]] virtual ExperimentalTarget experimental_target() const noexcept {
+        return ExperimentalTarget::None;
     }
 
     /// Visit one AST node. Called by the lint orchestrator for every named

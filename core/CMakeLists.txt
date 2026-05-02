@@ -166,6 +166,12 @@ add_library(hlsl_clippy_core STATIC
     src/rules/util/light_dataflow.cpp
     src/rules/util/helper_lane_analyzer.cpp
 
+    # Phase 8 — shared utilities for v0.8+ rules (ADR 0018: SM 6.10 surface
+    # helpers + experimental-target dispatch). Used by `linalg::Matrix`,
+    # `[GroupSharedLimit]`, `numthreads-not-wave-aligned`, and the
+    # `dispatchmesh-grid-too-small-for-wave` rule pack.
+    src/rules/util/sm6_10.cpp
+
     # Phase 7 — liveness + register-pressure heuristic over the Phase 4 CFG
     # (ADR 0017 sub-phases 7b.1 + 7b.2).
     src/rules/util/liveness.cpp

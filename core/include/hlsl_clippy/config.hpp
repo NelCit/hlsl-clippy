@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "hlsl_clippy/diagnostic.hpp"
+#include "hlsl_clippy/rule.hpp"
 
 namespace hlsl_clippy {
 
@@ -28,6 +29,10 @@ enum class RuleSeverity {
     Warn,
     Deny,
 };
+
+// `ExperimentalTarget` is declared in `hlsl_clippy/rule.hpp` (included
+// above) so that rule TUs can reference its enumerators without pulling in
+// the heavier config header.
 
 /// One `[[overrides]]` entry.
 struct RuleOverride {
@@ -49,12 +54,28 @@ struct Config {
     std::vector<std::string> excludes;
     /// `[[overrides]]` entries, in source order (later wins).
     std::vector<RuleOverride> overrides;
+    /// `[experimental] target = "rdna4" | "blackwell" | "xe2"`. Default
+    /// `None`. Unrecognised values fall back to `None` and surface a
+    /// human-readable string in `warnings`.
+    ExperimentalTarget experimental_target_value = ExperimentalTarget::None;
+    /// Soft warnings collected while parsing the config. Each entry is a
+    /// human-readable single-line message; the driver renders them as
+    /// `clippy::config` `Severity::Warning` diagnostics. Hard parse errors
+    /// surface via `ConfigError` instead and never reach this vector.
+    std::vector<std::string> warnings;
 
     /// Resolve the effective severity for `rule_id` when linting `file_path`.
     /// Returns `std::nullopt` when the config doesn't mention the rule (the
     /// caller should fall back to the rule's built-in severity).
     [[nodiscard]] std::optional<RuleSeverity> severity_for(
         std::string_view rule_id, const std::filesystem::path& file_path) const;
+
+    /// Selected `[experimental] target`. Default `ExperimentalTarget::None`.
+    /// The orchestrator uses this to filter rules with a non-`None`
+    /// `Rule::experimental_target()`.
+    [[nodiscard]] ExperimentalTarget experimental_target() const noexcept {
+        return experimental_target_value;
+    }
 };
 
 /// Configuration loader error. Carries enough context to render a

@@ -53,6 +53,26 @@ namespace {
     return std::nullopt;
 }
 
+/// Parse `[experimental] target` value. Returns `ExperimentalTarget::None`
+/// for empty / unrecognised input. The unrecognised case is reported back
+/// via the second tuple element (`true` -> `warnings.push_back` is in order).
+[[nodiscard]] std::pair<ExperimentalTarget, bool> parse_experimental_target(
+    std::string_view text) noexcept {
+    if (text.empty()) {
+        return {ExperimentalTarget::None, false};
+    }
+    if (text == "rdna4") {
+        return {ExperimentalTarget::Rdna4, false};
+    }
+    if (text == "blackwell") {
+        return {ExperimentalTarget::Blackwell, false};
+    }
+    if (text == "xe2") {
+        return {ExperimentalTarget::Xe2, false};
+    }
+    return {ExperimentalTarget::None, true};
+}
+
 [[nodiscard]] ConfigError make_error(std::string message,
                                      const std::filesystem::path& source,
                                      std::uint32_t line = 0,
@@ -146,6 +166,35 @@ namespace {
                     return make_error("`excludes.patterns` entries must be strings", source);
                 }
                 cfg.excludes.push_back(s->get());
+            }
+        }
+    }
+
+    // [experimental] target
+    if (const auto* exp = root.get("experimental"); exp != nullptr) {
+        const auto* tbl = exp->as_table();
+        if (tbl == nullptr) {
+            return make_error("`experimental` must be a table", source);
+        }
+        if (const auto* tgt = tbl->get("target"); tgt != nullptr) {
+            const auto* str = tgt->as_string();
+            if (str == nullptr) {
+                return make_error(
+                    "`experimental.target` must be a string "
+                    "(\"rdna4\", \"blackwell\", \"xe2\", or empty)",
+                    source,
+                    static_cast<std::uint32_t>(tgt->source().begin.line),
+                    static_cast<std::uint32_t>(tgt->source().begin.column));
+            }
+            const auto [parsed, unknown] = parse_experimental_target(str->get());
+            cfg.experimental_target_value = parsed;
+            if (unknown) {
+                std::string msg = "unrecognised `experimental.target = \"";
+                msg += str->get();
+                msg +=
+                    "\"`: expected \"rdna4\", \"blackwell\", \"xe2\", or empty; "
+                    "falling back to no experimental target";
+                cfg.warnings.push_back(std::move(msg));
             }
         }
     }
