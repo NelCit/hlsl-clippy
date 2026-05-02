@@ -99,10 +99,16 @@ code --install-extension hlsl-clippy-<version>-<target>.vsix
 
 ## Commands
 
-| Command | Description |
-| --- | --- |
-| `HLSL Clippy: Restart Server` | Stop and re-spawn the LSP server (useful after a binary update). |
-| `HLSL Clippy: Show Output Channel` | Reveal the extension's output panel. |
+| Command | Default keybinding (HLSL files) | Description |
+| --- | --- | --- |
+| `HLSL Clippy: Restart Server` | — | Stop and re-spawn the LSP server (useful after a binary update). |
+| `HLSL Clippy: Show Output Channel` | — | Reveal the extension's output panel. |
+| `HLSL Clippy: Re-lint Active Document` | `Ctrl+Alt+L` (`Cmd+Alt+L` on macOS) | Force a re-lint via a save round-trip; useful after editing `.hlsl-clippy.toml`. |
+| `HLSL Clippy: Open Rule Docs` | `Ctrl+Alt+D` (`Cmd+Alt+D` on macOS) | Open the per-rule docs page on github.com for the diagnostic at the cursor. |
+
+Right-click anywhere inside an HLSL file for an **HLSL Clippy** submenu
+that surfaces the four commands above. Keybindings only fire when the
+active editor language is HLSL.
 
 ## Rule documentation
 

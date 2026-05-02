@@ -13,6 +13,33 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [0.6.2] — 2026-05-02
+
+VS Code extension follow-up to v0.6.1: surface the four extension
+commands as a right-click submenu on HLSL files (Re-lint Document,
+Open Rule Docs, Show Output, Restart Server) and bind the two
+most-used commands to keyboard shortcuts. Closes the
+"right-clicking does nothing extension-specific" gap reported on
+v0.6.1.
+
+### Added
+- **Editor right-click submenu** — right-click anywhere inside an
+  HLSL file shows an `HLSL Clippy` submenu with the four extension
+  commands. Scoped via `editorLangId == hlsl` so it doesn't pollute
+  context menus in other languages.
+- **Default keybindings** (HLSL files only):
+  - `Ctrl+Alt+L` (`Cmd+Alt+L` on macOS) → `HLSL Clippy: Re-lint
+    Active Document`.
+  - `Ctrl+Alt+D` (`Cmd+Alt+D` on macOS) → `HLSL Clippy: Open Rule
+    Docs` (uses the diagnostic at the cursor; falls back to a
+    friendly message if there's none).
+- **Command Palette gating** — `HLSL Clippy: Re-lint Active
+  Document` and `HLSL Clippy: Open Rule Docs` are filtered out of
+  the palette unless the active editor is HLSL, so non-HLSL editors
+  don't see commands that would no-op anyway.
+- README: new "Commands" table column documents the keybindings;
+  bottom of the section documents the right-click submenu.
+
 ## [0.6.1] — 2026-05-02
 
 VS Code extension UX patch release. v0.6.0's `.vsix` shipped
@@ -573,6 +600,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.6.2]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.6...v0.6.0
 [0.5.6]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.5...v0.5.6

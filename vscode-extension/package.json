@@ -3,7 +3,7 @@
   "displayName": "HLSL Clippy",
   "description": "Linter for HLSL — performance + correctness rules beyond what dxc catches.",
   "publisher": "nelcit",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.85.0"
@@ -71,6 +71,63 @@
         "command": "hlslClippy.openRuleDocs",
         "title": "Open Rule Docs",
         "category": "HLSL Clippy"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "submenu": "hlslClippy.editorContext",
+          "group": "1_modification@99",
+          "when": "editorLangId == hlsl"
+        }
+      ],
+      "hlslClippy.editorContext": [
+        {
+          "command": "hlslClippy.openRuleDocs",
+          "group": "1_diagnostic@1"
+        },
+        {
+          "command": "hlslClippy.relintDocument",
+          "group": "2_action@1"
+        },
+        {
+          "command": "hlslClippy.showOutput",
+          "group": "3_diagnostic@1"
+        },
+        {
+          "command": "hlslClippy.restart",
+          "group": "3_diagnostic@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "hlslClippy.relintDocument",
+          "when": "editorLangId == hlsl"
+        },
+        {
+          "command": "hlslClippy.openRuleDocs",
+          "when": "editorLangId == hlsl"
+        }
+      ]
+    },
+    "submenus": [
+      {
+        "id": "hlslClippy.editorContext",
+        "label": "HLSL Clippy"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "hlslClippy.relintDocument",
+        "key": "ctrl+alt+l",
+        "mac": "cmd+alt+l",
+        "when": "editorLangId == hlsl"
+      },
+      {
+        "command": "hlslClippy.openRuleDocs",
+        "key": "ctrl+alt+d",
+        "mac": "cmd+alt+d",
+        "when": "editorLangId == hlsl"
       }
     ],
     "walkthroughs": [
