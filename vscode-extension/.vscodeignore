@@ -6,11 +6,28 @@ src/**
 **/tsconfig.json
 **/*.map
 **/*.ts
+DEVELOPMENT.md
+
+# Node modules: we want only the production transitive set bundled
+# (devDependencies stay out). The allow-list below tracks the actual
+# `npm list --production --all` output for vscode-languageclient v9.
+# If you bump vscode-languageclient or its transitives, re-run
+# `npm list --production --all` and align this list. CI's
+# `vsix-activation-check` job in lint.yml verifies the bundled
+# `vscode-languageclient/lib/node/main.js` actually loads -- catches
+# the v0.6.7 minimatch-missing failure mode before tagging.
 node_modules/**
+
+# vscode-languageclient v9 + transitives
 !node_modules/vscode-languageclient/**
 !node_modules/vscode-jsonrpc/**
 !node_modules/vscode-languageserver-protocol/**
 !node_modules/vscode-languageserver-types/**
 !node_modules/semver/**
-!node_modules/lru-cache/**
-!node_modules/yallist/**
+
+# minimatch (vscode-languageclient v9 transitive) + its own transitives
+# brace-expansion and balanced-match. Missing minimatch was the root
+# cause of v0.6.6's "Cannot find module 'minimatch'" activation crash.
+!node_modules/minimatch/**
+!node_modules/brace-expansion/**
+!node_modules/balanced-match/**

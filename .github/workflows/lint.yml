@@ -54,6 +54,55 @@ jobs:
         working-directory: vscode-extension
         run: npx tsc -p .
 
+      # Package the .vsix locally + verify every prod transitive
+      # dependency from `npm list --production --all` is present in
+      # the bundled node_modules tree. Catches the
+      # "Cannot find module 'minimatch'" failure mode -- a transitive
+      # of vscode-languageclient that the `.vscodeignore` allow-list
+      # missed. Pre-v0.6.7 this only surfaced at extension activation
+      # in real VS Code; now it's caught at PR time.
+      - name: Package + bundled-deps smoke
+        working-directory: vscode-extension
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Dummy LSP binary so vsce package has something to ship.
+          mkdir -p server/linux-x86_64
+          touch server/linux-x86_64/hlsl-clippy-lsp
+          chmod +x server/linux-x86_64/hlsl-clippy-lsp
+          npx --yes @vscode/vsce package --target linux-x64 --out smoke.vsix
+          rm -rf /tmp/vsix-unpack
+          mkdir -p /tmp/vsix-unpack
+          unzip -q -o smoke.vsix -d /tmp/vsix-unpack
+          # Build the expected set from npm's prod-dep tree, the actual
+          # set from what the .vsix contains, and diff them. The diff
+          # surfaces both missing prod deps (BAD) and bundled non-prod
+          # deps (worth investigating but not fatal).
+          expected=$(npm list --production --all --parseable 2>/dev/null \
+            | sed 's|.*/node_modules/||' \
+            | grep -v '^[A-Z]' | grep -v '^$' \
+            | grep -v "^$(node -p "require('./package.json').name")$" \
+            | sort -u)
+          actual=$(find /tmp/vsix-unpack/extension/node_modules \
+            -mindepth 1 -maxdepth 2 -name package.json \
+            -exec node -p "require('{}').name" \; 2>/dev/null \
+            | sort -u || true)
+          echo "==> Expected prod deps:"
+          echo "$expected" | sed 's/^/    /'
+          echo "==> Actually bundled:"
+          echo "$actual" | sed 's/^/    /'
+          missing=$(comm -23 <(echo "$expected") <(echo "$actual"))
+          if [ -n "$missing" ]; then
+            echo
+            echo "::error::missing production dependencies in bundled .vsix:"
+            echo "$missing" | sed 's/^/  - /'
+            echo
+            echo "Add the corresponding '!node_modules/<pkg>/**' lines to vscode-extension/.vscodeignore."
+            exit 1
+          fi
+          echo
+          echo "All prod deps bundled."
+
   # ── LSP smoke test ───────────────────────────────────────────────────
   # Spawns hlsl-clippy-lsp.exe and drives a real JSON-RPC handshake +
   # didOpen on a known-firing fixture. Catches:

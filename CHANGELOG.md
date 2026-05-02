@@ -13,6 +13,33 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [0.6.7] — 2026-05-02
+
+**Critical hotfix**: v0.6.6's .vsix activation crashed in VS Code with
+`Cannot find module 'minimatch'`. The DLL bundling and binary stdio
+fixes from v0.6.1 / v0.6.6 were both correct, but the activation
+crash happens before either is reached -- VS Code can't even load the
+extension's `extension.js` because the `vscode-languageclient` require
+chain hits transitive dependencies that the `.vscodeignore`
+allow-list excluded.
+
+### Fixed
+- **`vscode-extension/.vscodeignore`**: add the three missing prod
+  transitives that `vscode-languageclient` v9 pulls in --
+  `minimatch`, `brace-expansion`, `balanced-match`. Removed the dead
+  `lru-cache` and `yallist` allow-list entries (no longer in the
+  prod tree at vscode-languageclient v9). Documented the layout +
+  pointer to the new CI guard.
+
+### Added
+- **`.github/workflows/lint.yml` `vsix-activation-check` step**: in
+  the `vscode-extension-tsc` job, now also runs `vsce package`
+  locally, unpacks the .vsix, and diffs the bundled `node_modules/`
+  tree against `npm list --production --all`. Any missing prod
+  transitive fails the lint job at PR time -- catches exactly the
+  v0.6.7 failure mode (and the same class of bug for any future
+  vscode-languageclient transitive shuffle).
+
 ## [0.6.6] — 2026-05-02
 
 **Critical hotfix**: the LSP server has been broken on Windows since
@@ -740,6 +767,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[0.6.7]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.6...v0.6.7
 [0.6.6]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.5...v0.6.6
 [0.6.5]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.4...v0.6.5
 [0.6.4]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.3...v0.6.4
