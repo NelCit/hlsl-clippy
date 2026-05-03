@@ -13,6 +13,47 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [1.5.4] — 2026-05-03
+
+**Patch — clang-tidy `cppcoreguidelines-avoid-c-arrays` + CI bash
+exit-code inversion.** Two real bugs surfaced in the v1.5.3 CI
+matrix that v1.5.1–v1.5.3 hadn't reached:
+
+1. **Lint job (clang-tidy 18)** — two C-style arrays in
+   `core/src/rules/util/register_pressure_ast.cpp` were flagged
+   by `cppcoreguidelines-avoid-c-arrays`. The file shipped in
+   v1.0 register-pressure work; clang-tidy's array check tripped
+   only after v1.5.2 normalised formatting and the surrounding
+   noise cleared.
+2. **CI `slang-ast-coverage` smoke step** — the bash
+   `if cmd; then` block ran the *error* body when Python exited
+   `0` (success). The Python `sys.exit(...)` ternary returned
+   `1` when the `clippy::language-skip-ast` infra-diagnostic was
+   *absent* — so the success case was being classified as an
+   error by the bash conditional. Inverted the ternary so
+   exit-`0` means "skip-ast diagnostic present (failure)" and
+   exit-`1` means "Slang AST path engaged (success)".
+
+### Fixed
+
+- **`core/src/rules/util/register_pressure_ast.cpp`** —
+  converted two C-style arrays to `std::array`:
+  - `static constexpr std::string_view k_prefixes[15]` →
+    `std::array<std::string_view, 15>`
+  - `static constexpr std::pair<std::string_view, std::uint32_t>
+    k_scalar_prefixes[20]` → `std::array<std::pair<…>, 20>`
+    with doubled-brace `{{ … }}` aggregate init.
+  Added `#include <array>` to the includes block.
+- **`.github/workflows/ci.yml` Slang AST coverage step** —
+  flipped the Python `sys.exit(1 if … else 0)` to
+  `sys.exit(0 if … else 1)` so the bash `if` semantics line up
+  with the intended pass/fail mapping. Added a comment block
+  explaining the bash exit-code convention so the next reader
+  doesn't repeat the mistake.
+
+Test count unchanged: 856 cases / 2246 assertions, all green
+on Windows clang-cl + libstdc++.
+
 ## [1.5.3] — 2026-05-03
 
 **Patch — last clang-format straggler.** v1.5.2's full-repo
@@ -1648,6 +1689,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[1.5.4]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.3...v1.5.4
 [1.5.3]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.2...v1.5.3
 [1.5.2]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.0...v1.5.1

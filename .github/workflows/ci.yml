@@ -387,7 +387,15 @@ jobs:
             # parser dispatch lights up AST + CFG on every `.slang`
             # source. The notice is preserved as a code path for
             # future un-parseable languages but never fires today.
-            if echo "$output" | python3 -c "import sys, json; sys.exit(1 if any(d.get('rule') == 'clippy::language-skip-ast' for d in json.load(sys.stdin)) else 0)"; then
+            # Bash `if cmd; then` runs the body when `cmd` exits 0. The
+            # error case is "language-skip-ast IS in the diagnostics list"
+            # — so Python must exit 0 (success) when the rule is present
+            # so the body fires. Pre-fix the exit codes were inverted and
+            # the job errored on every `.slang` fixture that produced any
+            # other diagnostic. Sub-phase B's contract: `.slang` paths
+            # dispatch through tree-sitter-slang and AST-stage rules fire,
+            # so the language-skip-ast notice should never appear.
+            if echo "$output" | python3 -c "import sys, json; sys.exit(0 if any(d.get('rule') == 'clippy::language-skip-ast' for d in json.load(sys.stdin)) else 1)"; then
               echo "ERROR: $fixture emitted clippy::language-skip-ast (sub-phase B should suppress this)." >&2
               exit 1
             fi

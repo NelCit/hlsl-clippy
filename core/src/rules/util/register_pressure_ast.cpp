@@ -27,6 +27,7 @@
 #include "rules/util/register_pressure_ast.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <span>
 #include <string>
@@ -89,7 +90,7 @@ namespace {
         return 0U;
     }
     // Strip leading qualifiers: `row_major float4x4` -> `float4x4`.
-    static constexpr std::string_view k_prefixes[] = {
+    static constexpr std::array<std::string_view, 15> k_prefixes = {
         "row_major ",
         "column_major ",
         "snorm ",
@@ -126,13 +127,14 @@ namespace {
     // Detect the scalar prefix.
     std::uint32_t scalar_bits = 0U;
     std::string_view rest;
-    static constexpr std::pair<std::string_view, std::uint32_t> k_scalar_prefixes[] = {
-        {"min16float", 16U}, {"min10float", 16U}, {"min16int", 16U}, {"min12int", 16U},
-        {"min16uint", 16U},  {"float16_t", 16U},  {"int16_t", 16U},  {"uint16_t", 16U},
-        {"float32_t", 32U},  {"int32_t", 32U},    {"uint32_t", 32U}, {"float64_t", 64U},
-        {"int64_t", 64U},    {"uint64_t", 64U},   {"double", 64U},   {"float", 32U},
-        {"half", 16U},       {"uint", 32U},       {"int", 32U},      {"bool", 32U},
-    };
+    static constexpr std::array<std::pair<std::string_view, std::uint32_t>, 20>
+        k_scalar_prefixes = {{
+            {"min16float", 16U}, {"min10float", 16U}, {"min16int", 16U}, {"min12int", 16U},
+            {"min16uint", 16U},  {"float16_t", 16U},  {"int16_t", 16U},  {"uint16_t", 16U},
+            {"float32_t", 32U},  {"int32_t", 32U},    {"uint32_t", 32U}, {"float64_t", 64U},
+            {"int64_t", 64U},    {"uint64_t", 64U},   {"double", 64U},   {"float", 32U},
+            {"half", 16U},       {"uint", 32U},       {"int", 32U},      {"bool", 32U},
+        }};
     for (const auto& [pfx, bits] : k_scalar_prefixes) {
         if (type_name.starts_with(pfx)) {
             scalar_bits = bits;
