@@ -58,18 +58,18 @@ constexpr std::string_view k_category = "bindings";
             return static_cast<std::uint32_t>(c - '0');
         return 1U;
     };
-    auto matrix_dims =
-        [&](std::size_t prefix_len) noexcept -> std::pair<std::uint32_t, std::uint32_t> {
-            if (t.size() < prefix_len + 3U)
-                return {1U, 1U};
-            const char r = t[prefix_len];
-            const char x = t[prefix_len + 1U];
-            const char c = t[prefix_len + 2U];
-            if ((r >= '1' && r <= '4') && x == 'x' && (c >= '1' && c <= '4')) {
-                return {static_cast<std::uint32_t>(r - '0'), static_cast<std::uint32_t>(c - '0')};
-            }
+    using Dims = std::pair<std::uint32_t, std::uint32_t>;
+    auto matrix_dims = [&](std::size_t prefix_len) noexcept -> Dims {
+        if (t.size() < prefix_len + 3U)
             return {1U, 1U};
-        };
+        const char r = t[prefix_len];
+        const char x = t[prefix_len + 1U];
+        const char c = t[prefix_len + 2U];
+        if ((r >= '1' && r <= '4') && x == 'x' && (c >= '1' && c <= '4')) {
+            return {static_cast<std::uint32_t>(r - '0'), static_cast<std::uint32_t>(c - '0')};
+        }
+        return {1U, 1U};
+    };
 
     // Float / int / uint / bool scalars + vectors.
     if (starts_with("float") && t.find('x') == std::string_view::npos)
