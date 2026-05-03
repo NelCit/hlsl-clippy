@@ -127,8 +127,8 @@ namespace {
     // Detect the scalar prefix.
     std::uint32_t scalar_bits = 0U;
     std::string_view rest;
-    static constexpr std::array<std::pair<std::string_view, std::uint32_t>, 20>
-        k_scalar_prefixes = {{
+    static constexpr std::array<std::pair<std::string_view, std::uint32_t>, 20> k_scalar_prefixes =
+        {{
             {"min16float", 16U}, {"min10float", 16U}, {"min16int", 16U}, {"min12int", 16U},
             {"min16uint", 16U},  {"float16_t", 16U},  {"int16_t", 16U},  {"uint16_t", 16U},
             {"float32_t", 32U},  {"int32_t", 32U},    {"uint32_t", 32U}, {"float64_t", 64U},

@@ -13,6 +13,32 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [1.5.5] — 2026-05-03
+
+**Patch — clang-format-18 vs v1.5.4 std::array init.** v1.5.4
+converted the C-style `k_scalar_prefixes` array in
+`register_pressure_ast.cpp` to `std::array<std::pair<…>, 20>`,
+but my local clang-format-22 wrapped the type/variable
+declaration differently than the CI's clang-format-18 wants.
+Both versions emit valid HLSL-Clippy `.clang-format` output, but
+they disagree on this exact construct (98-character type +
+variable + ` = `):
+
+- v22 wraps before the variable name: `…, 20>\n    k_var = {{`
+- v18 keeps it on one line and wraps before `{{`:
+  `…, 20> k_var =\n    {{`
+
+Verified locally with the `clang-format` npm package (v15-era
+binary, identical decision on this construct as v18).
+
+### Fixed
+
+- **`core/src/rules/util/register_pressure_ast.cpp:130-131`** —
+  reformat to clang-format-18's preferred layout. Two-line
+  whitespace-only change, no semantic difference.
+
+Test count unchanged: 856 cases / 2246 assertions, all green.
+
 ## [1.5.4] — 2026-05-03
 
 **Patch — clang-tidy `cppcoreguidelines-avoid-c-arrays` + CI bash
@@ -1689,6 +1715,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[1.5.5]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.4...v1.5.5
 [1.5.4]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.3...v1.5.4
 [1.5.3]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.2...v1.5.3
 [1.5.2]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.1...v1.5.2
