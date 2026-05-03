@@ -59,7 +59,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Wrapping the argument in `clamp(x, -1.0, 1.0)` is a pure semantic preservation when the input was mathematically in domain (the clamp is a no-op for in-domain values). For values that have rounded outside the domain, the clamp produces the mathematically correct boundary value rather than a NaN. `hlsl-clippy fix` applies the wrap automatically; the user can override the rewrite to `saturate(...)` if they know the argument is non-negative.
+**machine-applicable** — Wrapping the argument in `clamp(x, -1.0, 1.0)` is a pure semantic preservation when the input was mathematically in domain (the clamp is a no-op for in-domain values). For values that have rounded outside the domain, the clamp produces the mathematically correct boundary value rather than a NaN. `shader-clippy fix` applies the wrap automatically; the user can override the rewrite to `saturate(...)` if they know the argument is non-negative.
 
 ## See also
 
@@ -71,6 +71,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/acos-without-saturate.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/acos-without-saturate.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

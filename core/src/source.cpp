@@ -1,4 +1,4 @@
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/source.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 namespace {
 
@@ -33,12 +33,12 @@ namespace {
 // content while bounding memory cost on attacker-controlled input (a 4 GiB
 // adversarial shader would otherwise allocate ~2× that during the read +
 // tree-sitter parse). The cap can be raised by setting the
-// `HLSL_CLIPPY_MAX_FILE_BYTES` environment variable to a larger value.
+// `SHADER_CLIPPY_MAX_FILE_BYTES` environment variable to a larger value.
 constexpr std::uintmax_t k_default_max_file_bytes = 8U * 1024U * 1024U;
 
 [[nodiscard]] std::uintmax_t max_file_bytes() noexcept {
     if (const char* env =
-            std::getenv("HLSL_CLIPPY_MAX_FILE_BYTES");  // NOLINT(concurrency-mt-unsafe)
+            std::getenv("SHADER_CLIPPY_MAX_FILE_BYTES");  // NOLINT(concurrency-mt-unsafe)
         env != nullptr && env[0] != '\0') {
         char* end = nullptr;
         const auto parsed = std::strtoull(env, &end, 10);  // NOLINT(cert-err34-c)
@@ -170,4 +170,4 @@ LineCol SourceManager::resolve(SourceId id, std::uint32_t byte_offset) const noe
     return LineCol{.line = 1, .column = 1};
 }
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

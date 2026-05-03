@@ -117,7 +117,7 @@ Bad:
 ### Defer all 41 to "post-1.0"
 
 - Good: keep the v0.5 launch surface tight.
-- Bad: launches `hlsl-clippy` as an SM 6.0-era tool; fails the "modern shader-model coverage" reputation goal.
+- Bad: launches `shader-clippy` as an SM 6.0-era tool; fails the "modern shader-model coverage" reputation goal.
 
 ## Links
 

@@ -3,17 +3,17 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/ir.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
-#include "hlsl_clippy/suppress.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/ir.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
+#include "shader_clippy/suppress.hpp"
 
 #include "parser_internal.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 void RuleContext::emit(Diagnostic diag) {
     if (suppressions_ != nullptr &&
@@ -98,4 +98,4 @@ ByteSpan AstTree::byte_range(::TSNode node) const noexcept {
     };
 }
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

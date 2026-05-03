@@ -85,6 +85,6 @@ void cs_soa_field0(uint gi : SV_GroupIndex) {
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/groupshared-stride-non-32-bank-conflict.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/groupshared-stride-non-32-bank-conflict.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

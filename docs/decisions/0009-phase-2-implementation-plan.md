@@ -9,7 +9,7 @@ tags: [rules, phase-2, implementation-plan, math, redundancy]
 
 ## Context and Problem Statement
 
-Phase 0 ships the rule-engine scaffolding plus `pow-const-squared`. Phase 1 lands the declarative tree-sitter query helper, the quick-fix Rewriter, inline suppression, the `.hlsl-clippy.toml` config loader, and two rules (`redundant-saturate`, `clamp01-to-saturate`). Phase 2 fills out the AST-only rule pack: ~25 additional rules across **math simplification**, **saturate / clamp / redundancy**, and **misc** categories.
+Phase 0 ships the rule-engine scaffolding plus `pow-const-squared`. Phase 1 lands the declarative tree-sitter query helper, the quick-fix Rewriter, inline suppression, the `.shader-clippy.toml` config loader, and two rules (`redundant-saturate`, `clamp01-to-saturate`). Phase 2 fills out the AST-only rule pack: ~25 additional rules across **math simplification**, **saturate / clamp / redundancy**, and **misc** categories.
 
 This ADR is the implementation plan a future implementer (or several parallel implementers, one per category) executes against. It assumes Phase 1's infrastructure is in place: `Rule` interface, `ts::Query` helper, `Rewriter`, `Diagnostic`, `Fix`, suppression filter. No further infrastructure work is in scope.
 
@@ -433,7 +433,7 @@ Good:
 - Fixture coverage is ~70% complete; additions are bounded.
 
 Bad:
-- 12/24 rules are suggestion-only — `hlsl-clippy fix` does less heavy lifting than the clippy comparison implies. Phase 3 should re-audit suggestions for promotion.
+- 12/24 rules are suggestion-only — `shader-clippy fix` does less heavy lifting than the clippy comparison implies. Phase 3 should re-audit suggestions for promotion.
 - One rule (`manual-refract`) doesn't ship in Phase 2; the v0.2 blog series is 24 posts, not 25. Acceptable.
 
 ### Confirmation

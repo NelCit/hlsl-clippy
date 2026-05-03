@@ -82,6 +82,6 @@ void main(uint tid : SV_GroupThreadID) {
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/groupshared-when-registers-suffice.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/groupshared-when-registers-suffice.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

@@ -16,7 +16,7 @@ difference is not micro-optimisation theatre — it is the architectural gap
 between two completely different execution units that happen to share an
 HLSL intrinsic.
 
-The math rule pack in `hlsl-clippy` is roughly thirty-one rules deep, and
+The math rule pack in `shader-clippy` is roughly thirty-one rules deep, and
 every one of them earns its keep at exactly one of those gaps. This post is
 the orientation map: four execution-unit distinctions, six thematic buckets,
 and an honest account of where the compiler already saves you. The companion
@@ -305,15 +305,15 @@ and a link to the relevant ISA documentation. The depth-first companion
 post for the squared case lives at
 [pow-const-squared](/rules/pow-const-squared).
 
-The math pack is the largest single category in `hlsl-clippy` because the
+The math pack is the largest single category in `shader-clippy` because the
 HLSL math intrinsic surface is the largest single surface where syntax and
 ISA cost diverge. Profile first, fix what the profiler points at, and let
 the linter calibrate where to look.
 
 ---
 
-`hlsl-clippy` is an open-source HLSL linter. Rules, issues, and discussion
-live at [github.com/NelCit/hlsl-clippy](https://github.com/NelCit/hlsl-clippy).
+`shader-clippy` is an open-source HLSL linter. Rules, issues, and discussion
+live at [github.com/NelCit/shader-clippy](https://github.com/NelCit/shader-clippy).
 If you have encountered a shader pattern that should be a lint rule, open an
 issue.
 

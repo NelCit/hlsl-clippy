@@ -1,9 +1,9 @@
 ---
-title: "hlsl-clippy blog"
+title: "shader-clippy blog"
 layout: doc
 ---
 
-# hlsl-clippy blog
+# shader-clippy blog
 
 One post per rule. Each post explains the GPU mechanism behind a lint warning
 in enough depth that you could derive the rule yourself.

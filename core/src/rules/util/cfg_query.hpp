@@ -2,7 +2,7 @@
 // (ADR 0013 sub-phase 4b).
 //
 // These helpers sit on top of the value-type `ControlFlowInfo` declared in
-// `hlsl_clippy/control_flow.hpp`. They translate rule-side `Span` values into
+// `shader_clippy/control_flow.hpp`. They translate rule-side `Span` values into
 // `BasicBlockId` lookups, then forward to the engine-internal CFG queries
 // exposed via `CfgInfo::reachable_from` / `CfgInfo::dominates` /
 // `CfgInfo::barrier_between`. Rules with `stage() == Stage::ControlFlow`
@@ -26,10 +26,10 @@
 
 #include <optional>
 
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 /// Return the `BasicBlockId` whose recorded source span encloses `span`, or
 /// `std::nullopt` when the span sits outside every tracked block in the
@@ -69,4 +69,4 @@ namespace hlsl_clippy::rules::util {
 /// enclosing branch has a uniform condition.
 [[nodiscard]] bool inside_divergent_cf(const ControlFlowInfo& cfg, Span inner_span) noexcept;
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

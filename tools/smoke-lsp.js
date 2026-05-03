@@ -1,4 +1,4 @@
-// End-to-end smoke test of hlsl-clippy-lsp.exe over JSON-RPC stdio.
+// End-to-end smoke test of shader-clippy-lsp.exe over JSON-RPC stdio.
 // Sends initialize -> initialized -> didOpen -> shutdown -> exit and
 // prints any publishDiagnostics frame the server emits. Exit 0 only if
 // at least one diagnostic is published.
@@ -12,7 +12,7 @@ const fs = require("fs");
 const path = require("path");
 
 const root = path.resolve(__dirname, "..");
-const lsp = path.join(root, "build", "lsp", "hlsl-clippy-lsp.exe");
+const lsp = path.join(root, "build", "lsp", "shader-clippy-lsp.exe");
 const fixture = path.join(root, "tests", "fixtures", "phase2", "math.hlsl");
 
 if (!fs.existsSync(lsp)) {

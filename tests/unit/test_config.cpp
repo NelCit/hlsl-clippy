@@ -1,4 +1,4 @@
-// Unit tests for the .hlsl-clippy.toml config loader.
+// Unit tests for the .shader-clippy.toml config loader.
 
 #include <chrono>
 #include <filesystem>
@@ -11,7 +11,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "hlsl_clippy/config.hpp"
+#include "shader_clippy/config.hpp"
 
 namespace {
 
@@ -32,7 +32,7 @@ public:
         const auto written = std::snprintf(  // NOLINT(cert-err33-c)
             static_cast<char*>(buf),
             sizeof(buf),
-            "hlsl-clippy-test-%016llx",
+            "shader-clippy-test-%016llx",
             static_cast<unsigned long long>(unique));
         REQUIRE(written > 0);
         path_ = std::filesystem::temp_directory_path() / buf;
@@ -72,7 +72,7 @@ private:
 }  // namespace
 
 TEST_CASE("Empty config parses to a default Config", "[config]") {
-    const auto result = hlsl_clippy::load_config_string("");
+    const auto result = shader_clippy::load_config_string("");
     REQUIRE(result.has_value());
     const auto& cfg = result.value();
     CHECK(cfg.rule_severity.empty());
@@ -88,22 +88,22 @@ pow-const-squared = "deny"
 redundant-saturate = "warn"
 clamp01-to-saturate = "allow"
 )";
-    const auto result = hlsl_clippy::load_config_string(k_toml);
+    const auto result = shader_clippy::load_config_string(k_toml);
     REQUIRE(result.has_value());
     const auto& cfg = result.value();
     REQUIRE(cfg.rule_severity.size() == 3U);
 
     const auto sev_pow = cfg.severity_for("pow-const-squared", "shaders/foo.hlsl");
     REQUIRE(sev_pow.has_value());
-    CHECK(*sev_pow == hlsl_clippy::RuleSeverity::Deny);
+    CHECK(*sev_pow == shader_clippy::RuleSeverity::Deny);
 
     const auto sev_red = cfg.severity_for("redundant-saturate", "shaders/foo.hlsl");
     REQUIRE(sev_red.has_value());
-    CHECK(*sev_red == hlsl_clippy::RuleSeverity::Warn);
+    CHECK(*sev_red == shader_clippy::RuleSeverity::Warn);
 
     const auto sev_clamp = cfg.severity_for("clamp01-to-saturate", "shaders/foo.hlsl");
     REQUIRE(sev_clamp.has_value());
-    CHECK(*sev_clamp == hlsl_clippy::RuleSeverity::Allow);
+    CHECK(*sev_clamp == shader_clippy::RuleSeverity::Allow);
 }
 
 TEST_CASE("[[overrides]] win over [rules] when the path glob matches", "[config][overrides]") {
@@ -115,23 +115,23 @@ redundant-saturate = "deny"
 path = "shaders/legacy/**"
 rules = { redundant-saturate = "allow" }
 )";
-    const auto result = hlsl_clippy::load_config_string(k_toml);
+    const auto result = shader_clippy::load_config_string(k_toml);
     REQUIRE(result.has_value());
     const auto& cfg = result.value();
 
     // Inside the legacy directory: override wins.
     const auto inside = cfg.severity_for("redundant-saturate", "shaders/legacy/foo.hlsl");
     REQUIRE(inside.has_value());
-    CHECK(*inside == hlsl_clippy::RuleSeverity::Allow);
+    CHECK(*inside == shader_clippy::RuleSeverity::Allow);
 
     // Outside: base [rules] applies.
     const auto outside = cfg.severity_for("redundant-saturate", "shaders/main.hlsl");
     REQUIRE(outside.has_value());
-    CHECK(*outside == hlsl_clippy::RuleSeverity::Deny);
+    CHECK(*outside == shader_clippy::RuleSeverity::Deny);
 }
 
 TEST_CASE("Path glob matcher handles ** and *", "[config][glob]") {
-    using hlsl_clippy::path_glob_match;
+    using shader_clippy::path_glob_match;
 
     CHECK(path_glob_match("**/*.hlsl", "shaders/foo.hlsl"));
     CHECK(path_glob_match("**/*.hlsl", "shaders/sub/foo.hlsl"));
@@ -146,29 +146,29 @@ TEST_CASE("Path glob matcher handles ** and *", "[config][glob]") {
 
 TEST_CASE("find_config walks parent directories", "[config][resolver]") {
     TempDir tmp;
-    // Lay out: tmp/.git/  +  tmp/.hlsl-clippy.toml  +  tmp/a/b/c/file.hlsl
+    // Lay out: tmp/.git/  +  tmp/.shader-clippy.toml  +  tmp/a/b/c/file.hlsl
     tmp.mkdir(".git");
-    tmp.write(".hlsl-clippy.toml", "");
+    tmp.write(".shader-clippy.toml", "");
     tmp.write("a/b/c/file.hlsl", "// shader");
 
     const auto target = tmp.path() / "a" / "b" / "c" / "file.hlsl";
-    const auto found = hlsl_clippy::find_config(target);
+    const auto found = shader_clippy::find_config(target);
     REQUIRE(found.has_value());
-    CHECK(std::filesystem::equivalent(*found, tmp.path() / ".hlsl-clippy.toml"));
+    CHECK(std::filesystem::equivalent(*found, tmp.path() / ".shader-clippy.toml"));
 }
 
 TEST_CASE("find_config stops at .git workspace boundary", "[config][resolver]") {
     TempDir tmp;
     // Layout:
-    //   tmp/outer/.hlsl-clippy.toml      <- should NOT be picked
+    //   tmp/outer/.shader-clippy.toml      <- should NOT be picked
     //   tmp/outer/inner/.git
     //   tmp/outer/inner/file.hlsl
-    tmp.write("outer/.hlsl-clippy.toml", "");
+    tmp.write("outer/.shader-clippy.toml", "");
     tmp.mkdir("outer/inner/.git");
     tmp.write("outer/inner/file.hlsl", "// shader");
 
     const auto target = tmp.path() / "outer" / "inner" / "file.hlsl";
-    const auto found = hlsl_clippy::find_config(target);
+    const auto found = shader_clippy::find_config(target);
     CHECK_FALSE(found.has_value());
 }
 
@@ -177,7 +177,7 @@ TEST_CASE("Malformed TOML returns ConfigError with line + column", "[config][err
 [rules
 pow-const-squared = "warn"
 )";
-    const auto result = hlsl_clippy::load_config_string(k_bad, "synthetic.toml");
+    const auto result = shader_clippy::load_config_string(k_bad, "synthetic.toml");
     REQUIRE_FALSE(result.has_value());
     const auto& err = result.error();
     CHECK(err.source == std::filesystem::path{"synthetic.toml"});
@@ -190,7 +190,7 @@ TEST_CASE("Invalid severity string is rejected", "[config][error]") {
 [rules]
 pow-const-squared = "panic"
 )";
-    const auto result = hlsl_clippy::load_config_string(k_toml);
+    const auto result = shader_clippy::load_config_string(k_toml);
     REQUIRE_FALSE(result.has_value());
     CHECK(result.error().message.find("panic") != std::string::npos);
 }
@@ -201,7 +201,7 @@ pow-const-squared = "panic"
 // `Config::div_epsilon()`.
 
 TEST_CASE("Default config returns the canonical compare/div epsilons", "[config][float-epsilon]") {
-    const auto result = hlsl_clippy::load_config_string("");
+    const auto result = shader_clippy::load_config_string("");
     REQUIRE(result.has_value());
     const auto& cfg = result.value();
     CHECK(cfg.compare_epsilon() == 0.0001F);
@@ -213,7 +213,7 @@ TEST_CASE("[float] compare-epsilon overrides the default", "[config][float-epsil
 [float]
 compare-epsilon = 0.05
 )";
-    const auto result = hlsl_clippy::load_config_string(k_toml);
+    const auto result = shader_clippy::load_config_string(k_toml);
     REQUIRE(result.has_value());
     const auto& cfg = result.value();
     CHECK(cfg.compare_epsilon() == 0.05F);
@@ -228,7 +228,7 @@ TEST_CASE("[float] div-epsilon with a non-numeric value falls back to default + 
 [float]
 div-epsilon = "not-a-number"
 )";
-    const auto result = hlsl_clippy::load_config_string(k_toml);
+    const auto result = shader_clippy::load_config_string(k_toml);
     REQUIRE(result.has_value());
     const auto& cfg = result.value();
     CHECK(cfg.div_epsilon() == 1.0e-6F);
@@ -244,7 +244,7 @@ patterns = ["**/*.hlsl", "**/*.hlsli"]
 [excludes]
 patterns = ["external/**"]
 )";
-    const auto result = hlsl_clippy::load_config_string(k_toml);
+    const auto result = shader_clippy::load_config_string(k_toml);
     REQUIRE(result.has_value());
     const auto& cfg = result.value();
     REQUIRE(cfg.includes.size() == 2U);

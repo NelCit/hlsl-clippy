@@ -1,4 +1,4 @@
-add_library(hlsl_clippy_core STATIC
+add_library(shader_clippy_core STATIC
     src/version.cpp
     src/source.cpp
     src/parser.cpp
@@ -296,7 +296,7 @@ add_library(hlsl_clippy_core STATIC
 
 # Phase 7 — IR-level analysis infrastructure (ADR 0016, sub-phase 7a.1).
 #
-# Gated behind `HLSL_CLIPPY_ENABLE_IR` (default ON). Sub-phase 7a.1 ships the
+# Gated behind `SHADER_CLIPPY_ENABLE_IR` (default ON). Sub-phase 7a.1 ships the
 # public API surface + a stub engine that always returns
 # `clippy::ir-not-implemented`; sub-phase 7a.2 adds the DXC submodule, the
 # real `dxil_bridge.cpp` parser, and `cmake/UseDxc.cmake`. The `target_sources`
@@ -304,35 +304,35 @@ add_library(hlsl_clippy_core STATIC
 # `debug_info.cpp` to the same conditional block.
 #
 # When the option is OFF, `core/src/ir/` is excluded from the build entirely
-# AND `HLSL_CLIPPY_IR_DISABLED` is defined on `hlsl_clippy_core`'s public
+# AND `SHADER_CLIPPY_IR_DISABLED` is defined on `shader_clippy_core`'s public
 # compile flags so the orchestrator can stub `IrEngine::analyze` to return a
 # permanent "compiled-out" diagnostic without linking the engine TU.
-option(HLSL_CLIPPY_ENABLE_IR
+option(SHADER_CLIPPY_ENABLE_IR
        "Build the Phase 7 IR-level analysis engine (ADR 0016). Default ON."
        ON)
 
-if(HLSL_CLIPPY_ENABLE_IR)
-    target_sources(hlsl_clippy_core PRIVATE
+if(SHADER_CLIPPY_ENABLE_IR)
+    target_sources(shader_clippy_core PRIVATE
         src/ir/engine.cpp
     )
 else()
-    target_compile_definitions(hlsl_clippy_core PUBLIC HLSL_CLIPPY_IR_DISABLED)
+    target_compile_definitions(shader_clippy_core PUBLIC SHADER_CLIPPY_IR_DISABLED)
 endif()
 
-target_include_directories(hlsl_clippy_core PUBLIC
+target_include_directories(shader_clippy_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 
-target_include_directories(hlsl_clippy_core PRIVATE
+target_include_directories(shader_clippy_core PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
 
-target_compile_features(hlsl_clippy_core PUBLIC cxx_std_23)
+target_compile_features(shader_clippy_core PUBLIC cxx_std_23)
 
-target_link_libraries(hlsl_clippy_core
+target_link_libraries(shader_clippy_core
     PRIVATE
-        hlsl_clippy_warnings
+        shader_clippy_warnings
         tree_sitter::tree_sitter
         tree_sitter::hlsl
         # ADR 0021 sub-phase B.1 (v1.4.0) — tree-sitter-slang grammar. Linked
@@ -364,9 +364,9 @@ target_link_libraries(hlsl_clippy_core
 # PCH is enabled via the standard `BUILD_TESTING`-style opt-out so a
 # contributor can disable it for a clean apples-to-apples compile-time
 # comparison.
-option(HLSL_CLIPPY_USE_PCH "Use precompiled headers for hlsl_clippy_core (faster builds)" ON)
-if(HLSL_CLIPPY_USE_PCH)
-    target_precompile_headers(hlsl_clippy_core PRIVATE
+option(SHADER_CLIPPY_USE_PCH "Use precompiled headers for shader_clippy_core (faster builds)" ON)
+if(SHADER_CLIPPY_USE_PCH)
+    target_precompile_headers(shader_clippy_core PRIVATE
         # STL essentials every rule TU touches.
         <cstdint>
         <memory>
@@ -378,9 +378,9 @@ if(HLSL_CLIPPY_USE_PCH)
         # tree-sitter API used by every AST-stage rule.
         <tree_sitter/api.h>
         # Public headers used by every rule.
-        "include/hlsl_clippy/rule.hpp"
-        "include/hlsl_clippy/diagnostic.hpp"
-        "include/hlsl_clippy/source.hpp"
+        "include/shader_clippy/rule.hpp"
+        "include/shader_clippy/diagnostic.hpp"
+        "include/shader_clippy/source.hpp"
         # Private headers used by most rule TUs.
         "src/parser_internal.hpp"
         "src/rules/rules.hpp"

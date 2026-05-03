@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <string_view>
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 /// Source language selector (ADR 0020 sub-phase A — v1.3.0).
 ///
@@ -12,7 +12,7 @@ namespace hlsl_clippy {
 /// `detect_language()`. `Hlsl` and `Slang` force a specific frontend
 /// regardless of the file's extension; useful as a CLI override
 /// (`--source-language=...`) and as a `[lint] source-language` knob in
-/// `.hlsl-clippy.toml`.
+/// `.shader-clippy.toml`.
 ///
 /// The orchestrator gates AST + CFG + IR rule dispatch on the resolved
 /// language: when `Slang`, only `Stage::Reflection` rules run because
@@ -47,4 +47,4 @@ enum class SourceLanguage : std::uint8_t {
 /// Human-readable label used in diagnostic messages and CLI output.
 [[nodiscard]] std::string_view language_label(SourceLanguage lang) noexcept;
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

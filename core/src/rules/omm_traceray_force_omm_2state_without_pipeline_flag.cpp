@@ -23,15 +23,15 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::node_kind;
@@ -114,4 +114,4 @@ std::unique_ptr<Rule> make_omm_traceray_force_omm_2state_without_pipeline_flag()
     return std::make_unique<OmmTraceRayForceOmm2StateWithoutPipelineFlag>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

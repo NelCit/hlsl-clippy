@@ -128,7 +128,7 @@ identifies the spilled variables and their sizes; the fix is always manual.
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/live-state-across-traceray.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/live-state-across-traceray.md)
 
 ---
 

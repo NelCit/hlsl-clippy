@@ -72,7 +72,7 @@ none
 
 ## Fix availability
 
-**suggestion** — Migrating a cbuffer to root constants requires changes to the D3D12 root signature on the CPU side (`InitAsConstants`) and to the `ExecuteCommandLists` call sequence. The HLSL shader side change is minimal (optionally replacing the `cbuffer` declaration with a `ConstantBuffer<T>` or leaving it as-is if the root parameter binding matches). `hlsl-clippy fix` generates the suggested root-signature snippet as a comment but does not modify HLSL source automatically.
+**suggestion** — Migrating a cbuffer to root constants requires changes to the D3D12 root signature on the CPU side (`InitAsConstants`) and to the `ExecuteCommandLists` call sequence. The HLSL shader side change is minimal (optionally replacing the `cbuffer` declaration with a `ConstantBuffer<T>` or leaving it as-is if the root parameter binding matches). `shader-clippy fix` generates the suggested root-signature snippet as a comment but does not modify HLSL source automatically.
 
 ## See also
 
@@ -84,6 +84,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/cbuffer-fits-rootconstants.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/cbuffer-fits-rootconstants.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

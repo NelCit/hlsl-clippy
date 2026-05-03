@@ -28,28 +28,28 @@
 // (typically < 100 entries per lint run) so std::map is fine here.
 #if defined(__cpp_lib_flat_map) && __cpp_lib_flat_map >= 202207L
 #include <flat_map>
-namespace hlsl_clippy::control_flow::detail {
+namespace shader_clippy::control_flow::detail {
 template<typename K, typename V>
 using CfgCacheMap = std::flat_map<K, V>;
-}  // namespace hlsl_clippy::control_flow::detail
+}  // namespace shader_clippy::control_flow::detail
 #else
 #include <map>
-namespace hlsl_clippy::control_flow::detail {
+namespace shader_clippy::control_flow::detail {
 template<typename K, typename V>
 using CfgCacheMap = std::map<K, V>;
-}  // namespace hlsl_clippy::control_flow::detail
+}  // namespace shader_clippy::control_flow::detail
 #endif
 
 #include <string_view>
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::control_flow {
+namespace shader_clippy::control_flow {
 
 class CfgEngine {
 public:
@@ -121,4 +121,4 @@ private:
     detail::CfgCacheMap<CacheKey, std::shared_ptr<Entry>> cache_;
 };
 
-}  // namespace hlsl_clippy::control_flow
+}  // namespace shader_clippy::control_flow

@@ -14,7 +14,7 @@
 #include <string>
 #include <string_view>
 
-namespace hlsl_clippy::lsp::rpc {
+namespace shader_clippy::lsp::rpc {
 
 /// Result of a single framing read attempt against the input stream.
 enum class FramingStatus {
@@ -43,4 +43,4 @@ struct ReadResult {
 /// `std::nullopt` on malformed input. Public for unit-testability.
 [[nodiscard]] std::optional<std::uint32_t> parse_content_length(std::string_view headers);
 
-}  // namespace hlsl_clippy::lsp::rpc
+}  // namespace shader_clippy::lsp::rpc

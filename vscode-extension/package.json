@@ -1,9 +1,9 @@
 {
-  "name": "hlsl-clippy",
-  "displayName": "HLSL Clippy",
+  "name": "shader-clippy",
+  "displayName": "Shader Clippy",
   "description": "Linter for HLSL — performance + correctness rules beyond what dxc catches. Lints .slang files end-to-end (AST + CFG + reflection) via tree-sitter-slang; ADR 0021 sub-phase B.",
   "publisher": "nelcit",
-  "version": "1.5.6",
+  "version": "2.0.0",
   "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.85.0"
@@ -64,126 +64,126 @@
     ],
     "commands": [
       {
-        "command": "hlslClippy.restart",
+        "command": "shaderClippy.restart",
         "title": "Restart Server",
-        "category": "HLSL Clippy"
+        "category": "Shader Clippy"
       },
       {
-        "command": "hlslClippy.showOutput",
+        "command": "shaderClippy.showOutput",
         "title": "Show Output Channel",
-        "category": "HLSL Clippy"
+        "category": "Shader Clippy"
       },
       {
-        "command": "hlslClippy.relintDocument",
+        "command": "shaderClippy.relintDocument",
         "title": "Re-lint Active Document",
-        "category": "HLSL Clippy"
+        "category": "Shader Clippy"
       },
       {
-        "command": "hlslClippy.openRuleDocs",
+        "command": "shaderClippy.openRuleDocs",
         "title": "Open Rule Docs",
-        "category": "HLSL Clippy"
+        "category": "Shader Clippy"
       },
       {
-        "command": "hlslClippy.suppressRuleForLine",
+        "command": "shaderClippy.suppressRuleForLine",
         "title": "Suppress Rule for This Line",
-        "category": "HLSL Clippy"
+        "category": "Shader Clippy"
       },
       {
-        "command": "hlslClippy.suppressRuleForFile",
+        "command": "shaderClippy.suppressRuleForFile",
         "title": "Suppress Rule for Entire File",
-        "category": "HLSL Clippy"
+        "category": "Shader Clippy"
       },
       {
-        "command": "hlslClippy.showAllRules",
+        "command": "shaderClippy.showAllRules",
         "title": "Show All Rules",
-        "category": "HLSL Clippy"
+        "category": "Shader Clippy"
       },
       {
-        "command": "hlslClippy.quickActions",
+        "command": "shaderClippy.quickActions",
         "title": "Quick Actions...",
-        "category": "HLSL Clippy"
+        "category": "Shader Clippy"
       },
       {
-        "command": "hlslClippy.openWalkthrough",
+        "command": "shaderClippy.openWalkthrough",
         "title": "Open Welcome Walkthrough",
-        "category": "HLSL Clippy"
+        "category": "Shader Clippy"
       },
       {
-        "command": "hlslClippy.fixAllInDocument",
+        "command": "shaderClippy.fixAllInDocument",
         "title": "Fix All in Document",
-        "category": "HLSL Clippy"
+        "category": "Shader Clippy"
       }
     ],
     "menus": {
       "editor/context": [
         {
-          "command": "hlslClippy.openRuleDocs",
-          "group": "9_hlslClippy@1",
+          "command": "shaderClippy.openRuleDocs",
+          "group": "9_shaderClippy@1",
           "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
-          "command": "hlslClippy.suppressRuleForLine",
-          "group": "9_hlslClippy@2",
+          "command": "shaderClippy.suppressRuleForLine",
+          "group": "9_shaderClippy@2",
           "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
-          "command": "hlslClippy.suppressRuleForFile",
-          "group": "9_hlslClippy@3",
+          "command": "shaderClippy.suppressRuleForFile",
+          "group": "9_shaderClippy@3",
           "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
-          "command": "hlslClippy.fixAllInDocument",
-          "group": "9_hlslClippy@4",
+          "command": "shaderClippy.fixAllInDocument",
+          "group": "9_shaderClippy@4",
           "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
-          "command": "hlslClippy.relintDocument",
-          "group": "9_hlslClippy@5",
+          "command": "shaderClippy.relintDocument",
+          "group": "9_shaderClippy@5",
           "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
-          "command": "hlslClippy.showAllRules",
-          "group": "9_hlslClippy@6",
+          "command": "shaderClippy.showAllRules",
+          "group": "9_shaderClippy@6",
           "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
-          "command": "hlslClippy.showOutput",
-          "group": "9_hlslClippy@7",
+          "command": "shaderClippy.showOutput",
+          "group": "9_shaderClippy@7",
           "when": "editorLangId == hlsl || editorLangId == slang"
         }
       ],
       "commandPalette": [
         {
-          "command": "hlslClippy.relintDocument",
+          "command": "shaderClippy.relintDocument",
           "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
-          "command": "hlslClippy.openRuleDocs",
+          "command": "shaderClippy.openRuleDocs",
           "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
-          "command": "hlslClippy.suppressRuleForLine",
+          "command": "shaderClippy.suppressRuleForLine",
           "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
-          "command": "hlslClippy.suppressRuleForFile",
+          "command": "shaderClippy.suppressRuleForFile",
           "when": "editorLangId == hlsl || editorLangId == slang"
         },
         {
-          "command": "hlslClippy.fixAllInDocument",
+          "command": "shaderClippy.fixAllInDocument",
           "when": "editorLangId == hlsl || editorLangId == slang"
         }
       ]
     },
     "keybindings": [
       {
-        "command": "hlslClippy.relintDocument",
+        "command": "shaderClippy.relintDocument",
         "key": "ctrl+alt+l",
         "mac": "cmd+alt+l",
         "when": "editorLangId == hlsl || editorLangId == slang"
       },
       {
-        "command": "hlslClippy.openRuleDocs",
+        "command": "shaderClippy.openRuleDocs",
         "key": "ctrl+alt+d",
         "mac": "cmd+alt+d",
         "when": "editorLangId == hlsl || editorLangId == slang"
@@ -191,14 +191,14 @@
     ],
     "walkthroughs": [
       {
-        "id": "hlslClippy.gettingStarted",
-        "title": "Get started with HLSL Clippy",
+        "id": "shaderClippy.gettingStarted",
+        "title": "Get started with Shader Clippy",
         "description": "Squiggle-by-squiggle introduction to the HLSL linter.",
         "steps": [
           {
             "id": "openHlslFile",
             "title": "Open an HLSL or Slang file",
-            "description": "Open any `.hlsl`, `.hlsli`, `.fx`, `.fxh`, `.vsh`, `.psh`, `.csh`, `.gsh`, `.hsh`, `.dsh`, or `.slang` file in your workspace. The extension activates automatically when one is open.\n\n**`.slang` reflection-only baseline (v1.3, ADR 0020 sub-phase A):** ~32 of 189 rules fire on Slang sources today (resource-binding, cbuffer-padding, descriptor-table, format-mismatch). AST + control-flow rules wait on `tree-sitter-slang` integration in v1.4+. Set `hlslClippy.slang.enable=false` to defer to the official `shader-slang.slang` extension exclusively.\n\nIf you don't have one handy, [create a new untitled file](command:workbench.action.files.newUntitledFile) and set its language to HLSL or Slang via the bottom-right language indicator.",
+            "description": "Open any `.hlsl`, `.hlsli`, `.fx`, `.fxh`, `.vsh`, `.psh`, `.csh`, `.gsh`, `.hsh`, `.dsh`, or `.slang` file in your workspace. The extension activates automatically when one is open.\n\n**`.slang` reflection-only baseline (v1.3, ADR 0020 sub-phase A):** ~32 of 189 rules fire on Slang sources today (resource-binding, cbuffer-padding, descriptor-table, format-mismatch). AST + control-flow rules wait on `tree-sitter-slang` integration in v1.4+. Set `shaderClippy.slang.enable=false` to defer to the official `shader-slang.slang` extension exclusively.\n\nIf you don't have one handy, [create a new untitled file](command:workbench.action.files.newUntitledFile) and set its language to HLSL or Slang via the bottom-right language indicator.",
             "completionEvents": [
               "onLanguage:hlsl",
               "onLanguage:slang"
@@ -207,7 +207,7 @@
           {
             "id": "checkStatus",
             "title": "Check the status bar",
-            "description": "Look at the bottom-right of the VS Code window. The HLSL Clippy status badge tells you whether the LSP server is running:\n\n- $(check) HLSL Clippy → ready, will lint on every edit\n- $(sync~spin) HLSL Clippy → starting up\n- $(error) HLSL Clippy → failed to start; click the badge to see why\n\n[Show the output channel](command:hlslClippy.showOutput) for the full activation log."
+            "description": "Look at the bottom-right of the VS Code window. The Shader Clippy status badge tells you whether the LSP server is running:\n\n- $(check) Shader Clippy → ready, will lint on every edit\n- $(sync~spin) Shader Clippy → starting up\n- $(error) Shader Clippy → failed to start; click the badge to see why\n\n[Show the output channel](command:shaderClippy.showOutput) for the full activation log."
           },
           {
             "id": "seeDiagnostics",
@@ -222,35 +222,35 @@
           {
             "id": "configureProject",
             "title": "Configure the linter",
-            "description": "Drop a `.hlsl-clippy.toml` next to your shaders to override severity per rule, exclude paths, or pin a target Slang profile. Example:\n\n```toml\n[rules]\n\"pow-const-squared\" = \"deny\"\n\"redundant-saturate\" = \"warn\"\n\"min16float-in-cbuffer-roundtrip\" = \"allow\"\n```\n\nFull schema: [Configuration docs](https://github.com/NelCit/hlsl-clippy/blob/main/docs/configuration.md). Run [HLSL Clippy: Re-lint Active Document](command:hlslClippy.relintDocument) after edits to apply changes immediately."
+            "description": "Drop a `.shader-clippy.toml` next to your shaders to override severity per rule, exclude paths, or pin a target Slang profile. Example:\n\n```toml\n[rules]\n\"pow-const-squared\" = \"deny\"\n\"redundant-saturate\" = \"warn\"\n\"min16float-in-cbuffer-roundtrip\" = \"allow\"\n```\n\nFull schema: [Configuration docs](https://github.com/NelCit/shader-clippy/blob/main/docs/configuration.md). Run [Shader Clippy: Re-lint Active Document](command:shaderClippy.relintDocument) after edits to apply changes immediately."
           }
         ]
       }
     ],
     "configuration": {
-      "title": "HLSL Clippy",
+      "title": "Shader Clippy",
       "properties": {
-        "hlslClippy.serverPath": {
+        "shaderClippy.serverPath": {
           "type": "string",
           "default": "",
-          "description": "Explicit path to hlsl-clippy-lsp binary (overrides auto-discovery)."
+          "description": "Explicit path to shader-clippy-lsp binary (overrides auto-discovery)."
         },
-        "hlslClippy.targetProfile": {
+        "shaderClippy.targetProfile": {
           "type": "string",
           "default": "",
           "description": "Slang target profile (e.g., sm_6_6, vs_6_7, ps_6_8). Empty = server default."
         },
-        "hlslClippy.enableReflection": {
+        "shaderClippy.enableReflection": {
           "type": "boolean",
           "default": true,
           "description": "Enable Phase 3 reflection-aware rules (requires Slang compile)."
         },
-        "hlslClippy.enableControlFlow": {
+        "shaderClippy.enableControlFlow": {
           "type": "boolean",
           "default": true,
           "description": "Enable Phase 4 CFG-aware rules."
         },
-        "hlslClippy.trace.server": {
+        "shaderClippy.trace.server": {
           "type": "string",
           "enum": [
             "off",
@@ -258,9 +258,9 @@
             "verbose"
           ],
           "default": "off",
-          "description": "Traces the communication between VS Code and the hlsl-clippy LSP server."
+          "description": "Traces the communication between VS Code and the shader-clippy LSP server."
         },
-        "hlslClippy.inlineDiagnostics": {
+        "shaderClippy.inlineDiagnostics": {
           "type": "string",
           "enum": [
             "off",
@@ -275,12 +275,12 @@
           "default": "off",
           "description": "Render the diagnostic message at the end of the offending line (Error Lens style)."
         },
-        "hlslClippy.showStatusBar": {
+        "shaderClippy.showStatusBar": {
           "type": "boolean",
           "default": true,
-          "description": "Show the HLSL Clippy badge in the status bar (severity-split diagnostic count + click for actions). Disable if your status bar is crowded."
+          "description": "Show the Shader Clippy badge in the status bar (severity-split diagnostic count + click for actions). Disable if your status bar is crowded."
         },
-        "hlslClippy.slang.enable": {
+        "shaderClippy.slang.enable": {
           "type": "boolean",
           "default": true,
           "description": "Recognise `.slang` files (ADR 0020 sub-phase A — v1.3+). When `false`, the extension does not handle `.slang` documents — useful when you rely on the official `shader-slang.slang` extension exclusively. Note: `.slang` source-language support is reflection-only on v1.3 (~32 of 189 rules fire); full AST + CFG coverage tracks for v1.4+."
@@ -303,10 +303,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/NelCit/hlsl-clippy"
+    "url": "https://github.com/NelCit/shader-clippy"
   },
   "bugs": {
-    "url": "https://github.com/NelCit/hlsl-clippy/issues"
+    "url": "https://github.com/NelCit/shader-clippy/issues"
   },
-  "homepage": "https://github.com/NelCit/hlsl-clippy#readme"
+  "homepage": "https://github.com/NelCit/shader-clippy#readme"
 }

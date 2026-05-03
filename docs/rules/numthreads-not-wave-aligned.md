@@ -76,7 +76,7 @@ target-wave-size = 64
 
 ## Fix availability
 
-**suggestion** — The rule proposes the nearest wave-aligned thread count that preserves the work coverage: rounding up X or Y to the next multiple of `target-wave-size`, or flattening to a 1D layout with a wave-aligned total. Because changing the thread group dimensions may require updating the `DispatchThreadID` interpretation in the shader body and the `Dispatch(X, Y, Z)` call counts on the CPU side, `hlsl-clippy fix` shows the candidate `[numthreads]` change but does not apply it automatically.
+**suggestion** — The rule proposes the nearest wave-aligned thread count that preserves the work coverage: rounding up X or Y to the next multiple of `target-wave-size`, or flattening to a 1D layout with a wave-aligned total. Because changing the thread group dimensions may require updating the `DispatchThreadID` interpretation in the shader body and the `Dispatch(X, Y, Z)` call counts on the CPU side, `shader-clippy fix` shows the candidate `[numthreads]` change but does not apply it automatically.
 
 ## See also
 
@@ -87,6 +87,6 @@ target-wave-size = 64
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/numthreads-not-wave-aligned.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/numthreads-not-wave-aligned.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

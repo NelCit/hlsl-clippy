@@ -8,7 +8,7 @@
 #include <string_view>
 #include <vector>
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 /// Opaque handle for a source file registered with `SourceManager`.
 /// `SourceId{0}` is reserved as the invalid id.
@@ -120,4 +120,4 @@ private:
     std::vector<std::unique_ptr<SourceFile>> files_;
 };
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

@@ -33,7 +33,7 @@ has not yet been designed**: a way to expose Slang's reflection API to
 the lint engine without violating the four constraints already locked
 elsewhere in the codebase:
 
-1. **`<slang.h>` MUST NOT appear in `core/include/hlsl_clippy/`.** CI
+1. **`<slang.h>` MUST NOT appear in `core/include/shader_clippy/`.** CI
    grep enforces this; same constraint applies to `<tree_sitter/api.h>`.
    See ADR 0001 + CLAUDE.md "What NOT to do".
 2. **Slang `IGlobalSession` is not thread-safe.** Maintain one global
@@ -57,7 +57,7 @@ ADR.** It is a plan, in the same shape as ADR 0008 (Phase 1) and ADR
 
 - **Don't leak `<slang.h>` through public headers.** Reflection types
   exposed to rule authors must be opaque value types defined in
-  `core/include/hlsl_clippy/reflection.hpp`; the only translation
+  `core/include/shader_clippy/reflection.hpp`; the only translation
   unit that includes `<slang.h>` is the bridge implementation under
   `core/src/reflection/slang_bridge.cpp`. CI grep already enforces this
   constraint and must continue to pass.
@@ -164,12 +164,12 @@ skipped for that source — they don't crash, they just don't fire.
 The proposed architecture, broken into the six concrete API additions
 that constitute it.
 
-### 1. New public header `core/include/hlsl_clippy/reflection.hpp` (opaque types only)
+### 1. New public header `core/include/shader_clippy/reflection.hpp` (opaque types only)
 
 No `<slang.h>` include. Pure value types. Sketch:
 
 ```cpp
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 enum class ResourceKind : std::uint8_t {
     Unknown,
@@ -237,7 +237,7 @@ struct ReflectionInfo {
         std::string_view name) const noexcept;
 };
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy
 ```
 
 Every type is a copyable / movable value. No `unique_ptr`s to opaque
@@ -245,7 +245,7 @@ Slang handles cross the public boundary; the bridge is responsible for
 walking Slang's reflection tree once and materialising these flat
 structs.
 
-### 2. Extend `Stage` enum in `core/include/hlsl_clippy/rule.hpp`
+### 2. Extend `Stage` enum in `core/include/shader_clippy/rule.hpp`
 
 ```cpp
 enum class Stage : std::uint8_t {
@@ -318,7 +318,7 @@ Responsibilities of `ReflectionEngine`:
 
 The `slang_bridge.cpp` translation unit is the **only** place
 `<slang.h>` is included anywhere under `core/`. CI grep that already
-forbids `<slang.h>` in `core/include/hlsl_clippy/` keeps passing
+forbids `<slang.h>` in `core/include/shader_clippy/` keeps passing
 unchanged; a new CI grep clause may want to assert `<slang.h>` is
 ALSO confined to `core/src/reflection/` (i.e., `core/src/rules/` stays
 free of it). That CI tweak is a follow-up under sub-phase 3a.
@@ -391,7 +391,7 @@ Sub-phase 3c is the parallel-pack dispatch.
 
 Single PR, single agent. Lands:
 
-- `core/include/hlsl_clippy/reflection.hpp` (opaque types per §1).
+- `core/include/shader_clippy/reflection.hpp` (opaque types per §1).
 - New private module `core/src/reflection/{engine,slang_bridge}.{hpp,cpp}`.
   `slang_bridge.cpp` is the only TU that includes `<slang.h>`.
 - Extend `Stage` enum (§2) and `Rule::on_reflection` virtual (§3).
@@ -485,7 +485,7 @@ unmerged Phase N branches outstanding").
 
 - **Risk: Slang ABI churn breaks reflection across version bumps.**
   Mitigation: `cmake/SlangVersion.cmake` already pins
-  `HLSL_CLIPPY_SLANG_VERSION` (currently `2026.7.1`) and the per-user
+  `SHADER_CLIPPY_SLANG_VERSION` (currently `2026.7.1`) and the per-user
   prebuilt cache is keyed by that string, so a submodule SHA bump
   invalidates stale cache entries automatically. CI runs against the
   pinned version. Bump the pin deliberately in a focused PR with
@@ -530,7 +530,7 @@ unmerged Phase N branches outstanding").
   `slang_bridge.cpp` only, never in public headers):
   `IShaderReflection`, `EntryPointReflection`, `VariableLayoutReflection`,
   `TypeLayoutReflection`, `ResourceShape`, `BindingType`. Pinned to
-  the `HLSL_CLIPPY_SLANG_VERSION` API surface per ADR 0001.
+  the `SHADER_CLIPPY_SLANG_VERSION` API surface per ADR 0001.
 - **CLAUDE.md "Known issues" interaction**: the
   `cbuffer X : register(b0)` tree-sitter grammar gap means the AST
   cannot tell us the cbuffer's register binding. Fallback noted in

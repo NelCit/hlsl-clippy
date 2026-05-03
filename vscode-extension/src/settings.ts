@@ -1,7 +1,7 @@
 // Copyright 2026 NelCit
 // SPDX-License-Identifier: Apache-2.0
 //
-// Strongly-typed accessor over `vscode.workspace.getConfiguration("hlslClippy")`.
+// Strongly-typed accessor over `vscode.workspace.getConfiguration("shaderClippy")`.
 // Bridges VS Code settings to the LSP `initializationOptions` payload that
 // `lsp/src/server/handlers.cpp` consumes (per ADR 0014 §6).
 
@@ -22,7 +22,7 @@ export interface ClippySettings {
     readonly trace: TraceLevel;
 }
 
-const k_section = "hlslClippy";
+const k_section = "shaderClippy";
 
 export function readSettings(): ClippySettings {
     const cfg = vscode.workspace.getConfiguration(k_section);

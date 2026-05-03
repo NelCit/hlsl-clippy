@@ -11,7 +11,7 @@
 //   * Compile + reflection failures surface as `Diagnostic` with
 //     `code = "clippy::reflection"` and `severity = Severity::Error`.
 //   * No Slang type ever escapes this TU. Everything the caller sees is a
-//     value type defined in `hlsl_clippy/reflection.hpp`.
+//     value type defined in `shader_clippy/reflection.hpp`.
 
 #include "reflection/slang_bridge.hpp"
 
@@ -30,11 +30,11 @@
 #include <slang-com-ptr.h>
 #include <slang.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::reflection {
+namespace shader_clippy::reflection {
 
 namespace {
 
@@ -729,7 +729,7 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManag
 
     const std::string contents{file->contents()};
     const std::string base_module_name = file->path().stem().string().empty()
-                                             ? std::string{"hlsl_clippy_module"}
+                                             ? std::string{"shader_clippy_module"}
                                              : file->path().stem().string();
     const std::string module_name = base_module_name + call_suffix;
 
@@ -874,4 +874,4 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManag
     return info;
 }
 
-}  // namespace hlsl_clippy::reflection
+}  // namespace shader_clippy::reflection

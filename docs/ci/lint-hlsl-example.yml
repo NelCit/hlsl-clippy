@@ -1,9 +1,9 @@
-# Example: run hlsl-clippy as a CI gate on a GitHub Actions workflow.
+# Example: run shader-clippy as a CI gate on a GitHub Actions workflow.
 #
 # Drop this file at `.github/workflows/lint-hlsl.yml` in your shader repo,
 # adjust the path glob and target SM profile to taste, and the workflow
 # will:
-#   * download the latest hlsl-clippy release for the runner's OS;
+#   * download the latest shader-clippy release for the runner's OS;
 #   * run it across every HLSL file matching the glob;
 #   * surface diagnostics inline on the PR via the GitHub Annotation
 #     format (the file/line annotations rendered by the GitHub UI), so
@@ -26,12 +26,12 @@ on:
     paths:
       - "**/*.hlsl"
       - "**/*.hlsli"
-      - "**/.hlsl-clippy.toml"
+      - "**/.shader-clippy.toml"
   pull_request:
     paths:
       - "**/*.hlsl"
       - "**/*.hlsli"
-      - "**/.hlsl-clippy.toml"
+      - "**/.shader-clippy.toml"
 
 permissions:
   contents: read
@@ -39,7 +39,7 @@ permissions:
 
 jobs:
   lint:
-    name: hlsl-clippy
+    name: shader-clippy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -47,18 +47,18 @@ jobs:
 
       # Pin to a release tag for reproducibility. Bump when you want a
       # newer rule pack. The release URL below resolves to the latest
-      # Linux x86_64 archive at <hlsl-clippy.tag>.
-      - name: Download hlsl-clippy
+      # Linux x86_64 archive at <shader-clippy.tag>.
+      - name: Download shader-clippy
         env:
-          HLSL_CLIPPY_TAG: v0.5.0
+          SHADER_CLIPPY_TAG: v0.5.0
         run: |
           set -euo pipefail
-          asset="hlsl-clippy-${HLSL_CLIPPY_TAG#v}-linux-x86_64.tar.gz"
-          curl -sSL -o /tmp/hlsl-clippy.tar.gz \
-            "https://github.com/NelCit/hlsl-clippy/releases/download/${HLSL_CLIPPY_TAG}/${asset}"
-          mkdir -p /tmp/hlsl-clippy
-          tar -xzf /tmp/hlsl-clippy.tar.gz -C /tmp/hlsl-clippy --strip-components=1
-          /tmp/hlsl-clippy/hlsl-clippy --version
+          asset="shader-clippy-${SHADER_CLIPPY_TAG#v}-linux-x86_64.tar.gz"
+          curl -sSL -o /tmp/shader-clippy.tar.gz \
+            "https://github.com/NelCit/shader-clippy/releases/download/${SHADER_CLIPPY_TAG}/${asset}"
+          mkdir -p /tmp/shader-clippy
+          tar -xzf /tmp/shader-clippy.tar.gz -C /tmp/shader-clippy --strip-components=1
+          /tmp/shader-clippy/shader-clippy --version
 
       - name: Lint shaders
         # `--format=github-annotations` would be auto-selected on Actions,
@@ -69,7 +69,7 @@ jobs:
           shopt -s globstar nullglob
           fail=0
           for shader in shaders/**/*.hlsl; do
-            /tmp/hlsl-clippy/hlsl-clippy lint "$shader" \
+            /tmp/shader-clippy/shader-clippy lint "$shader" \
               --format=github-annotations \
               || fail=$?
           done

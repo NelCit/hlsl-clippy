@@ -81,6 +81,6 @@ cache-line-target = 64
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/structured-buffer-stride-not-cache-aligned.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/structured-buffer-stride-not-cache-aligned.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

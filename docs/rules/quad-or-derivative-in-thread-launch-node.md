@@ -88,6 +88,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/quad-or-derivative-in-thread-launch-node.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/quad-or-derivative-in-thread-launch-node.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

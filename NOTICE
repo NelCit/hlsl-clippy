@@ -1,4 +1,4 @@
-hlsl-clippy
+shader-clippy
 Copyright 2026 NelCit and contributors
 
 This product includes software developed by Carnegie Mellon University,
@@ -18,7 +18,7 @@ This product includes toml++ developed by Mark Gillard (MIT):
   https://github.com/marzer/tomlplusplus
 
 This product includes nlohmann/json developed by Niels Lohmann and contributors
-(MIT, used by hlsl-clippy-lsp for JSON-RPC framing):
+(MIT, used by shader-clippy-lsp for JSON-RPC framing):
   https://github.com/nlohmann/json
 
 The vscode-extension/ subtree includes vscode-languageclient developed by

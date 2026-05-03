@@ -65,7 +65,7 @@ none
 
 ## Fix availability
 
-**suggestion** — Resolving the straddle requires inserting explicit padding or reordering members, both of which may break CPU-side layout assumptions. `hlsl-clippy fix` generates a candidate layout with explicit `packoffset` annotations but does not apply it automatically.
+**suggestion** — Resolving the straddle requires inserting explicit padding or reordering members, both of which may break CPU-side layout assumptions. `shader-clippy fix` generates a candidate layout with explicit `packoffset` annotations but does not apply it automatically.
 
 ## See also
 
@@ -77,6 +77,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/bool-straddles-16b.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/bool-straddles-16b.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

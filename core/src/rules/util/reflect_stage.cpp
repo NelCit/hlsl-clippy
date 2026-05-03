@@ -21,12 +21,12 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/rule.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/rule.hpp"
 
 #include "parser_internal.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 namespace {
 
@@ -317,4 +317,4 @@ std::optional<std::pair<std::uint32_t, std::uint32_t>> wave_size_for_entry_point
     return scan_wavesize(prefix);
 }
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

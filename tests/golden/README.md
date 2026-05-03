@@ -68,7 +68,7 @@ default `ensure_ascii = false`. The C++ test driver and the
    pwsh tools/update-goldens.ps1            # Windows
    bash tools/update-goldens.sh             # Linux / macOS
    ```
-   or, after building, set `HLSL_CLIPPY_GOLDEN_UPDATE=1` and re-run the
+   or, after building, set `SHADER_CLIPPY_GOLDEN_UPDATE=1` and re-run the
    `[golden]` tests directly via ctest -- the C++ driver supports both
    read-and-compare and write modes.
 4. Inspect `snapshots/<basename>.json`; sanity-check the line/col numbers
@@ -83,7 +83,7 @@ default `ensure_ascii = false`. The C++ test driver and the
 If you changed a rule's behaviour or message and the snapshot test now fails
 in CI:
 
-1. Build `hlsl-clippy` (the CLI target is what update-goldens uses).
+1. Build `shader-clippy` (the CLI target is what update-goldens uses).
 2. Run the regenerator:
    ```sh
    pwsh tools/update-goldens.ps1
@@ -126,7 +126,7 @@ the post-processor by hand:
 
 ```sh
 python tests/golden/normalize.py \
-    --cli build/cli/hlsl-clippy.exe \
+    --cli build/cli/shader-clippy.exe \
     --fixtures-dir tests/golden/fixtures \
     --snapshots-dir tests/golden/snapshots
 ```

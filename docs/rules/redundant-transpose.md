@@ -51,7 +51,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — The fix is a pure textual substitution with no observable semantic change. `transpose` is an involution: `transpose(transpose(M)) == M` exactly for all finite matrix entries. `hlsl-clippy fix` applies it automatically.
+**machine-applicable** — The fix is a pure textual substitution with no observable semantic change. `transpose` is an involution: `transpose(transpose(M)) == M` exactly for all finite matrix entries. `shader-clippy fix` applies it automatically.
 
 ## See also
 
@@ -62,6 +62,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/redundant-transpose.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/redundant-transpose.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

@@ -29,16 +29,16 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
 #include "rules/util/reflect_stage.hpp"
 
 #include "parser_internal.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::node_kind;
@@ -192,4 +192,4 @@ std::unique_ptr<Rule> make_compute_dispatch_grid_shape_vs_quad() {
     return std::make_unique<ComputeDispatchGridShapeVsQuad>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

@@ -17,7 +17,7 @@
 //   and emit a diagnostic when the conflict or the over-threshold N is observed.
 //
 // The threshold is hard-coded at 32 for Phase 2; Phase 3+ exposes it via the
-// `.hlsl-clippy.toml` config surface.
+// `.shader-clippy.toml` config surface.
 //
 // Rationale for textual attribute scan: tree-sitter-hlsl v0.2.0 has known
 // gaps around the `[attr]` bracket syntax (see external/treesitter-version.md);
@@ -32,15 +32,15 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::node_kind;
@@ -271,4 +271,4 @@ std::unique_ptr<Rule> make_loop_attribute_conflict() {
     return std::make_unique<LoopAttributeConflict>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

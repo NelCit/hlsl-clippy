@@ -84,7 +84,7 @@ none — The rule fires as an `info`-level suggestion; it never triggers
 automatically. Suppression:
 
 ```hlsl
-// hlsl-clippy: allow(min16float-opportunity)
+// shader-clippy: allow(min16float-opportunity)
 float4 albedo = AlbedoTex.Sample(SS, uv);
 ```
 
@@ -106,7 +106,7 @@ human-confirmation prompt when run with `--fix`.
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/min16float-opportunity.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/min16float-opportunity.md)
 
 ---
 

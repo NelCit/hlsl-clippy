@@ -91,6 +91,6 @@ float4 ps_box_blur_3_unrolled(float2 uv : TEXCOORD0, float4 pos : SV_Position) :
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/small-loop-no-unroll.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/small-loop-no-unroll.md)
 
 <!-- © 2026 NelCit, CC-BY-4.0. Code snippets are Apache-2.0. -->

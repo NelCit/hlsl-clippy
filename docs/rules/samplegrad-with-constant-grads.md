@@ -22,7 +22,7 @@ Calls to `SampleGrad(sampler, uv, ddx, ddy)` where both the `ddx` and `ddy` argu
 
 When both gradients are zero, `length(float2(0,0))` is zero, and `log2(0)` is negative infinity. The hardware clamps this to the minimum LOD, which is mip 0. The result is exactly identical to calling `SampleLevel(sampler, uv, 0)`. The difference is performance: on all current GPU families (AMD RDNA 2/3, NVIDIA Turing/Ada, Intel Xe-HPG), `SampleGrad` requires the TMU to accept and process two additional gradient registers per instruction. In a tight sampling loop this adds two extra source register reads per instruction and may increase register pressure enough to lower occupancy by one wave per CU/SM. `SampleLevel` with an explicit zero encodes the same semantic intent with a scalar LOD argument, halving the per-instruction register cost for the LOD term.
 
-The replacement from `SampleGrad(s, uv, float2(0,0), float2(0,0))` to `SampleLevel(s, uv, 0)` is a pure semantic equivalence: the hardware behaviour at runtime is identical (mip 0 is fetched in both cases), the fix is mechanical and cannot produce a regression, and `hlsl-clippy fix` applies it automatically. Authors who intentionally want mip 0 from a non-pixel-shader context should prefer `SampleLevel` directly — it is both more efficient and more readable in conveying intent.
+The replacement from `SampleGrad(s, uv, float2(0,0), float2(0,0))` to `SampleLevel(s, uv, 0)` is a pure semantic equivalence: the hardware behaviour at runtime is identical (mip 0 is fetched in both cases), the fix is mechanical and cannot produce a regression, and `shader-clippy fix` applies it automatically. Authors who intentionally want mip 0 from a non-pixel-shader context should prefer `SampleLevel` directly — it is both more efficient and more readable in conveying intent.
 
 ## Examples
 
@@ -63,7 +63,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Replacing `SampleGrad(s, uv, float2(0,0), float2(0,0))` with `SampleLevel(s, uv, 0)` is a pure textual substitution. The LOD selected by both calls is identical: mip 0. `hlsl-clippy fix` applies it without human confirmation.
+**machine-applicable** — Replacing `SampleGrad(s, uv, float2(0,0), float2(0,0))` with `SampleLevel(s, uv, 0)` is a pure textual substitution. The LOD selected by both calls is identical: mip 0. `shader-clippy fix` applies it without human confirmation.
 
 ## See also
 
@@ -73,6 +73,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/samplegrad-with-constant-grads.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/samplegrad-with-constant-grads.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

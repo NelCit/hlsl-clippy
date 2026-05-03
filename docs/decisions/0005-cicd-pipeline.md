@@ -81,7 +81,7 @@ Proposed shape (to land alongside the rename — this ADR doesn't itself edit `C
 
 - `/CMakeLists.txt` — `project()`, C++ settings, options, `add_subdirectory(third_party)`, `add_subdirectory(core)`, `add_subdirectory(cli)`, `add_subdirectory(tests)`. Defines `hlslc_warnings` INTERFACE library carrying `/W4 /WX /permissive-` via `target_compile_options(... $<COMPILE_LANG_AND_ID:CXX,MSVC>:...>)`. Also `hlslc_sanitizers` interface gated on `HLSLC_SANITIZE`.
 - `/core/CMakeLists.txt` — `add_library(hlslc_core STATIC ...)`, `target_include_directories PUBLIC include PRIVATE src`, `target_link_libraries hlslc_core PUBLIC slang tree-sitter PRIVATE hlslc_warnings`.
-- `/cli/CMakeLists.txt` — `add_executable(hlsl-clippy src/main.cpp)`, `target_link_libraries hlsl-clippy PRIVATE hlslc_core hlslc_warnings`.
+- `/cli/CMakeLists.txt` — `add_executable(shader-clippy src/main.cpp)`, `target_link_libraries shader-clippy PRIVATE hlslc_core hlslc_warnings`.
 
 **Rule: warning flags live on an INTERFACE lib that ONLY first-party targets link to. Vendored libs never see `/WX`.**
 
@@ -102,8 +102,8 @@ CPack is overkill for one binary per OS. Use:
 1. `actions/upload-artifact` on each matrix leg.
 2. Tag-triggered job downloads artifacts and runs `softprops/action-gh-release@v2`.
 
-- **Windows**: `hlsl-clippy.exe` + `slang.dll` if Slang is dynamic. `/DEBUG:NONE` on Release configs but emit a separate `.pdb` uploaded as a debug artifact.
-- **Linux**: `hlsl-clippy` static-linked against libstdc++ via `-static-libstdc++ -static-libgcc`; `strip --strip-unneeded` post-build. Don't statically link glibc — build on the oldest supported Ubuntu (24.04 baseline; revisit `manylinux_2_28` before v0.1).
+- **Windows**: `shader-clippy.exe` + `slang.dll` if Slang is dynamic. `/DEBUG:NONE` on Release configs but emit a separate `.pdb` uploaded as a debug artifact.
+- **Linux**: `shader-clippy` static-linked against libstdc++ via `-static-libstdc++ -static-libgcc`; `strip --strip-unneeded` post-build. Don't statically link glibc — build on the oldest supported Ubuntu (24.04 baseline; revisit `manylinux_2_28` before v0.1).
 - **Slang**: prefer static. Phase 0 may ship Slang as shared library next to binary; revisit static-link at Phase 6.
 
 ### Consequences

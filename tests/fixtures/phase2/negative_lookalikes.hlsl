@@ -1,5 +1,5 @@
 // Phase 2 — negative test cases. Patterns that LOOK like rule firings but must NOT fire.
-// Hand-written fixture for hlsl-clippy rule validation.
+// Hand-written fixture for shader-clippy rule validation.
 // Every entry here is annotated with SHOULD-NOT-HIT explaining why it is different.
 
 Texture2D    AlbedoTex  : register(t0);

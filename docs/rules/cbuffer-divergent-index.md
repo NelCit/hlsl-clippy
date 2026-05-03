@@ -66,7 +66,7 @@ none
 
 ## Fix availability
 
-**suggestion** — Moving indexed data from a `cbuffer` to a `StructuredBuffer` requires changes to both the HLSL resource declarations and the D3D12 root signature / pipeline state setup on the CPU side. `hlsl-clippy fix` generates a suggested `StructuredBuffer` declaration as a comment but does not restructure the cbuffer automatically.
+**suggestion** — Moving indexed data from a `cbuffer` to a `StructuredBuffer` requires changes to both the HLSL resource declarations and the D3D12 root signature / pipeline state setup on the CPU side. `shader-clippy fix` generates a suggested `StructuredBuffer` declaration as a comment but does not restructure the cbuffer automatically.
 
 ## See also
 
@@ -78,6 +78,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/cbuffer-divergent-index.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/cbuffer-divergent-index.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

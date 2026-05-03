@@ -20,19 +20,19 @@
 #include <catch2/catch_test_macros.hpp>
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/source.hpp"
 #include "rules/util/sm6_10.hpp"
 
 #include "parser_internal.hpp"
 
 namespace {
 
-using hlsl_clippy::AstTree;
-using hlsl_clippy::ReflectionInfo;
-using hlsl_clippy::SourceManager;
+using shader_clippy::AstTree;
+using shader_clippy::ReflectionInfo;
+using shader_clippy::SourceManager;
 
-namespace util = hlsl_clippy::rules::util;
+namespace util = shader_clippy::rules::util;
 
 [[nodiscard]] ReflectionInfo make_reflection_with_profile(std::string profile) {
     ReflectionInfo r;
@@ -43,11 +43,11 @@ namespace util = hlsl_clippy::rules::util;
 /// Parse synthetic HLSL and produce a `ParsedSource` whose tree pointer
 /// stays alive for the duration of the test (the caller owns the
 /// `ParsedSource` and constructs an `AstTree` value over it).
-[[nodiscard]] hlsl_clippy::parser::ParsedSource parse_source(
+[[nodiscard]] shader_clippy::parser::ParsedSource parse_source(
     SourceManager& sources, const std::string& hlsl, const std::string& name = "sm6_10_test.hlsl") {
     const auto src = sources.add_buffer(name, hlsl);
     REQUIRE(src.valid());
-    auto parsed_opt = hlsl_clippy::parser::parse(sources, src);
+    auto parsed_opt = shader_clippy::parser::parse(sources, src);
     REQUIRE(parsed_opt.has_value());
     return std::move(parsed_opt.value());
 }

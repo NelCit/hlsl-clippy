@@ -26,8 +26,8 @@
 # GitHub-auth scope from inside the implementation agent, so the maintainer
 # performs the fork later and points this submodule at the fork.
 
-set(HLSL_CLIPPY_TREE_SITTER_SLANG_SHA
+set(SHADER_CLIPPY_TREE_SITTER_SLANG_SHA
     "1dbcc4abc7b3cdd663eb03d93031167d6ed19f56"
     CACHE STRING
     "Pinned tree-sitter-slang grammar commit SHA (tree-sitter-grammars/tree-sitter-slang).")
-mark_as_advanced(HLSL_CLIPPY_TREE_SITTER_SLANG_SHA)
+mark_as_advanced(SHADER_CLIPPY_TREE_SITTER_SLANG_SHA)

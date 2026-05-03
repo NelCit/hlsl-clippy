@@ -1,4 +1,4 @@
-# HLSL Clippy VS Code extension — local development
+# Shader Clippy VS Code extension — local development
 
 Two ways to test the extension before tagging a release. Both produce
 real, end-to-end behaviour: the LSP server is spawned, diagnostics
@@ -22,7 +22,7 @@ instant. Best for iterating on the TypeScript side.
    - Loads the extension from `./out/extension.js` of the dev tree.
 3. In the child window, **open a `.hlsl` file** (this repo has plenty
    under `tests/fixtures/` and `tests/golden/fixtures/`).
-4. Look for the **`$(check) HLSL Clippy`** badge in the bottom-right
+4. Look for the **`$(check) Shader Clippy`** badge in the bottom-right
    status bar. Squiggles + Problems entries should appear within a
    second.
 5. Re-compile after a TypeScript edit: in the parent window, run
@@ -31,18 +31,18 @@ instant. Best for iterating on the TypeScript side.
    from the command palette.
 
 The Extension Development Host inherits the parent's environment, so
-the `hlsl-clippy-lsp` binary lookup walks the same chain as a real
+the `shader-clippy-lsp` binary lookup walks the same chain as a real
 install:
 
-1. `hlslClippy.serverPath` setting (point at `build/lsp/hlsl-clippy-lsp.exe`
+1. `shaderClippy.serverPath` setting (point at `build/lsp/shader-clippy-lsp.exe`
    for fastest iteration when you change the C++ side too).
 2. PATH lookup.
 3. Bundled binary at `vscode-extension/server/<platform>/`.
 4. Cached download.
 5. GitHub Releases download.
 
-Set `HLSL_CLIPPY_LSP_DEBUG=1` (already in `launch.json`) to make the
-LSP log to stderr; you'll see it under the **HLSL Clippy** Output
+Set `SHADER_CLIPPY_LSP_DEBUG=1` (already in `launch.json`) to make the
+LSP log to stderr; you'll see it under the **Shader Clippy** Output
 channel in the child window.
 
 ## B. Build the real .vsix and install it (highest fidelity)
@@ -66,8 +66,8 @@ bash tools/build-vsix-local.sh
 
 Both scripts:
 
-1. Build `hlsl_clippy_lsp` via cmake (uses the existing build tree).
-2. Stage `hlsl-clippy-lsp[.exe]` + every sibling Slang DLL / `.so` /
+1. Build `shader_clippy_lsp` via cmake (uses the existing build tree).
+2. Stage `shader-clippy-lsp[.exe]` + every sibling Slang DLL / `.so` /
    `.dylib` into `vscode-extension/server/<platform>/`.
 3. Run `npx tsc -p .` against `vscode-extension/` (catches strict-TS
    errors like `noUnusedParameters` BEFORE they break a release).
@@ -83,20 +83,20 @@ To uninstall the locally-built version and restore the Marketplace
 copy:
 
 ```
-code --uninstall-extension nelcit.hlsl-clippy
-code --install-extension nelcit.hlsl-clippy
+code --uninstall-extension nelcit.shader-clippy
+code --install-extension nelcit.shader-clippy
 ```
 
 ### Environment overrides
 
 | Variable | Effect |
 | --- | --- |
-| `HLSL_CLIPPY_SKIP_BUILD=1` | Reuse the existing `build/` tree (no `cmake --build` step). |
-| `HLSL_CLIPPY_SKIP_INSTALL=1` | Build the `.vsix` but don't install it (useful in CI dry-runs). |
+| `SHADER_CLIPPY_SKIP_BUILD=1` | Reuse the existing `build/` tree (no `cmake --build` step). |
+| `SHADER_CLIPPY_SKIP_INSTALL=1` | Build the `.vsix` but don't install it (useful in CI dry-runs). |
 
 ## C. LSP smoke test (cheapest)
 
-A pre-flight that proves the `hlsl-clippy-lsp.exe` binary actually
+A pre-flight that proves the `shader-clippy-lsp.exe` binary actually
 handshakes over JSON-RPC stdio and emits diagnostics. Catches both
 classes of LSP startup failure (missing Slang DLLs, CRLF mangling on
 Windows text-mode stdio). Takes ~3 seconds; runs without VS Code.
@@ -133,9 +133,9 @@ Then in the freshly-installed extension:
 2. Hover the squiggle. Confirm the message is readable + has a
    "Companion blog post" link in the hover content.
 3. Click the lightbulb (`Ctrl+.`). Confirm at least three actions:
-   the LSP-provided fix + `HLSL Clippy: suppress '<rule>' for this
-   line` + `HLSL Clippy: open '<rule>' docs`.
-4. Right-click in the editor. Confirm the six HLSL Clippy commands
+   the LSP-provided fix + `Shader Clippy: suppress '<rule>' for this
+   line` + `Shader Clippy: open '<rule>' docs`.
+4. Right-click in the editor. Confirm the six Shader Clippy commands
    appear inline (no submenu nesting).
 5. Click the status-bar badge. Confirm the quick-pick menu opens.
 

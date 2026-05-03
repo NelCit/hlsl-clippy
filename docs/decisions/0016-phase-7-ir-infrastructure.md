@@ -45,7 +45,7 @@ has not yet been designed**: a way to consume Slang's compiled IR
 output in the lint engine without violating the constraints already
 locked by ADRs 0001/0002/0004/0005/0012/0013:
 
-1. **Public headers under `core/include/hlsl_clippy/` MUST NOT leak
+1. **Public headers under `core/include/shader_clippy/` MUST NOT leak
    `<slang.h>`, `<dxil_*.h>`, or `<spirv-tools/*.h>`.** CI grep
    enforces the Slang case today; the IR engine adds DXIL/SPIR-V
    parser headers to that grep clause. Rules see opaque
@@ -65,7 +65,7 @@ locked by ADRs 0001/0002/0004/0005/0012/0013:
 4. **No new build-time mandatory dependency for AST-only users.**
    Phase 7 introduces a parser dependency (DXIL reader + spirv-tools
    per the chosen option below). It is link-time conditional under
-   a CMake option `HLSL_CLIPPY_ENABLE_IR=ON` (default `ON` for the
+   a CMake option `SHADER_CLIPPY_ENABLE_IR=ON` (default `ON` for the
    v0.7 release build, `OFF` for downstream consumers who only want
    the AST + reflection + CFG surface).
 
@@ -223,7 +223,7 @@ ray-tracing pack + SM 6.9 rule) run on DXIL only.
   first lint run per file is real.
 - Bad: doubles the parser dep surface (DXC + spirv-tools both
   required). Mitigated by gating each behind its own CMake option
-  (`HLSL_CLIPPY_ENABLE_DXIL=ON`, `HLSL_CLIPPY_ENABLE_SPIRV=OFF`),
+  (`SHADER_CLIPPY_ENABLE_DXIL=ON`, `SHADER_CLIPPY_ENABLE_SPIRV=OFF`),
   but the v0.7 default still pulls DXC.
 - Bad: too big for one ADR. Doubling the engine surface in the
   *introductory* IR phase is exactly the over-design ADR 0013
@@ -241,7 +241,7 @@ Vulkan side of the user base.
 follow-up ADR.** The proposed architecture, broken into the seven
 concrete API additions that constitute it.
 
-### 1. New public header `core/include/hlsl_clippy/ir.hpp` (opaque types only)
+### 1. New public header `core/include/shader_clippy/ir.hpp` (opaque types only)
 
 No `<slang.h>` include. No `<dxil_*.h>` include. No `<spirv-tools/*.h>`
 include. Pure value types. Sketch (illustrative; the implementation
@@ -249,7 +249,7 @@ PR designs the C++ class signatures in detail per the ADR's "What
 NOT to do" guard):
 
 ```cpp
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 enum class IrOpcode : std::uint16_t {
     Unknown,
@@ -311,7 +311,7 @@ struct IrInfo {
         IrInstructionId) const noexcept;
 };
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy
 ```
 
 The implementation PR (sub-phase 7a) designs the field surface in
@@ -320,7 +320,7 @@ spans, target-profile-keyed `IrInfo`, no DXIL/SPIR-V types in the
 public header. `LivenessInfo` and `RegisterPressureEstimate` are
 private utilities (per §6 below), not public types.
 
-### 2. Extend `Stage` enum in `core/include/hlsl_clippy/rule.hpp`
+### 2. Extend `Stage` enum in `core/include/shader_clippy/rule.hpp`
 
 ```cpp
 enum class Stage : std::uint8_t {
@@ -418,7 +418,7 @@ struct LintOptions {
     /// When false, the IR stage is skipped entirely even if IR-stage
     /// rules are enabled. Useful for CI runs that want to isolate
     /// Phase 7 cost, or for downstream consumers built with
-    /// HLSL_CLIPPY_ENABLE_IR=OFF where the engine simply isn't
+    /// SHADER_CLIPPY_ENABLE_IR=OFF where the engine simply isn't
     /// linked in.
     bool          enable_ir              = true;
 
@@ -471,22 +471,22 @@ never see DXIL types directly.
 
 ### 7. CMake gating + CI grep
 
-- New CMake option `HLSL_CLIPPY_ENABLE_IR` (default `ON` for the
+- New CMake option `SHADER_CLIPPY_ENABLE_IR` (default `ON` for the
   v0.7 release build). When `OFF`, `core/src/ir/` is excluded from
   the build, `Stage::Ir` still exists in the enum, but the
   orchestrator returns the warn-severity `clippy::ir` diagnostic
-  ("IR stage compiled out — rebuild with -DHLSL_CLIPPY_ENABLE_IR=ON
+  ("IR stage compiled out — rebuild with -DSHADER_CLIPPY_ENABLE_IR=ON
   to enable") for any source where an IR-stage rule is enabled.
   Downstream consumers who only want AST + reflection + CFG
   surface (the LSP server's hot path, e.g.) build with
-  `HLSL_CLIPPY_ENABLE_IR=OFF` and pay zero DXC dep cost.
+  `SHADER_CLIPPY_ENABLE_IR=OFF` and pay zero DXC dep cost.
 - New CI grep clause: `<dxil_*.h>`, `<DxilContainer.h>`, and any
   `dxc/` include must not appear under `core/include/` or
   `core/src/rules/`. The clause sits next to the existing
   `<slang.h>` clauses from ADRs 0001 + 0012.
 - DXC is integrated via the same 3-tier cache pattern ADR 0005
   uses for Slang: `cmake/UseDxc.cmake` looks for a per-user
-  prebuilt at `~/.cache/hlsl-clippy/dxc-<sha>/`, falls back to a
+  prebuilt at `~/.cache/shader-clippy/dxc-<sha>/`, falls back to a
   pinned submodule build with sccache, and pins the version via
   `cmake/DxcVersion.cmake`.
 
@@ -501,7 +501,7 @@ merge-time drift. Sub-phase 7c is the parallel-pack dispatch.
 
 Single PR, single agent. Lands:
 
-- `core/include/hlsl_clippy/ir.hpp` (opaque types per §1).
+- `core/include/shader_clippy/ir.hpp` (opaque types per §1).
 - New private module `core/src/ir/` (engine, dxil_bridge,
   debug_info per §4). `dxil_bridge.cpp` is the only TU that
   includes DXC headers.
@@ -515,7 +515,7 @@ Single PR, single agent. Lands:
 - Wire `IrEngine` into the orchestrator: stage-dispatch logic
   inspects rules' `stage()`, lazily constructs the engine, dispatches
   `on_ir` against the cached `IrInfo`.
-- New CMake option `HLSL_CLIPPY_ENABLE_IR` (§7). New CI grep clause
+- New CMake option `SHADER_CLIPPY_ENABLE_IR` (§7). New CI grep clause
   for DXC headers (§7).
 - `cmake/UseDxc.cmake` + `cmake/DxcVersion.cmake` per §7.
 - New unit-test TU `tests/unit/test_ir.cpp` with smoke tests:
@@ -525,7 +525,7 @@ Single PR, single agent. Lands:
     expected source byte-span.
   - IR-engine returns warn-severity `clippy::ir` diagnostic when
     `getEntryPointCode` fails (synthetic broken shader).
-  - `HLSL_CLIPPY_ENABLE_IR=OFF` build excludes `core/src/ir/`
+  - `SHADER_CLIPPY_ENABLE_IR=OFF` build excludes `core/src/ir/`
     from the link; orchestrator returns the documented
     "compiled out" diagnostic.
 
@@ -598,7 +598,7 @@ severity with documented heuristics.
   compatible per ADR 0006). The 3-tier cache pattern from ADR 0005
   absorbs the build-time cost; first-time builds without the
   cache pay a real DXC-from-source cost on the very first IR-engine
-  build. Mitigated by `HLSL_CLIPPY_ENABLE_IR=OFF` for AST-only
+  build. Mitigated by `SHADER_CLIPPY_ENABLE_IR=OFF` for AST-only
   downstream consumers.
 - Public API gains exactly one new header (`ir.hpp`), one new
   `Stage` value, one new `Rule` virtual, and two new `LintOptions`
@@ -628,7 +628,7 @@ severity with documented heuristics.
 
 - **Risk: DXC ABI churn breaks the DXIL parser across version
   bumps.** Mitigation: `cmake/DxcVersion.cmake` pins
-  `HLSL_CLIPPY_DXC_VERSION` and the per-user prebuilt cache is
+  `SHADER_CLIPPY_DXC_VERSION` and the per-user prebuilt cache is
   keyed by that string, so a submodule SHA bump invalidates stale
   cache entries automatically. CI runs against the pinned version.
   Bump deliberately in a focused PR with `dxil_bridge.cpp` updated
@@ -670,7 +670,7 @@ severity with documented heuristics.
   version. Mitigation: Pack C ships the four DXR rules first; the
   SM 6.9 rule lands in a follow-up patch tied to the Slang version
   pin that emits SM 6.9 DXIL. ADR 0010 already gates SM 6.9 rules
-  behind `HLSL_CLIPPY_SLANG_VERSION` ≥ the SM 6.9 release.
+  behind `SHADER_CLIPPY_SLANG_VERSION` ≥ the SM 6.9 release.
 
 ## More Information
 
@@ -703,7 +703,7 @@ severity with documented heuristics.
   public headers): `hlsl::DxilContainerHeader`,
   `hlsl::DxilModule`, `llvm::Function`, `llvm::BasicBlock`,
   `llvm::Instruction`, `llvm::DebugLoc`. Pinned to the
-  `HLSL_CLIPPY_DXC_VERSION` API surface.
+  `SHADER_CLIPPY_DXC_VERSION` API surface.
 - **Algorithmic references** (used in `core/src/rules/util/` only,
   never leaked through public headers):
   - Standard backward-liveness fixed-point iteration over the

@@ -7,7 +7,7 @@
 // Stage: Ast.
 //
 // CONFIG-GATED: preview API, per ADR 0010 gated behind
-// `[experimental] work-graph-mesh-nodes = true` in `.hlsl-clippy.toml`.
+// `[experimental] work-graph-mesh-nodes = true` in `.shader-clippy.toml`.
 // `Config` does not yet surface the key, so this rule returns early
 // unconditionally until the gate is wired through.
 
@@ -19,15 +19,15 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::node_kind;
@@ -111,4 +111,4 @@ std::unique_ptr<Rule> make_mesh_node_missing_output_topology() {
     return std::make_unique<MeshNodeMissingOutputTopology>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

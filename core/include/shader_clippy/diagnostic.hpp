@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 /// Severity classes follow the rustc/clippy convention. `Note` is informational
 /// only; `Warning` is the typical rule firing; `Error` is reserved for
@@ -49,4 +49,4 @@ struct Diagnostic {
     std::vector<Fix> fixes;
 };
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

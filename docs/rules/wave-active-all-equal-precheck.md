@@ -74,6 +74,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/wave-active-all-equal-precheck.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/wave-active-all-equal-precheck.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

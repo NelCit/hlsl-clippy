@@ -20,11 +20,11 @@
 #include <tree_sitter/api.h>
 
 #include "control_flow/cfg_storage.hpp"
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::control_flow {
+namespace shader_clippy::control_flow {
 
 namespace {
 
@@ -398,4 +398,4 @@ void analyse_uniformity(::TSNode root,
     a.scan_branches(root);
 }
 
-}  // namespace hlsl_clippy::control_flow
+}  // namespace shader_clippy::control_flow

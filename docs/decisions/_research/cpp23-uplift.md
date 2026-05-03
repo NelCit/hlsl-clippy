@@ -1,10 +1,10 @@
 <!--
 date: 2026-04-30
-prompt-summary: review the C++ standard floor for hlsl-clippy and propose a C++23 uplift with selective C++26 adoption — Core Guidelines tightening, GSL adoption policy, project ban list, and concrete CMakeLists.txt + .clang-tidy diff hunks.
+prompt-summary: review the C++ standard floor for shader-clippy and propose a C++23 uplift with selective C++26 adoption — Core Guidelines tightening, GSL adoption policy, project ban list, and concrete CMakeLists.txt + .clang-tidy diff hunks.
 preserved-verbatim: yes — see ../0004-cpp23-baseline.md for the distilled decision.
 -->
 
-# hlsl-clippy: C++23 Upgrade & Core Guidelines Tightening Plan
+# shader-clippy: C++23 Upgrade & Core Guidelines Tightening Plan
 
 ## 1. Standard version baseline
 
@@ -58,7 +58,7 @@ Project ban list: no raw owning pointers, no C-style casts, no goto, no implicit
 
 ```diff
  cmake_minimum_required(VERSION 3.20)
- project(hlsl-clippy LANGUAGES CXX VERSION 0.0.0)
+ project(shader-clippy LANGUAGES CXX VERSION 0.0.0)
 
 -set(CMAKE_CXX_STANDARD 20)
 -set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -74,8 +74,8 @@ Project ban list: no raw owning pointers, no C-style casts, no goto, no implicit
      )
  endif()
 
- add_executable(hlsl-clippy src/main.cpp)
-+target_compile_features(hlsl-clippy PRIVATE cxx_std_23)
+ add_executable(shader-clippy src/main.cpp)
++target_compile_features(shader-clippy PRIVATE cxx_std_23)
 +
 +if(MSVC AND MSVC_VERSION LESS 1940)
 +    message(FATAL_ERROR "MSVC 19.40+ required for C++23 std::expected/std::print")

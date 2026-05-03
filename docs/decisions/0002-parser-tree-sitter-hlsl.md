@@ -9,13 +9,13 @@ tags: [parser, architecture, phase-0, phase-1]
 
 ## Context and Problem Statement
 
-`hlsl-clippy` rules need an AST: spans for diagnostics, syntactic match patterns, control-flow recovery on partial input. Slang's public API exposes compilation + reflection but **not** AST nodes — its AST is internal C++. So a separate parser is mandatory regardless of compiler choice.
+`shader-clippy` rules need an AST: spans for diagnostics, syntactic match patterns, control-flow recovery on partial input. Slang's public API exposes compilation + reflection but **not** AST nodes — its AST is internal C++. So a separate parser is mandatory regardless of compiler choice.
 
 The parser must:
 
 1. Produce stable byte-offset spans we can hand to a diagnostic renderer and to a source rewriter.
 2. Recover gracefully from partial / malformed input (the LSP needs this; the CLI on a half-saved buffer needs this).
-3. Track comment trivia so inline suppressions (`// hlsl-clippy: allow(rule-name)`) work without retroactive lookups.
+3. Track comment trivia so inline suppressions (`// shader-clippy: allow(rule-name)`) work without retroactive lookups.
 4. Be cheap enough to vendor — we will patch it.
 5. Keep public headers free of backend-specific node types (see ADR 0003).
 

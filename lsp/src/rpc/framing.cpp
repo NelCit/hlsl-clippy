@@ -16,7 +16,7 @@
 #include <string_view>
 #include <system_error>
 
-namespace hlsl_clippy::lsp::rpc {
+namespace shader_clippy::lsp::rpc {
 
 namespace {
 
@@ -167,4 +167,4 @@ std::string frame_message(std::string_view body) {
     return out;
 }
 
-}  // namespace hlsl_clippy::lsp::rpc
+}  // namespace shader_clippy::lsp::rpc

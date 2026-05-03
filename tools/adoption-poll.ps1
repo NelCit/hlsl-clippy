@@ -4,10 +4,10 @@
 # track for the v1.1 readiness review (per ADR 0019 §"v1.x patch
 # trajectory"):
 #
-#   #7 — VS Code Marketplace install count for `nelcit.hlsl-clippy`
+#   #7 — VS Code Marketplace install count for `nelcit.shader-clippy`
 #        (target: >= 5,000).
 #   #8 — Downstream integrations: number of public GitHub repos that
-#        reference hlsl-clippy from a workflow file (target: >= 5).
+#        reference shader-clippy from a workflow file (target: >= 5).
 #
 # This script does NOT validate either threshold — the maintainer reviews
 # the trend periodically (suggested cadence: monthly). Each invocation
@@ -56,7 +56,7 @@ if (-not $vsceCmd) {
     try {
         # `vsce show <publisher>.<name> --json` returns a JSON object with
         # `statistics`: an array of { statisticName; value } pairs.
-        $raw = & vsce show 'nelcit.hlsl-clippy' --json 2>$null
+        $raw = & vsce show 'nelcit.shader-clippy' --json 2>$null
         if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($raw)) {
             Write-Warning "adoption-poll: 'vsce show' returned exit $LASTEXITCODE; using sentinels."
         } else {
@@ -87,7 +87,7 @@ if (-not $vsceCmd) {
 # --- 2. Downstream integrations -------------------------------------------
 #
 # We use GitHub code search to count public repos whose workflow files
-# (or `.hlsl-clippy.toml` configs) mention `hlsl-clippy`. Code search
+# (or `.shader-clippy.toml` configs) mention `shader-clippy`. Code search
 # excludes forks by default. The `--limit 100` cap is a backstop in case
 # the result set explodes; we count via `--json repository` so duplicates
 # from multiple matches in the same repo collapse on dedup.
@@ -100,10 +100,10 @@ if (-not $ghCmd) {
     Write-Warning "adoption-poll: 'gh' not on PATH. Install GitHub CLI + 'gh auth login'."
 } else {
     try {
-        # We deliberately exclude this repo (NelCit/hlsl-clippy) from the
+        # We deliberately exclude this repo (NelCit/shader-clippy) from the
         # downstream count. `gh search code` does not support `-repo:`
         # exclusion directly; we filter client-side after dedup.
-        $jsonRaw = & gh search code 'hlsl-clippy filename:.github/workflows' `
+        $jsonRaw = & gh search code 'shader-clippy filename:.github/workflows' `
             --json repository --limit 100 2>$null
         if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($jsonRaw)) {
             Write-Warning "adoption-poll: 'gh search code' returned exit $LASTEXITCODE."
@@ -120,7 +120,7 @@ if (-not $ghCmd) {
                     $name = $repo.fullName
                 }
                 if (-not $name) { continue }
-                if ($name -ieq 'NelCit/hlsl-clippy') { continue }
+                if ($name -ieq 'NelCit/shader-clippy') { continue }
                 [void]$repoSet.Add($name)
             }
             $downstreamRepos = @($repoSet)
@@ -155,7 +155,7 @@ if ($DryRun) {
 
 if (-not (Test-Path -LiteralPath $OutputMd)) {
     $header = @'
-# Adoption metrics — `nelcit.hlsl-clippy`
+# Adoption metrics — `nelcit.shader-clippy`
 
 External adoption signals tracked for ADR 0018 §5 criteria #7
 (Marketplace install count >= 5,000) and #8 (>= 5 downstream

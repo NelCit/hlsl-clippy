@@ -18,9 +18,9 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
+#include "shader_clippy/diagnostic.hpp"
 
-namespace hlsl_clippy::query {
+namespace shader_clippy::query {
 
 /// Tiny C++20-compatible stand-in for `std::expected<T, E>`. The error type
 /// is fixed to `CompileError` because that's the only place we use it; if we
@@ -163,4 +163,4 @@ private:
     std::unique_ptr<::TSQueryCursor, CursorDeleter> cursor_;
 };
 
-}  // namespace hlsl_clippy::query
+}  // namespace shader_clippy::query

@@ -1,17 +1,17 @@
 // Copyright 2026 NelCit
 // SPDX-License-Identifier: Apache-2.0
 //
-// Download + cache the `hlsl-clippy-lsp` binary from a versioned GitHub
+// Download + cache the `shader-clippy-lsp` binary from a versioned GitHub
 // Release. Per ADR 0014 §6:
 //
 //   * Asset URL pattern (5c scaffolding — release artifacts land in 5e):
-//       https://github.com/NelCit/hlsl-clippy/releases/download/v<version>/
-//         hlsl-clippy-lsp-<platform>.<ext>
+//       https://github.com/NelCit/shader-clippy/releases/download/v<version>/
+//         shader-clippy-lsp-<platform>.<ext>
 //     where:
 //       <ext>      = "zip" on Windows, "tar.gz" on Linux/macOS
 //       <platform> ∈ { windows-x86_64, linux-x86_64, macos-aarch64, macos-x86_64 }
 //
-//   * Cache directory: `<global_storage>/hlsl-clippy-lsp-<version>/`.
+//   * Cache directory: `<global_storage>/shader-clippy-lsp-<version>/`.
 //
 //   * Optional SHA-256 verification: if a `<asset>.sha256` file is published
 //     alongside the binary, fetch + verify it before extracting.
@@ -31,8 +31,8 @@ import { createWriteStream, createReadStream } from "fs";
 import * as vscode from "vscode";
 
 const k_repoOwner = "NelCit";
-const k_repoName = "hlsl-clippy";
-const k_binaryBaseName = "hlsl-clippy-lsp";
+const k_repoName = "shader-clippy";
+const k_binaryBaseName = "shader-clippy-lsp";
 
 /**
  * Maps Node's `process.platform` × `process.arch` to the platform string used
@@ -67,7 +67,7 @@ function binaryName(): string {
 /**
  * Build the canonical release asset URL.
  *   https://github.com/<owner>/<repo>/releases/download/v<version>/
- *     hlsl-clippy-lsp-<platform>.<ext>
+ *     shader-clippy-lsp-<platform>.<ext>
  */
 export function buildAssetUrl(version: string, platform: string): string {
     const ext = archiveExtension();
@@ -279,7 +279,7 @@ export async function downloadServerBinary(
     if (platform === undefined) {
         throw new Error(
             `Unsupported platform/arch: ${process.platform}/${process.arch}. ` +
-                `Set hlslClippy.serverPath manually.`,
+                `Set shaderClippy.serverPath manually.`,
         );
     }
 
@@ -294,12 +294,12 @@ export async function downloadServerBinary(
     const tmpName = `download-${Date.now()}.${archiveExtension()}`;
     const tmpPath = path.join(os.tmpdir(), tmpName);
 
-    output?.appendLine(`[hlsl-clippy] Downloading ${url}`);
+    output?.appendLine(`[shader-clippy] Downloading ${url}`);
 
     return await vscode.window.withProgress(
         {
             location: vscode.ProgressLocation.Notification,
-            title: `Downloading hlsl-clippy-lsp v${version}`,
+            title: `Downloading shader-clippy-lsp v${version}`,
             cancellable: false,
         },
         async (progress) => {
@@ -336,10 +336,10 @@ export async function downloadServerBinary(
                             `Checksum mismatch: expected ${expected}, got ${actual}`,
                         );
                     }
-                    output?.appendLine(`[hlsl-clippy] Checksum verified.`);
+                    output?.appendLine(`[shader-clippy] Checksum verified.`);
                 } else {
                     output?.appendLine(
-                        `[hlsl-clippy] No checksum file (HTTP ${checksumResp.status}); skipping verification.`,
+                        `[shader-clippy] No checksum file (HTTP ${checksumResp.status}); skipping verification.`,
                     );
                 }
             } catch (err) {
@@ -347,7 +347,7 @@ export async function downloadServerBinary(
                     throw err;
                 }
                 output?.appendLine(
-                    `[hlsl-clippy] Checksum fetch failed: ${
+                    `[shader-clippy] Checksum fetch failed: ${
                         err instanceof Error ? err.message : String(err)
                     } (continuing without verification).`,
                 );
@@ -358,7 +358,7 @@ export async function downloadServerBinary(
             await fs.unlink(tmpPath).catch(() => {
                 /* best-effort cleanup */
             });
-            output?.appendLine(`[hlsl-clippy] Server binary extracted to ${extracted}`);
+            output?.appendLine(`[shader-clippy] Server binary extracted to ${extracted}`);
             return extracted;
         },
     );

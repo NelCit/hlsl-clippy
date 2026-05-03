@@ -59,7 +59,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Replacing `1.0 / sqrt(x)` with `rsqrt(x)` is a pure textual substitution. The result is mathematically identical for `x > 0`. For `x == 0` both forms produce infinity or undefined behaviour; the `rsqrt` form matches existing GPU hardware semantics. `hlsl-clippy fix` applies it automatically.
+**machine-applicable** — Replacing `1.0 / sqrt(x)` with `rsqrt(x)` is a pure textual substitution. The result is mathematically identical for `x > 0`. For `x == 0` both forms produce infinity or undefined behaviour; the `rsqrt` form matches existing GPU hardware semantics. `shader-clippy fix` applies it automatically.
 
 ## See also
 
@@ -69,6 +69,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/inv-sqrt-to-rsqrt.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/inv-sqrt-to-rsqrt.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

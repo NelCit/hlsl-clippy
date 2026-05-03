@@ -5,25 +5,25 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
-#include "hlsl_clippy/suppress.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
+#include "shader_clippy/suppress.hpp"
 
 namespace {
 
-using hlsl_clippy::Diagnostic;
-using hlsl_clippy::lint;
-using hlsl_clippy::make_default_rules;
-using hlsl_clippy::SourceManager;
-using hlsl_clippy::SuppressionSet;
+using shader_clippy::Diagnostic;
+using shader_clippy::lint;
+using shader_clippy::make_default_rules;
+using shader_clippy::SourceManager;
+using shader_clippy::SuppressionSet;
 
 }  // namespace
 
 TEST_CASE("scan parses a single line-scoped allow marker", "[suppress][scan]") {
     const std::string src =
-        "// hlsl-clippy: allow(redundant-saturate)\n"
+        "// shader-clippy: allow(redundant-saturate)\n"
         "float3 f(float3 c) { return saturate(saturate(c)); }\n";
 
     const auto set = SuppressionSet::scan(src);
@@ -50,7 +50,7 @@ TEST_CASE("scan parses a single line-scoped allow marker", "[suppress][scan]") {
 
 TEST_CASE("scan parses block-scoped allow markers", "[suppress][scan][block]") {
     const std::string src =
-        "// hlsl-clippy: allow(redundant-saturate)\n"
+        "// shader-clippy: allow(redundant-saturate)\n"
         "{\n"
         "    saturate(saturate(c));\n"
         "    saturate(saturate(d));\n"
@@ -84,7 +84,7 @@ TEST_CASE("scan parses block-scoped allow markers", "[suppress][scan][block]") {
 
 TEST_CASE("scan parses comma-separated rule lists", "[suppress][scan]") {
     const std::string src =
-        "// hlsl-clippy: allow(rule-a, rule-b, rule-c)\n"
+        "// shader-clippy: allow(rule-a, rule-b, rule-c)\n"
         "float x = 1.0;\n";
 
     const auto set = SuppressionSet::scan(src);
@@ -96,7 +96,7 @@ TEST_CASE("scan parses comma-separated rule lists", "[suppress][scan]") {
 
 TEST_CASE("scan recognises the wildcard form", "[suppress][scan][wildcard]") {
     const std::string src =
-        "// hlsl-clippy: allow(*)\n"
+        "// shader-clippy: allow(*)\n"
         "saturate(saturate(c));\n";
 
     const auto set = SuppressionSet::scan(src);
@@ -116,7 +116,7 @@ TEST_CASE("scan skips suppression markers inside string literals", "[suppress][s
     // The scanner does NOT process // inside a string. We verify there's no
     // crash and no false annotation when a marker-shaped literal is embedded.
     const std::string src =
-        "const char* msg = \"// hlsl-clippy: allow(rule-a)\";\n"
+        "const char* msg = \"// shader-clippy: allow(rule-a)\";\n"
         "saturate(saturate(c));\n";
 
     const auto set = SuppressionSet::scan(src);
@@ -125,7 +125,7 @@ TEST_CASE("scan skips suppression markers inside string literals", "[suppress][s
 
 TEST_CASE("scan emits a diagnostic on malformed marker", "[suppress][scan][malformed]") {
     const std::string src =
-        "// hlsl-clippy: warn(rule-a)\n"
+        "// shader-clippy: warn(rule-a)\n"
         "saturate(c);\n";
 
     const auto set = SuppressionSet::scan(src);
@@ -137,7 +137,7 @@ TEST_CASE("end-to-end: allow(redundant-saturate) suppresses the diagnostic",
           "[suppress][integration]") {
     SourceManager sources;
     const std::string hlsl =
-        "// hlsl-clippy: allow(redundant-saturate)\n"
+        "// shader-clippy: allow(redundant-saturate)\n"
         "float3 f(float3 c) { return saturate(saturate(c)); }\n";
 
     const auto src = sources.add_buffer("synthetic.hlsl", hlsl);
@@ -156,7 +156,7 @@ TEST_CASE("end-to-end: allow(redundant-saturate) suppresses the diagnostic",
 TEST_CASE("end-to-end: file-scope allow(*) at top of file", "[suppress][integration][wildcard]") {
     SourceManager sources;
     const std::string hlsl =
-        "// hlsl-clippy: allow(*)\n"
+        "// shader-clippy: allow(*)\n"
         "float3 f(float3 c) {\n"
         "    return saturate(saturate(c));\n"
         "}\n";

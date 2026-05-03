@@ -5,7 +5,7 @@ outline: deep
 
 # Configuration
 
-`hlsl-clippy` reads `.hlsl-clippy.toml` from the directory of each
+`shader-clippy` reads `.shader-clippy.toml` from the directory of each
 linted file (or any ancestor directory up to the first `.git/`
 parent). When no config file is found, all rules run at their
 built-in default severity.
@@ -13,7 +13,7 @@ built-in default severity.
 The CLI also accepts an explicit path:
 
 ```sh
-hlsl-clippy lint --config path/to/.hlsl-clippy.toml shader.hlsl
+shader-clippy lint --config path/to/.shader-clippy.toml shader.hlsl
 ```
 
 ## `[rules]` — per-rule severity
@@ -58,7 +58,7 @@ v1.4+. **Reflection-stage rules are also quarantined for v1.3.0** because
 the Slang reflection bridge crashes on `.slang` ingestion under the
 v1.3-pinned Slang prebuilt — the quarantine lifts in v1.3.x once the
 bridge's call-suffixed virtual_path scheme is hardened. The full plan
-lives in [ADR 0020](https://github.com/NelCit/hlsl-clippy/blob/main/docs/decisions/0020-slang-language-compatibility.md).
+lives in [ADR 0020](https://github.com/NelCit/shader-clippy/blob/main/docs/decisions/0020-slang-language-compatibility.md).
 
 The CLI also accepts `--source-language=<auto|hlsl|slang>` per invocation;
 the flag overrides the TOML value when set.
@@ -74,7 +74,7 @@ To silence the per-source notice in CI gate-mode logs, suppress
 Or per-source:
 
 ```hlsl
-// hlsl-clippy: allow(clippy::language-skip-ast)
+// shader-clippy: allow(clippy::language-skip-ast)
 ```
 
 ## Severity levels
@@ -123,7 +123,7 @@ Overrides are applied in source order; later matches win.
 ## Walk-up resolution
 
 The CLI walks up the directory tree from each file's parent looking for
-`.hlsl-clippy.toml`. The walk stops at the first `.git/` ancestor. If
+`.shader-clippy.toml`. The walk stops at the first `.git/` ancestor. If
 no `.git/` is present (e.g. you extracted a tarball with no
 repository), the walk continues to the filesystem root — set
 `--config <path>` explicitly in that case to avoid surprises.
@@ -135,13 +135,13 @@ repository), the walk continues to the filesystem root — set
 Suppress a single rule on the same line:
 
 ```hlsl
-float k = pow(x, 2.0);  // hlsl-clippy: allow(pow-const-squared)
+float k = pow(x, 2.0);  // shader-clippy: allow(pow-const-squared)
 ```
 
 Or the next non-comment line:
 
 ```hlsl
-// hlsl-clippy: allow(pow-const-squared)
+// shader-clippy: allow(pow-const-squared)
 float k = pow(x, 2.0);
 ```
 
@@ -153,7 +153,7 @@ Place an `allow(...)` directive immediately before an opening brace
 to suppress the named rules for the entire `{...}` block:
 
 ```hlsl
-// hlsl-clippy: allow(redundant-saturate)
+// shader-clippy: allow(redundant-saturate)
 {
     float a = saturate(saturate(x));   // suppressed
     float b = saturate(y);             // suppressed
@@ -167,7 +167,7 @@ Place an `allow(...)` directive before any non-comment token at the
 top of the file:
 
 ```hlsl
-// hlsl-clippy: allow(*)
+// shader-clippy: allow(*)
 // Vendor file we do not control.
 ```
 

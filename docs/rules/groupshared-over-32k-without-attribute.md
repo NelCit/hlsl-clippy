@@ -53,7 +53,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — `hlsl-clippy fix` inserts
+**machine-applicable** — `shader-clippy fix` inserts
 `[GroupSharedLimit(<round-up-to-64KB>)]` before the entry-point
 declaration.
 

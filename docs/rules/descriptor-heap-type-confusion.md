@@ -73,6 +73,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/descriptor-heap-type-confusion.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/descriptor-heap-type-confusion.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

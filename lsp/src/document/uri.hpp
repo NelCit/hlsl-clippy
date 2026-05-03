@@ -15,7 +15,7 @@
 #include <string>
 #include <string_view>
 
-namespace hlsl_clippy::lsp::document {
+namespace shader_clippy::lsp::document {
 
 /// Parse a `file://` URI into a filesystem path. Returns `std::nullopt` for
 /// unsupported schemes or malformed encodings.
@@ -26,4 +26,4 @@ namespace hlsl_clippy::lsp::document {
 /// expect.
 [[nodiscard]] std::string path_to_uri(const std::filesystem::path& path);
 
-}  // namespace hlsl_clippy::lsp::document
+}  // namespace shader_clippy::lsp::document

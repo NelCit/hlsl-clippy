@@ -1,7 +1,7 @@
 # SM 6.7 / 6.8 / 6.9 rule expansion — research brain-dump
 
 Date: 2026-04-30
-Author: hlsl-clippy SM-features research agent
+Author: shader-clippy SM-features research agent
 Status: source material for ADR 0010
 
 ## Context

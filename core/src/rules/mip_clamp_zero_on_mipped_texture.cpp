@@ -27,16 +27,16 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 #include "rules/util/reflect_resource.hpp"
 #include "rules/util/reflect_sampler.hpp"
 
 #include "parser_internal.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 constexpr std::string_view k_rule_id = "mip-clamp-zero-on-mipped-texture";
@@ -199,4 +199,4 @@ std::unique_ptr<Rule> make_mip_clamp_zero_on_mipped_texture() {
     return std::make_unique<MipClampZeroOnMippedTexture>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

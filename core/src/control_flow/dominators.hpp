@@ -16,7 +16,7 @@
 
 #include "control_flow/cfg_storage.hpp"
 
-namespace hlsl_clippy::control_flow {
+namespace shader_clippy::control_flow {
 
 /// Compute and store the immediate-dominator parent vector for every block
 /// in `fn`. The entry block (local index 0) has `idom[0] == 0` by
@@ -28,4 +28,4 @@ void compute_dominators(CfgFunction& fn);
 /// the storage.
 void compute_all_dominators(CfgStorage& storage);
 
-}  // namespace hlsl_clippy::control_flow
+}  // namespace shader_clippy::control_flow

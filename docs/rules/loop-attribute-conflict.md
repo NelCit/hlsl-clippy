@@ -88,6 +88,6 @@ for (int i = 0; i < 128; i += 16) {
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/loop-attribute-conflict.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/loop-attribute-conflict.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

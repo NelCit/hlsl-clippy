@@ -16,24 +16,24 @@
 #include <utility>
 
 #include "control_flow/cfg_storage.hpp"
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 #include "rules/util/liveness.hpp"
 #include "rules/util/register_pressure_ast.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 constexpr std::string_view k_rule_id = "vgpr-pressure-warning";
 constexpr std::string_view k_category = "control-flow";
 /// Default threshold matches `LintOptions::vgpr_pressure_threshold` default
 /// (~RDNA wave32 x 2). Rules cannot read `LintOptions` directly today; the
-/// default lives here and is overridable per-source via `.hlsl-clippy.toml`
+/// default lives here and is overridable per-source via `.shader-clippy.toml`
 /// in a v0.7.x patch.
 constexpr std::uint32_t k_default_threshold = 64U;
 
@@ -50,11 +50,11 @@ public:
     }
 
     void on_cfg(const AstTree& tree, const ControlFlowInfo& cfg, RuleContext& ctx) override {
-        const auto liveness = hlsl_clippy::util::compute_liveness(cfg, tree);
+        const auto liveness = shader_clippy::util::compute_liveness(cfg, tree);
         if (liveness.live_in_per_block.empty())
             return;
         const auto pressure =
-            hlsl_clippy::util::estimate_pressure(cfg, liveness, tree, nullptr, k_default_threshold);
+            shader_clippy::util::estimate_pressure(cfg, liveness, tree, nullptr, k_default_threshold);
         if (pressure.empty())
             return;
 
@@ -105,4 +105,4 @@ std::unique_ptr<Rule> make_vgpr_pressure_warning() {
     return std::make_unique<VgprPressureWarning>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

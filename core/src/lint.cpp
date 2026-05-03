@@ -1,4 +1,4 @@
-#include "hlsl_clippy/lint.hpp"
+#include "shader_clippy/lint.hpp"
 
 #include <cstdint>
 #include <filesystem>
@@ -12,30 +12,30 @@
 #include <tree_sitter/api.h>
 
 #include "control_flow/engine.hpp"
-#include "hlsl_clippy/config.hpp"
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/ir.hpp"
-#include "hlsl_clippy/language.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
-#include "hlsl_clippy/suppress.hpp"
+#include "shader_clippy/config.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/ir.hpp"
+#include "shader_clippy/language.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
+#include "shader_clippy/suppress.hpp"
 #include "reflection/engine.hpp"
 
 // Phase 7 (ADR 0016): the IR engine TU is built only when
-// `HLSL_CLIPPY_ENABLE_IR=ON` (the default). When OFF, `core/src/ir/engine.cpp`
-// is excluded from the link and `HLSL_CLIPPY_IR_DISABLED` is defined; we
+// `SHADER_CLIPPY_ENABLE_IR=ON` (the default). When OFF, `core/src/ir/engine.cpp`
+// is excluded from the link and `SHADER_CLIPPY_IR_DISABLED` is defined; we
 // guard the include + the dispatch block here so the orchestrator still
 // builds and emits a one-shot "compiled out" diagnostic for any Stage::Ir
 // rule the caller enabled.
-#if !defined(HLSL_CLIPPY_IR_DISABLED)
+#if !defined(SHADER_CLIPPY_IR_DISABLED)
 #include "ir/engine.hpp"
 #endif
 
 #include "parser_internal.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 namespace {
 
@@ -355,7 +355,7 @@ namespace {
     // diagnostic. Either way the routing logic is the same and is locked in
     // by tests so 7a.2 only changes the engine internals, not this dispatch.
     //
-    // When the engine TU is compiled out via `HLSL_CLIPPY_ENABLE_IR=OFF`, we
+    // When the engine TU is compiled out via `SHADER_CLIPPY_ENABLE_IR=OFF`, we
     // emit a single `clippy::ir-compiled-out` Note diagnostic per source per
     // lint run so the user knows their Stage::Ir rule selection was
     // observed but no engine is available.
@@ -364,14 +364,14 @@ namespace {
     // consume the tree-sitter AST view alongside the IR. The one-shot
     // `clippy::language-skip-ast` notice already announced this.
     if (dispatch_ast && options.enable_ir && any_ir_rule(rules, active_target)) {
-#if defined(HLSL_CLIPPY_IR_DISABLED)
+#if defined(SHADER_CLIPPY_IR_DISABLED)
         Diagnostic diag;
         diag.code = std::string{"clippy::ir-compiled-out"};
         diag.severity = Severity::Note;
         diag.primary_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
         diag.message = std::string{
             "IR-stage rule selected but this build was configured with "
-            "`HLSL_CLIPPY_ENABLE_IR=OFF` (ADR 0016). Re-build with the option "
+            "`SHADER_CLIPPY_ENABLE_IR=OFF` (ADR 0016). Re-build with the option "
             "ON to enable Phase 7 IR-level analysis. AST / reflection / "
             "control-flow rules are unaffected."};
         ctx.emit(std::move(diag));
@@ -525,4 +525,4 @@ std::vector<Diagnostic> lint(const SourceManager& sources,
     return kept;
 }
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

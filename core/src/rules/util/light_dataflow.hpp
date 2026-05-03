@@ -18,10 +18,10 @@
 
 #pragma once
 
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 /// True when a `groupshared` cell whose declaration covers `gs_decl_span`
 /// is read on some CFG path before any thread writes to it. Conservative:
@@ -58,4 +58,4 @@ namespace hlsl_clippy::rules::util {
 /// to discriminate that case).
 [[nodiscard]] bool loop_invariant_expr(const ControlFlowInfo& cfg, Span expr_span) noexcept;
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

@@ -1,6 +1,6 @@
 # Build the VitePress docs site and deploy it to GitHub Pages.
 #
-# Live at: https://nelcit.github.io/hlsl-clippy/
+# Live at: https://nelcit.github.io/shader-clippy/
 #
 # Triggers on `main` for any change under `docs/**` or to `package.json`
 # (which carries the VitePress dep + scripts). Manual runs via `workflow_dispatch`

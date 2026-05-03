@@ -120,14 +120,14 @@ jobs:
         if: runner.os != 'Windows'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ~/.cache/hlsl-clippy/slang
+          path: ~/.cache/shader-clippy/slang
           key: slang-${{ runner.os }}-${{ hashFiles('cmake/SlangVersion.cmake') }}
 
       - name: Cache Slang prebuilt (Windows)
         if: runner.os == 'Windows'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ${{ env.LOCALAPPDATA }}\hlsl-clippy\slang
+          path: ${{ env.LOCALAPPDATA }}\shader-clippy\slang
           key: slang-${{ runner.os }}-${{ hashFiles('cmake/SlangVersion.cmake') }}
 
       - name: Fetch Slang prebuilt (Linux + macOS)
@@ -175,7 +175,7 @@ jobs:
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: Build LSP server
-        run: cmake --build build --target hlsl_clippy_lsp --config Release
+        run: cmake --build build --target shader_clippy_lsp --config Release
 
       # ── Stage binary into vscode-extension/server/<platform>/ ───────────
       # The TS-side `findBundled()` resolver looks at
@@ -190,8 +190,8 @@ jobs:
       # POSIX) the spawned LSP exits before the JSON-RPC handshake and
       # the user sees an empty Problems panel with no diagnostic.
       #
-      # The cmake POST_BUILD helper `hlsl_clippy_deploy_slang_dlls`
-      # already drops every needed DLL next to hlsl-clippy-lsp.exe in
+      # The cmake POST_BUILD helper `shader_clippy_deploy_slang_dlls`
+      # already drops every needed DLL next to shader-clippy-lsp.exe in
       # build/lsp/, so a `cp build/lsp/* dest/` after locating the EXE
       # picks them up. Same pattern as the standalone CLI release zip
       # in release.yml -- we just hadn't ported it to the .vsix path.
@@ -207,19 +207,19 @@ jobs:
           mkdir -p "$dest"
           src=""
           for c in \
-              "./build/lsp/hlsl-clippy-lsp${SUFFIX}" \
-              "./build/hlsl-clippy-lsp${SUFFIX}"; do
+              "./build/lsp/shader-clippy-lsp${SUFFIX}" \
+              "./build/shader-clippy-lsp${SUFFIX}"; do
             if [ -f "$c" ]; then
               src="$c"
               break
             fi
           done
           if [ -z "$src" ]; then
-            echo "::error::could not locate built hlsl-clippy-lsp binary"
+            echo "::error::could not locate built shader-clippy-lsp binary"
             exit 1
           fi
-          cp "$src" "${dest}/hlsl-clippy-lsp${SUFFIX}"
-          chmod +x "${dest}/hlsl-clippy-lsp${SUFFIX}"
+          cp "$src" "${dest}/shader-clippy-lsp${SUFFIX}"
+          chmod +x "${dest}/shader-clippy-lsp${SUFFIX}"
           # Copy any sibling shared libs (.so* / .dylib) the build placed
           # next to the EXE. Slang on Linux/macOS may be statically linked
           # or rely on rpath, in which case this loop is a no-op -- still
@@ -243,19 +243,19 @@ jobs:
           $dest = "vscode-extension/server/$env:PLATFORM"
           New-Item -ItemType Directory -Force -Path $dest | Out-Null
           $candidates = @(
-            ".\build\lsp\hlsl-clippy-lsp.exe",
-            ".\build\lsp\Release\hlsl-clippy-lsp.exe",
-            ".\build\hlsl-clippy-lsp.exe"
+            ".\build\lsp\shader-clippy-lsp.exe",
+            ".\build\lsp\Release\shader-clippy-lsp.exe",
+            ".\build\shader-clippy-lsp.exe"
           )
           $src = $null
           foreach ($c in $candidates) {
             if (Test-Path $c) { $src = $c; break }
           }
           if (-not $src) {
-            Write-Error "could not locate built hlsl-clippy-lsp.exe"
+            Write-Error "could not locate built shader-clippy-lsp.exe"
             exit 1
           }
-          Copy-Item $src "$dest/hlsl-clippy-lsp.exe"
+          Copy-Item $src "$dest/shader-clippy-lsp.exe"
           Write-Host "Staged $src -> $dest/"
 
           # Copy every sibling .dll (the cmake POST_BUILD helper drops
@@ -272,7 +272,7 @@ jobs:
             Write-Host "Bundled runtime DLL: $($dll.Name)"
           }
           if ($dlls.Count -eq 0) {
-            Write-Warning "No DLLs found next to hlsl-clippy-lsp.exe; the resulting .vsix will likely fail to start the LSP at runtime."
+            Write-Warning "No DLLs found next to shader-clippy-lsp.exe; the resulting .vsix will likely fail to start the LSP at runtime."
           }
           Get-ChildItem $dest
 
@@ -320,7 +320,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          out="hlsl-clippy-${VERSION}-${VSCE_TARGET}.vsix"
+          out="shader-clippy-${VERSION}-${VSCE_TARGET}.vsix"
           npx --yes @vscode/vsce package --target "$VSCE_TARGET" --out "$out"
           echo "vsix=vscode-extension/$out" >> "$GITHUB_OUTPUT"
           echo "vsix_name=$out" >> "$GITHUB_OUTPUT"
@@ -410,7 +410,7 @@ jobs:
           echo "VSCE_PAT not set — skipping Marketplace publish."
           echo "Per-platform .vsix files are attached to the GitHub Release"
           echo "for manual sideload via:"
-          echo "  code --install-extension hlsl-clippy-<version>-<target>.vsix"
+          echo "  code --install-extension shader-clippy-<version>-<target>.vsix"
 
       # ── Open VSX deferred to v0.6 (ADR 0014 §"Sub-phase 5e") ──────────────
       # Uncomment when the v0.6 release rolls and the OVSX_PAT secret is set.

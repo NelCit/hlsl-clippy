@@ -1,5 +1,5 @@
 // Phase 4 — interlocked / atomic rules (ADR 0007 patterns).
-// Hand-written fixture for hlsl-clippy rule validation.
+// Hand-written fixture for shader-clippy rule validation.
 // Convention: `// HIT(rule-id): reason` on offending lines.
 // `// SHOULD-NOT-HIT(rule-id): reason` on near-miss lines that must NOT fire.
 

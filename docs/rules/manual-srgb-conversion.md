@@ -73,6 +73,6 @@ The v1.2 foundation (ADR 0019) wires this rule to the new `ResourceBinding::dxgi
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/manual-srgb-conversion.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/manual-srgb-conversion.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

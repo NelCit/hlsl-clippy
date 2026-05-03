@@ -94,7 +94,7 @@ none
 value. For `unpack`/`repack` this is machine-applicable when no other use of
 the unpacked channels exists. For `f32tof16`/`f16tof32` the fix removes
 precision that was being explicitly thrown away; a human should confirm the
-original precision was not needed. `hlsl-clippy fix` proposes the simplification
+original precision was not needed. `shader-clippy fix` proposes the simplification
 and requests confirmation before applying.
 
 ## See also
@@ -111,7 +111,7 @@ and requests confirmation before applying.
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/unpack-then-repack.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/unpack-then-repack.md)
 
 ---
 

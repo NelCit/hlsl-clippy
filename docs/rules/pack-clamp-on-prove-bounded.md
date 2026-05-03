@@ -85,7 +85,7 @@ none
 
 **suggestion** — Replacing `pack_clamp_u8` with `pack_u8` is safe only when
 the value-range proof holds on all execution paths. The rule shows the proof
-and proposes the change; `hlsl-clippy fix` applies it after the user confirms
+and proposes the change; `shader-clippy fix` applies it after the user confirms
 the range assumption is correct.
 
 ## See also
@@ -100,7 +100,7 @@ the range assumption is correct.
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/pack-clamp-on-prove-bounded.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/pack-clamp-on-prove-bounded.md)
 
 ---
 

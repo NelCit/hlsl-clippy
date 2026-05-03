@@ -7,7 +7,7 @@
 // changed; review carefully before refreshing.
 //
 // Refresh workflow:
-//   1. Set env var `HLSL_CLIPPY_GOLDEN_UPDATE=1` and re-run the [golden]
+//   1. Set env var `SHADER_CLIPPY_GOLDEN_UPDATE=1` and re-run the [golden]
 //      tag of this binary; the test will overwrite the snapshot files
 //      instead of comparing.
 //   2. Or run `tools/update-goldens.ps1` (Windows) / `tools/update-goldens.sh`
@@ -30,20 +30,20 @@
 #include <catch2/catch_test_macros.hpp>
 #include <nlohmann/json.hpp>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "test_config.hpp"
 
 namespace {
 
-using hlsl_clippy::Diagnostic;
-using hlsl_clippy::lint;
-using hlsl_clippy::make_default_rules;
-using hlsl_clippy::Severity;
-using hlsl_clippy::SourceManager;
+using shader_clippy::Diagnostic;
+using shader_clippy::lint;
+using shader_clippy::make_default_rules;
+using shader_clippy::Severity;
+using shader_clippy::SourceManager;
 
 [[nodiscard]] std::string_view severity_label(Severity sev) noexcept {
     switch (sev) {
@@ -60,7 +60,7 @@ using hlsl_clippy::SourceManager;
 [[nodiscard]] std::filesystem::path golden_root() {
     // `k_fixtures_dir` points at `<repo>/tests/fixtures`; the golden root is
     // the sibling `<repo>/tests/golden`.
-    std::filesystem::path fixtures{std::string{hlsl_clippy::test::k_fixtures_dir}};
+    std::filesystem::path fixtures{std::string{shader_clippy::test::k_fixtures_dir}};
     return fixtures.parent_path() / "golden";
 }
 
@@ -68,7 +68,7 @@ using hlsl_clippy::SourceManager;
     // Use `getenv` (POSIX/MSVC both support it). Treat any non-empty value
     // other than "0" as "update".
     // NOLINTNEXTLINE(concurrency-mt-unsafe) -- tests are single-threaded.
-    const char* raw = std::getenv("HLSL_CLIPPY_GOLDEN_UPDATE");
+    const char* raw = std::getenv("SHADER_CLIPPY_GOLDEN_UPDATE");
     if (raw == nullptr) {
         return false;
     }
@@ -217,7 +217,7 @@ void run_one_fixture(const std::filesystem::path& fixture_path,
         write_file(actual_path, actual);
         FAIL("missing snapshot: "
              << snapshot_path.string() << "\nWrote actual output to: " << actual_path
-             << "\nRun tools/update-goldens.{ps1,sh} or set HLSL_CLIPPY_GOLDEN_UPDATE=1.");
+             << "\nRun tools/update-goldens.{ps1,sh} or set SHADER_CLIPPY_GOLDEN_UPDATE=1.");
         return;
     }
 

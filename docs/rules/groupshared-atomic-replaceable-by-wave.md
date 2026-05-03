@@ -87,6 +87,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/groupshared-atomic-replaceable-by-wave.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/groupshared-atomic-replaceable-by-wave.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

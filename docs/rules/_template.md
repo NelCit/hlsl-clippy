@@ -117,7 +117,7 @@ none
 <!-- One of: machine-applicable | suggestion | none -->
 
 **machine-applicable** — The fix is a pure textual substitution with no observable
-semantic change. `hlsl-clippy fix` applies it automatically.
+semantic change. `shader-clippy fix` applies it automatically.
 
 <!-- Or for suggestion:
 **suggestion** — A candidate fix is shown but requires verification: [reason]. -->
@@ -137,4 +137,4 @@ semantic change. `hlsl-clippy fix` applies it automatically.
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/rule-id-here.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/rule-id-here.md)

@@ -24,10 +24,10 @@
 #include <tree_sitter/api.h>
 
 #include "control_flow/cfg_storage.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::control_flow {
+namespace shader_clippy::control_flow {
 
 /// Walk `root` and populate `out` with per-span uniformity classifications.
 /// `reflection` may be `nullptr`; when non-null, the analyzer additionally
@@ -41,4 +41,4 @@ void analyse_uniformity(::TSNode root,
                         std::uint32_t cfg_inlining_depth,
                         UniformityImplData& out);
 
-}  // namespace hlsl_clippy::control_flow
+}  // namespace shader_clippy::control_flow

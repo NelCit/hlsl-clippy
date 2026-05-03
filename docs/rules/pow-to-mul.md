@@ -70,7 +70,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — For exponents 2.0 and 3.0 the fix is a straightforward inline expansion with no observable semantic change for finite non-negative inputs. For exponent 4.0, the tool introduces a named temporary to avoid four multiplies; because the temporary is limited to expression scope it does not affect surrounding code. `hlsl-clippy fix` applies all three variants without human confirmation.
+**machine-applicable** — For exponents 2.0 and 3.0 the fix is a straightforward inline expansion with no observable semantic change for finite non-negative inputs. For exponent 4.0, the tool introduces a named temporary to avoid four multiplies; because the temporary is limited to expression scope it does not affect surrounding code. `shader-clippy fix` applies all three variants without human confirmation.
 
 ## See also
 
@@ -82,6 +82,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/pow-to-mul.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/pow-to-mul.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

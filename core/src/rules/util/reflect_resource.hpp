@@ -2,7 +2,7 @@
 // (ADR 0012 sub-phase 3b).
 //
 // These helpers sit on top of the value-type `ReflectionInfo` declared in
-// `hlsl_clippy/reflection.hpp`. They classify `ResourceKind` values and
+// `shader_clippy/reflection.hpp`. They classify `ResourceKind` values and
 // look up bindings by shader-side identifier name. Rules with
 // `stage() == Stage::Reflection` include this header from
 // `core/src/rules/util/`; the public surface stays free of Slang types
@@ -15,9 +15,9 @@
 #include <optional>
 #include <string_view>
 
-#include "hlsl_clippy/reflection.hpp"
+#include "shader_clippy/reflection.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 /// True when `kind` denotes a writable (UAV-like) resource. Covers `RWBuffer`,
 /// every `RWTexture*` variant, `RWByteAddressBuffer`, and `RWStructuredBuffer`.
@@ -59,4 +59,4 @@ namespace hlsl_clippy::rules::util {
 [[nodiscard]] std::optional<std::uint32_t> array_size_of(const ReflectionInfo& reflection,
                                                          std::string_view name) noexcept;
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

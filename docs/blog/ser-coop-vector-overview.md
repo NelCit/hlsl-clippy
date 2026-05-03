@@ -30,7 +30,7 @@ collectively reshape how a modern HLSL author writes a ray-traced or
 ML-augmented frame: Shader Execution Reordering (SER), Cooperative Vectors,
 Long Vectors (`vector<T, N>` for `5 <= N <= 1024`), and Opacity Micromaps
 (OMM) in DXR 1.2. Each surface ships its own footguns. This post is the
-overview for the twenty-three `hlsl-clippy` rules that catch them.
+overview for the twenty-three `shader-clippy` rules that catch them.
 
 ## What SM 6.9 actually adds
 
@@ -70,7 +70,7 @@ for the first time without vendor extensions.
   vendor-extension form) and AMD RDNA 4; Intel Xe2 supports it through
   the OMM extension.
 
-Each surface has a corresponding rule sub-category in `hlsl-clippy`.
+Each surface has a corresponding rule sub-category in `shader-clippy`.
 Twenty-three rules ship in v0.5 across these four areas. The sections
 below walk each surface, picking the rules that best illustrate the
 hardware reasoning.
@@ -294,7 +294,7 @@ coverage in subsequent rule packs (per ADR 0010):
 - **Mesh nodes in work graphs** are SM 6.9 preview, not retail. Three
   rules — `mesh-node-not-leaf`, `mesh-node-missing-output-topology`,
   `mesh-node-uses-vertex-shader-pipeline` — ship gated behind
-  `[experimental] work-graph-mesh-nodes = true` in `.hlsl-clippy.toml`.
+  `[experimental] work-graph-mesh-nodes = true` in `.shader-clippy.toml`.
   When the preview API in Agility SDK locks, the gate goes away.
 
 - **`maybereorderthread-without-payload-shrink`** is queued for Phase 7
@@ -319,7 +319,7 @@ PRs are the channel.
 ## Run it on your raygen shader today
 
 If your engine has a path-tracing path, an inference path, or a wide-
-vector reduction, `hlsl-clippy` v0.5 covers the SM 6.9 surface from day
+vector reduction, `shader-clippy` v0.5 covers the SM 6.9 surface from day
 one. The rules ship default-on for retail SM 6.9 features (SER,
 cooperative vectors, long vectors, OMM) and gated for the preview
 surface (mesh nodes). Per-line suppression and per-rule severity
@@ -327,10 +327,10 @@ overrides work the same as on the rest of the rule pack:
 
 ```hlsl
 dx::HitObject hit = dx::HitObject::TraceRay(/*...*/);
-hit.Invoke(payload); // hlsl-clippy: allow(ser-trace-then-invoke-without-reorder)
+hit.Invoke(payload); // shader-clippy: allow(ser-trace-then-invoke-without-reorder)
 ```
 
-Or, in `.hlsl-clippy.toml`:
+Or, in `.shader-clippy.toml`:
 
 ```toml
 [rules]
@@ -350,8 +350,8 @@ profiler points you at.
 
 ---
 
-`hlsl-clippy` is open source. Rules, issues, and discussion live at
-[github.com/NelCit/hlsl-clippy](https://github.com/NelCit/hlsl-clippy).
+`shader-clippy` is open source. Rules, issues, and discussion live at
+[github.com/NelCit/shader-clippy](https://github.com/NelCit/shader-clippy).
 If you have encountered a shader pattern that should be a lint rule,
 open an issue.
 

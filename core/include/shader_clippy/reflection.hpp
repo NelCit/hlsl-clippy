@@ -20,9 +20,9 @@
 #include <string_view>
 #include <vector>
 
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 /// Coarse-grained classification of a shader resource binding. Mirrors the
 /// HLSL resource type system at the granularity rule authors care about. The
@@ -159,4 +159,4 @@ struct ReflectionInfo {
         std::string_view name) const noexcept;
 };
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

@@ -5,7 +5,7 @@
 
 #include <tree_sitter/api.h>
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 std::string_view node_kind(::TSNode node) noexcept {
     if (::ts_node_is_null(node)) {
@@ -27,4 +27,4 @@ std::string_view node_text(::TSNode node, std::string_view bytes) noexcept {
     return bytes.substr(lo, hi - lo);
 }
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

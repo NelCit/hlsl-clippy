@@ -14,7 +14,7 @@
             ],
             "preLaunchTask": "npm: compile",
             "env": {
-                "HLSL_CLIPPY_LSP_DEBUG": "1"
+                "SHADER_CLIPPY_LSP_DEBUG": "1"
             }
         }
     ]

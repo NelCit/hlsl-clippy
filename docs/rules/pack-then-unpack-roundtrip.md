@@ -95,7 +95,7 @@ pure textual substitution with no observable semantic change for any input. The
 `f16tof32(f32tof16(x))` fix is also machine-applicable when the caller does
 not depend on the precision-reducing effect of the round-trip; the rule emits
 a note about the precision change and applies the fix automatically.
-`hlsl-clippy fix` applies both without human confirmation.
+`shader-clippy fix` applies both without human confirmation.
 
 ## See also
 
@@ -109,7 +109,7 @@ a note about the precision change and applies the fix automatically.
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/pack-then-unpack-roundtrip.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/pack-then-unpack-roundtrip.md)
 
 ---
 

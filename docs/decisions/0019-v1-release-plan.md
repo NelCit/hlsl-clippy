@@ -10,7 +10,7 @@ tags: [v1.0, release, api-stability, governance]
 
 ## Context
 
-`hlsl-clippy` ships v0.8.0 with 190 registered rules across nine
+`shader-clippy` ships v0.8.0 with 190 registered rules across nine
 phases of work. The pre-v0 / v0.x labels signalled "we reserve the
 right to break things"; v1.0 graduates the project from research
 preview to stable consumer-facing release.
@@ -70,7 +70,7 @@ as targets in `docs/v1-roadmap.md`; revisit at v1.1.
 
 Documented in `docs/api-stability.md`. Concrete commitments:
 
-1. **Public-API freeze.** `core/include/hlsl_clippy/*.hpp` types,
+1. **Public-API freeze.** `core/include/shader_clippy/*.hpp` types,
    CLI flags / output formats, LSP wire protocol (engine
    diagnostics + standard LSP). New types / new fields / new
    config keys are additive. Removing or renaming is a v2.0
@@ -108,7 +108,7 @@ Documented in `docs/api-stability.md`. Concrete commitments:
   cannot be closed safely at the AST level — needs side-effect-
   purity oracle (Phase 4 light-dataflow extension), DXGI format
   reflection (ADR 0012 follow-up), and configurable epsilon
-  surfaces (`.hlsl-clippy.toml` extension). All three are v1.1
+  surfaces (`.shader-clippy.toml` extension). All three are v1.1
   / v1.2 work items.
 - Branch-coverage gate (criterion #2 partial). Lifted to v1.1.
 - Marketplace + downstream-integration metrics (criteria #7,

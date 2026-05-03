@@ -28,10 +28,10 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
 #include "rules/util/cfg_query.hpp"
 #include "rules/util/uniformity.hpp"
@@ -39,7 +39,7 @@
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::node_kind;
@@ -185,4 +185,4 @@ std::unique_ptr<Rule> make_primcount_overrun_in_conditional_cf() {
     return std::make_unique<PrimcountOverrunInConditionalCf>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

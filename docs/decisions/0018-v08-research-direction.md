@@ -188,7 +188,7 @@ Source: [Slang command-line reference](https://docs.shader-slang.org/en/latest/e
 - **Slang already flags:** dead-code (similar to our `redundant-computation-in-branch`), some unused-parameter cases (similar to `unused-cbuffer-field` partial overlap), `volatile`-on-cbuffer-field syntax errors.
 - **Slang doesn't flag (we do):** every perf-bias rule, every IHV-specific portability rule, every quad/wave subtletly (our 28-ish wave/quad rules), every `coopvec-*` layout rule.
 
-**v0.8 docs action:** add a "Rules where Slang's `-Wall` overlaps" callout to the affected `docs/rules/<id>.md` pages so users understand what they get for free vs. what only `hlsl-clippy` provides.
+**v0.8 docs action:** add a "Rules where Slang's `-Wall` overlaps" callout to the affected `docs/rules/<id>.md` pages so users understand what they get for free vs. what only `shader-clippy` provides.
 
 #### 3.4 Khronos glslang (validation for SPIR-V emit)
 
@@ -290,17 +290,17 @@ Source: [GDC 2026 announcement of Shader Explorer for PIX](https://gpuopen.com/l
 
 The bar for v0.x → v1.0. Each criterion is concrete and testable on inspection. Targeting v1.0 in the v0.10 → v0.11 → v1.0 trajectory across roughly 6-9 months from v0.7.0.
 
-1. **API stability commitment.** A v1.0 → v1.x bump may not change the binary shape of `Diagnostic`, `Rule`, `LintOptions`, `RuleContext`, or any public type in `core/include/hlsl_clippy/`. Documented in `docs/api-stability.md`. Validated by a CI job that diffs `nm`-extracted public symbols across versions.
+1. **API stability commitment.** A v1.0 → v1.x bump may not change the binary shape of `Diagnostic`, `Rule`, `LintOptions`, `RuleContext`, or any public type in `core/include/shader_clippy/`. Documented in `docs/api-stability.md`. Validated by a CI job that diffs `nm`-extracted public symbols across versions.
 2. **Coverage gate.** Line coverage on `core/` ≥ 80 %, branch coverage ≥ 70 %, measured by `llvm-cov` in CI. Currently target 60 % per CLAUDE.md; v1.0 lifts the floor to 80 %.
 3. **False-positive budget.** Every warn-severity rule carries a measured FP rate ≤ 5 % against `tests/corpus/` (27 shaders), tracked in `tests/corpus/FP_RATES.md`. Suggestion-severity rules have no FP budget but ship a measured surface area number.
 4. **Independent reproduction of every shipped rule's GPU-mechanism claim by ≥ 2 IHV sources.** Either two of {RDNA / Blackwell / Xe2 / Hopper / Ada} architecture guides citing the mechanism, or one IHV doc + one GDC talk slide / arXiv paper. Tracked in `docs/rules/<id>.md` `references:` front-matter (new field).
 5. **Machine-applicable fixes for ≥ 50 % of warn-grade diagnostics.** Currently 37 of 169 rules have `applicability: machine-applicable` (~22 %). v1.0 demands ≥ 50 % of *warn-grade* (i.e. not pure suggestions) rules carry a fix.
 6. **Per-rule blog-post coverage ≥ 80 %.** v0.5 shipped 8 category overviews in lieu of per-rule posts; v1.0 demands per-rule posts for ≥ 80 % of shipped rules. The remaining 20 % are stubs that link to the category overview.
 7. **VS Code Marketplace install count ≥ 5,000.** Soft target; tracks adoption. Marketplace listing is live as of v0.5.3.
-8. **Independent integration with at least 1 well-known engine or pipeline.** GitHub search for `hlsl-clippy` in `.github/workflows/` files returns ≥ 5 hits in non-monorepo public repos. Or a vendor-side integration (Slang opt-in, Khronos integration, etc.).
+8. **Independent integration with at least 1 well-known engine or pipeline.** GitHub search for `shader-clippy` in `.github/workflows/` files returns ≥ 5 hits in non-monorepo public repos. Or a vendor-side integration (Slang opt-in, Khronos integration, etc.).
 9. **Multi-platform binary releases on every tagged version.** Linux + Windows + macOS CLI/LSP archives + per-platform `.vsix`. Currently green; v1.0 demands no green-then-red regression for 3 consecutive releases.
 10. **Reflection-driven rules survive Slang submodule bumps without source changes.** Validated by a CI job that bumps the Slang prebuilt cache version one minor + one patch and runs the full ctest baseline. v1.0 fails this job → v1.0 fails the release.
-11. **Vendor-specific (`[experimental.target = *]`) rules cleanly disabled on default config.** Default `.hlsl-clippy.toml` produces zero IHV-specific diagnostics on `tests/corpus/`. Validated by a CI snapshot.
+11. **Vendor-specific (`[experimental.target = *]`) rules cleanly disabled on default config.** Default `.shader-clippy.toml` produces zero IHV-specific diagnostics on `tests/corpus/`. Validated by a CI snapshot.
 12. **DCO + CONTRIBUTING.md fully-followed for the last 200 commits before tag.** Verified by a release-time audit script. Project posture is clean now; v1.0 demands no regression.
 
 ## Decision (Proposed)
@@ -363,7 +363,7 @@ Plus the v0.10 infrastructure investment:
 - **`tools/rga-bridge.{sh,ps1}`** — invokes RGA, parses CSV output, emits a JSON file consumed by a new `RgaPressureOracle` in `core/src/reflection/`. Replaces the heuristic in `vgpr-pressure-warning` with measured per-block VGPR counts on RDNA targets when the bridge is configured.
 - **`tools/nsight-bridge.{sh,ps1}`** — analogous for NVIDIA Nsight CSV.
 
-Both bridges are **opt-in via `.hlsl-clippy.toml`**; default `lint` runs do not invoke them.
+Both bridges are **opt-in via `.shader-clippy.toml`**; default `lint` runs do not invoke them.
 
 ### DEFERRED candidates (4)
 

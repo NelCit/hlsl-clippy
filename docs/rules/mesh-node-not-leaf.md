@@ -10,7 +10,7 @@ language_applicability: ["hlsl", "slang"]
 
 # mesh-node-not-leaf
 
-> **Pre-v0 status:** this rule page is published ahead of the implementation (preview / experimental, gated behind `[experimental] work-graph-mesh-nodes = true` in `.hlsl-clippy.toml`). Behaviour described here reflects the design intent; the preview API may change.
+> **Pre-v0 status:** this rule page is published ahead of the implementation (preview / experimental, gated behind `[experimental] work-graph-mesh-nodes = true` in `.shader-clippy.toml`). Behaviour described here reflects the design intent; the preview API may change.
 
 *(via ADR 0010)*
 
@@ -69,7 +69,7 @@ void MeshNode(
 
 ## Options
 
-This rule is gated behind `[experimental] work-graph-mesh-nodes = true` in `.hlsl-clippy.toml`. With the gate off, the rule does not fire.
+This rule is gated behind `[experimental] work-graph-mesh-nodes = true` in `.shader-clippy.toml`. With the gate off, the rule does not fire.
 
 ## Fix availability
 
@@ -85,6 +85,6 @@ This rule is gated behind `[experimental] work-graph-mesh-nodes = true` in `.hls
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/mesh-node-not-leaf.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/mesh-node-not-leaf.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

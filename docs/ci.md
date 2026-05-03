@@ -5,7 +5,7 @@ outline: deep
 
 # CI integration
 
-`hlsl-clippy` is designed to drop into a CI pipeline as a gate. Two
+`shader-clippy` is designed to drop into a CI pipeline as a gate. Two
 output formats are tuned for CI:
 
 - `--format=github-annotations` — emits GitHub Actions workflow
@@ -21,7 +21,7 @@ When `$GITHUB_ACTIONS=true` and `--format` is unset,
 ## GitHub Actions example
 
 A copy-paste-able starter workflow lives at
-[`docs/ci/lint-hlsl-example.yml`](https://github.com/NelCit/hlsl-clippy/blob/main/docs/ci/lint-hlsl-example.yml).
+[`docs/ci/lint-hlsl-example.yml`](https://github.com/NelCit/shader-clippy/blob/main/docs/ci/lint-hlsl-example.yml).
 Drop it at `.github/workflows/lint-hlsl.yml` in your repo and adjust
 the path glob + version pin:
 
@@ -31,32 +31,32 @@ name: HLSL lint
 on:
   push:
     branches: ["**"]
-    paths: ["**/*.hlsl", "**/*.hlsli", "**/.hlsl-clippy.toml"]
+    paths: ["**/*.hlsl", "**/*.hlsli", "**/.shader-clippy.toml"]
   pull_request:
-    paths: ["**/*.hlsl", "**/*.hlsli", "**/.hlsl-clippy.toml"]
+    paths: ["**/*.hlsl", "**/*.hlsli", "**/.shader-clippy.toml"]
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download hlsl-clippy
+      - name: Download shader-clippy
         env:
-          HLSL_CLIPPY_TAG: v0.5.3
+          SHADER_CLIPPY_TAG: v0.5.3
         run: |
           set -euo pipefail
-          asset="hlsl-clippy-${HLSL_CLIPPY_TAG#v}-linux-x86_64.tar.gz"
-          curl -sSL -o /tmp/hlsl-clippy.tar.gz \
-            "https://github.com/NelCit/hlsl-clippy/releases/download/${HLSL_CLIPPY_TAG}/${asset}"
-          mkdir -p /tmp/hlsl-clippy
-          tar -xzf /tmp/hlsl-clippy.tar.gz -C /tmp/hlsl-clippy --strip-components=1
+          asset="shader-clippy-${SHADER_CLIPPY_TAG#v}-linux-x86_64.tar.gz"
+          curl -sSL -o /tmp/shader-clippy.tar.gz \
+            "https://github.com/NelCit/shader-clippy/releases/download/${SHADER_CLIPPY_TAG}/${asset}"
+          mkdir -p /tmp/shader-clippy
+          tar -xzf /tmp/shader-clippy.tar.gz -C /tmp/shader-clippy --strip-components=1
       - name: Lint shaders
         run: |
           set -euo pipefail
           shopt -s globstar nullglob
           fail=0
           for shader in shaders/**/*.hlsl; do
-            /tmp/hlsl-clippy/hlsl-clippy lint "$shader" \
+            /tmp/shader-clippy/shader-clippy lint "$shader" \
               --format=github-annotations \
               || fail=$?
           done
@@ -69,7 +69,7 @@ jobs:
 |------|---------|
 | `0`  | No diagnostics emitted. |
 | `1`  | At least one `warning`-level (or `note`-level) diagnostic. |
-| `2`  | At least one `error`-level diagnostic, OR the linter itself failed (file not found, malformed `.hlsl-clippy.toml`, etc.). |
+| `2`  | At least one `error`-level diagnostic, OR the linter itself failed (file not found, malformed `.shader-clippy.toml`, etc.). |
 
 Today exit code `2` is overloaded: a malformed config and a
 rule-emitted error both surface as `2`. Distinguishing the two cases
@@ -79,7 +79,7 @@ the v0.6 backlog.
 ## Promoting warnings to errors
 
 If your repo policy wants `pow-const-squared` to fail CI rather than
-just warn, override its severity in `.hlsl-clippy.toml`:
+just warn, override its severity in `.shader-clippy.toml`:
 
 ```toml
 [rules]

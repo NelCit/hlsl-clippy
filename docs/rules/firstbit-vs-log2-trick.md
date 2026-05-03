@@ -55,7 +55,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — For the canonical `(uint)log2((float)x)` form (and its `(int)` and `floor()` variants), the fix is a direct substitution to `firstbithigh(x)` with strictly greater precision and identical results for all `x` in the float-representable range. `hlsl-clippy fix` applies it automatically. The asuint exponent-bias variant is rewritten the same way; the intrinsic's defined zero-input sentinel is a behaviour improvement, not a regression.
+**machine-applicable** — For the canonical `(uint)log2((float)x)` form (and its `(int)` and `floor()` variants), the fix is a direct substitution to `firstbithigh(x)` with strictly greater precision and identical results for all `x` in the float-representable range. `shader-clippy fix` applies it automatically. The asuint exponent-bias variant is rewritten the same way; the intrinsic's defined zero-input sentinel is a behaviour improvement, not a regression.
 
 ## See also
 
@@ -66,6 +66,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/firstbit-vs-log2-trick.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/firstbit-vs-log2-trick.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

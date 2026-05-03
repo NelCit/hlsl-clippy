@@ -10,7 +10,7 @@
 
 #include "rpc/message.hpp"
 
-namespace hlsl_clippy::lsp::rpc {
+namespace shader_clippy::lsp::rpc {
 
 namespace {
 
@@ -175,4 +175,4 @@ std::string JsonRpcDispatcher::dispatch_wire(std::string_view wire_body) const {
     return dispatch(envelope);
 }
 
-}  // namespace hlsl_clippy::lsp::rpc
+}  // namespace shader_clippy::lsp::rpc

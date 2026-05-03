@@ -66,7 +66,7 @@ float4 entry_main(float4 pos : SV_Position, float2 uv : TEXCOORD0) : SV_Target {
 
 // When the array must remain (multiple slices across permutations), keep the
 // array but suppress the diagnostic at the call site:
-// hlsl-clippy: allow(texture-array-known-slice-uniform)
+// shader-clippy: allow(texture-array-known-slice-uniform)
 float3 stacked = Stack.Sample(Bilinear, float3(uv, StackSlice)).rgb;
 
 // Per-thread divergent slice — rule does not fire:
@@ -82,7 +82,7 @@ none
 
 ## Fix availability
 
-**suggestion** — The rule can propose demoting the resource declaration from `Texture2DArray` to `Texture2D` and removing the z component from the UV argument. Because the fix requires a corresponding CPU-side binding change (creating a `D3D12_SRV_DIMENSION_TEXTURE2D` view instead of `D3D12_SRV_DIMENSION_TEXTURE2DARRAY`), `hlsl-clippy fix` shows the candidate HLSL edits but does not apply them automatically.
+**suggestion** — The rule can propose demoting the resource declaration from `Texture2DArray` to `Texture2D` and removing the z component from the UV argument. Because the fix requires a corresponding CPU-side binding change (creating a `D3D12_SRV_DIMENSION_TEXTURE2D` view instead of `D3D12_SRV_DIMENSION_TEXTURE2DARRAY`), `shader-clippy fix` shows the candidate HLSL edits but does not apply them automatically.
 
 ## See also
 
@@ -93,6 +93,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/texture-array-known-slice-uniform.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/texture-array-known-slice-uniform.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

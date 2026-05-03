@@ -8,19 +8,19 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "hlsl_clippy/config.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/config.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 namespace {
 
-using hlsl_clippy::Config;
-using hlsl_clippy::Diagnostic;
-using hlsl_clippy::lint;
-using hlsl_clippy::make_default_rules;
-using hlsl_clippy::SourceManager;
+using shader_clippy::Config;
+using shader_clippy::Diagnostic;
+using shader_clippy::lint;
+using shader_clippy::make_default_rules;
+using shader_clippy::SourceManager;
 
 [[nodiscard]] std::vector<Diagnostic> lint_buffer(const std::string& hlsl, SourceManager& sources) {
     const auto src = sources.add_buffer("div.hlsl", hlsl);
@@ -84,8 +84,8 @@ float half_of(float x) { return x / 2.0; }
 // v1.2 (ADR 0019): machine-applicable rewrite wraps the divisor in max(eps, ...).
 
 namespace {
-[[nodiscard]] const hlsl_clippy::Diagnostic* find_rule(
-    const std::vector<hlsl_clippy::Diagnostic>& diags, std::string_view code) {
+[[nodiscard]] const shader_clippy::Diagnostic* find_rule(
+    const std::vector<shader_clippy::Diagnostic>& diags, std::string_view code) {
     for (const auto& d : diags) {
         if (d.code == code)
             return &d;

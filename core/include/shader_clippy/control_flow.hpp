@@ -21,9 +21,9 @@
 #include <memory>
 #include <vector>
 
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 /// Three-state-plus-one classification of an expression's wave-lane behaviour.
 /// Per ADR 0013, the oracle is best-effort: a value tagged `Divergent` may in
@@ -146,4 +146,4 @@ struct ControlFlowInfo {
     UniformityOracle uniformity;
 };
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

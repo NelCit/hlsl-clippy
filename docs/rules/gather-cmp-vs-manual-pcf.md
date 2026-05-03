@@ -22,7 +22,7 @@ A 2x2 grid of `SampleCmp` or `SampleCmpLevelZero` calls whose UV arguments diffe
 
 The manual 2x2 PCF pattern — four `SampleCmp` calls with explicit UV offsets — costs four separate TMU instructions. Each `SampleCmp` is an independent issue, and the four-wide gather footprint is not reused across them. On RDNA 3 at typical TMU issue rates (one texture operation per cycle per TMU), this means the manual PCF loop is approximately four times as expensive in TMU cycles as the `GatherCmp` equivalent. On NVIDIA Turing, `SampleCmp` runs at approximately quarter-rate throughput on certain shadow formats, and four serial `SampleCmp` calls in a pixel shader can stall the quad for 16+ cycles. `GatherCmp` on the same hardware runs at half-rate, making the gather form roughly two times cheaper than the manual loop.
 
-After `GatherCmp` returns the four comparison results in a `float4`, the shader must still apply the bilinear blend weights manually using `frac(uv * textureSize)`. This is a small amount of arithmetic (four multiplications and a lerp) that runs at full VALU rate and has negligible cost compared to the four TMU instructions it replaces. The fix is mechanical: compute the base UV, issue one `GatherCmp`, extract the four corners from the returned `float4`, and reconstruct the bilinear filter using `lerp`. `hlsl-clippy fix` emits this pattern automatically.
+After `GatherCmp` returns the four comparison results in a `float4`, the shader must still apply the bilinear blend weights manually using `frac(uv * textureSize)`. This is a small amount of arithmetic (four multiplications and a lerp) that runs at full VALU rate and has negligible cost compared to the four TMU instructions it replaces. The fix is mechanical: compute the base UV, issue one `GatherCmp`, extract the four corners from the returned `float4`, and reconstruct the bilinear filter using `lerp`. `shader-clippy fix` emits this pattern automatically.
 
 ## Examples
 
@@ -88,6 +88,6 @@ The lint surfaces the perf opportunity; the rewrite needs the developer to confi
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/gather-cmp-vs-manual-pcf.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/gather-cmp-vs-manual-pcf.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

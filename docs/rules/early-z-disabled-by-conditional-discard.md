@@ -77,6 +77,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/early-z-disabled-by-conditional-discard.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/early-z-disabled-by-conditional-discard.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

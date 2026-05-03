@@ -1,14 +1,14 @@
 # Release — binary artifact pipeline (Phase 5 sub-phase 5e per ADR 0014).
 #
 # Trigger: push of a tag matching `v*.*.*`. Per OS, builds Release-config
-# `hlsl-clippy[.exe]` (CLI) and `hlsl-clippy-lsp[.exe]` (LSP), bundles them
+# `shader-clippy[.exe]` (CLI) and `shader-clippy-lsp[.exe]` (LSP), bundles them
 # into a per-platform archive, and attaches them to the matching GitHub
 # Release via softprops/action-gh-release@v2.
 #
 # Platform identifiers (artifact filenames):
-#   - windows-x86_64  → hlsl-clippy-<version>-windows-x86_64.zip
-#   - linux-x86_64    → hlsl-clippy-<version>-linux-x86_64.tar.gz
-#   - macos-aarch64   → hlsl-clippy-<version>-macos-aarch64.tar.gz
+#   - windows-x86_64  → shader-clippy-<version>-windows-x86_64.zip
+#   - linux-x86_64    → shader-clippy-<version>-linux-x86_64.tar.gz
+#   - macos-aarch64   → shader-clippy-<version>-macos-aarch64.tar.gz
 #
 # (No macos-x86_64 slot — macos-14 is Apple Silicon, per ADR 0014 §"5d".)
 #
@@ -52,7 +52,7 @@
 #       warn on first run; user clicks "More info" > "Run anyway"). ADR 0014
 #       documents this as deliberately deferred to v0.6.
 #
-# Linux: no code signing. SHA-256 sums file (hlsl-clippy-<version>-SHA256SUMS.txt)
+# Linux: no code signing. SHA-256 sums file (shader-clippy-<version>-SHA256SUMS.txt)
 # is generated and uploaded as a release asset for verification.
 
 name: Release
@@ -149,14 +149,14 @@ jobs:
         if: runner.os != 'Windows'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ~/.cache/hlsl-clippy/slang
+          path: ~/.cache/shader-clippy/slang
           key: slang-${{ runner.os }}-${{ hashFiles('cmake/SlangVersion.cmake') }}
 
       - name: Cache Slang prebuilt (Windows)
         if: runner.os == 'Windows'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ${{ env.LOCALAPPDATA }}\hlsl-clippy\slang
+          path: ${{ env.LOCALAPPDATA }}\shader-clippy\slang
           key: slang-${{ runner.os }}-${{ hashFiles('cmake/SlangVersion.cmake') }}
 
       - name: Fetch Slang prebuilt (Linux + macOS)
@@ -213,8 +213,8 @@ jobs:
 
       - name: Build (CLI + LSP)
         run: |
-          cmake --build build --target hlsl-clippy --config Release
-          cmake --build build --target hlsl_clippy_lsp --config Release
+          cmake --build build --target shader-clippy --config Release
+          cmake --build build --target shader_clippy_lsp --config Release
 
       # ── 5. Locate built binaries (probe candidate paths) ─────────────────
       - name: Locate binaries (POSIX)
@@ -225,10 +225,10 @@ jobs:
           set -euo pipefail
           cli=""
           lsp=""
-          for c in ./build/cli/hlsl-clippy ./build/hlsl-clippy; do
+          for c in ./build/cli/shader-clippy ./build/shader-clippy; do
             if [ -x "$c" ]; then cli="$c"; break; fi
           done
-          for c in ./build/lsp/hlsl-clippy-lsp ./build/hlsl-clippy-lsp; do
+          for c in ./build/lsp/shader-clippy-lsp ./build/shader-clippy-lsp; do
             if [ -x "$c" ]; then lsp="$c"; break; fi
           done
           if [ -z "$cli" ]; then echo "::error::CLI binary not found"; exit 1; fi
@@ -242,11 +242,11 @@ jobs:
         shell: pwsh
         run: |
           $cli = $null
-          foreach ($c in @(".\build\cli\hlsl-clippy.exe", ".\build\cli\Release\hlsl-clippy.exe", ".\build\hlsl-clippy.exe")) {
+          foreach ($c in @(".\build\cli\shader-clippy.exe", ".\build\cli\Release\shader-clippy.exe", ".\build\shader-clippy.exe")) {
             if (Test-Path $c) { $cli = $c; break }
           }
           $lsp = $null
-          foreach ($c in @(".\build\lsp\hlsl-clippy-lsp.exe", ".\build\lsp\Release\hlsl-clippy-lsp.exe", ".\build\hlsl-clippy-lsp.exe")) {
+          foreach ($c in @(".\build\lsp\shader-clippy-lsp.exe", ".\build\lsp\Release\shader-clippy-lsp.exe", ".\build\shader-clippy-lsp.exe")) {
             if (Test-Path $c) { $lsp = $c; break }
           }
           if (-not $cli) { Write-Error "CLI binary not found"; exit 1 }
@@ -260,13 +260,13 @@ jobs:
         env:
           CLI_PATH: ${{ steps.locate_posix.outputs.cli || steps.locate_win.outputs.cli }}
           LSP_PATH: ${{ steps.locate_posix.outputs.lsp || steps.locate_win.outputs.lsp }}
-          STAGE_NAME: hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
+          STAGE_NAME: shader-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
         run: |
           set -euo pipefail
           rm -rf "dist/$STAGE_NAME"
           mkdir -p "dist/$STAGE_NAME"
-          cp "$CLI_PATH" "dist/$STAGE_NAME/hlsl-clippy${{ matrix.exe_suffix }}"
-          cp "$LSP_PATH" "dist/$STAGE_NAME/hlsl-clippy-lsp${{ matrix.exe_suffix }}"
+          cp "$CLI_PATH" "dist/$STAGE_NAME/shader-clippy${{ matrix.exe_suffix }}"
+          cp "$LSP_PATH" "dist/$STAGE_NAME/shader-clippy-lsp${{ matrix.exe_suffix }}"
           # Bundle license + notice + third-party attributions per ADR 0006.
           cp LICENSE "dist/$STAGE_NAME/LICENSE"
           cp NOTICE "dist/$STAGE_NAME/NOTICE" || true
@@ -286,7 +286,7 @@ jobs:
         if: runner.os != 'Windows'
         shell: bash
         env:
-          STAGE_NAME: hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
+          STAGE_NAME: shader-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
         run: |
           set -euo pipefail
           cd dist
@@ -297,7 +297,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         env:
-          STAGE_NAME: hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
+          STAGE_NAME: shader-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
         run: |
           $stage = $env:STAGE_NAME
           Compress-Archive -Path "dist/$stage" -DestinationPath "dist/$stage.zip" -Force
@@ -308,7 +308,7 @@ jobs:
         if: runner.os != 'Windows'
         shell: bash
         env:
-          STAGE_NAME: hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
+          STAGE_NAME: shader-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
           ARCHIVE_EXT: ${{ matrix.archive_ext }}
         run: |
           set -euo pipefail
@@ -325,7 +325,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         env:
-          STAGE_NAME: hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
+          STAGE_NAME: shader-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
           ARCHIVE_EXT: ${{ matrix.archive_ext }}
         run: |
           $archive = "dist/$env:STAGE_NAME.$env:ARCHIVE_EXT"
@@ -343,7 +343,7 @@ jobs:
           APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
           APPLE_DEVELOPER_ID_CERT: ${{ secrets.APPLE_DEVELOPER_ID_CERT }}
           APPLE_DEVELOPER_ID_CERT_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERT_PASSWORD }}
-          STAGE_NAME: hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
+          STAGE_NAME: shader-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
         shell: bash
         run: |
           set -euo pipefail
@@ -362,7 +362,7 @@ jobs:
           # 2. Codesign each Mach-O.
           IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" \
             | awk -F'"' '/Developer ID Application/ {print $2; exit}')
-          for f in "dist/$STAGE_NAME/hlsl-clippy" "dist/$STAGE_NAME/hlsl-clippy-lsp"; do
+          for f in "dist/$STAGE_NAME/shader-clippy" "dist/$STAGE_NAME/shader-clippy-lsp"; do
             codesign --force --options runtime --timestamp \
               --sign "$IDENTITY" "$f"
           done
@@ -391,7 +391,7 @@ jobs:
         env:
           WINDOWS_CERT: ${{ secrets.WINDOWS_CERT }}
           WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
-          STAGE_NAME: hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
+          STAGE_NAME: shader-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}
         shell: pwsh
         run: |
           $certPath = "$env:RUNNER_TEMP\windows-cert.pfx"
@@ -401,7 +401,7 @@ jobs:
             Write-Warning "signtool.exe not on PATH; skipping signing."
             exit 0
           }
-          foreach ($exe in @("dist\$env:STAGE_NAME\hlsl-clippy.exe", "dist\$env:STAGE_NAME\hlsl-clippy-lsp.exe")) {
+          foreach ($exe in @("dist\$env:STAGE_NAME\shader-clippy.exe", "dist\$env:STAGE_NAME\shader-clippy-lsp.exe")) {
             & signtool.exe sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 `
               /f $certPath /p $env:WINDOWS_CERT_PASSWORD $exe
           }
@@ -424,7 +424,7 @@ jobs:
           tag_name: ${{ steps.version.outputs.tag }}
           fail_on_unmatched_files: true
           files: |
-            dist/hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}.${{ matrix.archive_ext }}
-            dist/hlsl-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}.${{ matrix.archive_ext }}.sha256
+            dist/shader-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}.${{ matrix.archive_ext }}
+            dist/shader-clippy-${{ steps.version.outputs.version }}-${{ matrix.platform }}.${{ matrix.archive_ext }}.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

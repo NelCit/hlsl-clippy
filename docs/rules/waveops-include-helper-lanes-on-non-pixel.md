@@ -57,7 +57,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Removing the attribute is a textual deletion. `hlsl-clippy fix` deletes the attribute from non-pixel entries.
+**machine-applicable** — Removing the attribute is a textual deletion. `shader-clippy fix` deletes the attribute from non-pixel entries.
 
 ## See also
 
@@ -68,6 +68,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/waveops-include-helper-lanes-on-non-pixel.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/waveops-include-helper-lanes-on-non-pixel.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

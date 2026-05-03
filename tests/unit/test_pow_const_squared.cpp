@@ -13,22 +13,22 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "test_config.hpp"
 
 namespace {
 
-using hlsl_clippy::Diagnostic;
-using hlsl_clippy::lint;
-using hlsl_clippy::make_default_rules;
-using hlsl_clippy::SourceManager;
+using shader_clippy::Diagnostic;
+using shader_clippy::lint;
+using shader_clippy::make_default_rules;
+using shader_clippy::SourceManager;
 
 [[nodiscard]] std::filesystem::path math_fixture() {
-    std::filesystem::path p{std::string{hlsl_clippy::test::k_fixtures_dir}};
+    std::filesystem::path p{std::string{shader_clippy::test::k_fixtures_dir}};
     p /= "phase2";
     p /= "math.hlsl";
     return p;

@@ -106,7 +106,7 @@ foreach ($cpp in Get-ChildItem -Path $rulesDir -Filter *.cpp -File) {
     }
 
     # Add `using` declarations after the anonymous namespace opener.
-    # Look for `namespace {` standing alone after `namespace hlsl_clippy::rules
+    # Look for `namespace {` standing alone after `namespace shader_clippy::rules
     # {` (possibly separated by a blank line).
     $nsIdx = -1
     for ($i = 0; $i -lt $newLines.Count; $i++) {
@@ -114,7 +114,7 @@ foreach ($cpp in Get-ChildItem -Path $rulesDir -Filter *.cpp -File) {
             # Confirm the previous non-blank line is the parent namespace.
             $back = $i - 1
             while ($back -ge 0 -and $newLines[$back] -eq '') { $back-- }
-            if ($back -ge 0 -and $newLines[$back] -eq 'namespace hlsl_clippy::rules {') {
+            if ($back -ge 0 -and $newLines[$back] -eq 'namespace shader_clippy::rules {') {
                 $nsIdx = $i
                 break
             }

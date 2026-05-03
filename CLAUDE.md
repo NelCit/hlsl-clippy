@@ -12,7 +12,7 @@ decisions, see [docs/decisions/](docs/decisions/).
 
 ## What this project is
 
-`hlsl-clippy` is a static linter for HLSL written in C++23, built on
+`shader-clippy` is a static linter for HLSL written in C++23, built on
 tree-sitter-hlsl (AST) and Slang (compile + reflection + IR). It surfaces
 portable anti-patterns that hurt GPU performance or hide correctness bugs —
 patterns that `dxc` and vendor analyzers do not flag. Phases 0 → 5 are
@@ -20,7 +20,7 @@ complete and v0.5.3 has shipped with **154 rules** end-to-end across math,
 bindings, texture, workgroup, control-flow, mesh, DXR, work-graphs, SER,
 cooperative-vector, long-vectors, opacity-micromaps, sampler-feedback,
 VRS, and wave-helper-lane — plus machine-applicable `--fix` rewrites,
-inline suppressions, a `.hlsl-clippy.toml` config, an LSP server, and a
+inline suppressions, a `.shader-clippy.toml` config, an LSP server, and a
 VS Code extension. A companion blog series (9 launch posts) explaining
 the GPU reasoning behind each rule category is central to the project's
 reputation goal.
@@ -54,7 +54,7 @@ reputation goal.
   pass (commits `7afe88b` → `8d44934`):
   - `core/src/rules/util/ast_helpers.{hpp,cpp}` factor — 1422 LOC removed
     across 119 rule TUs.
-  - LSP static-lib factor (`hlsl_clippy_lsp_lib`).
+  - LSP static-lib factor (`shader_clippy_lsp_lib`).
   - Slang prebuilt cache step in every workflow.
   - Parallel `clang-tidy` via `run-clang-tidy-18 -j$(nproc)`; lint went
     from ~30 min serial to ~10 min parallel.
@@ -77,7 +77,7 @@ reputation goal.
     "pre-v0 — scheduled" / "Pre-v0 status" to "shipped (Phase N)";
     183 companion-blog-link placeholders linked to the shipped per-
     category overview posts.
-  - Docs site live at https://nelcit.github.io/hlsl-clippy/; 9 launch
+  - Docs site live at https://nelcit.github.io/shader-clippy/; 9 launch
     blog posts shipped (preface + 8 category overviews + 1 per-rule);
     per-platform `.vsix` bundling lands in v0.5.3. Slang submodule
     retired in commit 73c0322 — Slang is now consumed via the prebuilt
@@ -149,7 +149,7 @@ the ADR first.
 - **SM 6.9 rule expansion**: 36 additional rules (SER, Cooperative Vectors,
   Long Vectors, OMM, Mesh Nodes, SM 6.7/6.8 surfaces) distributed across
   Phases 2–7. Preview mesh-node rules gated behind
-  `[experimental] work-graph-mesh-nodes = true` in `.hlsl-clippy.toml`. See
+  `[experimental] work-graph-mesh-nodes = true` in `.shader-clippy.toml`. See
   [ADR 0010](docs/decisions/0010-sm69-rule-expansion.md).
 
 - **Candidate rule adoption (per-phase plan)**: 41 additional LOCKED rules
@@ -186,11 +186,11 @@ the ADR first.
   [ADR 0013](docs/decisions/0013-phase-4-control-flow-infrastructure.md).
 
 - **Phase 5 LSP + IDE architecture**: separate `lsp/` C++ binary
-  (`hlsl_clippy_lsp`) thin-wrapping `core` over JSON-RPC (nlohmann/json
+  (`shader_clippy_lsp`) thin-wrapping `core` over JSON-RPC (nlohmann/json
   vendored, in-tree dispatcher); TypeScript VS Code extension
   (`vscode-extension/`, Apache-2.0, `nelcit` publisher) thin-wrapping
   the LSP; quick-fixes surfaced as `quickfix` code actions; per-document
-  `.hlsl-clippy.toml` walk-up reused; macOS CI matrix added in the same
+  `.shader-clippy.toml` walk-up reused; macOS CI matrix added in the same
   phase. **Accepted**; lands as 5a (server scaffolding) → 5b (code
   actions) → 5c (extension, parallel-after-5a) → 5d (macOS CI,
   parallel-after-5a) → 5e (distribution). See
@@ -213,7 +213,7 @@ the ADR first.
 ## Code standards (enforced by CI)
 
 - **/W4 /WX /permissive-** on MSVC; **-Wall -Wextra -Wpedantic -Werror** on
-  Clang/GCC. Warnings are errors. The `hlsl_clippy_warnings` INTERFACE
+  Clang/GCC. Warnings are errors. The `shader_clippy_warnings` INTERFACE
   library scopes these flags to first-party targets only — vendored Slang
   and tree-sitter compile under their own flags.
 
@@ -294,7 +294,7 @@ the ADR first.
 - **CMakeLists.txt still sets `CMAKE_CXX_STANDARD 20`.** ADR 0004 locks
   C++23; the build-system edit is a tracked follow-up before Phase 2.
 
-- **`<slang.h>` must never appear in `core/include/hlsl_clippy/` OR
+- **`<slang.h>` must never appear in `core/include/shader_clippy/` OR
   `core/src/rules/`.** CI grep enforces both. The only TU under `core/`
   allowed to include `<slang.h>` is `core/src/reflection/slang_bridge.cpp`;
   rules go through `RuleContext` / `ReflectionInfo` (ADR 0012). Same
@@ -328,14 +328,14 @@ the ADR first.
   tag push triggers `.github/workflows/release.yml` + `release-vscode.yml`).
 - **Docs site:** `docs/` is built by VitePress; pushed to `gh-pages` branch
   via `.github/workflows/docs.yml` on every main commit touching `docs/**`.
-  Live at https://nelcit.github.io/hlsl-clippy/.
+  Live at https://nelcit.github.io/shader-clippy/.
 - **Pre-commit hook**: install the project clang-format gate via
   `pwsh tools/install-hooks.ps1` (Windows) or `bash tools/install-hooks.sh`
   (Linux / macOS) — runs `clang-format --dry-run --Werror` on staged
   `cli/` / `core/` / `tools/` / `lsp/` C++ files, matching the
   `.github/workflows/lint.yml` glob. See
   [tools/git-hooks/README.md](tools/git-hooks/README.md) for env-var
-  overrides (`HLSL_CLIPPY_HOOK_FIX=1` to auto-fix + re-stage).
+  overrides (`SHADER_CLIPPY_HOOK_FIX=1` to auto-fix + re-stage).
 
 ---
 
@@ -401,8 +401,8 @@ blocked at review. The category list as of Phase 1:
 
 ```sh
 # Clone with submodules
-git clone --recurse-submodules https://github.com/NelCit/hlsl-clippy.git
-cd hlsl-clippy
+git clone --recurse-submodules https://github.com/NelCit/shader-clippy.git
+cd shader-clippy
 
 # Configure + build (debug, with compile_commands.json for clangd)
 cmake -B build-debug --preset dev-debug
@@ -412,12 +412,12 @@ cmake --build build-debug
 ctest --test-dir build-debug --output-on-failure
 
 # Lint a shader
-./build-debug/hlsl-clippy lint shader.hlsl
-./build-debug/hlsl-clippy lint --fix shader.hlsl
-./build-debug/hlsl-clippy lint --format=json shader.hlsl
+./build-debug/shader-clippy lint shader.hlsl
+./build-debug/shader-clippy lint --fix shader.hlsl
+./build-debug/shader-clippy lint --format=json shader.hlsl
 ```
 
-**Windows shortcut: dot-source `tools\dev-shell.ps1`** before running cmake / ninja / ctest. It locates the latest VS install via `vswhere`, enters the VS Dev Shell (puts `cl.exe`, `link.exe`, `INCLUDE`, `LIB` on PATH), prepends VS-bundled `cmake.exe` + `ninja.exe`, and adds the Slang prebuilt cache's `bin/` so test exes resolve `slang.dll` + the 6 transitive runtime DLLs at runtime. Idempotent (`HLSL_CLIPPY_DEV_SHELL_READY` guard). Replaces ~30 lines of manual env munging per build attempt.
+**Windows shortcut: dot-source `tools\dev-shell.ps1`** before running cmake / ninja / ctest. It locates the latest VS install via `vswhere`, enters the VS Dev Shell (puts `cl.exe`, `link.exe`, `INCLUDE`, `LIB` on PATH), prepends VS-bundled `cmake.exe` + `ninja.exe`, and adds the Slang prebuilt cache's `bin/` so test exes resolve `slang.dll` + the 6 transitive runtime DLLs at runtime. Idempotent (`SHADER_CLIPPY_DEV_SHELL_READY` guard). Replaces ~30 lines of manual env munging per build attempt.
 
 ```powershell
 . .\tools\dev-shell.ps1                                 # one-time per session
@@ -427,7 +427,7 @@ ctest --test-dir build --output-on-failure
 ```
 
 On Windows with MSVC, use `--preset ci-msvc` or configure without a preset
-and let CMake pick MSVC. The `hlsl-clippy_warnings` INTERFACE library
+and let CMake pick MSVC. The `shader-clippy_warnings` INTERFACE library
 applies `/W4 /WX /permissive-` automatically to first-party targets.
 
 ### Slang prebuilt cache (local dev)
@@ -438,9 +438,9 @@ resolves Slang in this priority order:
 
 1. **`Slang_ROOT`** (CMake var or env var) — install prefix with
    `include/slang.h`, `lib/`, `bin/`.
-2. **Per-user prebuilt cache** at `%LOCALAPPDATA%/hlsl-clippy/slang/<version>/`
-   (Windows) or `$HOME/.cache/hlsl-clippy/slang/<version>/` (Linux).
-   Override root with `HLSL_CLIPPY_SLANG_CACHE`.
+2. **Per-user prebuilt cache** at `%LOCALAPPDATA%/shader-clippy/slang/<version>/`
+   (Windows) or `$HOME/.cache/shader-clippy/slang/<version>/` (Linux).
+   Override root with `SHADER_CLIPPY_SLANG_CACHE`.
 3. **Submodule from-source build** — historical default; runs when neither
    above hits. CI is unaffected (opt-in only).
 
@@ -451,7 +451,7 @@ pwsh tools/fetch-slang.ps1   # Windows
 bash tools/fetch-slang.sh    # Linux
 ```
 
-The cache is keyed by `HLSL_CLIPPY_SLANG_VERSION` in `cmake/SlangVersion.cmake`
+The cache is keyed by `SHADER_CLIPPY_SLANG_VERSION` in `cmake/SlangVersion.cmake`
 (currently `2026.7.1`); bumping the submodule SHA invalidates the cache by
 design — re-run the fetch script after a bump. ABI caveat: prebuilt must
 match the submodule version exactly; mismatch fails at link time, fall back
@@ -459,7 +459,7 @@ to source build by clearing the cache. macOS support landed in Phase 5
 (sub-phase 5d, ADR 0014): `tools/fetch-slang.sh` auto-detects Darwin via
 `uname -s` and downloads `slang-<version>-macos-aarch64.tar.gz` (Apple
 Silicon) or `slang-<version>-macos-x86_64.tar.gz` (Intel) into the same
-`$HOME/.cache/hlsl-clippy/slang/<version>/` root that Linux uses.
+`$HOME/.cache/shader-clippy/slang/<version>/` root that Linux uses.
 
 ---
 
@@ -468,19 +468,19 @@ Silicon) or `slang-<version>-macos-x86_64.tar.gz` (Intel) into the same
 | Phase | State | Notes |
 |---|---|---|
 | 0 — First real diagnostic | DONE | `pow-const-squared` end-to-end; smoke tools; CI; 17-shader corpus; 7 ADRs; blog stub |
-| 1 — Rule engine + quick-fix | DONE | Suppression; declarative TSQuery; `Rewriter` + `--fix`; `.hlsl-clippy.toml` + `--config`; `redundant-saturate`; `clamp01-to-saturate`; 46/46 tests; 27-shader corpus; 22 expansion fixtures; 3 ADRs |
+| 1 — Rule engine + quick-fix | DONE | Suppression; declarative TSQuery; `Rewriter` + `--fix`; `.shader-clippy.toml` + `--config`; `redundant-saturate`; `clamp01-to-saturate`; 46/46 tests; 27-shader corpus; 22 expansion fixtures; 3 ADRs |
 | 2 — AST-only rule pack | DONE | ADR 0009 shipped: math / saturate-redundancy / misc packs; 24 net-new rules |
 | 3 — Reflection-aware | DONE | ADR 0012 reflection infra + ADR 0007/0010 rule packs landed (Pack A/B/C/D/E — 60 rules) |
 | 4 — Control flow + light data flow | DONE | ADR 0013 CFG/uniformity infra + control-flow / atomics / wave-helper-lane packs landed; 42 rules; 12 wiring failures triaged 2026-05-01 |
 | 5 — LSP + IDE | DONE | ADR 0014 sub-phases 5a→5e shipped: LSP server, code-actions, VS Code extension, macOS CI matrix, release pipeline |
-| 6 — Launch (v0.5) | IN PROGRESS | docs site at https://nelcit.github.io/hlsl-clippy/ wired (Pages enable pending); release-readiness audit running; CI gate-mode + per-rule blog stubs queued |
+| 6 — Launch (v0.5) | IN PROGRESS | docs site at https://nelcit.github.io/shader-clippy/ wired (Pages enable pending); release-readiness audit running; CI gate-mode + per-rule blog stubs queued |
 | 7 — IR-level / stretch | PLANNED | Register pressure; redundant samples; packed-math precision; `live-state-across-traceray`; `maybereorderthread-without-payload-shrink` |
 
 ---
 
 ## ADR index
 
-All 21 ADRs are in MADR 4.0 format under `docs/decisions/`. Each ADR's
+All 22 ADRs are in MADR 4.0 format under `docs/decisions/`. Each ADR's
 `status` field is the canonical authority — read it before assuming a
 decision is settled.
 
@@ -507,6 +507,7 @@ decision is settled.
 | [0019](docs/decisions/0019-v1-release-plan.md) | v1.0 release plan — API stability commitment + v1.x maintenance contract | Accepted |
 | [0020](docs/decisions/0020-slang-language-compatibility.md) | Slang language compatibility — sub-phase A (`.slang` recognition + reflection-only lint) for v1.3.0 | Accepted |
 | [0021](docs/decisions/0021-slang-sub-phase-b-tree-sitter.md) | Slang sub-phase B — tree-sitter-slang grammar integration for `.slang` AST coverage (v1.4+) | Accepted |
+| [0022](docs/decisions/0022-rebrand-shader-clippy.md) | Rebrand to `shader-clippy` — clean break for v2.0 | Accepted |
 
 "Proposed" ADRs represent plans that are approved in principle but not yet
 fully implemented. "Accepted" ADRs represent shipped decisions. Do not
@@ -517,11 +518,11 @@ amend an Accepted ADR to change a decision — add an addendum ADR instead.
 ## File map (top-level)
 
 ```
-cli/                    hlsl-clippy executable (src/main.cpp)
-lsp/                    hlsl-clippy-lsp executable (LSP server, ADR 0014)
+cli/                    shader-clippy executable (src/main.cpp)
+lsp/                    shader-clippy-lsp executable (LSP server, ADR 0014)
 vscode-extension/       VS Code extension wrapping the LSP server (TypeScript, ADR 0014)
 core/                   static lib
-  include/hlsl_clippy/  PUBLIC headers (version.hpp, diagnostic.hpp,
+  include/shader_clippy/  PUBLIC headers (version.hpp, diagnostic.hpp,
                           rule.hpp, rewriter.hpp, suppress.hpp, config.hpp)
   src/                  private implementation (parser bridge, rules,
                           query engine, rewriter, config, suppression)
@@ -572,7 +573,7 @@ THIRD_PARTY_LICENSES.md full vendored license texts
   alone — it does not; fall back to Slang reflection.
 - Do not add rules to the roadmap without a corresponding ADR or addendum.
 - Do not let `<slang.h>` or `<tree_sitter/api.h>` appear in
-  `core/include/hlsl_clippy/`.
+  `core/include/shader_clippy/`.
 
 ---
 

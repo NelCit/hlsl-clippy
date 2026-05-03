@@ -6,28 +6,28 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 [[nodiscard]] std::unique_ptr<Rule> make_omm_allocaterayquery2_non_const_flags();
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules
 
 namespace {
 
-using hlsl_clippy::Diagnostic;
-using hlsl_clippy::lint;
-using hlsl_clippy::Rule;
-using hlsl_clippy::SourceManager;
+using shader_clippy::Diagnostic;
+using shader_clippy::lint;
+using shader_clippy::Rule;
+using shader_clippy::SourceManager;
 
 [[nodiscard]] std::vector<Diagnostic> lint_buffer(const std::string& hlsl) {
     SourceManager sources;
     const auto src = sources.add_buffer("synthetic.hlsl", hlsl);
     REQUIRE(src.valid());
     std::vector<std::unique_ptr<Rule>> rules;
-    rules.push_back(hlsl_clippy::rules::make_omm_allocaterayquery2_non_const_flags());
+    rules.push_back(shader_clippy::rules::make_omm_allocaterayquery2_non_const_flags());
     return lint(sources, src, rules);
 }
 

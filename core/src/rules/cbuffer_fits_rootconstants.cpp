@@ -16,15 +16,15 @@
 #include <string_view>
 #include <utility>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 constexpr std::string_view k_rule_id = "cbuffer-fits-rootconstants";
@@ -69,4 +69,4 @@ std::unique_ptr<Rule> make_cbuffer_fits_rootconstants() {
     return std::make_unique<CBufferFitsRootConstants>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

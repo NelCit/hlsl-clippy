@@ -63,11 +63,11 @@ float3 fresnel_schlick(float n_dot_v, float3 f0) {
 none — this rule has no configurable thresholds. To silence it on a specific call site, use inline suppression:
 
 ```hlsl
-// hlsl-clippy: allow(pow-to-mul)
+// shader-clippy: allow(pow-to-mul)
 float k = pow(x, 2.0);
 ```
 
-To silence it project-wide, add to `.hlsl-clippy.toml`:
+To silence it project-wide, add to `.shader-clippy.toml`:
 
 ```toml
 [rules]
@@ -76,7 +76,7 @@ pow-to-mul = "allow"
 
 ## Fix availability
 
-**machine-applicable** — Replacing `pow(x, 2.0)` with `x * x` is a pure textual substitution. The result is semantically identical for all finite positive values of `x`; the NaN behaviour for `x <= 0` is actually improved (fewer NaN sources). `hlsl-clippy fix` applies it without human confirmation.
+**machine-applicable** — Replacing `pow(x, 2.0)` with `x * x` is a pure textual substitution. The result is semantically identical for all finite positive values of `x`; the NaN behaviour for `x <= 0` is actually improved (fewer NaN sources). `shader-clippy fix` applies it without human confirmation.
 
 ## See also
 
@@ -87,4 +87,4 @@ pow-to-mul = "allow"
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/pow-const-squared.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/pow-const-squared.md)

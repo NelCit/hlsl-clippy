@@ -77,6 +77,6 @@ float4 ps_gated_feedback(float4 sv_pos : SV_Position,
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/feedback-every-sample.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/feedback-every-sample.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

@@ -61,7 +61,7 @@ none
 
 ## Fix availability
 
-**suggestion-only** — Identifying which of the function's parameters plays the role of `I`, `N`, and `eta` from the AST alone is fragile, and codebases differ on the incident-vs-outward normal convention. The diagnostic carries a `Fix` whose description suggests `return refract(I, N, eta);`, but no automatic edits are produced; `hlsl-clippy --fix` will not rewrite this rule unattended.
+**suggestion-only** — Identifying which of the function's parameters plays the role of `I`, `N`, and `eta` from the AST alone is fragile, and codebases differ on the incident-vs-outward normal convention. The diagnostic carries a `Fix` whose description suggests `return refract(I, N, eta);`, but no automatic edits are produced; `shader-clippy --fix` will not rewrite this rule unattended.
 
 ## See also
 
@@ -72,6 +72,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/manual-refract.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/manual-refract.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

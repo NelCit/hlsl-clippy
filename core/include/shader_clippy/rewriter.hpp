@@ -7,9 +7,9 @@
 #include <utility>
 #include <vector>
 
-#include "hlsl_clippy/diagnostic.hpp"
+#include "shader_clippy/diagnostic.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 /// Priority assigned to a `Fix` when resolving overlap conflicts. Higher
 /// numbers win. The driver computes this from the host diagnostic's severity
@@ -55,4 +55,4 @@ public:
                                     std::vector<FixConflict>* conflicts_out = nullptr) const;
 };
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

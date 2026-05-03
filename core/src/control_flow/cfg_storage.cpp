@@ -1,6 +1,6 @@
 // Implementation of `CfgStorage` allocators + the public `CfgInfo` /
 // `UniformityOracle` accessors declared in
-// `core/include/hlsl_clippy/control_flow.hpp`. Pure value-type accessors --
+// `core/include/shader_clippy/control_flow.hpp`. Pure value-type accessors --
 // no tree-sitter dependency. The actual reach / dominate / barrier work
 // happens in `dominators.cpp` (parents) and here (graph queries).
 
@@ -10,9 +10,9 @@
 #include <utility>
 #include <vector>
 
-#include "hlsl_clippy/control_flow.hpp"
+#include "shader_clippy/control_flow.hpp"
 
-namespace hlsl_clippy::control_flow {
+namespace shader_clippy::control_flow {
 
 std::uint32_t CfgStorage::allocate_block_id(std::uint32_t function_id, std::uint32_t local_index) {
     // Block ids are dense + global; index 0 reserved for "invalid".
@@ -196,9 +196,9 @@ namespace {
 
 }  // namespace
 
-}  // namespace hlsl_clippy::control_flow
+}  // namespace shader_clippy::control_flow
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 namespace {
 
@@ -282,4 +282,4 @@ Uniformity UniformityOracle::of_branch(Span branch_stmt) const noexcept {
     return it->second;
 }
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

@@ -9,7 +9,7 @@ tags: [compiler, architecture, phase-0]
 
 ## Context and Problem Statement
 
-`hlsl-clippy` needs an HLSL compiler/reflection backend to validate input shaders, surface type and binding information for type-aware rules (Phase 3+), and emit DXIL/SPIR-V for IR-level rules (Phase 7). The choice determines the project's cross-platform reach, ABI stability, and how much compiler-internal plumbing we have to maintain.
+`shader-clippy` needs an HLSL compiler/reflection backend to validate input shaders, surface type and binding information for type-aware rules (Phase 3+), and emit DXIL/SPIR-V for IR-level rules (Phase 7). The choice determines the project's cross-platform reach, ABI stability, and how much compiler-internal plumbing we have to maintain.
 
 ## Decision Drivers
 

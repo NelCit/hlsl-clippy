@@ -24,10 +24,10 @@
 #include <string_view>
 #include <utility>
 
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/rule.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/rule.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 /// Look up an `EntryPointInfo` by its declared entry-point name. Returns
 /// `nullptr` on miss.
@@ -74,4 +74,4 @@ namespace hlsl_clippy::rules::util {
 [[nodiscard]] std::optional<std::pair<std::uint32_t, std::uint32_t>> wave_size_for_entry_point(
     const AstTree& tree, const EntryPointInfo& ep) noexcept;
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

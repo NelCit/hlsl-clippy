@@ -12,10 +12,10 @@
 #include <vector>
 
 #include "control_flow/cfg_storage.hpp"
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 namespace {
 
@@ -244,4 +244,4 @@ bool inside_divergent_cf(const ControlFlowInfo& cfg, Span inner_span) noexcept {
     return false;
 }
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

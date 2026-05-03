@@ -24,7 +24,7 @@
 
 #include "rpc/message.hpp"
 
-namespace hlsl_clippy::lsp::rpc {
+namespace shader_clippy::lsp::rpc {
 
 /// Synchronous request handler. Returns a JSON `result` payload or an
 /// `ErrorObject`. The dispatcher wraps the return value in the LSP response
@@ -77,4 +77,4 @@ private:
     std::unordered_map<std::string, NotificationHandler> notification_handlers_;
 };
 
-}  // namespace hlsl_clippy::lsp::rpc
+}  // namespace shader_clippy::lsp::rpc

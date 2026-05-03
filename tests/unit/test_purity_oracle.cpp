@@ -22,7 +22,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
 #include "rules/util/purity_oracle.hpp"
 
@@ -30,20 +30,20 @@
 
 namespace {
 
-using hlsl_clippy::AstTree;
-using hlsl_clippy::SourceManager;
-using hlsl_clippy::rules::util::Purity;
-namespace util = hlsl_clippy::rules::util;
+using shader_clippy::AstTree;
+using shader_clippy::SourceManager;
+using shader_clippy::rules::util::Purity;
+namespace util = shader_clippy::rules::util;
 
 /// Parse `hlsl` and return the resulting `ParsedSource`. The caller pins
 /// the returned object so the underlying `TSTree*` outlives every node
 /// view we hand out.
-[[nodiscard]] hlsl_clippy::parser::ParsedSource parse_source(SourceManager& sources,
+[[nodiscard]] shader_clippy::parser::ParsedSource parse_source(SourceManager& sources,
                                                              const std::string& hlsl,
                                                              const std::string& name) {
     const auto src = sources.add_buffer(name, hlsl);
     REQUIRE(src.valid());
-    auto parsed_opt = hlsl_clippy::parser::parse(sources, src);
+    auto parsed_opt = shader_clippy::parser::parse(sources, src);
     REQUIRE(parsed_opt.has_value());
     return std::move(parsed_opt.value());
 }

@@ -69,7 +69,7 @@ none
 
 ## Fix availability
 
-**suggestion** — The fix involves reordering or repacking struct members, which may invalidate CPU-side layout assumptions (e.g., `memcpy` fills, explicit `packoffset` annotations, or C++ mirror structs). `hlsl-clippy fix` generates a candidate reordered layout as a comment but does not apply it automatically.
+**suggestion** — The fix involves reordering or repacking struct members, which may invalidate CPU-side layout assumptions (e.g., `memcpy` fills, explicit `packoffset` annotations, or C++ mirror structs). `shader-clippy fix` generates a candidate reordered layout as a comment but does not apply it automatically.
 
 ## See also
 
@@ -81,6 +81,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/cbuffer-padding-hole.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/cbuffer-padding-hole.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

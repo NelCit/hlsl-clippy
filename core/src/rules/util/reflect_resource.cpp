@@ -8,9 +8,9 @@
 #include <optional>
 #include <string_view>
 
-#include "hlsl_clippy/reflection.hpp"
+#include "shader_clippy/reflection.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 bool is_writable(ResourceKind kind) noexcept {
     switch (kind) {
@@ -87,4 +87,4 @@ std::optional<std::uint32_t> array_size_of(const ReflectionInfo& reflection,
     return binding->array_size;
 }
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

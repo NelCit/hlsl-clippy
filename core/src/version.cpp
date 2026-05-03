@@ -1,9 +1,9 @@
-#include "hlsl_clippy/version.hpp"
+#include "shader_clippy/version.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 std::string_view version() noexcept {
-    return "1.5.6";
+    return "2.0.0";
 }
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

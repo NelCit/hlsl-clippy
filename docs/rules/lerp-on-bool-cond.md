@@ -78,6 +78,6 @@ The fix downgrades to **suggestion-only** when either operand contains a non-all
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/lerp-on-bool-cond.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/lerp-on-bool-cond.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

@@ -68,7 +68,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — The closed-form simplification of `cross(v, e_i)` for any cardinal-axis constant `e_i` is exact: the eliminated multiplies are by zero (mathematically exact) and the surviving multiplies are by ±1 (also exact). The fix tool selects the correct swizzle and signs based on the literal vector and the argument order (cross is anti-commutative; `cross(c, v) = -cross(v, c)` and the fix flips signs accordingly). `hlsl-clippy fix` applies the rewrite automatically.
+**machine-applicable** — The closed-form simplification of `cross(v, e_i)` for any cardinal-axis constant `e_i` is exact: the eliminated multiplies are by zero (mathematically exact) and the surviving multiplies are by ±1 (also exact). The fix tool selects the correct swizzle and signs based on the literal vector and the argument order (cross is anti-commutative; `cross(c, v) = -cross(v, c)` and the fix flips signs accordingly). `shader-clippy fix` applies the rewrite automatically.
 
 ## See also
 
@@ -79,6 +79,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/cross-with-up-vector.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/cross-with-up-vector.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

@@ -5,8 +5,8 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/language.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/language.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 
@@ -21,7 +21,7 @@ const ::TSLanguage* tree_sitter_hlsl(void);
 const ::TSLanguage* tree_sitter_slang(void);
 }  // extern "C"
 
-namespace hlsl_clippy::parser {
+namespace shader_clippy::parser {
 
 namespace {
 
@@ -84,4 +84,4 @@ std::optional<ParsedSource> parse(const SourceManager& sources, SourceId source)
     return parse(sources, source, SourceLanguage::Auto);
 }
 
-}  // namespace hlsl_clippy::parser
+}  // namespace shader_clippy::parser

@@ -56,7 +56,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Replacing `v / length(v)` (and the equivalent `v * (1.0 / length(v))` and `v * rsqrt(dot(v, v))` forms) with `normalize(v)` is a pure semantic-preserving substitution. For a non-zero finite `v`, both forms produce a unit vector to within one-ulp transcendental precision; `normalize` is the canonical form and is at least as accurate. `hlsl-clippy fix` applies it automatically. Note that neither form is well-defined for the zero vector — both produce NaN/Inf — so the fix preserves the existing edge-case behaviour.
+**machine-applicable** — Replacing `v / length(v)` (and the equivalent `v * (1.0 / length(v))` and `v * rsqrt(dot(v, v))` forms) with `normalize(v)` is a pure semantic-preserving substitution. For a non-zero finite `v`, both forms produce a unit vector to within one-ulp transcendental precision; `normalize` is the canonical form and is at least as accurate. `shader-clippy fix` applies it automatically. Note that neither form is well-defined for the zero vector — both produce NaN/Inf — so the fix preserves the existing edge-case behaviour.
 
 ## See also
 
@@ -68,6 +68,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/length-then-divide.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/length-then-divide.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

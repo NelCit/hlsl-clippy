@@ -9,7 +9,7 @@ tags: [rules, sm-6.9, sm-6.8, sm-6.7, ser, work-graphs, cooperative-vectors]
 
 ## Context and Problem Statement
 
-ADR 0007 mined the SM 6.4 → 6.8 surface (descriptor heaps, packed math, sampler feedback, mesh shaders, basic work graphs, DXR 1.1) and produced 41 lint candidates. That pass landed before **DXR 1.2 + SM 6.9** shipped retail in Agility SDK 1.619 (February 2026), and it under-mined the SM 6.7 helper-lane / quad surface. SM 6.9 is the largest single shader-model delta since SM 6.5: Shader Execution Reordering (SER) with `dx::HitObject` and `dx::MaybeReorderThread`, Cooperative Vectors (matrix-vector multiply on tensor / WMMA cores), Long Vectors (`vector<T, N>` for `5 ≤ N ≤ 1024`), Opacity Micromaps in DXR 1.2, and Mesh Nodes in Work Graphs (preview). Each surface has a tightly specified set of validation rules and performance footguns that are observable at the AST + Slang-reflection layer hlsl-clippy already plans to operate on.
+ADR 0007 mined the SM 6.4 → 6.8 surface (descriptor heaps, packed math, sampler feedback, mesh shaders, basic work graphs, DXR 1.1) and produced 41 lint candidates. That pass landed before **DXR 1.2 + SM 6.9** shipped retail in Agility SDK 1.619 (February 2026), and it under-mined the SM 6.7 helper-lane / quad surface. SM 6.9 is the largest single shader-model delta since SM 6.5: Shader Execution Reordering (SER) with `dx::HitObject` and `dx::MaybeReorderThread`, Cooperative Vectors (matrix-vector multiply on tensor / WMMA cores), Long Vectors (`vector<T, N>` for `5 ≤ N ≤ 1024`), Opacity Micromaps in DXR 1.2, and Mesh Nodes in Work Graphs (preview). Each surface has a tightly specified set of validation rules and performance footguns that are observable at the AST + Slang-reflection layer shader-clippy already plans to operate on.
 
 A second research pass (`_research/sm69-rule-expansion.md`) produced 36 candidate rules across SER, Cooperative Vectors, Long Vectors, OMM, the SM 6.7 wave/quad surface, SM 6.8 attributes, mesh nodes, and SM 6.9 numerical-special intrinsics. Every candidate was cross-checked against the current ROADMAP.md and ADR 0007 — none duplicate existing rules. The decision now is whether to adopt the pack, and if so, how to slot the rules across phases without distending Phase 4's already-large scope.
 
@@ -148,7 +148,7 @@ For each rule, before it ships:
 - A `tests/fixtures/phaseN/<category>.hlsl` fixture with a `// HIT(rule-name)` marker (per the fixtures convention used in ADR 0009).
 - A blog-post draft under `docs/rules/<rule-name>.md` explaining the GPU reason it matters. SER, Cooperative Vector, Long Vector, and OMM each get a category-overview post in addition to the per-rule pages.
 - Spec-status front-matter in the rule's blog post: which DXC / Slang version implements it, which Agility SDK exposes it, and whether it's preview / retail / vendor-only.
-- Mesh-node rules (#32–#34) hidden behind `[experimental] work-graph-mesh-nodes = true` in `.hlsl-clippy.toml` until the preview API in Agility SDK is finalized.
+- Mesh-node rules (#32–#34) hidden behind `[experimental] work-graph-mesh-nodes = true` in `.shader-clippy.toml` until the preview API in Agility SDK is finalized.
 
 The Phase 6 rule-pack catalog grows from ADR 0007's `math, bindings, texture, workgroup, control-flow, vrs, sampler-feedback, mesh, dxr, work-graphs` to also include `ser`, `cooperative-vector`, `long-vectors`, `opacity-micromaps`, and `wave-helper-lane`.
 

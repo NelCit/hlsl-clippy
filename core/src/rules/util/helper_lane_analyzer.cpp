@@ -20,10 +20,10 @@
 #include <vector>
 
 #include "control_flow/cfg_storage.hpp"
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 namespace {
 
@@ -128,4 +128,4 @@ bool in_pixel_stage_or_unknown(const ControlFlowInfo& cfg) noexcept {
     return true;
 }
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

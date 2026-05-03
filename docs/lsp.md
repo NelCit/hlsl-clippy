@@ -5,17 +5,17 @@ outline: deep
 
 # LSP / IDE
 
-`hlsl-clippy` ships a JSON-RPC LSP server (`hlsl-clippy-lsp`) that
+`shader-clippy` ships a JSON-RPC LSP server (`shader-clippy-lsp`) that
 thin-wraps the same diagnostic + fix engine the CLI uses. Any
 LSP-speaking editor can drive it.
 
 ## VS Code extension
 
-Recommended path on VS Code 1.85+. Search for **HLSL Clippy** by
+Recommended path on VS Code 1.85+. Search for **Shader Clippy** by
 `nelcit` in the Extensions view, or:
 
 ```sh
-code --install-extension nelcit.hlsl-clippy
+code --install-extension nelcit.shader-clippy
 ```
 
 The Marketplace serves the matching per-platform `.vsix` for your
@@ -25,44 +25,44 @@ bundled inside the `.vsix` — no extra download required.
 ### Sideload from a `.vsix`
 
 Per-platform `.vsix` files are also attached to every
-[GitHub Release](https://github.com/NelCit/hlsl-clippy/releases):
+[GitHub Release](https://github.com/NelCit/shader-clippy/releases):
 
-- `hlsl-clippy-<version>-linux-x64.vsix`
-- `hlsl-clippy-<version>-win32-x64.vsix`
-- `hlsl-clippy-<version>-darwin-arm64.vsix`
+- `shader-clippy-<version>-linux-x64.vsix`
+- `shader-clippy-<version>-win32-x64.vsix`
+- `shader-clippy-<version>-darwin-arm64.vsix`
 
 ```sh
-code --install-extension hlsl-clippy-<version>-<target>.vsix
+code --install-extension shader-clippy-<version>-<target>.vsix
 ```
 
 ### Extension settings
 
 | Setting | Type | Default | Purpose |
 |---|---|---|---|
-| `hlslClippy.serverPath` | `string` | `""` | Override the bundled LSP binary with a custom build. Empty = use the bundled binary (or `hlsl-clippy-lsp` on `PATH`). |
-| `hlslClippy.targetProfile` | `string` | `""` | Slang target profile (e.g. `sm_6_6`, `vs_6_7`, `ps_6_8`). Empty = server default per shader stage. |
-| `hlslClippy.enableReflection` | `boolean` | `true` | Enable Phase 3 reflection-aware rules. Disable on slow machines for AST-only latency. |
-| `hlslClippy.enableControlFlow` | `boolean` | `true` | Enable Phase 4 control-flow / uniformity rules. |
-| `hlslClippy.trace.server` | `enum` | `"off"` | LSP wire trace (`"off"`, `"messages"`, `"verbose"`) for debugging. |
+| `shaderClippy.serverPath` | `string` | `""` | Override the bundled LSP binary with a custom build. Empty = use the bundled binary (or `shader-clippy-lsp` on `PATH`). |
+| `shaderClippy.targetProfile` | `string` | `""` | Slang target profile (e.g. `sm_6_6`, `vs_6_7`, `ps_6_8`). Empty = server default per shader stage. |
+| `shaderClippy.enableReflection` | `boolean` | `true` | Enable Phase 3 reflection-aware rules. Disable on slow machines for AST-only latency. |
+| `shaderClippy.enableControlFlow` | `boolean` | `true` | Enable Phase 4 control-flow / uniformity rules. |
+| `shaderClippy.trace.server` | `enum` | `"off"` | LSP wire trace (`"off"`, `"messages"`, `"verbose"`) for debugging. |
 
 ## Other LSP clients
 
 The LSP wire is generic. Any editor with LSP support can drive
-`hlsl-clippy-lsp` directly. Get the binary from a tagged
-[GitHub Release](https://github.com/NelCit/hlsl-clippy/releases) and
+`shader-clippy-lsp` directly. Get the binary from a tagged
+[GitHub Release](https://github.com/NelCit/shader-clippy/releases) and
 put it on `PATH`, then point your editor's HLSL filetype at it.
 
 ### Neovim (lspconfig)
 
 ```lua
-require('lspconfig.configs').hlsl_clippy = {
+require('lspconfig.configs').shader_clippy = {
   default_config = {
-    cmd = { 'hlsl-clippy-lsp' },
+    cmd = { 'shader-clippy-lsp' },
     filetypes = { 'hlsl' },
-    root_dir = require('lspconfig.util').root_pattern('.hlsl-clippy.toml', '.git'),
+    root_dir = require('lspconfig.util').root_pattern('.shader-clippy.toml', '.git'),
   },
 }
-require('lspconfig').hlsl_clippy.setup{}
+require('lspconfig').shader_clippy.setup{}
 ```
 
 ### Helix
@@ -70,12 +70,12 @@ require('lspconfig').hlsl_clippy.setup{}
 In `~/.config/helix/languages.toml`:
 
 ```toml
-[language-server.hlsl-clippy]
-command = "hlsl-clippy-lsp"
+[language-server.shader-clippy]
+command = "shader-clippy-lsp"
 
 [[language]]
 name = "hlsl"
-language-servers = ["hlsl-clippy"]
+language-servers = ["shader-clippy"]
 ```
 
 ### Emacs lsp-mode
@@ -83,19 +83,19 @@ language-servers = ["hlsl-clippy"]
 ```elisp
 (with-eval-after-load 'lsp-mode
   (lsp-register-client
-   (make-lsp-client :new-connection (lsp-stdio-connection "hlsl-clippy-lsp")
+   (make-lsp-client :new-connection (lsp-stdio-connection "shader-clippy-lsp")
                     :major-modes '(hlsl-mode)
-                    :server-id 'hlsl-clippy)))
+                    :server-id 'shader-clippy)))
 ```
 
 ## Workspace awareness
 
-The LSP server reads `.hlsl-clippy.toml` per-document using the same
+The LSP server reads `.shader-clippy.toml` per-document using the same
 walk-up logic as the CLI (see [Configuration](/configuration#walk-up-resolution)).
 Multi-root workspaces are supported — each root resolves its own
 config independently.
 
-A file watcher on `.hlsl-clippy.toml` invalidates the cached `Config`
+A file watcher on `.shader-clippy.toml` invalidates the cached `Config`
 for every open document under the changed config root, so editing
 the config takes effect immediately without an editor restart.
 

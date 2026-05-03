@@ -64,12 +64,12 @@ float3 project_safe(float3 a, float3 b) {
 
 ## Fix availability
 
-**machine-applicable** (since v1.2 — ADR 0019) — The fix wraps the divisor in `max(<epsilon>, <divisor>)`, where `<epsilon>` comes from the project-tuned `Config::div_epsilon()` (see `[float] div-epsilon` in `.hlsl-clippy.toml`, default `1e-6`). The rewrite preserves divisor evaluation count, so the substitution is safe whenever the divisor is **side-effect-free** under the v1.2 purity oracle.
+**machine-applicable** (since v1.2 — ADR 0019) — The fix wraps the divisor in `max(<epsilon>, <divisor>)`, where `<epsilon>` comes from the project-tuned `Config::div_epsilon()` (see `[float] div-epsilon` in `.shader-clippy.toml`, default `1e-6`). The rewrite preserves divisor evaluation count, so the substitution is safe whenever the divisor is **side-effect-free** under the v1.2 purity oracle.
 
 The fix downgrades to **suggestion-only** when the divisor contains an unknown call, an assignment, or any other observable side effect — hand-review before applying.
 
 ```toml
-# .hlsl-clippy.toml — tune the inserted epsilon to your project's dynamic range.
+# .shader-clippy.toml — tune the inserted epsilon to your project's dynamic range.
 [float]
 div-epsilon = 1e-5
 ```
@@ -86,6 +86,6 @@ The choice between `max(b, eps)`, `b + eps`, and an early-exit `if (b < eps) ret
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/div-without-epsilon.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/div-without-epsilon.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

@@ -384,7 +384,7 @@ Five phases, mapped to versions:
   into `nelcit/tree-sitter-slang` (assuming Option B). Add a third
   submodule under `external/tree-sitter-slang/`. Extend
   `cmake/UseTreeSitter.cmake` to build both grammars as parallel
-  OBJECT libs linked into `hlsl_clippy_parser`. Smoke-test that
+  OBJECT libs linked into `shader_clippy_parser`. Smoke-test that
   the `tree_sitter_slang()` C function returns a valid `TSLanguage*`
   and parses a hand-written `.slang` fixture without crashing.
 - **B.2 — Parser dispatch.** Modify `core/src/parser.cpp` so
@@ -617,7 +617,7 @@ Slang-specific fixtures + CI gate (B.4) in **v1.4.0**.
   we add it to every CI configuration on every commit.
   - *Mitigation 1:* OBJECT-lib pattern from `cmake/UseTreeSitter.cmake`
     means tree-sitter-slang's parser.c compiles once per
-    configuration, links into `hlsl_clippy_parser` once. No
+    configuration, links into `shader_clippy_parser` once. No
     per-rule-TU recompile cost.
   - *Mitigation 2:* tree-sitter parsers compile in <30 seconds on
     cold cache; sccache from ADR 0005 makes warm cache ~2 seconds.
@@ -665,7 +665,7 @@ Slang-specific fixtures + CI gate (B.4) in **v1.4.0**.
   maintenance contract permits additive features within ABI.
   Sub-phase B is additive: a new tree-sitter language linked in, new
   parser dispatch, new test fixtures, new CI job. No public-type ABI
-  change in `core/include/hlsl_clippy/` (the existing public types
+  change in `core/include/shader_clippy/` (the existing public types
   already accommodate `SourceLanguage` per sub-phase A).
 - **[ADR 0020](0020-slang-language-compatibility.md)** (Slang
   sub-phase A) — sub-phase B is the explicit successor to sub-phase A's

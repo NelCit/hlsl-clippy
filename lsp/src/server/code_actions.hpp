@@ -1,4 +1,4 @@
-// hlsl_clippy::Fix → LSP CodeAction / WorkspaceEdit conversion.
+// shader_clippy::Fix → LSP CodeAction / WorkspaceEdit conversion.
 //
 // Sub-phase 5b (per ADR 0014 §"Sub-phase 5b — Code actions"). Each
 // `Diagnostic` carrying one or more `Fix`es is mapped to an LSP CodeAction:
@@ -37,10 +37,10 @@
 
 #include <nlohmann/json.hpp>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::lsp::server {
+namespace shader_clippy::lsp::server {
 
 /// Convert each Diagnostic with a Fix into an LSP CodeAction. Diagnostics
 /// whose `primary_span` does not overlap the requested range
@@ -49,8 +49,8 @@ namespace hlsl_clippy::lsp::server {
 /// The returned value is always a JSON array; an empty array is the LSP
 /// "no actions available" response.
 [[nodiscard]] nlohmann::json code_actions_for_range(
-    const std::vector<hlsl_clippy::Diagnostic>& diagnostics,
-    const hlsl_clippy::SourceManager& sources,
+    const std::vector<shader_clippy::Diagnostic>& diagnostics,
+    const shader_clippy::SourceManager& sources,
     std::string_view document_uri,
     std::int32_t requested_line_start,
     std::int32_t requested_char_start,
@@ -64,8 +64,8 @@ namespace hlsl_clippy::lsp::server {
 /// Output shape per LSP §"Hover":
 ///   { "contents": { "kind": "markdown", "value": "..." } }
 [[nodiscard]] nlohmann::json hover_for_position(
-    const std::vector<hlsl_clippy::Diagnostic>& diagnostics,
-    const hlsl_clippy::SourceManager& sources,
+    const std::vector<shader_clippy::Diagnostic>& diagnostics,
+    const shader_clippy::SourceManager& sources,
     std::int32_t line,
     std::int32_t character);
 
@@ -73,4 +73,4 @@ namespace hlsl_clippy::lsp::server {
 /// (no docs site live yet) we link to the GitHub-hosted markdown source.
 [[nodiscard]] std::string docs_url_for_rule(std::string_view rule_id);
 
-}  // namespace hlsl_clippy::lsp::server
+}  // namespace shader_clippy::lsp::server

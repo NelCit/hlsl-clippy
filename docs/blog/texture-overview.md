@@ -290,7 +290,7 @@ contract with the calling shader. The patterns above are the ones
 that violate the contract while compiling clean and producing
 plausible images.
 
-Run `hlsl-clippy lint --format=github-annotations` against the texture
+Run `shader-clippy lint --format=github-annotations` against the texture
 sampling in your hot pass. Read the doc page on the first warning.
 Every rule explains the GPU mechanism in enough depth that you stop
 writing the pattern in the first place — which is, eventually, the
@@ -298,8 +298,8 @@ point.
 
 ---
 
-`hlsl-clippy` is open source. Rules, issues, and discussion live at
-[github.com/NelCit/hlsl-clippy](https://github.com/NelCit/hlsl-clippy).
+`shader-clippy` is open source. Rules, issues, and discussion live at
+[github.com/NelCit/shader-clippy](https://github.com/NelCit/shader-clippy).
 If you have encountered a shader pattern that should be a lint rule,
 open an issue.
 

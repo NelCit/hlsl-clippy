@@ -25,25 +25,25 @@
 
 #include "control_flow/cfg_storage.hpp"
 #include "control_flow/engine.hpp"
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 #include "parser_internal.hpp"
 #include "rules/util/liveness.hpp"
 
 namespace {
 
-using hlsl_clippy::AstTree;
-using hlsl_clippy::BasicBlockId;
-using hlsl_clippy::ByteSpan;
-using hlsl_clippy::ControlFlowInfo;
-using hlsl_clippy::SourceId;
-using hlsl_clippy::SourceManager;
-using hlsl_clippy::Span;
+using shader_clippy::AstTree;
+using shader_clippy::BasicBlockId;
+using shader_clippy::ByteSpan;
+using shader_clippy::ControlFlowInfo;
+using shader_clippy::SourceId;
+using shader_clippy::SourceManager;
+using shader_clippy::Span;
 
-namespace util = hlsl_clippy::util;
+namespace util = shader_clippy::util;
 
 struct Built {
-    hlsl_clippy::parser::ParsedSource parsed;
+    shader_clippy::parser::ParsedSource parsed;
     ControlFlowInfo cfg;
     SourceId source;
 };
@@ -51,11 +51,11 @@ struct Built {
 /// Parse + build the CFG using the same tree-sitter root, and return
 /// both so the test can construct a matching `AstTree` for liveness.
 [[nodiscard]] Built build(SourceManager& sources, const std::string& name, std::string_view src) {
-    auto& engine = hlsl_clippy::control_flow::CfgEngine::instance();
+    auto& engine = shader_clippy::control_flow::CfgEngine::instance();
     engine.clear_cache();
     const auto sid = sources.add_buffer(name, std::string{src});
     REQUIRE(sid.valid());
-    auto parsed_opt = hlsl_clippy::parser::parse(sources, sid);
+    auto parsed_opt = shader_clippy::parser::parse(sources, sid);
     REQUIRE(parsed_opt.has_value());
     auto parsed = std::move(parsed_opt.value());
     const ::TSNode root = ::ts_tree_root_node(parsed.tree.get());
@@ -263,7 +263,7 @@ TEST_CASE("compute_liveness on empty CFG returns an empty LivenessInfo", "[liven
     SourceManager sources;
     constexpr std::string_view k_src = "void empty() {}\n";
     const auto sid = sources.add_buffer("empty.hlsl", std::string{k_src});
-    auto parsed_opt = hlsl_clippy::parser::parse(sources, sid);
+    auto parsed_opt = shader_clippy::parser::parse(sources, sid);
     REQUIRE(parsed_opt.has_value());
     auto parsed = std::move(parsed_opt.value());
     AstTree tree{parsed.tree.get(), parsed.language, parsed.bytes, parsed.source};

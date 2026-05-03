@@ -1,7 +1,7 @@
-﻿---
+---
 title: "missing-accept-first-hit"
 date: 2026-05-02
-author: hlsl-clippy maintainers
+author: shader-clippy maintainers
 category: dxr
 tags: [hlsl, performance, dxr]
 status: stub
@@ -47,4 +47,4 @@ The bad / good code snippets are kept canonical on the rule page; see
 ---
 
 *This is a v1.0-ship stub. Full analysis pending; track [issue link
-TBD](https://github.com/NelCit/hlsl-clippy/issues).*
+TBD](https://github.com/NelCit/shader-clippy/issues).*

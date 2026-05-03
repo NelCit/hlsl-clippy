@@ -13,6 +13,96 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [2.0.0] — 2026-05-03
+
+**Major — rebrand to `shader-clippy` (clean break, no compat
+shim).** The linter has covered both HLSL and Slang
+end-to-end since v1.4 (ADR 0021 sub-phase B), and v1.5
+shipped Slang-specific rules (sub-phase C). The
+`hlsl-clippy` name no longer reflects the surface; v2.0
+adopts `shader-clippy` everywhere — the slug is short,
+keeps the Rust-clippy heritage, and leaves room for
+GLSL/MSL/WGSL coverage via Slang's cross-compile targets.
+
+ADR 0022 documents the rationale and the clean-break
+transition: no dual-name compat shim, no deprecated alias.
+v1.x users land on v2 via a v1.5.7 farewell release on the
+old VS Code Marketplace listing pointing at the new
+`nelcit.shader-clippy` extension.
+
+### BREAKING
+
+- **Binary names**: `hlsl-clippy` → `shader-clippy`,
+  `hlsl-clippy-lsp` → `shader-clippy-lsp`. CI scripts that
+  invoke the CLI must update.
+- **Config file**: `.hlsl-clippy.toml` →
+  `.shader-clippy.toml`. The walk-up loader no longer
+  recognises the old name; rename or the file is ignored.
+- **Public header path**: `core/include/hlsl_clippy/` →
+  `core/include/shader_clippy/`. Downstream embedders that
+  link against `core/` must update `#include` paths.
+- **C++ namespace**: `hlsl_clippy::` → `shader_clippy::`.
+  Header guards and CMake target names (`hlsl_clippy_core`,
+  `hlsl_clippy_lsp`, `hlsl_clippy_warnings`,
+  `hlsl_clippy_unit_tests`, `hlsl_clippy_bench`) renamed
+  in lock-step.
+- **VS Code extension ID**: `nelcit.hlsl-clippy` →
+  `nelcit.shader-clippy`. New Marketplace listing — old
+  extension installs do not auto-upgrade. Settings prefix
+  `hlslClippy.*` → `shaderClippy.*`; existing user
+  settings must be renamed (no fallback read).
+- **Suppression syntax**: `// hlsl-clippy: allow(rule)` →
+  `// shader-clippy: allow(rule)`. Existing suppressions
+  in shipped shader trees must be updated.
+- **Environment vars**: `HLSL_CLIPPY_*` →
+  `SHADER_CLIPPY_*` (`HLSL_CLIPPY_HOOK_FIX`,
+  `HLSL_CLIPPY_SLANG_CACHE`, `HLSL_CLIPPY_SLANG_VERSION`,
+  `HLSL_CLIPPY_DEV_SHELL_READY`).
+- **Slang prebuilt cache root**:
+  `%LOCALAPPDATA%/hlsl-clippy/slang/` →
+  `%LOCALAPPDATA%/shader-clippy/slang/` on Windows;
+  `~/.cache/hlsl-clippy/slang/` →
+  `~/.cache/shader-clippy/slang/` on Linux/macOS. Existing
+  caches orphan; re-run `tools/fetch-slang.{ps1,sh}` once.
+
+### Changed
+
+- All occurrences of `hlsl-clippy` / `hlsl_clippy` /
+  `hlslClippy` / `HLSL_CLIPPY` / `HLSL Clippy` rewritten
+  to `shader-clippy` / `shader_clippy` / `shaderClippy` /
+  `SHADER_CLIPPY` / `Shader Clippy` across 1042 files via
+  `tools/v2-rebrand.ps1` (kept in tree as the canonical
+  audit trail of the sweep).
+- GitHub repo will be renamed `NelCit/hlsl-clippy` →
+  `NelCit/shader-clippy` post-merge; GitHub auto-redirects
+  preserve issue / PR / clone URLs.
+- Docs site moves
+  `nelcit.github.io/hlsl-clippy/` →
+  `nelcit.github.io/shader-clippy/` (auto-redirected by
+  GitHub Pages once the repo is renamed).
+
+### Fixed
+
+- _(no rule changes — this release is rebrand-only;
+  v1.5.6's 856 cases / 2246 assertions stand.)_
+
+### Migration
+
+1. Uninstall `nelcit.hlsl-clippy` from VS Code.
+2. Install `nelcit.shader-clippy`.
+3. In each shader workspace, rename `.hlsl-clippy.toml`
+   → `.shader-clippy.toml`.
+4. In any CI pipeline, swap `hlsl-clippy` for
+   `shader-clippy` in the binary call.
+5. Re-run `tools/fetch-slang.{ps1,sh}` to populate the
+   new cache root (or copy the existing cache from
+   `%LOCALAPPDATA%/hlsl-clippy/slang/` to
+   `%LOCALAPPDATA%/shader-clippy/slang/`).
+6. In editor settings JSON, rename `hlslClippy.*` keys
+   to `shaderClippy.*`.
+7. In suppressed shader files, rewrite
+   `// hlsl-clippy: allow(...)` → `// shader-clippy: allow(...)`.
+
 ## [1.5.6] — 2026-05-03
 
 **Patch — 7 latent clang-tidy errors uncovered by v1.5.5's
@@ -134,12 +224,12 @@ on Windows clang-cl + libstdc++.
 format pass missed the public-header tree (`core/include/`); the
 sweep extracted file paths from v1.5.1's failure log, which only
 listed `core/src/` files. v1.5.2's CI run flagged exactly one
-remaining offender: `core/include/hlsl_clippy/ir.hpp:100` — a
+remaining offender: `core/include/shader_clippy/ir.hpp:100` — a
 single line-break disagreement on `IrFunctionId::operator==`.
 
 ### Fixed
 
-- **`core/include/hlsl_clippy/ir.hpp`** — single-line
+- **`core/include/shader_clippy/ir.hpp`** — single-line
   reformatting (joined a wrapped function signature). No
   semantic change.
 
@@ -501,7 +591,7 @@ rules tracks for v1.4+ (sub-phase B). All v1.x ABI guarantees hold
 
 ### Added
 
-- `core/include/hlsl_clippy/language.hpp` — `enum class SourceLanguage
+- `core/include/shader_clippy/language.hpp` — `enum class SourceLanguage
   { Auto, Hlsl, Slang }` plus `detect_language(path)` and
   `resolve_language(selected, path)` helpers. Used by both CLI and LSP
   for per-source language inference.
@@ -517,13 +607,13 @@ rules tracks for v1.4+ (sub-phase B). All v1.x ABI guarantees hold
   extensions: [".slang"] }`. The `documentSelector` covers
   `file/untitled × hlsl/slang` (4 entries). Walkthrough copy mentions
   `.slang` files alongside `.hlsl`.
-- `hlslClippy.slang.enable` config knob (default `true`). When `false`,
+- `shaderClippy.slang.enable` config knob (default `true`). When `false`,
   the extension does not register the `slang` language contribution at
   activation time — useful for users who run `shader-slang.slang`
   exclusively. Toggling triggers a server restart.
 - Orchestrator emits `clippy::language-skip-ast` once per `.slang`
   source per lint run (`Severity::Note`, suppressible via
-  `// hlsl-clippy: allow(clippy::language-skip-ast)` or
+  `// shader-clippy: allow(clippy::language-skip-ast)` or
   `[rules] "clippy::language-skip-ast" = "allow"`).
 - `tests/fixtures/slang/` (3 fixtures) + `tests/unit/test_slang_dispatch.cpp`
   + `tests/golden/slang/` cover dispatch, language-detection, and
@@ -567,7 +657,7 @@ out the conversions specifically unlocked by the v1.2 foundation.
   that need project-tuned scalar dials. Returns `nullptr` when the lint
   run was started via a non-config-aware overload (legacy callers); rules
   fall back to documented hard-coded defaults in that case.
-  `core/include/hlsl_clippy/rule.hpp`, `core/src/lint.cpp`.
+  `core/include/shader_clippy/rule.hpp`, `core/src/lint.cpp`.
 - **Tests** — 7 new `[fix]` cases covering the v1.2 conversions
   (machine-applicable on pure operands, suggestion-grade fallback on
   impure operands, project-tuned epsilon plumbing): 825 -> 827 cases /
@@ -652,9 +742,9 @@ infrastructure + governance.
   `vgpr-pressure-warning` (static estimate unreliable on small shaders;
   needs threshold-tuning patch).
 - **`tools/adoption-poll.{ps1,sh}`** (v1.1) — polls the VS Code
-  Marketplace listing for `nelcit.hlsl-clippy` (installs / rating /
+  Marketplace listing for `nelcit.shader-clippy` (installs / rating /
   version) via `vsce show --json` and counts public GitHub repos
-  referencing `hlsl-clippy` from a workflow file via `gh search code`.
+  referencing `shader-clippy` from a workflow file via `gh search code`.
   Appends one dated row per invocation to `docs/adoption-metrics.md`.
   Suggested cadence: monthly. Captures data only — the maintainer
   reviews the install / downstream thresholds (ADR 0018 §5 #7, #8) at
@@ -683,7 +773,7 @@ infrastructure + governance.
 registered rules, API stability commitment, v1.x maintenance contract.
 
 The pre-v1 / v0.x labels signalled "we reserve the right to break
-things." v1.0 freezes the public API: `core/include/hlsl_clippy/*.hpp`
+things." v1.0 freezes the public API: `core/include/shader_clippy/*.hpp`
 types, CLI flags + output formats, LSP wire protocol (engine
 diagnostic codes plus standard LSP). A v1.0 → v1.x bump may not change
 the binary shape of those surfaces. Removing or renaming a public type
@@ -701,13 +791,13 @@ deprecation policy, Slang submodule cadence policy).
   surface (private headers, dev-shell scripts, exact diagnostic
   message wording), and a regression-reporting note.
 - **3 new CI gates**:
-  - `api-symbol-diff` — extracts `nm` symbols from `hlsl_clippy_core`
+  - `api-symbol-diff` — extracts `nm` symbols from `shader_clippy_core`
     and uploads as artefact. The `diff` step against the v1.0
     baseline is a v1.0.x patch follow-up.
-  - `slang-bump-regression` — nightly cron, bumps `HLSL_CLIPPY_SLANG_VERSION`
+  - `slang-bump-regression` — nightly cron, bumps `SHADER_CLIPPY_SLANG_VERSION`
     one patch, builds + tests. Catches Slang-side breakages before
     user-visible bumps.
-  - `ihv-target-snapshot` — runs `hlsl-clippy lint tests/corpus/`
+  - `ihv-target-snapshot` — runs `shader-clippy lint tests/corpus/`
     once per `[experimental.target]` value. Default-config snapshot
     must contain zero IHV-target-coded diagnostics.
 - **`tests/unit/test_ihv_target_snapshot.cpp`** — in-tree complement
@@ -718,7 +808,7 @@ deprecation policy, Slang submodule cadence policy).
   version, version strings synced across `core/src/version.cpp` /
   `vscode-extension/package.json` / CHANGELOG / git tag, ADR index
   consistency, public-header guard.
-- **`tools/fp-rate-baseline.ps1`** — runs `hlsl-clippy lint --format=json`
+- **`tools/fp-rate-baseline.ps1`** — runs `shader-clippy lint --format=json`
   across `tests/corpus/`, aggregates per-rule firing counts, generates
   `tests/corpus/FP_RATES.md` for human triage. Initial baseline: 39
   rules fire / 211 diagnostics across the 27-shader corpus.
@@ -764,7 +854,7 @@ RGA, and IHV-experimental rules gated behind a new
 169 → **190**.
 
 This release is the first to land a per-IHV gate. Default builds emit
-zero IHV-specific diagnostics; users opt in via `.hlsl-clippy.toml`:
+zero IHV-specific diagnostics; users opt in via `.shader-clippy.toml`:
 
 ```toml
 [experimental]
@@ -826,7 +916,7 @@ implemented.
 ### Added (infrastructure)
 
 - **`Rule::experimental_target()` virtual** + **`ExperimentalTarget`
-  enum** in `<hlsl_clippy/rule.hpp>`. Rules opt into the gate by
+  enum** in `<shader_clippy/rule.hpp>`. Rules opt into the gate by
   overriding the virtual; default `None` keeps them always-on.
 - **`Config::experimental_target()`** parsed from `[experimental]
   target = ...`. Recognised tokens: `"rdna4"`, `"blackwell"`, `"xe2"`.
@@ -863,7 +953,7 @@ utilities back the rules (`liveness` over the Phase 4 CFG,
 `register_pressure_ast` heuristic over reflection types).
 
 If a future rule turns out to genuinely need post-codegen IR access,
-ADR 0016's `Stage::Ir` + `<hlsl_clippy/ir.hpp>` are still in force as
+ADR 0016's `Stage::Ir` + `<shader_clippy/ir.hpp>` are still in force as
 the dispatch hook (currently used for stage-gating only); a v0.8+
 follow-up ADR can re-introduce the bridge cleanly.
 
@@ -921,7 +1011,7 @@ follow-up ADR can re-introduce the bridge cleanly.
 
 - ADR 0016 sub-phase 7a.2-step2 (DXC submodule + DXIL parser) and 7b's
   IR-based shared utilities — **superseded by ADR 0017**. ADR 0016's
-  shipped pieces (`Stage::Ir` enum, `<hlsl_clippy/ir.hpp>`, metadata-
+  shipped pieces (`Stage::Ir` enum, `<shader_clippy/ir.hpp>`, metadata-
   only `IrEngine` from 7a.2-step1, `LintOptions::enable_ir`) stay in
   force as a stage-gating dispatch hook; the v0.7 rules that use
   `Stage::Ir` use it for stage gating only.
@@ -956,8 +1046,8 @@ that made VS Code feel broken are gone, fix-all now actually works, and
   `gatherFixAllEdit(document)` helper that does one full-document
   QuickFix gather, filters aux suppress/open-docs actions, and merges
   every TextEdit into one WorkspaceEdit. The
-  `hlslClippy.fixAllInDocument` command and the
-  `source.fixAll.hlslClippy` provider both call it.
+  `shaderClippy.fixAllInDocument` command and the
+  `source.fixAll.shaderClippy` provider both call it.
 
 ### Added
 - **TextEdit fixes on 10 previously fix-less rules**, after a full
@@ -1061,7 +1151,7 @@ frames, server hung.
 
 ### Added
 - **`tools/smoke-lsp.js`** -- standalone Node.js smoke test that
-  spawns `hlsl-clippy-lsp.exe`, drives a real JSON-RPC handshake
+  spawns `shader-clippy-lsp.exe`, drives a real JSON-RPC handshake
   through stdio, and asserts at least one `publishDiagnostics`
   frame is produced. Catches both LSP startup failure modes:
   missing DLLs (server crashes before handshake) and text-mode
@@ -1097,36 +1187,36 @@ v0.6.4 succeeded, but every Marketplace user is still on v0.6.3.
 ## [0.6.4] — 2026-05-02
 
 VS Code extension UX wave #3: inline diagnostic decorations
-(Error Lens style), `source.fixAll.hlslClippy` for auto-fix-on-save,
+(Error Lens style), `source.fixAll.shaderClippy` for auto-fix-on-save,
 status-bar visibility toggle, and an explicit
 "Fix All in Document" command.
 
 ### Added
 - **Inline diagnostic decorations** (opt-in via
-  `hlslClippy.inlineDiagnostics` setting). Renders the diagnostic
+  `shaderClippy.inlineDiagnostics` setting). Renders the diagnostic
   message at the end of the offending line in a dim italic colour
   themed to severity. Three modes: `off` (default), `errors-only`,
   `all`. Only one inline message per line (highest-priority
   diagnostic wins) so dense files stay readable.
-- **`source.fixAll.hlslClippy`** code action kind. Apply every
+- **`source.fixAll.shaderClippy`** code action kind. Apply every
   machine-applicable fix in the active document at once, optionally
   on save:
   ```jsonc
   // settings.json
   "editor.codeActionsOnSave": {
-    "source.fixAll.hlslClippy": "always"
+    "source.fixAll.shaderClippy": "always"
   }
   ```
-- **`HLSL Clippy: Fix All in Document`** command (also right-click
+- **`Shader Clippy: Fix All in Document`** command (also right-click
   menu + status-bar quick-pick) for explicit one-shot invocation.
-- **`hlslClippy.showStatusBar`** boolean setting -- hides the
+- **`shaderClippy.showStatusBar`** boolean setting -- hides the
   status-bar badge for users with crowded status bars (commands and
   hotkeys still work).
 
 ### Changed
 - Status-bar `renderStatus()` re-renders on
   `onDidChangeConfiguration` so toggling
-  `hlslClippy.showStatusBar` / `inlineDiagnostics` takes effect
+  `shaderClippy.showStatusBar` / `inlineDiagnostics` takes effect
   immediately without a window reload.
 
 ## [0.6.3] — 2026-05-02
@@ -1139,7 +1229,7 @@ open-docs, "Show All Rules" webview, plus the
 masking the v0.6.1 / v0.6.2 "command not found" report.
 
 ### Fixed
-- **`HLSL Clippy: Re-lint Active Document` no longer throws on VS
+- **`Shader Clippy: Re-lint Active Document` no longer throws on VS
   Code 1.85.** v0.6.1 used `vscode.workspace.save()` which is a 1.86+
   API; on 1.85 the call was a TypeError. Replaced with
   `vscode.commands.executeCommand("workbench.action.files.save")`
@@ -1150,28 +1240,28 @@ masking the v0.6.1 / v0.6.2 "command not found" report.
   appear directly inline (no submenu nesting) when right-clicking
   inside an HLSL file. Order: Open Rule Docs → Suppress for Line →
   Suppress for File → Re-lint → Show All Rules → Show Output.
-- **Code actions** (`Ctrl+.` / lightbulb on any HLSL Clippy
+- **Code actions** (`Ctrl+.` / lightbulb on any Shader Clippy
   diagnostic):
-  - `HLSL Clippy: suppress '<rule>' for this line` -- inserts
-    `// hlsl-clippy: allow(rule-id)` at the end of the offending
+  - `Shader Clippy: suppress '<rule>' for this line` -- inserts
+    `// shader-clippy: allow(rule-id)` at the end of the offending
     line. If a comment already exists, extends its rule list.
-  - `HLSL Clippy: suppress '<rule>' for entire file` -- inserts
-    (or extends) a top-of-file `// hlsl-clippy: allow(rule-id)`.
-  - `HLSL Clippy: open '<rule>' docs` -- opens the per-rule docs
+  - `Shader Clippy: suppress '<rule>' for entire file` -- inserts
+    (or extends) a top-of-file `// shader-clippy: allow(rule-id)`.
+  - `Shader Clippy: open '<rule>' docs` -- opens the per-rule docs
     page on github.com.
   These actions sit alongside the LSP server's existing quick-fixes;
   one diagnostic with a machine-applicable fix now offers four
   lightbulb actions: the fix + the three above.
-- **Status-bar severity split**: `$(check) HLSL Clippy $(error) 2
+- **Status-bar severity split**: `$(check) Shader Clippy $(error) 2
   $(warning) 5 $(info) 1` instead of one flat count. Severity tiers
   with zero count are omitted to save real estate.
-- **Status-bar click → quick-pick** (`HLSL Clippy: Quick Actions...`)
+- **Status-bar click → quick-pick** (`Shader Clippy: Quick Actions...`)
   lists every extension command with icons + descriptions. Replaces
   the click-jumps-to-output behaviour from v0.6.1 / v0.6.2; output
   is still on the menu, just not the only option.
-- **`HLSL Clippy: Show All Rules`** -- opens a webview side panel
+- **`Shader Clippy: Show All Rules`** -- opens a webview side panel
   listing every rule category with a deep link to its docs section.
-- **`HLSL Clippy: Open Welcome Walkthrough`** -- re-opens the
+- **`Shader Clippy: Open Welcome Walkthrough`** -- re-opens the
   first-install guided tour for users who closed the Welcome tab.
 - **Suppress-line / Suppress-file / Quick-Actions / Walkthrough**
   commands also appear in the Command Palette.
@@ -1187,17 +1277,17 @@ v0.6.1.
 
 ### Added
 - **Editor right-click submenu** — right-click anywhere inside an
-  HLSL file shows an `HLSL Clippy` submenu with the four extension
+  HLSL file shows an `Shader Clippy` submenu with the four extension
   commands. Scoped via `editorLangId == hlsl` so it doesn't pollute
   context menus in other languages.
 - **Default keybindings** (HLSL files only):
-  - `Ctrl+Alt+L` (`Cmd+Alt+L` on macOS) → `HLSL Clippy: Re-lint
+  - `Ctrl+Alt+L` (`Cmd+Alt+L` on macOS) → `Shader Clippy: Re-lint
     Active Document`.
-  - `Ctrl+Alt+D` (`Cmd+Alt+D` on macOS) → `HLSL Clippy: Open Rule
+  - `Ctrl+Alt+D` (`Cmd+Alt+D` on macOS) → `Shader Clippy: Open Rule
     Docs` (uses the diagnostic at the cursor; falls back to a
     friendly message if there's none).
-- **Command Palette gating** — `HLSL Clippy: Re-lint Active
-  Document` and `HLSL Clippy: Open Rule Docs` are filtered out of
+- **Command Palette gating** — `Shader Clippy: Re-lint Active
+  Document` and `Shader Clippy: Open Rule Docs` are filtered out of
   the palette unless the active editor is HLSL, so non-HLSL editors
   don't see commands that would no-op anyway.
 - README: new "Commands" table column documents the keybindings;
@@ -1206,7 +1296,7 @@ v0.6.1.
 ## [0.6.1] — 2026-05-02
 
 VS Code extension UX patch release. v0.6.0's `.vsix` shipped
-`hlsl-clippy-lsp.exe` without its 7 required Slang runtime DLLs, so
+`shader-clippy-lsp.exe` without its 7 required Slang runtime DLLs, so
 the LSP subprocess crashed on Windows before the JSON-RPC handshake
 and users saw an empty Problems panel with no error feedback. This
 release fixes the bundling, makes activation status visible, and adds
@@ -1214,7 +1304,7 @@ a guided walkthrough for first-time users.
 
 ### Fixed
 - **`.vsix` bundling: ship the full Slang runtime alongside
-  `hlsl-clippy-lsp[.exe]`.** `release-vscode.yml`'s "Stage LSP binary"
+  `shader-clippy-lsp[.exe]`.** `release-vscode.yml`'s "Stage LSP binary"
   step copied only the EXE; on Windows that meant 7 missing DLLs
   (`slang.dll`, `gfx.dll`, `slang-compiler.dll`,
   `slang-glsl-module.dll`, `slang-glslang.dll`, `slang-llvm.dll`,
@@ -1225,20 +1315,20 @@ a guided walkthrough for first-time users.
 
 ### Added
 - **Status-bar indicator.** Bottom-right badge shows live LSP health:
-  `$(check) HLSL Clippy <count>` when the server is running (with
-  diagnostic count for the active document), `$(sync~spin) HLSL Clippy`
-  while starting, `$(error) HLSL Clippy` when activation failed (red
+  `$(check) Shader Clippy <count>` when the server is running (with
+  diagnostic count for the active document), `$(sync~spin) Shader Clippy`
+  while starting, `$(error) Shader Clippy` when activation failed (red
   background, click to open the Output channel).
-- **VS Code Walkthrough** (`HLSL Clippy: Get started`) — shows on
+- **VS Code Walkthrough** (`Shader Clippy: Get started`) — shows on
   first install via Welcome → Walkthroughs. Five steps: open file →
   check status → trigger a rule → apply a quick-fix → configure via
-  `.hlsl-clippy.toml`. Each step has command links for one-click
+  `.shader-clippy.toml`. Each step has command links for one-click
   navigation.
-- **`HLSL Clippy: Re-lint Active Document`** command — forces a
+- **`Shader Clippy: Re-lint Active Document`** command — forces a
   re-lint via a save round-trip. Useful after editing
-  `.hlsl-clippy.toml` or toggling settings, when you want the new
+  `.shader-clippy.toml` or toggling settings, when you want the new
   behaviour without typing.
-- **`HLSL Clippy: Open Rule Docs`** command — opens the per-rule docs
+- **`Shader Clippy: Open Rule Docs`** command — opens the per-rule docs
   page on github.com for the diagnostic at the cursor (or any rule
   ID passed as the argument). Falls back to a friendly message when
   the cursor isn't on a diagnostic.
@@ -1275,7 +1365,7 @@ banner in `docs/rules/`.
   `tests/golden/fixtures/*.hlsl`, and `*.sh`; CRLF on `*.ps1`. Stops
   fresh Windows checkouts (with `core.autocrlf=true`) from breaking
   the golden harness.
-- LSP: new `hlsl_clippy_lsp_lib` STATIC library factor — both the
+- LSP: new `shader_clippy_lsp_lib` STATIC library factor — both the
   server exe and the unit tests link the same 8 LSP TUs once.
 
 ### Changed
@@ -1285,7 +1375,7 @@ banner in `docs/rules/`.
   anonymous namespace; with 95+ rule files the duplicates dominated
   post-PCH compile time and any tweak (e.g. an out-of-range guard)
   had to be applied 95 times. New header centralises the canonical
-  definition under `hlsl_clippy::rules::util`. Net: 119 rule files
+  definition under `shader_clippy::rules::util`. Net: 119 rule files
   modified, **1422 LOC removed** (1886 deletions vs 464 insertions).
 - Parallelise `clang-tidy` via `run-clang-tidy-18 -j$(nproc)`. Lint
   workflow drops from ~30 min serial to <11 min parallel on
@@ -1373,7 +1463,7 @@ during the audit-driven cleanup chain.
   ci.yml + release.yml toolchain shape.
 - `tests/CMakeLists.txt` — mark Catch2's interface include directories
   as SYSTEM via `INTERFACE_SYSTEM_INCLUDE_DIRECTORIES` so
-  `hlsl_clippy_warnings`'s `-Werror -Wnon-virtual-dtor` doesn't
+  `shader_clippy_warnings`'s `-Werror -Wnon-virtual-dtor` doesn't
   trigger on Catch2's `BinaryExpr<>` template internals. macOS Clang 18
   surfaces this warning where Linux Clang 18 doesn't (different libc++
   version); SYSTEM-include attribution suppresses it consistently.
@@ -1395,7 +1485,7 @@ binaries that v0.5.4 couldn't.
 
 ### Added
 
-- **Multi-file CLI invocation.** `hlsl-clippy lint a.hlsl b.hlsl c.hlsl`
+- **Multi-file CLI invocation.** `shader-clippy lint a.hlsl b.hlsl c.hlsl`
   now lints all three files in one process, amortizing Slang
   `IGlobalSession` + ReflectionEngine cache + CFG engine cache + the
   154-rule registry across the whole tree. Previously each file
@@ -1417,7 +1507,7 @@ binaries that v0.5.4 couldn't.
   Detects OS, validates clang-18 / brew llvm@18, prepends keg bin/
   to PATH on macOS, runs `tools/fetch-slang.sh` if the cache is
   empty, exports `Slang_ROOT`. Idempotent via
-  `HLSL_CLIPPY_DEV_SHELL_READY` guard.
+  `SHADER_CLIPPY_DEV_SHELL_READY` guard.
 - **`.github/dependabot.yml`** — weekly bumps for github-actions,
   npm (root + vscode-extension), and git submodules. Slang +
   tomlplusplus excluded (manual SHA-rotation maintainer tasks).
@@ -1501,12 +1591,12 @@ blockers; this release closes the 18 highest-severity items.
   OOM via stdin from a hostile peer. Now fails with `HeaderError` so
   the dispatcher's read loop continues with the next message.
 - **Input file size capped at 8 MiB** (`core/src/source.cpp`).
-  Overridable via `HLSL_CLIPPY_MAX_FILE_BYTES` env var. Bounds memory
+  Overridable via `SHADER_CLIPPY_MAX_FILE_BYTES` env var. Bounds memory
   cost on attacker-controlled shaders.
 - **Slang prebuilt download SHA-256 verification.**
   `tools/fetch-slang.{sh,ps1}` now optionally verifies the downloaded
-  tarball against `HLSL_CLIPPY_SLANG_SHA256_<UPPER_TRIPLE>` (or the
-  generic `HLSL_CLIPPY_SLANG_SHA256`) env var. Mismatch refuses to
+  tarball against `SHADER_CLIPPY_SLANG_SHA256_<UPPER_TRIPLE>` (or the
+  generic `SHADER_CLIPPY_SLANG_SHA256`) env var. Mismatch refuses to
   populate the cache. Set the per-triple var in CI for hardened
   supply-chain; bumping `cmake/SlangVersion.cmake` should rotate the
   per-triple hashes from the Slang release-notes SHA-256 sums.
@@ -1571,9 +1661,9 @@ network download on first activation.
   `vscode-extension/server/<platform>/`, and packages a
   per-platform `.vsix` via `vsce package --target <vscode-target>`.
   Three `.vsix` files ship per release:
-  - `hlsl-clippy-0.5.3-linux-x64.vsix`
-  - `hlsl-clippy-0.5.3-win32-x64.vsix`
-  - `hlsl-clippy-0.5.3-darwin-arm64.vsix`
+  - `shader-clippy-0.5.3-linux-x64.vsix`
+  - `shader-clippy-0.5.3-win32-x64.vsix`
+  - `shader-clippy-0.5.3-darwin-arm64.vsix`
 
   The Marketplace serves each user the matching `.vsix` for their
   OS+arch automatically. The TS-side `findBundled()` resolver
@@ -1632,7 +1722,7 @@ release pipeline and ships the CLI/LSP archives that v0.5.0 missed.
 - **Slang now resolves via a per-user prebuilt cache, not a from-source
   submodule build.** The `external/slang` git submodule was retired;
   `cmake/UseSlang.cmake` resolves Slang via `Slang_ROOT` (escape
-  hatch) → `~/.cache/hlsl-clippy/slang/<version>/` (the cache
+  hatch) → `~/.cache/shader-clippy/slang/<version>/` (the cache
   populated by `tools/fetch-slang.{sh,ps1}`). CI runs that previously
   spent ~20 minutes compiling Slang now spend ~10 seconds downloading
   the matching prebuilt tarball. `git clone` is meaningfully smaller
@@ -1658,7 +1748,7 @@ release pipeline and ships the CLI/LSP archives that v0.5.0 missed.
 
 ### Added
 
-- **Phase 6 launch blog series** at <https://nelcit.github.io/hlsl-clippy/blog/>:
+- **Phase 6 launch blog series** at <https://nelcit.github.io/shader-clippy/blog/>:
   the `Why your HLSL is slower than it has to be` preface plus eight
   category overviews (math, workgroup, control-flow, bindings,
   texture, mesh+DXR, wave+helper-lane, SM 6.9 / SER+coop-vec). Each
@@ -1689,7 +1779,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 ### Added
 
-- Phase 5 — LSP server (`hlsl-clippy-lsp`) thinly wrapping `core` over
+- Phase 5 — LSP server (`shader-clippy-lsp`) thinly wrapping `core` over
   JSON-RPC, plus a TypeScript VS Code extension (`vscode-extension/`,
   publisher `nelcit`) that activates on the `hlsl` language id and
   surfaces diagnostics + quick-fix code actions.
@@ -1729,8 +1819,8 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 - Pre-tag release checklist at `tools/release-checklist.md`.
 - Directory layout: `cli/` (CLI binary) and `core/` (library), replacing the
   earlier `crates/` placeholder.
-- Modular CMake build: `hlsl_clippy_core` static library target and
-  `hlsl-clippy` CLI executable target.
+- Modular CMake build: `shader_clippy_core` static library target and
+  `shader-clippy` CLI executable target.
 - Test corpus under `tests/corpus/`: 17 permissively-licensed HLSL shaders.
 - Test fixtures under `tests/fixtures/`: expected diagnostics for Phase 2, 3,
   and 4 rule validation.
@@ -1741,13 +1831,13 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 - Documentation scaffolding: `docs/` tree, governance files
   (`CODE_OF_CONDUCT.md`, `SECURITY.md`, `CHANGELOG.md`), and GitHub issue/PR
   templates.
-- Inline suppression parser (`// hlsl-clippy: allow(rule-name)`) with line,
+- Inline suppression parser (`// shader-clippy: allow(rule-name)`) with line,
   block, and file scopes.
 - Declarative TSQuery wrapper for AST-pattern rules.
 - `redundant-saturate` rule with machine-applicable fix.
 - `clamp01-to-saturate` rule with machine-applicable fix.
 - Quick-fix `Rewriter` framework + `--fix` CLI flag (idempotent application).
-- `.hlsl-clippy.toml` config loader (toml++) with rule severity,
+- `.shader-clippy.toml` config loader (toml++) with rule severity,
   includes/excludes, per-directory overrides; `--config <path>` CLI flag.
 
 ### Changed
@@ -1763,35 +1853,36 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
-[1.5.6]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.5...v1.5.6
-[1.5.5]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.4...v1.5.5
-[1.5.4]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.3...v1.5.4
-[1.5.3]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.2...v1.5.3
-[1.5.2]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.1...v1.5.2
-[1.5.1]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.0...v1.5.1
-[1.5.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.4.1...v1.5.0
-[1.4.1]: https://github.com/NelCit/hlsl-clippy/compare/v1.4.0...v1.4.1
-[1.4.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.3.1...v1.4.0
-[1.3.1]: https://github.com/NelCit/hlsl-clippy/compare/v1.3.0...v1.3.1
-[1.3.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.2.0...v1.3.0
-[1.2.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.8.0...v1.0.0
-[0.8.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.7.0...v0.8.0
-[0.7.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.8...v0.7.0
-[0.6.8]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.7...v0.6.8
-[0.6.7]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.6...v0.6.7
-[0.6.6]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.5...v0.6.6
-[0.6.5]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.4...v0.6.5
-[0.6.4]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.3...v0.6.4
-[0.6.3]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.2...v0.6.3
-[0.6.2]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.1...v0.6.2
-[0.6.1]: https://github.com/NelCit/hlsl-clippy/compare/v0.6.0...v0.6.1
-[0.6.0]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.6...v0.6.0
-[0.5.6]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.5...v0.5.6
-[0.5.5]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.4...v0.5.5
-[0.5.4]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.3...v0.5.4
-[0.5.3]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.2...v0.5.3
-[0.5.2]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.1...v0.5.2
-[0.5.1]: https://github.com/NelCit/hlsl-clippy/compare/v0.5.0...v0.5.1
-[0.5.0]: https://github.com/NelCit/hlsl-clippy/releases/tag/v0.5.0
+[2.0.0]: https://github.com/NelCit/shader-clippy/compare/v1.5.6...v2.0.0
+[1.5.6]: https://github.com/NelCit/shader-clippy/compare/v1.5.5...v1.5.6
+[1.5.5]: https://github.com/NelCit/shader-clippy/compare/v1.5.4...v1.5.5
+[1.5.4]: https://github.com/NelCit/shader-clippy/compare/v1.5.3...v1.5.4
+[1.5.3]: https://github.com/NelCit/shader-clippy/compare/v1.5.2...v1.5.3
+[1.5.2]: https://github.com/NelCit/shader-clippy/compare/v1.5.1...v1.5.2
+[1.5.1]: https://github.com/NelCit/shader-clippy/compare/v1.5.0...v1.5.1
+[1.5.0]: https://github.com/NelCit/shader-clippy/compare/v1.4.1...v1.5.0
+[1.4.1]: https://github.com/NelCit/shader-clippy/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/NelCit/shader-clippy/compare/v1.3.1...v1.4.0
+[1.3.1]: https://github.com/NelCit/shader-clippy/compare/v1.3.0...v1.3.1
+[1.3.0]: https://github.com/NelCit/shader-clippy/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/NelCit/shader-clippy/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/NelCit/shader-clippy/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/NelCit/shader-clippy/compare/v0.8.0...v1.0.0
+[0.8.0]: https://github.com/NelCit/shader-clippy/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/NelCit/shader-clippy/compare/v0.6.8...v0.7.0
+[0.6.8]: https://github.com/NelCit/shader-clippy/compare/v0.6.7...v0.6.8
+[0.6.7]: https://github.com/NelCit/shader-clippy/compare/v0.6.6...v0.6.7
+[0.6.6]: https://github.com/NelCit/shader-clippy/compare/v0.6.5...v0.6.6
+[0.6.5]: https://github.com/NelCit/shader-clippy/compare/v0.6.4...v0.6.5
+[0.6.4]: https://github.com/NelCit/shader-clippy/compare/v0.6.3...v0.6.4
+[0.6.3]: https://github.com/NelCit/shader-clippy/compare/v0.6.2...v0.6.3
+[0.6.2]: https://github.com/NelCit/shader-clippy/compare/v0.6.1...v0.6.2
+[0.6.1]: https://github.com/NelCit/shader-clippy/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/NelCit/shader-clippy/compare/v0.5.6...v0.6.0
+[0.5.6]: https://github.com/NelCit/shader-clippy/compare/v0.5.5...v0.5.6
+[0.5.5]: https://github.com/NelCit/shader-clippy/compare/v0.5.4...v0.5.5
+[0.5.4]: https://github.com/NelCit/shader-clippy/compare/v0.5.3...v0.5.4
+[0.5.3]: https://github.com/NelCit/shader-clippy/compare/v0.5.2...v0.5.3
+[0.5.2]: https://github.com/NelCit/shader-clippy/compare/v0.5.1...v0.5.2
+[0.5.1]: https://github.com/NelCit/shader-clippy/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/NelCit/shader-clippy/releases/tag/v0.5.0

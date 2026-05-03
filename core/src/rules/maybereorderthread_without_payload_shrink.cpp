@@ -18,10 +18,10 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
 #include "rules/util/cfg_query.hpp"
 #include "rules/util/liveness.hpp"
@@ -29,7 +29,7 @@
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::node_kind;
@@ -76,7 +76,7 @@ public:
         collect_reorder_calls(::ts_tree_root_node(tree.raw_tree()), bytes, calls);
         if (calls.empty())
             return;
-        const auto liveness = hlsl_clippy::util::compute_liveness(cfg, tree);
+        const auto liveness = shader_clippy::util::compute_liveness(cfg, tree);
         if (liveness.live_out_per_block.empty())
             return;
 
@@ -112,4 +112,4 @@ std::unique_ptr<Rule> make_maybereorderthread_without_payload_shrink() {
     return std::make_unique<MaybeReorderThreadWithoutPayloadShrink>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

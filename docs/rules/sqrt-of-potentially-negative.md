@@ -76,7 +76,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Wrapping the argument in `max(x, 0.0)` is semantically equivalent for non-negative inputs and replaces NaN with `0.0` for negative inputs (or `+inf` for `rsqrt`). When the algorithm legitimately needs to distinguish negative inputs from non-negative, the user can override the fix to insert an explicit `if`-guard. `hlsl-clippy fix` applies the wrap automatically; for `1.0 - x` style expressions where `x` is a dot product of unit-length-intent vectors, the rewrite uses `saturate(...)` instead of `max(..., 0.0)`.
+**machine-applicable** — Wrapping the argument in `max(x, 0.0)` is semantically equivalent for non-negative inputs and replaces NaN with `0.0` for negative inputs (or `+inf` for `rsqrt`). When the algorithm legitimately needs to distinguish negative inputs from non-negative, the user can override the fix to insert an explicit `if`-guard. `shader-clippy fix` applies the wrap automatically; for `1.0 - x` style expressions where `x` is a dot product of unit-length-intent vectors, the rewrite uses `saturate(...)` instead of `max(..., 0.0)`.
 
 ## See also
 
@@ -87,6 +87,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/sqrt-of-potentially-negative.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/sqrt-of-potentially-negative.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

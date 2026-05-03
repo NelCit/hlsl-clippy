@@ -66,7 +66,7 @@ none
 
 ## Fix availability
 
-**suggestion** — Adding `[earlydepthstencil]` changes observable behaviour when the shader contains `discard`, writes `SV_Depth`, or writes `SV_Coverage` — in those cases the rule does not fire. When the rule fires (no depth-modifying operations present), adding the attribute is safe, but `hlsl-clippy fix` requires explicit author confirmation before inserting a shader-attribute that affects rasterisation semantics.
+**suggestion** — Adding `[earlydepthstencil]` changes observable behaviour when the shader contains `discard`, writes `SV_Depth`, or writes `SV_Coverage` — in those cases the rule does not fire. When the rule fires (no depth-modifying operations present), adding the attribute is safe, but `shader-clippy fix` requires explicit author confirmation before inserting a shader-attribute that affects rasterisation semantics.
 
 ## See also
 
@@ -78,6 +78,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/rov-without-earlydepthstencil.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/rov-without-earlydepthstencil.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

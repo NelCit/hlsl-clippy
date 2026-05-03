@@ -18,15 +18,15 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::is_id_char;
@@ -181,4 +181,4 @@ std::unique_ptr<Rule> make_descriptor_heap_no_non_uniform_marker() {
     return std::make_unique<DescriptorHeapNoNonUniformMarker>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

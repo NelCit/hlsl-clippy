@@ -23,11 +23,11 @@ $ErrorActionPreference = "Stop"
 $repoRoot = (Resolve-Path "$PSScriptRoot/..").Path
 $fixturesDir = Join-Path $repoRoot "tests/golden/fixtures"
 $snapshotsDir = Join-Path $repoRoot "tests/golden/snapshots"
-$cliExe = Join-Path $repoRoot "$BuildDir/cli/hlsl-clippy.exe"
+$cliExe = Join-Path $repoRoot "$BuildDir/cli/shader-clippy.exe"
 
 if (-not $SkipBuild) {
-    Write-Host "[update-goldens] cmake --build $BuildDir --target hlsl-clippy"
-    & cmake --build $BuildDir --target hlsl-clippy
+    Write-Host "[update-goldens] cmake --build $BuildDir --target shader-clippy"
+    & cmake --build $BuildDir --target shader-clippy
     if ($LASTEXITCODE -ne 0) {
         throw "cmake --build failed (exit $LASTEXITCODE)"
     }

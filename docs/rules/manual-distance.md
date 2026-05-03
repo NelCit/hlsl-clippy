@@ -50,7 +50,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Replacing `length(a - b)` with `distance(a, b)` is a pure textual substitution. The HLSL specification defines `distance(a, b)` as `length(a - b)`, so the results are identical for all finite inputs. `hlsl-clippy fix` applies it automatically.
+**machine-applicable** — Replacing `length(a - b)` with `distance(a, b)` is a pure textual substitution. The HLSL specification defines `distance(a, b)` as `length(a - b)`, so the results are identical for all finite inputs. `shader-clippy fix` applies it automatically.
 
 ## See also
 
@@ -61,6 +61,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/manual-distance.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/manual-distance.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

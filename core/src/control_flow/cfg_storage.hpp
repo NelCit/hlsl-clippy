@@ -16,10 +16,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::control_flow {
+namespace shader_clippy::control_flow {
 
 /// One basic block in the CFG. Successors are dense indices into the
 /// owning function's block range; predecessors are recomputed on demand for
@@ -121,9 +121,9 @@ struct UniformityImplData {
     std::unordered_map<std::uint64_t, Uniformity> branch_uniformity;
 };
 
-}  // namespace hlsl_clippy::control_flow
+}  // namespace shader_clippy::control_flow
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 /// Concrete struct backing the public `CfgImpl` forward declaration.
 struct CfgImpl {
@@ -135,4 +135,4 @@ struct UniformityImpl {
     control_flow::UniformityImplData data;
 };
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

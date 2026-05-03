@@ -29,15 +29,15 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fixtures_dir="$repo_root/tests/golden/fixtures"
 snapshots_dir="$repo_root/tests/golden/snapshots"
 
-# CLI exe lives at build/cli/hlsl-clippy on Linux/macOS, .exe on Windows.
-cli_exe="$repo_root/$build_dir/cli/hlsl-clippy"
+# CLI exe lives at build/cli/shader-clippy on Linux/macOS, .exe on Windows.
+cli_exe="$repo_root/$build_dir/cli/shader-clippy"
 if [[ ! -x "$cli_exe" && -x "$cli_exe.exe" ]]; then
     cli_exe="$cli_exe.exe"
 fi
 
 if [[ "$skip_build" -ne 1 ]]; then
-    echo "[update-goldens] cmake --build $build_dir --target hlsl-clippy"
-    cmake --build "$build_dir" --target hlsl-clippy
+    echo "[update-goldens] cmake --build $build_dir --target shader-clippy"
+    cmake --build "$build_dir" --target shader-clippy
 fi
 
 if [[ ! -x "$cli_exe" ]]; then

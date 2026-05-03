@@ -7,13 +7,13 @@
 #       install prefix (include/slang.h + lib/ + bin/). Power-user escape
 #       hatch — point this at a custom Slang build (from-source on a fork,
 #       a CI artifact, etc.) when the prebuilt does not fit.
-#   (b) Per-user prebuilt cache (HLSL_CLIPPY_SLANG_CACHE / env var). The
-#       cache is keyed by HLSL_CLIPPY_SLANG_VERSION (see SlangVersion.cmake);
+#   (b) Per-user prebuilt cache (SHADER_CLIPPY_SLANG_CACHE / env var). The
+#       cache is keyed by SHADER_CLIPPY_SLANG_VERSION (see SlangVersion.cmake);
 #       bumping the version forces a fresh download and ignores stale cache
 #       entries. Default cache root:
-#         Windows: %LOCALAPPDATA%/hlsl-clippy/slang/<version>/
-#         Linux  : $HOME/.cache/hlsl-clippy/slang/<version>/
-#         macOS  : $HOME/.cache/hlsl-clippy/slang/<version>/
+#         Windows: %LOCALAPPDATA%/shader-clippy/slang/<version>/
+#         Linux  : $HOME/.cache/shader-clippy/slang/<version>/
+#         macOS  : $HOME/.cache/shader-clippy/slang/<version>/
 #       Populate via tools/fetch-slang.ps1 (Windows) or tools/fetch-slang.sh
 #       (POSIX); both download the upstream GitHub release tarball
 #       (https://github.com/shader-slang/slang/releases/v<version>).
@@ -26,7 +26,7 @@
 # `external/slang`. The submodule was retired (see commit history + ADR
 # 0001 addendum) because every CI run + every fresh worktree paid the
 # ~20-minute cold compile, while the upstream prebuilt tarball matches the
-# pinned `HLSL_CLIPPY_SLANG_VERSION` exactly. Power users still have the
+# pinned `SHADER_CLIPPY_SLANG_VERSION` exactly. Power users still have the
 # Slang_ROOT escape hatch above for custom builds.
 
 cmake_minimum_required(VERSION 3.20)
@@ -34,7 +34,7 @@ cmake_minimum_required(VERSION 3.20)
 include("${CMAKE_CURRENT_LIST_DIR}/SlangVersion.cmake")
 
 # ---------------------------------------------------------------------------
-# hlsl_clippy_deploy_slang_dlls(<target>)
+# shader_clippy_deploy_slang_dlls(<target>)
 #
 # Defined FIRST (before any of the resolution-path early-return blocks below)
 # so the helper stays available even when (a) Slang_ROOT hits, (b) the cache
@@ -45,28 +45,28 @@ include("${CMAKE_CURRENT_LIST_DIR}/SlangVersion.cmake")
 # checks at call time, so moving the definition above the resolution paths
 # is safe.
 # ---------------------------------------------------------------------------
-function(hlsl_clippy_deploy_slang_dlls target)
+function(shader_clippy_deploy_slang_dlls target)
     if(NOT TARGET ${target})
         message(FATAL_ERROR
-            "hlsl_clippy_deploy_slang_dlls: target '${target}' does not exist."
+            "shader_clippy_deploy_slang_dlls: target '${target}' does not exist."
         )
     endif()
 
     get_property(_already_done GLOBAL PROPERTY
-        _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target})
+        _SHADER_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target})
     if(_already_done)
         return()
     endif()
 
     if(NOT WIN32)
         set_property(GLOBAL PROPERTY
-            _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
+            _SHADER_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
         return()
     endif()
 
     if(NOT TARGET slang::slang)
         message(FATAL_ERROR
-            "hlsl_clippy_deploy_slang_dlls: slang::slang target not defined; "
+            "shader_clippy_deploy_slang_dlls: slang::slang target not defined; "
             "include UseSlang.cmake before calling this helper."
         )
     endif()
@@ -74,7 +74,7 @@ function(hlsl_clippy_deploy_slang_dlls target)
     get_target_property(_slang_dll slang IMPORTED_LOCATION)
     if(NOT _slang_dll)
         message(STATUS
-            "hlsl_clippy_deploy_slang_dlls(${target}): slang has no "
+            "shader_clippy_deploy_slang_dlls(${target}): slang has no "
             "IMPORTED_LOCATION; falling back to TARGET_RUNTIME_DLLS "
             "(submodule build path -- only slang.dll will be copied)."
         )
@@ -85,7 +85,7 @@ function(hlsl_clippy_deploy_slang_dlls target)
             COMMAND_EXPAND_LISTS
         )
         set_property(GLOBAL PROPERTY
-            _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
+            _SHADER_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
         return()
     endif()
 
@@ -94,12 +94,12 @@ function(hlsl_clippy_deploy_slang_dlls target)
     file(GLOB _slang_runtime_dlls "${_slang_dll_dir}/*.dll")
     if(NOT _slang_runtime_dlls)
         message(WARNING
-            "hlsl_clippy_deploy_slang_dlls(${target}): no DLLs found in "
+            "shader_clippy_deploy_slang_dlls(${target}): no DLLs found in "
             "'${_slang_dll_dir}'. The build will succeed but the resulting "
             "executable will fail to load Slang at runtime."
         )
         set_property(GLOBAL PROPERTY
-            _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
+            _SHADER_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
         return()
     endif()
 
@@ -113,7 +113,7 @@ function(hlsl_clippy_deploy_slang_dlls target)
     endforeach()
 
     set_property(GLOBAL PROPERTY
-        _HLSL_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
+        _SHADER_CLIPPY_SLANG_DLLS_ALREADY_DEPLOYED_${target} TRUE)
 endfunction()
 
 # Re-entrancy guard: tools/slang-smoke/CMakeLists.txt may include this file
@@ -131,7 +131,7 @@ endif()
 #   at least one of <dir>/lib/slang.lib, <dir>/lib/libslang.so,
 #   <dir>/lib/libslang.dylib exists.
 # ---------------------------------------------------------------------------
-function(_hlsl_clippy_slang_validate_prefix dir out_var)
+function(_shader_clippy_slang_validate_prefix dir out_var)
     set(${out_var} FALSE PARENT_SCOPE)
     if(NOT IS_DIRECTORY "${dir}")
         return()
@@ -159,7 +159,7 @@ endfunction()
 # Helper: import a prebuilt prefix as a SHARED IMPORTED `slang` target with
 # its `slang::slang` alias. Mirrors what Slang's own CMakeLists.txt exposes.
 # ---------------------------------------------------------------------------
-function(_hlsl_clippy_slang_import_prefix dir)
+function(_shader_clippy_slang_import_prefix dir)
     add_library(slang SHARED IMPORTED GLOBAL)
 
     set_target_properties(slang PROPERTIES
@@ -202,14 +202,14 @@ elseif(DEFINED ENV{Slang_ROOT} AND NOT "$ENV{Slang_ROOT}" STREQUAL "")
 endif()
 
 if(NOT "${_slang_root}" STREQUAL "")
-    _hlsl_clippy_slang_validate_prefix("${_slang_root}" _is_valid)
+    _shader_clippy_slang_validate_prefix("${_slang_root}" _is_valid)
     if(_is_valid)
-        message(STATUS "hlsl-clippy: using Slang from explicit Slang_ROOT=${_slang_root}")
-        _hlsl_clippy_slang_import_prefix("${_slang_root}")
+        message(STATUS "shader-clippy: using Slang from explicit Slang_ROOT=${_slang_root}")
+        _shader_clippy_slang_import_prefix("${_slang_root}")
         return()
     else()
         message(WARNING
-            "hlsl-clippy: Slang_ROOT='${_slang_root}' does not contain a valid "
+            "shader-clippy: Slang_ROOT='${_slang_root}' does not contain a valid "
             "Slang install (missing include/slang.h or lib/{slang.lib|libslang.so|"
             "libslang.dylib}). Falling through to cache / submodule build."
         )
@@ -220,28 +220,28 @@ endif()
 # (b) Per-user prebuilt cache
 # ---------------------------------------------------------------------------
 set(_slang_cache_root "")
-if(DEFINED HLSL_CLIPPY_SLANG_CACHE AND NOT "${HLSL_CLIPPY_SLANG_CACHE}" STREQUAL "")
-    set(_slang_cache_root "${HLSL_CLIPPY_SLANG_CACHE}")
-elseif(DEFINED ENV{HLSL_CLIPPY_SLANG_CACHE} AND NOT "$ENV{HLSL_CLIPPY_SLANG_CACHE}" STREQUAL "")
-    set(_slang_cache_root "$ENV{HLSL_CLIPPY_SLANG_CACHE}")
+if(DEFINED SHADER_CLIPPY_SLANG_CACHE AND NOT "${SHADER_CLIPPY_SLANG_CACHE}" STREQUAL "")
+    set(_slang_cache_root "${SHADER_CLIPPY_SLANG_CACHE}")
+elseif(DEFINED ENV{SHADER_CLIPPY_SLANG_CACHE} AND NOT "$ENV{SHADER_CLIPPY_SLANG_CACHE}" STREQUAL "")
+    set(_slang_cache_root "$ENV{SHADER_CLIPPY_SLANG_CACHE}")
 else()
     if(WIN32)
         if(DEFINED ENV{LOCALAPPDATA} AND NOT "$ENV{LOCALAPPDATA}" STREQUAL "")
-            set(_slang_cache_root "$ENV{LOCALAPPDATA}/hlsl-clippy/slang")
+            set(_slang_cache_root "$ENV{LOCALAPPDATA}/shader-clippy/slang")
         endif()
     else()
         if(DEFINED ENV{HOME} AND NOT "$ENV{HOME}" STREQUAL "")
-            set(_slang_cache_root "$ENV{HOME}/.cache/hlsl-clippy/slang")
+            set(_slang_cache_root "$ENV{HOME}/.cache/shader-clippy/slang")
         endif()
     endif()
 endif()
 
 if(NOT "${_slang_cache_root}" STREQUAL "")
-    set(_slang_cache_dir "${_slang_cache_root}/${HLSL_CLIPPY_SLANG_VERSION}")
-    _hlsl_clippy_slang_validate_prefix("${_slang_cache_dir}" _is_valid)
+    set(_slang_cache_dir "${_slang_cache_root}/${SHADER_CLIPPY_SLANG_VERSION}")
+    _shader_clippy_slang_validate_prefix("${_slang_cache_dir}" _is_valid)
     if(_is_valid)
-        message(STATUS "hlsl-clippy: using cached Slang from ${_slang_cache_dir}")
-        _hlsl_clippy_slang_import_prefix("${_slang_cache_dir}")
+        message(STATUS "shader-clippy: using cached Slang from ${_slang_cache_dir}")
+        _shader_clippy_slang_import_prefix("${_slang_cache_dir}")
         return()
     endif()
 endif()
@@ -253,18 +253,18 @@ endif()
 # ---------------------------------------------------------------------------
 if(WIN32)
     set(_fetch_cmd "pwsh tools/fetch-slang.ps1")
-    set(_default_cache "%LOCALAPPDATA%/hlsl-clippy/slang/${HLSL_CLIPPY_SLANG_VERSION}/")
+    set(_default_cache "%LOCALAPPDATA%/shader-clippy/slang/${SHADER_CLIPPY_SLANG_VERSION}/")
 else()
     set(_fetch_cmd "bash tools/fetch-slang.sh")
-    set(_default_cache "$HOME/.cache/hlsl-clippy/slang/${HLSL_CLIPPY_SLANG_VERSION}/")
+    set(_default_cache "$HOME/.cache/shader-clippy/slang/${SHADER_CLIPPY_SLANG_VERSION}/")
 endif()
 
 message(FATAL_ERROR
-    "hlsl-clippy: could not locate Slang ${HLSL_CLIPPY_SLANG_VERSION}.\n"
+    "shader-clippy: could not locate Slang ${SHADER_CLIPPY_SLANG_VERSION}.\n"
     "\n"
     "  No `Slang_ROOT` is set, and the per-user prebuilt cache at\n"
     "    ${_default_cache}\n"
-    "  is empty (or HLSL_CLIPPY_SLANG_CACHE / Slang_ROOT point at an\n"
+    "  is empty (or SHADER_CLIPPY_SLANG_CACHE / Slang_ROOT point at an\n"
     "  invalid prefix).\n"
     "\n"
     "  Fix: from the repo root, run\n"
@@ -276,7 +276,7 @@ message(FATAL_ERROR
     "   custom Slang install prefix to bypass the cache entirely.)"
 )
 
-# `hlsl_clippy_deploy_slang_dlls(<target>)` is defined at the top of this
+# `shader_clippy_deploy_slang_dlls(<target>)` is defined at the top of this
 # file. It is unreachable from this branch (FATAL_ERROR aborts), but the
 # definition stays valid for the (a) Slang_ROOT and (b) cache paths which
 # both `return()` before reaching this fall-through.

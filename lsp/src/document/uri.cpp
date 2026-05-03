@@ -9,7 +9,7 @@
 #include <string>
 #include <string_view>
 
-namespace hlsl_clippy::lsp::document {
+namespace shader_clippy::lsp::document {
 
 namespace {
 
@@ -120,4 +120,4 @@ std::string path_to_uri(const std::filesystem::path& path) {
     return out;
 }
 
-}  // namespace hlsl_clippy::lsp::document
+}  // namespace shader_clippy::lsp::document

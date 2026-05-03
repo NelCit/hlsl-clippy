@@ -98,7 +98,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — When the rule confirms that both arm expressions are syntactically and semantically identical, and that the expression is pure (no side effects, no implicit-gradient intrinsics), it extracts the expression to a new `float` (or vector) temporary immediately before the `if` and replaces both in-arm occurrences with the new name. The substitution is semantically equivalent for all pure expressions. `hlsl-clippy fix` applies it automatically.
+**machine-applicable** — When the rule confirms that both arm expressions are syntactically and semantically identical, and that the expression is pure (no side effects, no implicit-gradient intrinsics), it extracts the expression to a new `float` (or vector) temporary immediately before the `if` and replaces both in-arm occurrences with the new name. The substitution is semantically equivalent for all pure expressions. `shader-clippy fix` applies it automatically.
 
 ## See also
 
@@ -109,6 +109,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/redundant-computation-in-branch.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/redundant-computation-in-branch.md)
 
 <!-- © 2026 NelCit, CC-BY-4.0. Code snippets are Apache-2.0. -->

@@ -28,10 +28,10 @@
 
 #pragma once
 
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 /// True when `span` is reached by a path that has already executed a
 /// `discard` (or `clip(...)`), so the lane may be a helper lane in pixel-
@@ -57,4 +57,4 @@ namespace hlsl_clippy::rules::util {
 /// helper-lane-state stamping lands.
 [[nodiscard]] bool in_pixel_stage_or_unknown(const ControlFlowInfo& cfg) noexcept;
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

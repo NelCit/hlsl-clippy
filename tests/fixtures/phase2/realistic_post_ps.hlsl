@@ -1,5 +1,5 @@
 // Phase 2 — realistic post-process pixel shader (tonemap / bloom / vignette)
-// with deliberate Phase-2 rule firings. Hand-written fixture for hlsl-clippy rule validation.
+// with deliberate Phase-2 rule firings. Hand-written fixture for shader-clippy rule validation.
 // Convention: `// HIT(rule-id): reason` on offending lines.
 
 Texture2D    HDRBuffer    : register(t0);

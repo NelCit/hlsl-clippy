@@ -13,13 +13,13 @@
 #     cmake --build build
 #     ctest --test-dir build --output-on-failure
 #
-# Caching: idempotency is enforced via $env:HLSL_CLIPPY_DEV_SHELL_READY.
+# Caching: idempotency is enforced via $env:SHADER_CLIPPY_DEV_SHELL_READY.
 # To force a re-init (e.g. after a VS update) clear it first:
-#     Remove-Item Env:HLSL_CLIPPY_DEV_SHELL_READY
+#     Remove-Item Env:SHADER_CLIPPY_DEV_SHELL_READY
 #     . .\tools\dev-shell.ps1
 
-if ($env:HLSL_CLIPPY_DEV_SHELL_READY -eq "1") {
-    Write-Host "dev-shell: already initialised in this session (set HLSL_CLIPPY_DEV_SHELL_READY='' to redo)"
+if ($env:SHADER_CLIPPY_DEV_SHELL_READY -eq "1") {
+    Write-Host "dev-shell: already initialised in this session (set SHADER_CLIPPY_DEV_SHELL_READY='' to redo)"
     return
 }
 
@@ -54,16 +54,16 @@ $env:Path = "$ninjaDir;$cmakeDir;$env:Path"
 # ── 4. Add the Slang prebuilt cache's bin/ to PATH so test exes resolve   ──
 #       slang.dll + the 6 transitive runtime DLLs at runtime without needing
 #       a per-target POST_BUILD copy. Phase 5 v0.6 follow-up: replace this
-#       with a hlsl_clippy_deploy_slang_dlls(target) helper in UseSlang.cmake
+#       with a shader_clippy_deploy_slang_dlls(target) helper in UseSlang.cmake
 #       so the deployed bits ship to the build/ tree directly.
 $slangVer = $null
 $slangVersionFile = "cmake\SlangVersion.cmake"
 if (Test-Path $slangVersionFile) {
-    $line = Select-String -Path $slangVersionFile -Pattern 'HLSL_CLIPPY_SLANG_VERSION\s+"([^"]+)"' | Select-Object -First 1
+    $line = Select-String -Path $slangVersionFile -Pattern 'SHADER_CLIPPY_SLANG_VERSION\s+"([^"]+)"' | Select-Object -First 1
     if ($line) { $slangVer = $line.Matches[0].Groups[1].Value }
 }
 if ($slangVer) {
-    $slangBin = Join-Path $env:LOCALAPPDATA "hlsl-clippy\slang\$slangVer\bin"
+    $slangBin = Join-Path $env:LOCALAPPDATA "shader-clippy\slang\$slangVer\bin"
     if (Test-Path $slangBin) {
         $env:Path = "$slangBin;$env:Path"
         Write-Host "dev-shell: Slang $slangVer bin on PATH ($slangBin)"
@@ -112,5 +112,5 @@ foreach ($t in $tools) {
     else    { Write-Warning "dev-shell:   $t NOT FOUND on PATH" }
 }
 
-$env:HLSL_CLIPPY_DEV_SHELL_READY = "1"
+$env:SHADER_CLIPPY_DEV_SHELL_READY = "1"
 Write-Host "dev-shell: ready. Now run cmake / ninja / ctest / clang-format directly."

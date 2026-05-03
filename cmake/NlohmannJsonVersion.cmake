@@ -7,5 +7,5 @@
 # the submodule is a deliberate two-step act: update the submodule pointer
 # AND update the version string here.
 
-set(HLSL_CLIPPY_NLOHMANN_JSON_VERSION "3.12.0" CACHE STRING "Pinned nlohmann/json version")
-mark_as_advanced(HLSL_CLIPPY_NLOHMANN_JSON_VERSION)
+set(SHADER_CLIPPY_NLOHMANN_JSON_VERSION "3.12.0" CACHE STRING "Pinned nlohmann/json version")
+mark_as_advanced(SHADER_CLIPPY_NLOHMANN_JSON_VERSION)

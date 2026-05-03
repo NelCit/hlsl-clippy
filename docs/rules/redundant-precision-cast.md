@@ -81,11 +81,11 @@ float int_to_float_intentional(int i) {
 none — this rule has no configurable thresholds. To silence it on a specific call site, use inline suppression:
 
 ```hlsl
-// hlsl-clippy: allow(redundant-precision-cast)
+// shader-clippy: allow(redundant-precision-cast)
 return (float)((int)x);
 ```
 
-To silence it project-wide, add to `.hlsl-clippy.toml`:
+To silence it project-wide, add to `.shader-clippy.toml`:
 
 ```toml
 [rules]
@@ -94,7 +94,7 @@ redundant-precision-cast = "allow"
 
 ## Fix availability
 
-**machine-applicable** — For the `float → int → float` pattern, `hlsl-clippy fix` replaces `(float)((int)x)` with `trunc(x)`, which is semantically identical and makes the truncation explicit. For the `half → float → half` no-op, it removes both casts and retains the inner expression. For the `int → float → int` pattern, it removes both casts and retains the inner expression when the round-trip is provably a no-op; when precision loss is possible, it emits a suggestion instead of an automatic fix.
+**machine-applicable** — For the `float → int → float` pattern, `shader-clippy fix` replaces `(float)((int)x)` with `trunc(x)`, which is semantically identical and makes the truncation explicit. For the `half → float → half` no-op, it removes both casts and retains the inner expression. For the `int → float → int` pattern, it removes both casts and retains the inner expression when the round-trip is provably a no-op; when precision loss is possible, it emits a suggestion instead of an automatic fix.
 
 ## See also
 
@@ -107,4 +107,4 @@ redundant-precision-cast = "allow"
 
 *© 2026 NelCit, CC-BY-4.0.*
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/redundant-precision-cast.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/redundant-precision-cast.md)

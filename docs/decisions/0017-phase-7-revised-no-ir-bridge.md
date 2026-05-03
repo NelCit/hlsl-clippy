@@ -13,7 +13,7 @@ tags: [phase-7, revision, addendum, scope-correction]
 
 ADR 0016 was Accepted on 2026-05-02 with a DXIL-only IR bridge as the
 foundation of Phase 7. Sub-phase 7a.1 shipped (`Stage::Ir` enum, opaque
-`<hlsl_clippy/ir.hpp>`, skeleton `IrEngine`). Sub-phase 7a.2-step1
+`<shader_clippy/ir.hpp>`, skeleton `IrEngine`). Sub-phase 7a.2-step1
 shipped (engine returns metadata-only `IrInfo` from reflection).
 Sub-phase 7a.2-step2 was scoped to the DXC submodule + DXIL parser.
 
@@ -62,13 +62,13 @@ over IR), and the entire DXC dependency chain. Replace with:
   `oversized-ray-payload` -> "raygeneration") use it.
 * `Rule::on_ir(tree, ir, ctx)` virtual — kept; receives the
   metadata-only `IrInfo` already produced by 7a.2-step1.
-* `<hlsl_clippy/ir.hpp>` opaque types (`IrInfo`, `IrFunction`,
+* `<shader_clippy/ir.hpp>` opaque types (`IrInfo`, `IrFunction`,
   `IrFunctionId`, etc.) — kept; `IrFunction::blocks` will stay empty.
   Future ADR can populate it if a real consumer drives demand.
 * `IrEngine` reflection-driven implementation (7a.2-step1) — kept.
 * `LintOptions::enable_ir` + `vgpr_pressure_threshold` — kept; the
   threshold is now consumed by the AST-level pressure heuristic.
-* CMake option `HLSL_CLIPPY_ENABLE_IR` — kept; same semantics.
+* CMake option `SHADER_CLIPPY_ENABLE_IR` — kept; same semantics.
 
 ### What's removed from ADR 0016
 
@@ -89,7 +89,7 @@ over IR), and the entire DXC dependency chain. Replace with:
 * **Sub-phase 7b.1** (sequential, lands first): liveness analysis
   extension to Phase 4 CFG. Backward dataflow over the existing
   `ControlFlowInfo` storage. ~150 LOC + tests. No new public types
-  in `<hlsl_clippy/control_flow.hpp>`; the liveness API lives in a
+  in `<shader_clippy/control_flow.hpp>`; the liveness API lives in a
   shared utility header `core/src/rules/util/liveness.{hpp,cpp}`
   that consumes `ControlFlowInfo` and produces per-CFG-node
   live-in / live-out sets. Rules that need liveness include
@@ -239,7 +239,7 @@ After all packs merge:
   bringing the total registered rule count to **169**.
 * No new build-time dependency. Existing AST-only / reflection-only
   / CFG-only consumers see zero behaviour change.
-* The `<hlsl_clippy/ir.hpp>` public header and `Stage::Ir` enum
+* The `<shader_clippy/ir.hpp>` public header and `Stage::Ir` enum
   stay shipped (already in v0.6.8) but are documented as a
   metadata-only surface; the v0.7 rules that use `Stage::Ir` are
   ones that just need stage gating, not instruction walks.

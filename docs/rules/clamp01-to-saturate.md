@@ -70,7 +70,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Replacing `clamp(x, 0.0, 1.0)` with `saturate(x)` is a pure textual substitution. The two forms are semantically identical for all finite and non-finite float inputs, including NaN (both clamp to [0, 1]). `hlsl-clippy fix` applies it automatically.
+**machine-applicable** — Replacing `clamp(x, 0.0, 1.0)` with `saturate(x)` is a pure textual substitution. The two forms are semantically identical for all finite and non-finite float inputs, including NaN (both clamp to [0, 1]). `shader-clippy fix` applies it automatically.
 
 ## See also
 
@@ -81,6 +81,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/clamp01-to-saturate.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/clamp01-to-saturate.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

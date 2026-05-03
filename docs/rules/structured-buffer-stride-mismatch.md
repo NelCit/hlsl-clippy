@@ -74,7 +74,7 @@ none
 
 ## Fix availability
 
-**suggestion** — Adding explicit padding members changes the CPU-side struct layout. The `sizeof` of the C++ mirror struct must be updated to match, and any code that fills the buffer via `memcpy` or manually computes element offsets must be verified. `hlsl-clippy fix` suggests the padded struct as a comment but does not insert padding members automatically.
+**suggestion** — Adding explicit padding members changes the CPU-side struct layout. The `sizeof` of the C++ mirror struct must be updated to match, and any code that fills the buffer via `memcpy` or manually computes element offsets must be verified. `shader-clippy fix` suggests the padded struct as a comment but does not insert padding members automatically.
 
 ## See also
 
@@ -86,6 +86,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/structured-buffer-stride-mismatch.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/structured-buffer-stride-mismatch.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

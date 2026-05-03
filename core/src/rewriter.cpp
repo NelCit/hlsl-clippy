@@ -13,7 +13,7 @@
 //    to the source so byte offsets in unprocessed prefix bytes never shift.
 // 5. Emit one FixConflict per dropped fix.
 
-#include "hlsl_clippy/rewriter.hpp"
+#include "shader_clippy/rewriter.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -24,9 +24,9 @@
 #include <utility>
 #include <vector>
 
-#include "hlsl_clippy/diagnostic.hpp"
+#include "shader_clippy/diagnostic.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 namespace {
 
@@ -152,4 +152,4 @@ std::string Rewriter::apply(std::string_view source,
     return out;
 }
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

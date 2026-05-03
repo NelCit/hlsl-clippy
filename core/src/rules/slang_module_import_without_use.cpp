@@ -29,7 +29,7 @@
 //
 // References:
 //   - Slang language guide §"Modules and Imports".
-//   - hlsl-clippy `unused-cbuffer-field` rule -- companion text-search
+//   - shader-clippy `unused-cbuffer-field` rule -- companion text-search
 //     heuristic for unused declarations.
 
 #include <cstddef>
@@ -41,9 +41,9 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
 
 #include "parser_internal.hpp"
@@ -53,7 +53,7 @@ extern "C" {
 const ::TSLanguage* tree_sitter_slang(void);
 }
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::is_id_char;
@@ -175,4 +175,4 @@ std::unique_ptr<Rule> make_slang_module_import_without_use() {
     return std::make_unique<SlangModuleImportWithoutUse>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

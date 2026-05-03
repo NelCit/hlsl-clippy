@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 # Resolve project root at configure time so the binary knows where fixtures are.
-set(HLSL_CLIPPY_ROOT "${CMAKE_SOURCE_DIR}")
+set(SHADER_CLIPPY_ROOT "${CMAKE_SOURCE_DIR}")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in"
     "${CMAKE_CURRENT_BINARY_DIR}/config.hpp"

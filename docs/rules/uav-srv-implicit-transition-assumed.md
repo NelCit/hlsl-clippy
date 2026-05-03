@@ -61,7 +61,7 @@ void cs_distinct(uint3 dtid : SV_DispatchThreadID) {
 
 // Or, if ping-ponging is intentional, document the application-side
 // barrier and suppress the rule for this scope:
-//   // hlsl-clippy disable-next-line uav-srv-implicit-transition-assumed
+//   // shader-clippy disable-next-line uav-srv-implicit-transition-assumed
 ```
 
 ## Options
@@ -82,6 +82,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/uav-srv-implicit-transition-assumed.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/uav-srv-implicit-transition-assumed.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

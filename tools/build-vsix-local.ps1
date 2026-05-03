@@ -4,9 +4,9 @@
 # publish.
 #
 # Steps:
-#   1. Build hlsl_clippy_lsp via cmake (uses the existing dev-shell.ps1
+#   1. Build shader_clippy_lsp via cmake (uses the existing dev-shell.ps1
 #      to set up clang-cl + Slang prebuilt on PATH).
-#   2. Stage hlsl-clippy-lsp.exe + every sibling Slang DLL into
+#   2. Stage shader-clippy-lsp.exe + every sibling Slang DLL into
 #      vscode-extension/server/windows-x86_64/.
 #   3. Compile the TypeScript source (catches strict-mode errors that
 #      would otherwise blow up release-vscode.yml's "Compile TypeScript"
@@ -18,8 +18,8 @@
 #   powershell -ExecutionPolicy Bypass -File tools\build-vsix-local.ps1
 #
 # Optional flags via environment variables:
-#   HLSL_CLIPPY_SKIP_INSTALL=1   build the .vsix but don't install it
-#   HLSL_CLIPPY_SKIP_BUILD=1     reuse the existing build/ tree
+#   SHADER_CLIPPY_SKIP_INSTALL=1   build the .vsix but don't install it
+#   SHADER_CLIPPY_SKIP_BUILD=1     reuse the existing build/ tree
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
@@ -27,15 +27,15 @@ Set-Location $root
 
 # 0. Arm the dev shell (clang-cl + cmake/ninja + Slang DLLs on PATH).
 . "$PSScriptRoot\dev-shell.ps1" *> dev-shell.log
-if (-not $env:HLSL_CLIPPY_DEV_SHELL_READY) {
+if (-not $env:SHADER_CLIPPY_DEV_SHELL_READY) {
     Write-Error "dev-shell.ps1 did not arm; check dev-shell.log"
     exit 1
 }
 
-# 1. Build hlsl_clippy_lsp (skip if requested).
-if (-not $env:HLSL_CLIPPY_SKIP_BUILD) {
-    Write-Host '==> Building hlsl_clippy_lsp...' -ForegroundColor Cyan
-    cmake --build build --target hlsl_clippy_lsp 2>&1 | Tee-Object -FilePath dev-shell.log -Append | Select-Object -Last 5
+# 1. Build shader_clippy_lsp (skip if requested).
+if (-not $env:SHADER_CLIPPY_SKIP_BUILD) {
+    Write-Host '==> Building shader_clippy_lsp...' -ForegroundColor Cyan
+    cmake --build build --target shader_clippy_lsp 2>&1 | Tee-Object -FilePath dev-shell.log -Append | Select-Object -Last 5
     if ($LASTEXITCODE -ne 0) {
         Write-Error "cmake build failed; see dev-shell.log"
         exit 1
@@ -48,15 +48,15 @@ $dest = Join-Path $root "vscode-extension\server\$platform"
 New-Item -ItemType Directory -Force -Path $dest | Out-Null
 
 $lspSrc = $null
-foreach ($c in @(".\build\lsp\hlsl-clippy-lsp.exe", ".\build\lsp\Release\hlsl-clippy-lsp.exe", ".\build\hlsl-clippy-lsp.exe")) {
+foreach ($c in @(".\build\lsp\shader-clippy-lsp.exe", ".\build\lsp\Release\shader-clippy-lsp.exe", ".\build\shader-clippy-lsp.exe")) {
     if (Test-Path $c) { $lspSrc = $c; break }
 }
 if (-not $lspSrc) {
-    Write-Error "could not locate built hlsl-clippy-lsp.exe"
+    Write-Error "could not locate built shader-clippy-lsp.exe"
     exit 1
 }
 Write-Host "==> Staging $lspSrc + sibling DLLs into $dest" -ForegroundColor Cyan
-Copy-Item $lspSrc "$dest/hlsl-clippy-lsp.exe" -Force
+Copy-Item $lspSrc "$dest/shader-clippy-lsp.exe" -Force
 $srcDir = Split-Path -Parent $lspSrc
 foreach ($dll in Get-ChildItem -Path $srcDir -Filter '*.dll' -File) {
     Copy-Item $dll.FullName "$dest/" -Force
@@ -80,7 +80,7 @@ try {
 
     # 4. Package per-platform .vsix.
     $version = (Get-Content package.json | ConvertFrom-Json).version
-    $vsixName = "hlsl-clippy-$version-win32-x64-local.vsix"
+    $vsixName = "shader-clippy-$version-win32-x64-local.vsix"
     Write-Host "==> Packaging $vsixName..." -ForegroundColor Cyan
     npx --yes @vscode/vsce package --target win32-x64 --out $vsixName
     if ($LASTEXITCODE -ne 0) {
@@ -93,8 +93,8 @@ try {
     Write-Host "Built $vsixName ($vsixSize MB)" -ForegroundColor Green
 
     # 5. Install into local VS Code.
-    if ($env:HLSL_CLIPPY_SKIP_INSTALL) {
-        Write-Host "Skipping install (HLSL_CLIPPY_SKIP_INSTALL=1)." -ForegroundColor Yellow
+    if ($env:SHADER_CLIPPY_SKIP_INSTALL) {
+        Write-Host "Skipping install (SHADER_CLIPPY_SKIP_INSTALL=1)." -ForegroundColor Yellow
         Write-Host "To install manually:"
         Write-Host "  code --install-extension vscode-extension\$vsixName --force"
     } elseif (Get-Command code -ErrorAction SilentlyContinue) {

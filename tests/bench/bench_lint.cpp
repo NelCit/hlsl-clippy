@@ -1,4 +1,4 @@
-// Performance benchmark for `hlsl_clippy::lint()` over the public 27-shader
+// Performance benchmark for `shader_clippy::lint()` over the public 27-shader
 // corpus.
 //
 // What this benchmark measures
@@ -42,19 +42,19 @@
 #include <catch2/benchmark/catch_benchmark_all.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "bench_config.hpp"
 
 namespace {
 
-using hlsl_clippy::Diagnostic;
-using hlsl_clippy::lint;
-using hlsl_clippy::make_default_rules;
-using hlsl_clippy::SourceManager;
+using shader_clippy::Diagnostic;
+using shader_clippy::lint;
+using shader_clippy::make_default_rules;
+using shader_clippy::SourceManager;
 
 /// Relative paths (POSIX-style, joined under tests/corpus/) of every fixture
 /// the bench drives. Hard-coded to keep the BENCHMARK macro list flat: each
@@ -98,7 +98,7 @@ constexpr std::array<std::string_view, 27> k_corpus_files{
 };
 
 [[nodiscard]] std::filesystem::path corpus_path(std::string_view rel) {
-    std::filesystem::path p{std::string{hlsl_clippy::bench::k_corpus_dir}};
+    std::filesystem::path p{std::string{shader_clippy::bench::k_corpus_dir}};
     p /= std::string{rel};
     return p;
 }
@@ -128,7 +128,7 @@ constexpr std::array<std::string_view, 27> k_corpus_files{
 
 }  // namespace
 
-TEST_CASE("hlsl-clippy lint perf - per-file corpus walk", "[!benchmark][bench][perf]") {
+TEST_CASE("shader-clippy lint perf - per-file corpus walk", "[!benchmark][bench][perf]") {
     // Sanity-check the corpus layout up front so a missing file produces a
     // clean test failure instead of every BENCHMARK silently reporting
     // "lint NULL" timings.
@@ -154,7 +154,7 @@ TEST_CASE("hlsl-clippy lint perf - per-file corpus walk", "[!benchmark][bench][p
     }
 }
 
-TEST_CASE("hlsl-clippy lint perf - full corpus rollup", "[!benchmark][bench][perf]") {
+TEST_CASE("shader-clippy lint perf - full corpus rollup", "[!benchmark][bench][perf]") {
     // Verify every fixture exists before timing -- see the per-file test
     // above for the rationale.
     std::vector<std::filesystem::path> paths;

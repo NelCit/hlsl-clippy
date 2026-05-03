@@ -1,4 +1,4 @@
-// `.hlsl-clippy.toml` loader (per ADR 0008 §5).
+// `.shader-clippy.toml` loader (per ADR 0008 §5).
 //
 // Schema:
 //   [rules]
@@ -19,7 +19,7 @@
 // The file is parsed via toml++ in single-header mode. Every diagnostic
 // surface has a `clippy::config` diagnostic equivalent emitted by the driver.
 
-#include "hlsl_clippy/config.hpp"
+#include "shader_clippy/config.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -36,7 +36,7 @@
 
 #include <toml++/toml.hpp>
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 namespace {
 
@@ -499,7 +499,7 @@ std::optional<std::filesystem::path> find_config(const std::filesystem::path& st
     }
 
     while (true) {
-        const auto candidate = cur / ".hlsl-clippy.toml";
+        const auto candidate = cur / ".shader-clippy.toml";
         if (std::filesystem::exists(candidate, ec) &&
             std::filesystem::is_regular_file(candidate, ec)) {
             return candidate;
@@ -519,4 +519,4 @@ std::optional<std::filesystem::path> find_config(const std::filesystem::path& st
     }
 }
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

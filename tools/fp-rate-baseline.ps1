@@ -26,7 +26,7 @@ Set-StrictMode -Version Latest
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot  = Split-Path -Parent $ScriptDir
-$CliPath   = Join-Path $RepoRoot 'build\cli\hlsl-clippy.exe'
+$CliPath   = Join-Path $RepoRoot 'build\cli\shader-clippy.exe'
 $CorpusDir = Join-Path $RepoRoot 'tests\corpus'
 $OutputMd  = Join-Path $CorpusDir 'FP_RATES.md'
 

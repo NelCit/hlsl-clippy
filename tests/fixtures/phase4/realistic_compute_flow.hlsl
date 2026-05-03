@@ -1,5 +1,5 @@
 // Phase 4 — realistic tile-binning compute shader with deliberate uniformity /
-// divergence rule mix. Hand-written fixture for hlsl-clippy rule validation.
+// divergence rule mix. Hand-written fixture for shader-clippy rule validation.
 // Convention: `// HIT(rule-id): reason` on offending lines.
 
 Texture2D<float>  DepthTex   : register(t0);

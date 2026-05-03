@@ -1,5 +1,5 @@
 name: "Rule proposal"
-description: "Propose a new lint rule for hlsl-clippy"
+description: "Propose a new lint rule for shader-clippy"
 title: "[Rule] "
 labels: ["rule-proposal", "enhancement"]
 body:

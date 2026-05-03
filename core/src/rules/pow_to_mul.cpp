@@ -20,7 +20,7 @@
 //
 // Note: the existing `pow-const-squared` rule also covers exponent 2; both
 // rules can fire on `pow(x, 2.0)`. Users can disable whichever they prefer
-// via `.hlsl-clippy.toml`.
+// via `.shader-clippy.toml`.
 
 #include <cstddef>
 #include <cstdint>
@@ -32,15 +32,15 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::node_kind;
@@ -236,4 +236,4 @@ std::unique_ptr<Rule> make_pow_to_mul() {
     return std::make_unique<PowToMul>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

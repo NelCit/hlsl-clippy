@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate canonical golden snapshots from `hlsl-clippy lint` output.
+"""Generate canonical golden snapshots from `shader-clippy lint` output.
 
 This script is the WRITE side of the golden-snapshot test loop; the READ
 side is `tests/unit/test_golden_snapshots.cpp`. Both produce byte-identical
@@ -30,7 +30,7 @@ so we match the diagnostic header line by anchoring on the file path.
 
 Usage:
     python tests/golden/normalize.py \\
-        --cli build/cli/hlsl-clippy.exe \\
+        --cli build/cli/shader-clippy.exe \\
         --fixtures-dir tests/golden/fixtures \\
         --snapshots-dir tests/golden/snapshots
 """
@@ -98,7 +98,7 @@ def run_cli(cli: Path, fixture: Path) -> str:
 
 def main() -> int:
     p = argparse.ArgumentParser()
-    p.add_argument("--cli", type=Path, required=True, help="path to hlsl-clippy[.exe]")
+    p.add_argument("--cli", type=Path, required=True, help="path to shader-clippy[.exe]")
     p.add_argument("--fixtures-dir", type=Path, required=True)
     p.add_argument("--snapshots-dir", type=Path, required=True)
     args = p.parse_args()

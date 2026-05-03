@@ -5,7 +5,7 @@ preserved-verbatim: yes — see ../0007-rule-pack-expansion.md for the distilled
 note: the agent's heading says "30" but produced 41 rules; all 41 were adopted.
 -->
 
-# 30 Additional Rules for hlsl-clippy
+# 30 Additional Rules for shader-clippy
 [Note: agent labeled "30" but produced 41. Use all 41.]
 
 ## Math / Intrinsics

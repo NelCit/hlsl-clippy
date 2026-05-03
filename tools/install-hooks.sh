@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install hlsl-clippy git hooks into .git/hooks/.
+# Install shader-clippy git hooks into .git/hooks/.
 #
 # Idempotent: re-running overwrites existing hooks. POSIX-friendly aside
 # from the bash shebang for argument parsing — the hook itself is /bin/sh.
@@ -43,5 +43,5 @@ done
 echo ""
 echo "Pre-commit hook installed. Override env vars:"
 echo "  CLANG_FORMAT=/path/to/clang-format-18           (explicit binary)"
-echo "  HLSL_CLIPPY_HOOK_ALLOW_ANY_CLANG_FORMAT=1       (skip v18 check)"
-echo "  HLSL_CLIPPY_HOOK_FIX=1                          (auto-fix + re-stage)"
+echo "  SHADER_CLIPPY_HOOK_ALLOW_ANY_CLANG_FORMAT=1       (skip v18 check)"
+echo "  SHADER_CLIPPY_HOOK_FIX=1                          (auto-fix + re-stage)"

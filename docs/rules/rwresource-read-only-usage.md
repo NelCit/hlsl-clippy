@@ -75,7 +75,7 @@ none
 
 ## Fix availability
 
-**suggestion** — Demoting a UAV to an SRV changes the resource's bind point from a `u` register to a `t` register and requires updating the D3D12 root signature, the pipeline state object descriptor table, and any resource-barrier code on the CPU side. The HLSL change (renaming the resource type and register) is mechanical, but the surrounding CPU-side changes must be made in concert. `hlsl-clippy fix` generates the suggested HLSL declaration change as a comment but does not apply it automatically.
+**suggestion** — Demoting a UAV to an SRV changes the resource's bind point from a `u` register to a `t` register and requires updating the D3D12 root signature, the pipeline state object descriptor table, and any resource-barrier code on the CPU side. The HLSL change (renaming the resource type and register) is mechanical, but the surrounding CPU-side changes must be made in concert. `shader-clippy fix` generates the suggested HLSL declaration change as a comment but does not apply it automatically.
 
 ## See also
 
@@ -87,6 +87,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/rwresource-read-only-usage.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/rwresource-read-only-usage.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

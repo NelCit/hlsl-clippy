@@ -29,8 +29,8 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "control_flow/engine.hpp"
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 #include "rules/util/cfg_query.hpp"
 #include "rules/util/helper_lane_analyzer.hpp"
 #include "rules/util/light_dataflow.hpp"
@@ -38,14 +38,14 @@
 
 namespace {
 
-using hlsl_clippy::BasicBlockId;
-using hlsl_clippy::ByteSpan;
-using hlsl_clippy::ControlFlowInfo;
-using hlsl_clippy::SourceManager;
-using hlsl_clippy::Span;
-using hlsl_clippy::Uniformity;
+using shader_clippy::BasicBlockId;
+using shader_clippy::ByteSpan;
+using shader_clippy::ControlFlowInfo;
+using shader_clippy::SourceManager;
+using shader_clippy::Span;
+using shader_clippy::Uniformity;
 
-namespace util = hlsl_clippy::rules::util;
+namespace util = shader_clippy::rules::util;
 
 constexpr std::string_view k_simple_src = R"hlsl(
 float compute_simple(float x)
@@ -101,7 +101,7 @@ void cs_branch(uint3 tid : SV_DispatchThreadID)
 [[nodiscard]] ControlFlowInfo build(SourceManager& sources,
                                     const std::string& name,
                                     std::string_view src) {
-    auto& engine = hlsl_clippy::control_flow::CfgEngine::instance();
+    auto& engine = shader_clippy::control_flow::CfgEngine::instance();
     engine.clear_cache();
     const auto sid = sources.add_buffer(name, std::string{src});
     REQUIRE(sid.valid());
@@ -111,7 +111,7 @@ void cs_branch(uint3 tid : SV_DispatchThreadID)
 }
 
 [[nodiscard]] Span span_at(const SourceManager& /*sources*/,
-                           hlsl_clippy::SourceId sid,
+                           shader_clippy::SourceId sid,
                            std::string_view src,
                            std::string_view needle) {
     const auto pos = src.find(needle);

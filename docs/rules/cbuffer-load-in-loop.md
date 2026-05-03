@@ -87,7 +87,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — When the rule confirms that the expression is a pure function of cbuffer fields and literals (no texture reads, no UAV accesses, no side effects), it inserts a `float <name> = <expr>;` local before the loop and replaces the in-loop occurrences with the new local name. The expression is identical; only the evaluation point changes. Because cbuffer fields are read-only from the shader's perspective and the expression has no side effects, the substitution is always semantically equivalent. `hlsl-clippy fix` applies it without human confirmation.
+**machine-applicable** — When the rule confirms that the expression is a pure function of cbuffer fields and literals (no texture reads, no UAV accesses, no side effects), it inserts a `float <name> = <expr>;` local before the loop and replaces the in-loop occurrences with the new local name. The expression is identical; only the evaluation point changes. Because cbuffer fields are read-only from the shader's perspective and the expression has no side effects, the substitution is always semantically equivalent. `shader-clippy fix` applies it without human confirmation.
 
 ## See also
 
@@ -99,6 +99,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/cbuffer-load-in-loop.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/cbuffer-load-in-loop.md)
 
 <!-- © 2026 NelCit, CC-BY-4.0. Code snippets are Apache-2.0. -->

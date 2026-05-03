@@ -21,7 +21,7 @@ const platform =
     process.platform === "win32"  ? "windows-x86_64"
     : process.platform === "darwin" ? (process.arch === "arm64" ? "macos-aarch64" : "macos-x86_64")
     : "linux-x86_64";
-const exeName = process.platform === "win32" ? "hlsl-clippy-lsp.exe" : "hlsl-clippy-lsp";
+const exeName = process.platform === "win32" ? "shader-clippy-lsp.exe" : "shader-clippy-lsp";
 const lsp = path.join(extensionRoot, "server", platform, exeName);
 
 if (!fs.existsSync(lsp)) {
@@ -31,7 +31,7 @@ if (!fs.existsSync(lsp)) {
 
 // Use a CWD that has no DLLs near it -- mimics what VS Code does when
 // the workspace folder is unrelated to the extension install dir.
-const fakeCwd = path.join(os.tmpdir(), "hlsl-clippy-cwd-test");
+const fakeCwd = path.join(os.tmpdir(), "shader-clippy-cwd-test");
 fs.mkdirSync(fakeCwd, { recursive: true });
 
 const fixtureSrc = path.join(__dirname, "..", "tests", "fixtures", "phase2", "math.hlsl");

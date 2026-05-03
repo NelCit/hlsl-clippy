@@ -93,6 +93,6 @@ void ah_foliage(inout ShadowPayload pl, in BuiltInTriangleIntersectionAttributes
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/inline-rayquery-when-pipeline-better.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/inline-rayquery-when-pipeline-better.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

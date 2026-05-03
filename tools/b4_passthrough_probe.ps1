@@ -20,9 +20,9 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $Repo = (Get-Location).Path
-$Cli  = Join-Path $Repo 'build\cli\hlsl-clippy.exe'
+$Cli  = Join-Path $Repo 'build\cli\shader-clippy.exe'
 if (-not (Test-Path $Cli)) {
-    Write-Host "build CLI not found at $Cli; run cmake --build build --target hlsl-clippy first."
+    Write-Host "build CLI not found at $Cli; run cmake --build build --target shader-clippy first."
     exit 1
 }
 

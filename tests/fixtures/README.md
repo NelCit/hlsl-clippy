@@ -1,4 +1,4 @@
-# hlsl-clippy test fixtures
+# shader-clippy test fixtures
 
 Hand-written HLSL fixtures used to validate rule firing.
 

@@ -111,7 +111,7 @@ the intended computation; the fix is always manual.
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/vgpr-pressure-warning.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/vgpr-pressure-warning.md)
 
 ---
 

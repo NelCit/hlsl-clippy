@@ -77,6 +77,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/feedback-write-wrong-stage.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/feedback-write-wrong-stage.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

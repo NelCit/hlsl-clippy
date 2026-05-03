@@ -77,6 +77,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/hitobject-stored-in-memory.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/hitobject-stored-in-memory.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

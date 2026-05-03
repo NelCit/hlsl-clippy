@@ -25,7 +25,7 @@ or an RTX 3080, it runs roughly thirty-two times slower on its second LDS
 access than the same kernel with one extra float per row of the tile array.
 Not 30% slower. 32x slower on that load. The compiler cannot fix it because
 the bug is in the index arithmetic, not in the code generator. Every other
-rule in the workgroup category of `hlsl-clippy` is a variant of the same
+rule in the workgroup category of `shader-clippy` is a variant of the same
 shape: groupshared memory is a hardware resource with mechanical rules that
 are invisible at the source level, and the patterns that violate those
 rules look identical to the patterns that don't.
@@ -288,7 +288,7 @@ GCD with the bank count, you are paying for every wave that touches it.
 
 Browse the full set of workgroup rules at
 [/rules/?category=workgroup](/rules/?category=workgroup) and run
-`hlsl-clippy lint` over your compute pass. The `--fix` flag will apply
+`shader-clippy lint` over your compute pass. The `--fix` flag will apply
 the machine-applicable rewrites (the `groupshared-volatile` removal
 notably). The rest carry diagnostic notes that explain the GPU
 mechanism and point at the specific index expression or barrier site
@@ -296,9 +296,9 @@ that triggered the rule.
 
 ---
 
-`hlsl-clippy` is an open-source HLSL linter. Rules, issues, and
+`shader-clippy` is an open-source HLSL linter. Rules, issues, and
 discussion live at
-[github.com/NelCit/hlsl-clippy](https://github.com/NelCit/hlsl-clippy).
+[github.com/NelCit/shader-clippy](https://github.com/NelCit/shader-clippy).
 If you have encountered a shader pattern that should be a lint rule,
 open an issue.
 
