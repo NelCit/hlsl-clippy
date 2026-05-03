@@ -39,10 +39,10 @@
 #include <tree_sitter/api.h>
 
 #include "control_flow/cfg_storage.hpp"
+#include "rules/util/liveness.hpp"
 #include "shader_clippy/control_flow.hpp"
 #include "shader_clippy/reflection.hpp"
 #include "shader_clippy/source.hpp"
-#include "rules/util/liveness.hpp"
 
 #include "parser_internal.hpp"
 

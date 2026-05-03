@@ -12,6 +12,7 @@
 #include <tree_sitter/api.h>
 
 #include "control_flow/engine.hpp"
+#include "reflection/engine.hpp"
 #include "shader_clippy/config.hpp"
 #include "shader_clippy/control_flow.hpp"
 #include "shader_clippy/diagnostic.hpp"
@@ -21,7 +22,6 @@
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
 #include "shader_clippy/suppress.hpp"
-#include "reflection/engine.hpp"
 
 // Phase 7 (ADR 0016): the IR engine TU is built only when
 // `SHADER_CLIPPY_ENABLE_IR=ON` (the default). When OFF, `core/src/ir/engine.cpp`

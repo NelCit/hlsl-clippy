@@ -11,10 +11,10 @@
 
 #include "rules/util/light_dataflow.hpp"
 
-#include "shader_clippy/control_flow.hpp"
-#include "shader_clippy/source.hpp"
 #include "rules/util/cfg_query.hpp"
 #include "rules/util/uniformity.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 
 namespace shader_clippy::rules::util {
 

@@ -15,8 +15,8 @@
 #include <optional>
 #include <string_view>
 
-#include "shader_clippy/reflection.hpp"
 #include "rules/util/reflect_resource.hpp"
+#include "shader_clippy/reflection.hpp"
 
 namespace shader_clippy::rules::util {
 

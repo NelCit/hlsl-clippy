@@ -25,10 +25,10 @@
 #include <tree_sitter/api.h>
 
 #include "../parser_internal.hpp"
+#include "rules/util/ast_helpers.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
-#include "rules/util/ast_helpers.hpp"
 
 #include "rules.hpp"
 

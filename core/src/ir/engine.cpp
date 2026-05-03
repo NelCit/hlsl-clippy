@@ -35,11 +35,11 @@
 #include <tuple>
 #include <utility>
 
+#include "reflection/engine.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/ir.hpp"
 #include "shader_clippy/reflection.hpp"
 #include "shader_clippy/source.hpp"
-#include "reflection/engine.hpp"
 
 namespace shader_clippy::ir {
 

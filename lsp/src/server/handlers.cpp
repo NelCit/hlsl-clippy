@@ -11,16 +11,16 @@
 
 #include "document/manager.hpp"
 #include "document/uri.hpp"
+#include "rpc/dispatcher.hpp"
+#include "rpc/message.hpp"
+#include "server/code_actions.hpp"
+#include "server/diagnostic_convert.hpp"
 #include "shader_clippy/config.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/lint.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
 #include "shader_clippy/version.hpp"
-#include "rpc/dispatcher.hpp"
-#include "rpc/message.hpp"
-#include "server/code_actions.hpp"
-#include "server/diagnostic_convert.hpp"
 
 #include "config_resolver.hpp"
 

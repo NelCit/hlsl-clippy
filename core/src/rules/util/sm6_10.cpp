@@ -20,10 +20,10 @@
 
 #include <tree_sitter/api.h>
 
-#include "shader_clippy/reflection.hpp"
-#include "shader_clippy/rule.hpp"
 #include "rules/util/ast_helpers.hpp"
 #include "rules/util/reflect_stage.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/rule.hpp"
 
 #include "parser_internal.hpp"
 

@@ -33,12 +33,12 @@
 
 #include <tree_sitter/api.h>
 
+#include "query/query.hpp"
+#include "rules/util/purity_oracle.hpp"
 #include "shader_clippy/config.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
-#include "query/query.hpp"
-#include "rules/util/purity_oracle.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"

@@ -16,12 +16,12 @@
 #include <utility>
 
 #include "control_flow/cfg_storage.hpp"
+#include "rules/util/liveness.hpp"
+#include "rules/util/register_pressure_ast.hpp"
 #include "shader_clippy/control_flow.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
-#include "rules/util/liveness.hpp"
-#include "rules/util/register_pressure_ast.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
@@ -53,8 +53,8 @@ public:
         const auto liveness = shader_clippy::util::compute_liveness(cfg, tree);
         if (liveness.live_in_per_block.empty())
             return;
-        const auto pressure =
-            shader_clippy::util::estimate_pressure(cfg, liveness, tree, nullptr, k_default_threshold);
+        const auto pressure = shader_clippy::util::estimate_pressure(
+            cfg, liveness, tree, nullptr, k_default_threshold);
         if (pressure.empty())
             return;
 

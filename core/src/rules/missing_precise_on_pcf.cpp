@@ -17,10 +17,10 @@
 #include <string_view>
 #include <utility>
 
+#include "rules/util/ast_helpers.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
-#include "rules/util/ast_helpers.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"

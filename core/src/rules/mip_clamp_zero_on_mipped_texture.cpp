@@ -27,12 +27,12 @@
 
 #include <tree_sitter/api.h>
 
+#include "rules/util/reflect_resource.hpp"
+#include "rules/util/reflect_sampler.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/reflection.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
-#include "rules/util/reflect_resource.hpp"
-#include "rules/util/reflect_sampler.hpp"
 
 #include "parser_internal.hpp"
 

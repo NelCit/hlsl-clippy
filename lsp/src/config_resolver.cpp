@@ -10,7 +10,8 @@
 
 namespace shader_clippy::lsp {
 
-std::optional<shader_clippy::Config> resolve_config_for(const std::filesystem::path& document_path) {
+std::optional<shader_clippy::Config> resolve_config_for(
+    const std::filesystem::path& document_path) {
     const auto config_path = shader_clippy::find_config(document_path);
     if (!config_path.has_value()) {
         return std::nullopt;

@@ -27,10 +27,10 @@
 
 #include <tree_sitter/api.h>
 
+#include "rules/util/ast_helpers.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
-#include "rules/util/ast_helpers.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
@@ -60,16 +60,16 @@ constexpr std::string_view k_category = "bindings";
     };
     auto matrix_dims =
         [&](std::size_t prefix_len) noexcept -> std::pair<std::uint32_t, std::uint32_t> {
-        if (t.size() < prefix_len + 3U)
+            if (t.size() < prefix_len + 3U)
+                return {1U, 1U};
+            const char r = t[prefix_len];
+            const char x = t[prefix_len + 1U];
+            const char c = t[prefix_len + 2U];
+            if ((r >= '1' && r <= '4') && x == 'x' && (c >= '1' && c <= '4')) {
+                return {static_cast<std::uint32_t>(r - '0'), static_cast<std::uint32_t>(c - '0')};
+            }
             return {1U, 1U};
-        const char r = t[prefix_len];
-        const char x = t[prefix_len + 1U];
-        const char c = t[prefix_len + 2U];
-        if ((r >= '1' && r <= '4') && x == 'x' && (c >= '1' && c <= '4')) {
-            return {static_cast<std::uint32_t>(r - '0'), static_cast<std::uint32_t>(c - '0')};
-        }
-        return {1U, 1U};
-    };
+        };
 
     // Float / int / uint / bool scalars + vectors.
     if (starts_with("float") && t.find('x') == std::string_view::npos)

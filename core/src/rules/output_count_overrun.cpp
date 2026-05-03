@@ -21,12 +21,12 @@
 
 #include <tree_sitter/api.h>
 
+#include "rules/util/ast_helpers.hpp"
+#include "rules/util/cfg_query.hpp"
 #include "shader_clippy/control_flow.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
-#include "rules/util/ast_helpers.hpp"
-#include "rules/util/cfg_query.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"

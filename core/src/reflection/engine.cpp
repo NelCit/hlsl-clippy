@@ -10,10 +10,10 @@
 #include <tuple>
 #include <utility>
 
+#include "reflection/slang_bridge.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/reflection.hpp"
 #include "shader_clippy/source.hpp"
-#include "reflection/slang_bridge.hpp"
 
 namespace shader_clippy::reflection {
 

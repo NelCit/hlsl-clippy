@@ -618,7 +618,8 @@ struct PerFileResult {
         }
         if (a == "--source-language") {
             if (i + 1U >= args.size()) {
-                std::cerr << "shader-clippy: --source-language requires a value (auto|hlsl|slang)\n";
+                std::cerr
+                    << "shader-clippy: --source-language requires a value (auto|hlsl|slang)\n";
                 return 2;
             }
             const auto parsed = parse_source_language(args[i + 1U]);

@@ -9,9 +9,9 @@
 #include <utility>
 #include <vector>
 
+#include "server/diagnostic_convert.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/source.hpp"
-#include "server/diagnostic_convert.hpp"
 
 namespace shader_clippy::lsp::server {
 
