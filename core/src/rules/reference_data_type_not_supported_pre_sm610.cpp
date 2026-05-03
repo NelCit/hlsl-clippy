@@ -53,25 +53,23 @@ public:
         }
         // Confirm the prefix is one of the parameter qualifiers.
         std::size_t k = pos;
-        while (k > 0U &&
-               (bytes[k - 1U] == ' ' || bytes[k - 1U] == '\t' || bytes[k - 1U] == 'a' ||
-                bytes[k - 1U] == 'b' || bytes[k - 1U] == 'c' || bytes[k - 1U] == 'd' ||
-                bytes[k - 1U] == 'e' || bytes[k - 1U] == 'f' || bytes[k - 1U] == 'g' ||
-                bytes[k - 1U] == 'h' || bytes[k - 1U] == 'i' || bytes[k - 1U] == 'j' ||
-                bytes[k - 1U] == 'k' || bytes[k - 1U] == 'l' || bytes[k - 1U] == 'm' ||
-                bytes[k - 1U] == 'n' || bytes[k - 1U] == 'o' || bytes[k - 1U] == 'p' ||
-                bytes[k - 1U] == 'q' || bytes[k - 1U] == 'r' || bytes[k - 1U] == 's' ||
-                bytes[k - 1U] == 't' || bytes[k - 1U] == 'u' || bytes[k - 1U] == 'v' ||
-                bytes[k - 1U] == 'w' || bytes[k - 1U] == 'x' || bytes[k - 1U] == 'y' ||
-                bytes[k - 1U] == 'z')) {
+        while (k > 0U && (bytes[k - 1U] == ' ' || bytes[k - 1U] == '\t' || bytes[k - 1U] == 'a' ||
+                          bytes[k - 1U] == 'b' || bytes[k - 1U] == 'c' || bytes[k - 1U] == 'd' ||
+                          bytes[k - 1U] == 'e' || bytes[k - 1U] == 'f' || bytes[k - 1U] == 'g' ||
+                          bytes[k - 1U] == 'h' || bytes[k - 1U] == 'i' || bytes[k - 1U] == 'j' ||
+                          bytes[k - 1U] == 'k' || bytes[k - 1U] == 'l' || bytes[k - 1U] == 'm' ||
+                          bytes[k - 1U] == 'n' || bytes[k - 1U] == 'o' || bytes[k - 1U] == 'p' ||
+                          bytes[k - 1U] == 'q' || bytes[k - 1U] == 'r' || bytes[k - 1U] == 's' ||
+                          bytes[k - 1U] == 't' || bytes[k - 1U] == 'u' || bytes[k - 1U] == 'v' ||
+                          bytes[k - 1U] == 'w' || bytes[k - 1U] == 'x' || bytes[k - 1U] == 'y' ||
+                          bytes[k - 1U] == 'z')) {
             --k;
         }
         const auto prefix = bytes.substr(k, pos - k);
         const std::string_view trimmed_prefix = prefix.empty() ? prefix : prefix;
-        const bool is_param_qual =
-            trimmed_prefix.find("inout") != std::string_view::npos ||
-            trimmed_prefix.find("out") != std::string_view::npos ||
-            trimmed_prefix.find("in") != std::string_view::npos;
+        const bool is_param_qual = trimmed_prefix.find("inout") != std::string_view::npos ||
+                                   trimmed_prefix.find("out") != std::string_view::npos ||
+                                   trimmed_prefix.find("in") != std::string_view::npos;
         if (!is_param_qual) {
             return;
         }

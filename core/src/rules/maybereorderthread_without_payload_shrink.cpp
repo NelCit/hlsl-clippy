@@ -39,9 +39,7 @@ constexpr std::string_view k_rule_id = "maybereorderthread-without-payload-shrin
 constexpr std::string_view k_category = "ser";
 constexpr std::size_t k_live_threshold = 3U;
 
-void collect_reorder_calls(::TSNode node,
-                           std::string_view bytes,
-                           std::vector<::TSNode>& out) {
+void collect_reorder_calls(::TSNode node, std::string_view bytes, std::vector<::TSNode>& out) {
     if (::ts_node_is_null(node))
         return;
     if (node_kind(node) == "call_expression") {
@@ -98,12 +96,11 @@ public:
             diag.code = std::string{k_rule_id};
             diag.severity = Severity::Warning;
             diag.primary_span = call_span;
-            diag.message = std::string{
-                                "`MaybeReorderThread` call site has "} +
-                            std::to_string(live_out.size()) +
-                            " AST-level locals live across the reorder -- the SER scheduler "
-                            "must move that state with the thread when it re-coalesces, "
-                            "negating the throughput win the reorder is designed to deliver";
+            diag.message = std::string{"`MaybeReorderThread` call site has "} +
+                           std::to_string(live_out.size()) +
+                           " AST-level locals live across the reorder -- the SER scheduler "
+                           "must move that state with the thread when it re-coalesces, "
+                           "negating the throughput win the reorder is designed to deliver";
             ctx.emit(std::move(diag));
         }
     }

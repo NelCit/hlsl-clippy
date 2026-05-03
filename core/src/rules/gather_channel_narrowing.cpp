@@ -168,12 +168,12 @@ public:
             const bool is_red_channel = (ch == 'r' || ch == 'x');
             Fix fix;
             fix.machine_applicable = is_red_channel;
-            fix.description =
-                is_red_channel
-                    ? std::string{"replace `Gather(...).r` with `GatherRed(...).r`"}
-                    : std::string{"replace `Gather(...).<channel>` with the channel-"
-                                  "specific gather; verify the original swizzle was "
-                                  "intended to mean the channel name (not a texel index)"};
+            fix.description = is_red_channel
+                                  ? std::string{"replace `Gather(...).r` with `GatherRed(...).r`"}
+                                  : std::string{
+                                        "replace `Gather(...).<channel>` with the channel-"
+                                        "specific gather; verify the original swizzle was "
+                                        "intended to mean the channel name (not a texel index)"};
             TextEdit edit;
             edit.span = Span{.source = tree.source_id(),
                              .bytes = ByteSpan{static_cast<std::uint32_t>(call_lo),

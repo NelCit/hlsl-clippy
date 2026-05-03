@@ -88,8 +88,8 @@ void walk(::TSNode node,
                             Span{.source = tree.source_id(), .bytes = tree.byte_range(node)};
                         diag.message =
                             std::string{"`DispatchMesh("} + std::to_string(dims[0]) + ", " +
-                            std::to_string(dims[1]) + ", " + std::to_string(dims[2]) +
-                            ")` total " + std::to_string(total) + " is less than wave size " +
+                            std::to_string(dims[1]) + ", " + std::to_string(dims[2]) + ")` total " +
+                            std::to_string(total) + " is less than wave size " +
                             std::to_string(wave_size) +
                             " -- dispatching less than one wave wastes the entire dispatch "
                             "(the lanes beyond the grid still consume a wave slot)";

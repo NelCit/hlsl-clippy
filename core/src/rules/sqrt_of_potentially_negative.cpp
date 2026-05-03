@@ -110,8 +110,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                         TextEdit edit;
                         edit.span =
                             Span{.source = tree.source_id(), .bytes = tree.byte_range(arg0)};
-                        edit.replacement =
-                            std::string{"max(0.0, "} + std::string{arg_text} + ")";
+                        edit.replacement = std::string{"max(0.0, "} + std::string{arg_text} + ")";
                         fix.edits.push_back(std::move(edit));
                     }
                     diag.fixes.push_back(std::move(fix));

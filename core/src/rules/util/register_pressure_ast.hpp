@@ -27,9 +27,9 @@
 #include "hlsl_clippy/source.hpp"
 
 namespace hlsl_clippy {
-class AstTree;        // forward declaration; defined in `parser_internal.hpp`.
+class AstTree;          // forward declaration; defined in `parser_internal.hpp`.
 struct ReflectionInfo;  // forward declaration; defined in `reflection.hpp`.
-}
+}  // namespace hlsl_clippy
 
 namespace hlsl_clippy::util {
 

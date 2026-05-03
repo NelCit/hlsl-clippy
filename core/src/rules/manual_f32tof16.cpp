@@ -55,8 +55,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
             Diagnostic diag;
             diag.code = std::string{k_rule_id};
             diag.severity = Severity::Warning;
-            diag.primary_span =
-                Span{.source = tree.source_id(), .bytes = tree.byte_range(node)};
+            diag.primary_span = Span{.source = tree.source_id(), .bytes = tree.byte_range(node)};
             diag.message = std::string{
                 "expression matches the canonical `(asuint(x) >> 13) & 0x7FFF | ...` "
                 "lowering of a software fp32 -> fp16 conversion -- replace with the "

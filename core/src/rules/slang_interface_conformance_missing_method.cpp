@@ -85,8 +85,8 @@ constexpr std::string_view k_category = "slang-language";
 /// `field_declaration` (no body) and extension-method DEFINITIONS as
 /// `function_definition` (with body). Both are accepted — the rule just
 /// needs the method name regardless of declaration vs definition shape.
-[[nodiscard]] std::unordered_set<std::string> collect_method_names(
-    ::TSNode body, std::string_view bytes) {
+[[nodiscard]] std::unordered_set<std::string> collect_method_names(::TSNode body,
+                                                                   std::string_view bytes) {
     std::unordered_set<std::string> out;
     if (::ts_node_is_null(body)) {
         return out;

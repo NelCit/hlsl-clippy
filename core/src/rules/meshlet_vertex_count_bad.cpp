@@ -44,10 +44,7 @@ constexpr std::uint32_t k_wave_align = 32U;
     return s;
 }
 
-void scan(std::string_view bytes,
-          std::string_view kind_kw,
-          const AstTree& tree,
-          RuleContext& ctx) {
+void scan(std::string_view bytes, std::string_view kind_kw, const AstTree& tree, RuleContext& ctx) {
     std::size_t pos = 0U;
     while (pos < bytes.size()) {
         const auto found = bytes.find(kind_kw, pos);

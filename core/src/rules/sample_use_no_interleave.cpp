@@ -41,7 +41,11 @@ constexpr std::string_view k_category = "memory";
 constexpr std::size_t k_window_statements = 3U;
 
 constexpr std::array<std::string_view, 5> k_sample_names{
-    "Sample", "SampleLevel", "SampleGrad", "SampleBias", "SampleCmp",
+    "Sample",
+    "SampleLevel",
+    "SampleGrad",
+    "SampleBias",
+    "SampleCmp",
 };
 
 [[nodiscard]] bool callee_is_sample(::TSNode call, std::string_view bytes) noexcept {
@@ -107,10 +111,7 @@ constexpr std::array<std::string_view, 5> k_sample_names{
     return {};
 }
 
-void scan_compound(::TSNode block,
-                   std::string_view bytes,
-                   const AstTree& tree,
-                   RuleContext& ctx) {
+void scan_compound(::TSNode block, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
     if (::ts_node_is_null(block)) {
         return;
     }
@@ -141,14 +142,11 @@ void scan_compound(::TSNode block,
                 diag.severity = Severity::Warning;
                 diag.primary_span =
                     Span{.source = tree.source_id(), .bytes = tree.byte_range(init_call)};
-                diag.message =
-                    std::string{
-                        "(suggestion) `Sample()` result `"} +
-                    std::string{name} +
-                    "` is consumed within the next " + std::to_string(scanned + 1U) +
-                    " statement(s) -- interleave compute between sample and use to hide "
-                    "the texture-cache miss latency (Nsight: \"Warp Stalled by L1 Long "
-                    "Scoreboard\")";
+                diag.message = std::string{"(suggestion) `Sample()` result `"} + std::string{name} +
+                               "` is consumed within the next " + std::to_string(scanned + 1U) +
+                               " statement(s) -- interleave compute between sample and use to hide "
+                               "the texture-cache miss latency (Nsight: \"Warp Stalled by L1 Long "
+                               "Scoreboard\")";
                 ctx.emit(std::move(diag));
                 break;
             }

@@ -86,8 +86,7 @@ public:
         if (bytes.find("ClusterID") == std::string_view::npos) {
             return;
         }
-        const bool has_check =
-            bytes.find("IsClusteredGeometrySupported") != std::string_view::npos;
+        const bool has_check = bytes.find("IsClusteredGeometrySupported") != std::string_view::npos;
         walk(::ts_tree_root_node(tree.raw_tree()), bytes, has_check, tree, ctx);
     }
 };

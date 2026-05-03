@@ -178,7 +178,7 @@ constexpr std::uint32_t k_round_up_step = 64U * 1024U;  // 64 KB granularity
 /// definition preceded by a `[numthreads(...)]` attribute. Returns null on
 /// miss.
 [[nodiscard]] ::TSNode find_entry_point_with_numthreads(::TSNode root,
-                                                       std::string_view bytes) noexcept {
+                                                        std::string_view bytes) noexcept {
     if (::ts_node_is_null(root)) {
         return root;
     }
@@ -285,8 +285,7 @@ public:
                 .bytes = ByteSpan{static_cast<std::uint32_t>(::ts_node_start_byte(entry)),
                                   static_cast<std::uint32_t>(::ts_node_start_byte(entry))},
             };
-            edit.replacement =
-                "[GroupSharedLimit(" + std::to_string(suggested) + ")]\n";
+            edit.replacement = "[GroupSharedLimit(" + std::to_string(suggested) + ")]\n";
             fix.edits.push_back(std::move(edit));
             diag.fixes.push_back(std::move(fix));
         }

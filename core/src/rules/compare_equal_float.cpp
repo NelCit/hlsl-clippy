@@ -160,91 +160,87 @@ public:
         }
 
         query::QueryEngine engine;
-        engine.run(compiled.value(),
-                   ::ts_tree_root_node(tree.raw_tree()),
-                   [&](const query::QueryMatch& match) {
-                       const ::TSNode left = match.capture("left");
-                       const ::TSNode right = match.capture("right");
-                       const ::TSNode expr = match.capture("expr");
-                       if (::ts_node_is_null(left) || ::ts_node_is_null(right) ||
-                           ::ts_node_is_null(expr)) {
-                           return;
-                       }
+        engine.run(
+            compiled.value(),
+            ::ts_tree_root_node(tree.raw_tree()),
+            [&](const query::QueryMatch& match) {
+                const ::TSNode left = match.capture("left");
+                const ::TSNode right = match.capture("right");
+                const ::TSNode expr = match.capture("expr");
+                if (::ts_node_is_null(left) || ::ts_node_is_null(right) ||
+                    ::ts_node_is_null(expr)) {
+                    return;
+                }
 
-                       const auto op = binary_op(expr, tree.source_bytes());
-                       if (op != "==" && op != "!=")
-                           return;
+                const auto op = binary_op(expr, tree.source_bytes());
+                if (op != "==" && op != "!=")
+                    return;
 
-                       const auto left_text = tree.text(left);
-                       const auto right_text = tree.text(right);
+                const auto left_text = tree.text(left);
+                const auto right_text = tree.text(right);
 
-                       const bool left_is_float_lit =
-                           is_number_literal(left) && literal_looks_like_float(left_text);
-                       const bool right_is_float_lit =
-                           is_number_literal(right) && literal_looks_like_float(right_text);
+                const bool left_is_float_lit =
+                    is_number_literal(left) && literal_looks_like_float(left_text);
+                const bool right_is_float_lit =
+                    is_number_literal(right) && literal_looks_like_float(right_text);
 
-                       if (!left_is_float_lit && !right_is_float_lit)
-                           return;
+                if (!left_is_float_lit && !right_is_float_lit)
+                    return;
 
-                       const auto expr_range = tree.byte_range(expr);
+                const auto expr_range = tree.byte_range(expr);
 
-                       // v1.2 (ADR 0019): pick the project-tuned epsilon
-                       // when a Config is in scope; otherwise fall back to
-                       // the documented hard-coded default. The rewrite is
-                       // machine-applicable iff both operands classify as
-                       // pure under the side-effect oracle (the textual
-                       // rewrite preserves operand evaluation count -- one
-                       // `a` and one `b` -- so purity is sufficient to make
-                       // the rewrite safe).
-                       const float epsilon = (ctx.config() != nullptr)
-                                                 ? ctx.config()->compare_epsilon()
-                                                 : k_default_compare_epsilon;
-                       const std::string eps_literal = render_float_literal(epsilon);
+                // v1.2 (ADR 0019): pick the project-tuned epsilon
+                // when a Config is in scope; otherwise fall back to
+                // the documented hard-coded default. The rewrite is
+                // machine-applicable iff both operands classify as
+                // pure under the side-effect oracle (the textual
+                // rewrite preserves operand evaluation count -- one
+                // `a` and one `b` -- so purity is sufficient to make
+                // the rewrite safe).
+                const float epsilon = (ctx.config() != nullptr) ? ctx.config()->compare_epsilon()
+                                                                : k_default_compare_epsilon;
+                const std::string eps_literal = render_float_literal(epsilon);
 
-                       const auto left_purity = util::classify_expression(tree, left);
-                       const auto right_purity = util::classify_expression(tree, right);
-                       const bool both_pure =
-                           left_purity == util::Purity::SideEffectFree &&
-                           right_purity == util::Purity::SideEffectFree;
+                const auto left_purity = util::classify_expression(tree, left);
+                const auto right_purity = util::classify_expression(tree, right);
+                const bool both_pure = left_purity == util::Purity::SideEffectFree &&
+                                       right_purity == util::Purity::SideEffectFree;
 
-                       const std::string compare_op = (op == "==") ? "<" : ">=";
-                       const std::string replacement = std::string{"abs(("} +
-                                                       std::string{left_text} + ") - (" +
-                                                       std::string{right_text} + ")) " +
-                                                       compare_op + " " + eps_literal;
+                const std::string compare_op = (op == "==") ? "<" : ">=";
+                const std::string replacement = std::string{"abs(("} + std::string{left_text} +
+                                                ") - (" + std::string{right_text} + ")) " +
+                                                compare_op + " " + eps_literal;
 
-                       Diagnostic diag;
-                       diag.code = std::string{k_rule_id};
-                       diag.severity = Severity::Warning;
-                       diag.primary_span = Span{.source = tree.source_id(), .bytes = expr_range};
-                       diag.message =
-                           std::string{"exact `"} + std::string{op} +
-                           "` on floating-point values is unreliable — rounding error "
-                           "and NaN make the result unpredictable; use an explicit "
-                           "tolerance such as `abs(a - b) < epsilon` instead";
+                Diagnostic diag;
+                diag.code = std::string{k_rule_id};
+                diag.severity = Severity::Warning;
+                diag.primary_span = Span{.source = tree.source_id(), .bytes = expr_range};
+                diag.message = std::string{"exact `"} + std::string{op} +
+                               "` on floating-point values is unreliable — rounding error "
+                               "and NaN make the result unpredictable; use an explicit "
+                               "tolerance such as `abs(a - b) < epsilon` instead";
 
-                       Fix fix;
-                       fix.machine_applicable = both_pure;
-                       fix.description =
-                           std::string{"replace exact float equality with a tolerance check ("} +
-                           "`abs((a) - (b)) " + compare_op + " " + eps_literal + "`; epsilon " +
-                           ((ctx.config() != nullptr) ? "from `[float] compare-epsilon`"
-                                                      : "= default 1e-4") +
-                           ")" +
-                           (both_pure
-                                ? std::string{}
-                                : std::string{
-                                      " -- suggestion-only: at least one operand is not "
-                                      "side-effect-free under the purity oracle, hand-review the "
-                                      "rewrite before applying"});
-                       TextEdit edit;
-                       edit.span = Span{.source = tree.source_id(), .bytes = expr_range};
-                       edit.replacement = replacement;
-                       fix.edits.push_back(std::move(edit));
-                       diag.fixes.push_back(std::move(fix));
+                Fix fix;
+                fix.machine_applicable = both_pure;
+                fix.description =
+                    std::string{"replace exact float equality with a tolerance check ("} +
+                    "`abs((a) - (b)) " + compare_op + " " + eps_literal + "`; epsilon " +
+                    ((ctx.config() != nullptr) ? "from `[float] compare-epsilon`"
+                                               : "= default 1e-4") +
+                    ")" +
+                    (both_pure
+                         ? std::string{}
+                         : std::string{" -- suggestion-only: at least one operand is not "
+                                       "side-effect-free under the purity oracle, hand-review the "
+                                       "rewrite before applying"});
+                TextEdit edit;
+                edit.span = Span{.source = tree.source_id(), .bytes = expr_range};
+                edit.replacement = replacement;
+                fix.edits.push_back(std::move(edit));
+                diag.fixes.push_back(std::move(fix));
 
-                       ctx.emit(std::move(diag));
-                   });
+                ctx.emit(std::move(diag));
+            });
     }
 };
 

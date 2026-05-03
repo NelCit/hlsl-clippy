@@ -47,8 +47,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
             Diagnostic diag;
             diag.code = std::string{k_rule_id};
             diag.severity = Severity::Warning;
-            diag.primary_span =
-                Span{.source = tree.source_id(), .bytes = tree.byte_range(node)};
+            diag.primary_span = Span{.source = tree.source_id(), .bytes = tree.byte_range(node)};
             diag.message =
                 "(suggestion) `TriangleObjectPositions()` (SM 6.10) requires the BLAS "
                 "to be built with `D3D12_RAYTRACING_GEOMETRY_FLAG_USE_ORIENTED_BOUNDING_BOX` "

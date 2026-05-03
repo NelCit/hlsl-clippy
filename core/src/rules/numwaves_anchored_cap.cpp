@@ -133,14 +133,14 @@ public:
                     .bytes = ByteSpan{static_cast<std::uint32_t>(found - 1U),
                                       static_cast<std::uint32_t>(i + 1U)},
                 };
-                diag.message = std::string{"(suggestion) `[numthreads("} +
-                               std::to_string(dims[0]) + ", " + std::to_string(dims[1]) +
-                               ", " + std::to_string(dims[2]) + ")]` total " +
-                               std::to_string(total) + " exceeds the current per-group lane "
-                                                       "cap of 1024 -- HLSL specs proposal "
-                                                       "0054 (`numWaves`) is under "
-                                                       "consideration; revisit this dispatch "
-                                                       "shape if 0054 lands";
+                diag.message = std::string{"(suggestion) `[numthreads("} + std::to_string(dims[0]) +
+                               ", " + std::to_string(dims[1]) + ", " + std::to_string(dims[2]) +
+                               ")]` total " + std::to_string(total) +
+                               " exceeds the current per-group lane "
+                               "cap of 1024 -- HLSL specs proposal "
+                               "0054 (`numWaves`) is under "
+                               "consideration; revisit this dispatch "
+                               "shape if 0054 lands";
                 ctx.emit(std::move(diag));
             }
             pos = i + 1U;

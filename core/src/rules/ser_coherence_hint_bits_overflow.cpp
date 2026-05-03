@@ -125,13 +125,14 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                         diag.severity = Severity::Warning;
                         diag.primary_span =
                             Span{.source = tree.source_id(), .bytes = tree.byte_range(node)};
-                        diag.message = std::string{"`MaybeReorderThread(...)` last numeric "
-                                                   "arg "} +
-                                       std::to_string(last_value) +
-                                       " exceeds the spec coherence-hint-bits cap " +
-                                       std::to_string(cap) +
-                                       " -- the SER scheduler silently truncates the value, "
-                                       "producing incoherent reorder";
+                        diag.message =
+                            std::string{
+                                "`MaybeReorderThread(...)` last numeric "
+                                "arg "} +
+                            std::to_string(last_value) +
+                            " exceeds the spec coherence-hint-bits cap " + std::to_string(cap) +
+                            " -- the SER scheduler silently truncates the value, "
+                            "producing incoherent reorder";
 
                         // Clamp the literal to the spec cap. The arg is already a
                         // number_literal (the only shape the rule fires on), so

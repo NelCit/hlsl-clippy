@@ -40,10 +40,10 @@ constexpr std::array<std::string_view, 3> k_routing_calls{
 };
 
 constexpr std::array<std::string_view, 4> k_fp4_fp6_components{
-    "COMPONENT_TYPE_FLOAT_E2M1",   // FP4
-    "COMPONENT_TYPE_FLOAT_E3M2",   // FP6
-    "COMPONENT_TYPE_FLOAT_E2M3",   // FP6 alt
-    "COMPONENT_TYPE_FLOAT_FP4",    // alias
+    "COMPONENT_TYPE_FLOAT_E2M1",  // FP4
+    "COMPONENT_TYPE_FLOAT_E3M2",  // FP6
+    "COMPONENT_TYPE_FLOAT_E2M3",  // FP6 alt
+    "COMPONENT_TYPE_FLOAT_FP4",   // alias
 };
 
 constexpr std::array<std::string_view, 2> k_optimal_layouts{

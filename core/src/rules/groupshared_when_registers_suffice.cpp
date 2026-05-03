@@ -131,7 +131,14 @@ void scan_decls(std::string_view bytes, std::vector<GroupsharedDecl>& out) {
     // Accept identifiers / expressions whose text matches a per-thread index:
     // `tid`, `gtid`, `dtid`, `groupIndex`, `SV_GroupIndex`, etc.
     static constexpr std::string_view k_markers[] = {
-        "tid", "gtid", "dtid", "GroupIndex", "GroupThread", "DispatchThread", "gi", "groupIndex",
+        "tid",
+        "gtid",
+        "dtid",
+        "GroupIndex",
+        "GroupThread",
+        "DispatchThread",
+        "gi",
+        "groupIndex",
     };
     for (const auto m : k_markers) {
         if (idx.find(m) != std::string_view::npos)

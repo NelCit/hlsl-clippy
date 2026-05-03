@@ -80,8 +80,7 @@ constexpr std::array<std::string_view, 2> k_intrinsics{
         if (prefix.substr(j, k_attr.size()) == k_attr) {
             // Make sure it's a word boundary on the right.
             const std::size_t after = j + k_attr.size();
-            if (after >= prefix.size() ||
-                !(is_id_char(prefix[after]))) {
+            if (after >= prefix.size() || !(is_id_char(prefix[after]))) {
                 return true;
             }
         }
@@ -133,11 +132,10 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                 diag.severity = Severity::Warning;
                 diag.primary_span =
                     Span{.source = tree.source_id(), .bytes = tree.byte_range(node)};
-                diag.message =
-                    std::string{"`"} + std::string{fn_text} +
-                    "()` (SM 6.10) needs an explicit `[WaveSize(N)]` on the entry "
-                    "point -- without it, RDNA may run wave32 or wave64 and the "
-                    "index/count returned silently changes between IHV drivers";
+                diag.message = std::string{"`"} + std::string{fn_text} +
+                               "()` (SM 6.10) needs an explicit `[WaveSize(N)]` on the entry "
+                               "point -- without it, RDNA may run wave32 or wave64 and the "
+                               "index/count returned silently changes between IHV drivers";
                 ctx.emit(std::move(diag));
             }
         }

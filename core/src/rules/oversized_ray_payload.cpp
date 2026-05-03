@@ -113,9 +113,9 @@ constexpr std::uint32_t k_threshold_bytes = 32U;
     std::size_t pos = 0U;
     while (pos < body_text.size()) {
         // Skip whitespace.
-        while (pos < body_text.size() && (body_text[pos] == ' ' || body_text[pos] == '\t' ||
-                                          body_text[pos] == '\n' || body_text[pos] == '\r' ||
-                                          body_text[pos] == '{' || body_text[pos] == '}')) {
+        while (pos < body_text.size() &&
+               (body_text[pos] == ' ' || body_text[pos] == '\t' || body_text[pos] == '\n' ||
+                body_text[pos] == '\r' || body_text[pos] == '{' || body_text[pos] == '}')) {
             ++pos;
         }
         // End-of-statement scan.
@@ -165,8 +165,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
         if (!struct_text.empty()) {
             const auto open = struct_text.find('{');
             const auto close = struct_text.rfind('}');
-            if (open != std::string_view::npos && close != std::string_view::npos &&
-                close > open) {
+            if (open != std::string_view::npos && close != std::string_view::npos && close > open) {
                 const auto body = struct_text.substr(open + 1U, close - open - 1U);
                 const auto total = sum_struct_size(body);
                 if (total > k_threshold_bytes) {
@@ -217,13 +216,12 @@ public:
         // Only fire when the source actually has DXR markers; avoid spurious
         // firings on plain compute / pixel shaders that happen to declare
         // large structs.
-        const bool has_dxr_marker =
-            bytes.find("TraceRay") != std::string_view::npos ||
-            bytes.find("ReportHit") != std::string_view::npos ||
-            bytes.find("\"closesthit\"") != std::string_view::npos ||
-            bytes.find("\"anyhit\"") != std::string_view::npos ||
-            bytes.find("\"raygeneration\"") != std::string_view::npos ||
-            bytes.find("\"miss\"") != std::string_view::npos;
+        const bool has_dxr_marker = bytes.find("TraceRay") != std::string_view::npos ||
+                                    bytes.find("ReportHit") != std::string_view::npos ||
+                                    bytes.find("\"closesthit\"") != std::string_view::npos ||
+                                    bytes.find("\"anyhit\"") != std::string_view::npos ||
+                                    bytes.find("\"raygeneration\"") != std::string_view::npos ||
+                                    bytes.find("\"miss\"") != std::string_view::npos;
         if (!has_dxr_marker)
             return;
         walk(::ts_tree_root_node(tree.raw_tree()), bytes, tree, ctx);

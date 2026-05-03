@@ -62,8 +62,7 @@ constexpr std::string_view k_category = "control-flow";
     if (trimmed.size() > 2U && trimmed[0] == '0' && (trimmed[1] == 'x' || trimmed[1] == 'X')) {
         for (std::size_t i = 2U; i < trimmed.size(); ++i) {
             const char c = trimmed[i];
-            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
-                  (c >= 'A' && c <= 'F'))) {
+            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) {
                 return false;
             }
         }
@@ -110,8 +109,7 @@ void collect_local_arrays(::TSNode node,
                     inner = ::ts_node_child(n, 0U);
                 }
                 while (!::ts_node_is_null(inner) && node_kind(inner) == "array_declarator") {
-                    const ::TSNode child =
-                        ::ts_node_child_by_field_name(inner, "declarator", 10U);
+                    const ::TSNode child = ::ts_node_child_by_field_name(inner, "declarator", 10U);
                     if (::ts_node_is_null(child))
                         break;
                     inner = child;

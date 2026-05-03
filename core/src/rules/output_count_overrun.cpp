@@ -66,7 +66,7 @@ constexpr std::string_view k_category = "mesh";
 }
 
 [[nodiscard]] std::optional<std::uint32_t> find_output_cap(std::string_view bytes,
-                                                          std::string_view kw) noexcept {
+                                                           std::string_view kw) noexcept {
     std::size_t pos = 0U;
     while (pos < bytes.size()) {
         const auto found = bytes.find(kw, pos);
@@ -186,8 +186,9 @@ public:
             msg += v_cap.has_value() ? std::to_string(*v_cap) : std::string{"?"};
             msg += " vertices, ";
             msg += p_cap.has_value() ? std::to_string(*p_cap) : std::string{"?"};
-            msg += " primitives) -- writes past the workgroup-output buffer have undefined "
-                   "semantics on every IHV";
+            msg +=
+                " primitives) -- writes past the workgroup-output buffer have undefined "
+                "semantics on every IHV";
 
             Diagnostic diag;
             diag.code = std::string{k_rule_id};

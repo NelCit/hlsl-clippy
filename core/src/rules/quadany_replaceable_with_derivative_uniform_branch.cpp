@@ -158,10 +158,8 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                     // the rule already proved the body has no derivative
                     // consumers, the unwrap is semantics-preserving on the
                     // syntactic shape that fires today.
-                    const ::TSNode args =
-                        ::ts_node_child_by_field_name(wrapper, "arguments", 9);
-                    if (!::ts_node_is_null(args) &&
-                        ::ts_node_named_child_count(args) == 1U) {
+                    const ::TSNode args = ::ts_node_child_by_field_name(wrapper, "arguments", 9);
+                    if (!::ts_node_is_null(args) && ::ts_node_named_child_count(args) == 1U) {
                         const ::TSNode inner = ::ts_node_named_child(args, 0);
                         if (!::ts_node_is_null(inner)) {
                             const auto inner_text = node_text(inner, bytes);

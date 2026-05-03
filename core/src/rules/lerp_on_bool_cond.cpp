@@ -204,9 +204,8 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                         // fix that the user must hand-review.
                         const auto a_purity = util::classify_expression(tree, a);
                         const auto b_purity = util::classify_expression(tree, b);
-                        const bool both_pure =
-                            a_purity == util::Purity::SideEffectFree &&
-                            b_purity == util::Purity::SideEffectFree;
+                        const bool both_pure = a_purity == util::Purity::SideEffectFree &&
+                                               b_purity == util::Purity::SideEffectFree;
 
                         Diagnostic diag;
                         diag.code = std::string{k_rule_id};
@@ -220,13 +219,11 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
 
                         Fix fix;
                         fix.machine_applicable = both_pure;
-                        fix.description = std::string{"replace with `"} + cond_text + " ? " +
-                                          consequence + " : " + alternative +
-                                          "` for portable codegen across IHVs" +
-                                          (both_pure
-                                               ? std::string{}
-                                               : std::string{
-                                                     " (suggestion-only: at least one of `a` / `b` "
+                        fix.description =
+                            std::string{"replace with `"} + cond_text + " ? " + consequence +
+                            " : " + alternative + "` for portable codegen across IHVs" +
+                            (both_pure ? std::string{}
+                                       : std::string{" (suggestion-only: at least one of `a` / `b` "
                                                      "is not side-effect-free, applying the "
                                                      "rewrite would change the evaluation count)"});
                         TextEdit edit;

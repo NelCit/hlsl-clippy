@@ -37,6 +37,7 @@
 #include "control_flow/cfg_storage.hpp"
 #include "hlsl_clippy/control_flow.hpp"
 #include "hlsl_clippy/source.hpp"
+
 #include "parser_internal.hpp"
 
 namespace hlsl_clippy::util {
@@ -77,10 +78,9 @@ namespace {
     // because tree-sitter-hlsl exposes vector shapes as `floatN`, `intN`,
     // `uintN` etc. We use a tight prefix list to avoid overfiring.
     static constexpr std::string_view k_type_prefixes[] = {
-        "float",      "double",     "half",       "min10float",  "min16float", "min12int",
-        "min16int",   "min16uint",  "uint",       "int",         "bool",       "uint16_t",
-        "uint32_t",   "uint64_t",   "int16_t",    "int32_t",     "int64_t",    "vector",
-        "matrix",
+        "float",     "double",  "half",    "min10float", "min16float", "min12int", "min16int",
+        "min16uint", "uint",    "int",     "bool",       "uint16_t",   "uint32_t", "uint64_t",
+        "int16_t",   "int32_t", "int64_t", "vector",     "matrix",
     };
     for (const auto pfx : k_type_prefixes) {
         if (text == pfx) {
@@ -96,14 +96,49 @@ namespace {
         }
     }
     static constexpr std::string_view k_keywords[] = {
-        "if",        "else",         "for",       "while",      "do",       "switch",
-        "case",      "default",      "break",     "continue",   "return",   "discard",
-        "true",      "false",        "void",      "in",         "out",      "inout",
-        "const",     "static",       "uniform",   "groupshared", "shared", "register",
-        "struct",    "cbuffer",      "tbuffer",   "typedef",    "namespace", "this",
-        "nullptr",   "centroid",     "noperspective", "linear", "sample",   "nointerpolation",
-        "precise",   "snorm",        "unorm",     "row_major",  "column_major",
-        "globallycoherent", "reordercoherent",
+        "if",
+        "else",
+        "for",
+        "while",
+        "do",
+        "switch",
+        "case",
+        "default",
+        "break",
+        "continue",
+        "return",
+        "discard",
+        "true",
+        "false",
+        "void",
+        "in",
+        "out",
+        "inout",
+        "const",
+        "static",
+        "uniform",
+        "groupshared",
+        "shared",
+        "register",
+        "struct",
+        "cbuffer",
+        "tbuffer",
+        "typedef",
+        "namespace",
+        "this",
+        "nullptr",
+        "centroid",
+        "noperspective",
+        "linear",
+        "sample",
+        "nointerpolation",
+        "precise",
+        "snorm",
+        "unorm",
+        "row_major",
+        "column_major",
+        "globallycoherent",
+        "reordercoherent",
     };
     for (const auto kw : k_keywords) {
         if (text == kw) {
@@ -130,8 +165,8 @@ namespace {
 /// the AST node. Returns 0 (invalid) when no enclosing block exists for
 /// the node's offset (e.g. the node is in a function the CFG skipped).
 [[nodiscard]] std::uint32_t find_enclosing_block(const control_flow::CfgStorage& storage,
-                                                  std::uint32_t node_lo,
-                                                  std::uint32_t node_hi) noexcept {
+                                                 std::uint32_t node_lo,
+                                                 std::uint32_t node_hi) noexcept {
     std::uint32_t best = 0U;
     std::uint32_t best_size = 0xFFFFFFFFU;
     for (const auto& [block_span, raw] : storage.span_to_block) {
@@ -153,11 +188,10 @@ namespace {
 /// in `span_to_block` in allocation order (header, body, exit), so
 /// passing `n = 0` returns the header, `n = 1` returns the body, `n = 2`
 /// returns the exit. Returns 0 when fewer than `n + 1` matches exist.
-[[nodiscard]] std::uint32_t find_nth_block_with_exact_span(
-    const control_flow::CfgStorage& storage,
-    std::uint32_t node_lo,
-    std::uint32_t node_hi,
-    std::uint32_t n) noexcept {
+[[nodiscard]] std::uint32_t find_nth_block_with_exact_span(const control_flow::CfgStorage& storage,
+                                                           std::uint32_t node_lo,
+                                                           std::uint32_t node_hi,
+                                                           std::uint32_t n) noexcept {
     std::uint32_t seen = 0U;
     for (const auto& [block_span, raw] : storage.span_to_block) {
         if (block_span.bytes.lo == node_lo && block_span.bytes.hi == node_hi) {
@@ -806,7 +840,8 @@ LivenessInfo compute_liveness(const ControlFlowInfo& cfg, const AstTree& tree) {
                 }
                 // live_out[B] = U live_in[succ]
                 std::unordered_set<std::string> new_out;
-                for (const auto succ_local : fn.blocks[static_cast<std::size_t>(local)].successors) {
+                for (const auto succ_local :
+                     fn.blocks[static_cast<std::size_t>(local)].successors) {
                     if (succ_local >= fn.blocks.size()) {
                         continue;
                     }

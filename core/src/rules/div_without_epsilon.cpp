@@ -103,13 +103,12 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                 // the divisor classifies as pure under the side-effect
                 // oracle (the rewrite preserves divisor evaluation count;
                 // `max(eps, x)` evaluates `x` once, same as the original).
-                const float epsilon = (ctx.config() != nullptr) ? ctx.config()->div_epsilon()
-                                                                : k_default_div_epsilon;
+                const float epsilon =
+                    (ctx.config() != nullptr) ? ctx.config()->div_epsilon() : k_default_div_epsilon;
                 const std::string eps_literal = render_float_literal(epsilon);
 
                 const auto divisor_purity = util::classify_expression(tree, right);
-                const bool divisor_pure =
-                    divisor_purity == util::Purity::SideEffectFree;
+                const bool divisor_pure = divisor_purity == util::Purity::SideEffectFree;
 
                 const auto right_range = tree.byte_range(right);
                 const std::string replacement =
@@ -129,8 +128,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                 fix.machine_applicable = divisor_pure;
                 fix.description =
                     std::string{"wrap the divisor in `max("} + eps_literal + ", ...)` (epsilon " +
-                    ((ctx.config() != nullptr) ? "from `[float] div-epsilon`"
-                                               : "= default 1e-6") +
+                    ((ctx.config() != nullptr) ? "from `[float] div-epsilon`" : "= default 1e-6") +
                     "); Inf / NaN propagation through subsequent ops corrupts "
                     "neighbouring pixels in TAA / denoiser pipelines" +
                     (divisor_pure

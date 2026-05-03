@@ -13,6 +13,33 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [1.5.2] — 2026-05-03
+
+**Patch — full-repo clang-format pass.** v1.5.1's clang-format
+edits covered only the 5 files that the prior CI run flagged.
+The actual `Lint` job's `FILES` glob covers every `.cpp`/`.hpp`
+under `cli/`, `core/`, `lsp/`, `tools/` — and 248 files were out
+of format from the multi-agent dispatches across v0.7 through
+v1.5.0. `clang-format-22` (local) → `clang-format-18` (CI) was
+verified compatible by v1.5.1's narrower fix; this release runs
+the same v22 formatter across the full set so the next push is
+green.
+
+### Fixed
+
+- **`.github/workflows/lint.yml` clang-format check** — 40 files
+  reformatted: `core/src/config.cpp`, `core/src/control_flow/*`,
+  `core/src/ir/engine.{cpp,hpp}`, `core/src/lint.cpp`,
+  `core/src/parser.cpp`, `core/src/parser_internal.hpp`,
+  `core/src/query/*`, `core/src/reflection/*`, `core/src/rewriter.cpp`,
+  `core/src/rule_context.cpp`, `core/src/rules/util/{liveness,
+  purity_oracle,register_pressure_ast}.{cpp,hpp}`, plus assorted
+  Phase 7 / 8 / 8.C rule TUs. No semantic changes — pure
+  whitespace + line-break realignment per `.clang-format`.
+
+Test count unchanged: 856 cases / 2246 assertions, all green.
+HLSL + Slang behaviour bit-identical.
+
 ## [1.5.1] — 2026-05-02
 
 **Patch — CI repair round 2.** Four more workflows that had been
@@ -1604,6 +1631,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[1.5.2]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/NelCit/hlsl-clippy/compare/v1.4.0...v1.4.1

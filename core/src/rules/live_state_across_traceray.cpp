@@ -45,9 +45,7 @@ constexpr std::string_view k_category = "dxr";
 /// trace has to spill more than two locals the per-ray cost climbs.
 constexpr std::size_t k_live_threshold = 2U;
 
-void collect_traceray_calls(::TSNode node,
-                            std::string_view bytes,
-                            std::vector<::TSNode>& out) {
+void collect_traceray_calls(::TSNode node, std::string_view bytes, std::vector<::TSNode>& out) {
     if (::ts_node_is_null(node))
         return;
     if (node_kind(node) == "call_expression") {
@@ -101,12 +99,11 @@ public:
             diag.code = std::string{k_rule_id};
             diag.severity = Severity::Warning;
             diag.primary_span = call_span;
-            diag.message = std::string{
-                                "`TraceRay` call site has "} +
-                            std::to_string(live_out.size()) +
-                            " AST-level locals live across the call -- the values must be "
-                            "carried in the ray stack (scratch / global memory on every IHV) "
-                            "for the duration of the trace, costing memory traffic per ray";
+            diag.message = std::string{"`TraceRay` call site has "} +
+                           std::to_string(live_out.size()) +
+                           " AST-level locals live across the call -- the values must be "
+                           "carried in the ray stack (scratch / global memory on every IHV) "
+                           "for the duration of the trace, costing memory traffic per ray";
             ctx.emit(std::move(diag));
         }
     }

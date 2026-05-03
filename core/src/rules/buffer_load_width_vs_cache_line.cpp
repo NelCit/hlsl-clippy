@@ -45,8 +45,8 @@ constexpr std::string_view k_category = "control-flow";
 [[nodiscard]] std::optional<std::uint32_t> parse_uint_literal(std::string_view s) noexcept {
     while (!s.empty() && (s.front() == ' ' || s.front() == '\t'))
         s.remove_prefix(1U);
-    while (!s.empty() && (s.back() == ' ' || s.back() == '\t' ||
-                          s.back() == 'u' || s.back() == 'U'))
+    while (!s.empty() &&
+           (s.back() == ' ' || s.back() == '\t' || s.back() == 'u' || s.back() == 'U'))
         s.remove_suffix(1U);
     if (s.empty())
         return std::nullopt;
@@ -83,9 +83,7 @@ struct LoadCall {
     std::uint32_t offset;
 };
 
-void collect_loads(::TSNode node,
-                   std::string_view bytes,
-                   std::vector<LoadCall>& out) {
+void collect_loads(::TSNode node, std::string_view bytes, std::vector<LoadCall>& out) {
     if (::ts_node_is_null(node))
         return;
     if (node_kind(node) == "call_expression") {
@@ -166,8 +164,9 @@ public:
             if (group.size() < 2U)
                 continue;
             // Sort by offset.
-            std::sort(group.begin(), group.end(),
-                      [](const LoadCall& a, const LoadCall& b) { return a.offset < b.offset; });
+            std::sort(group.begin(), group.end(), [](const LoadCall& a, const LoadCall& b) {
+                return a.offset < b.offset;
+            });
             // Find a window of 2-4 loads inside [base, base+16).
             for (std::size_t i = 0; i < group.size(); ++i) {
                 std::size_t j = i;
@@ -183,8 +182,7 @@ public:
                         .source = tree.source_id(),
                         .bytes = tree.byte_range(group[i].call),
                     };
-                    diag.message = std::to_string(count) +
-                                   " consecutive `" + key.receiver +
+                    diag.message = std::to_string(count) + " consecutive `" + key.receiver +
                                    ".Load` calls in this basic block fall within a 16-byte "
                                    "window -- coalesce them into a single `Load" +
                                    std::to_string(count) +

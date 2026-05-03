@@ -77,13 +77,11 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                     // `machine_applicable = false` per the doc page: adding the
                     // allow flag changes the trace's semantics and the
                     // developer must confirm the BVH has OMM blocks attached.
-                    const auto node_lo =
-                        static_cast<std::uint32_t>(::ts_node_start_byte(node));
-                    const std::uint32_t arg_lo = node_lo +
-                        static_cast<std::uint32_t>(rq_pos +
-                                                   std::string_view{"RayQuery<"}.size());
-                    const std::uint32_t arg_hi =
-                        node_lo + static_cast<std::uint32_t>(end);
+                    const auto node_lo = static_cast<std::uint32_t>(::ts_node_start_byte(node));
+                    const std::uint32_t arg_lo =
+                        node_lo +
+                        static_cast<std::uint32_t>(rq_pos + std::string_view{"RayQuery<"}.size());
+                    const std::uint32_t arg_hi = node_lo + static_cast<std::uint32_t>(end);
                     if (arg_lo < arg_hi) {
                         // Trim trailing whitespace so the inserted ` | ...`
                         // lands flush against the last non-space character.
@@ -106,8 +104,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                             }
                         }
                         if (trim_lo < trim_hi) {
-                            const auto flag_text =
-                                bytes.substr(trim_lo, trim_hi - trim_lo);
+                            const auto flag_text = bytes.substr(trim_lo, trim_hi - trim_lo);
                             Fix fix;
                             fix.machine_applicable = false;
                             fix.description = std::string{

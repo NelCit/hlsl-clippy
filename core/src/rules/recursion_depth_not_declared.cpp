@@ -43,8 +43,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
     }
     if (node_kind(node) == "function_definition") {
         const auto fn_text = node_text(node, bytes);
-        const bool is_raygen =
-            fn_text.find("\"raygeneration\"") != std::string_view::npos;
+        const bool is_raygen = fn_text.find("\"raygeneration\"") != std::string_view::npos;
         const bool has_traceray = fn_text.find("TraceRay") != std::string_view::npos;
         if (is_raygen && has_traceray) {
             // Look for either an attribute-style depth declaration on this

@@ -172,8 +172,7 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
                         fix.description =
                             std::string{"clamp `hintBits` literal to the SER spec ceiling (32)"};
                         TextEdit edit;
-                        edit.span =
-                            Span{.source = tree.source_id(), .bytes = tree.byte_range(arg)};
+                        edit.span = Span{.source = tree.source_id(), .bytes = tree.byte_range(arg)};
                         edit.replacement = std::string{"32"};
                         fix.edits.push_back(std::move(edit));
                         diag.fixes.push_back(std::move(fix));

@@ -77,12 +77,10 @@ public:
             diag.severity = Severity::Warning;
             diag.primary_span =
                 Span{.source = tree.source_id(), .bytes = binding.declaration_span.bytes};
-            diag.message = std::string{
-                "binding `"} +
-                binding.name +
-                "` is a `B8G8R8A8`-channel-order texture; reads using `.rgba` "
-                "silently invert the red and blue channels -- audit the read "
-                "sites and switch to `.bgra` (or rebind as `R8G8B8A8`)";
+            diag.message = std::string{"binding `"} + binding.name +
+                           "` is a `B8G8R8A8`-channel-order texture; reads using `.rgba` "
+                           "silently invert the red and blue channels -- audit the read "
+                           "sites and switch to `.bgra` (or rebind as `R8G8B8A8`)";
 
             Fix fix;
             // Description-only: the rewrite point is the swizzle suffix on
@@ -92,9 +90,10 @@ public:
             // receiver is `binding.name`, and surface a TextEdit for each
             // matched site.
             fix.machine_applicable = false;
-            fix.description = std::string{
-                "switch the shader read swizzle from `.rgba` to `.bgra` on "
-                "every site that samples `"} +
+            fix.description =
+                std::string{
+                    "switch the shader read swizzle from `.rgba` to `.bgra` on "
+                    "every site that samples `"} +
                 binding.name +
                 "`, OR rebind the resource as `R8G8B8A8_UNORM` on the "
                 "host side";

@@ -150,8 +150,7 @@ public:
         std::vector<std::string> half_idents;
         for (const auto& cb : reflection.cbuffers) {
             for (const auto& field : cb.fields) {
-                if (field.type_name.starts_with("half") ||
-                    field.type_name.starts_with("min16")) {
+                if (field.type_name.starts_with("half") || field.type_name.starts_with("min16")) {
                     half_idents.push_back(field.name);
                 }
             }
@@ -170,9 +169,9 @@ public:
                 if (end < bytes.size() && (bytes[end] == ' ' || bytes[end] == '\t')) {
                     // Skip type suffix component digits.
                     std::size_t i = end;
-                    while (i < bytes.size() && (bytes[i] == ' ' || bytes[i] == '\t' ||
-                                                (bytes[i] >= '0' && bytes[i] <= '9') ||
-                                                bytes[i] == 'x'))
+                    while (i < bytes.size() &&
+                           (bytes[i] == ' ' || bytes[i] == '\t' ||
+                            (bytes[i] >= '0' && bytes[i] <= '9') || bytes[i] == 'x'))
                         ++i;
                     const std::size_t name_start = i;
                     while (i < bytes.size() && util::is_id_char(bytes[i]))

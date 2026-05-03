@@ -118,11 +118,12 @@ namespace {
     diag.primary_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
     if (min_precision_only) {
         diag.message =
-            std::string{"Slang reflection skipped for this file: it uses DXC minimum-"
-                        "precision types (`min16float` / `min16uint` / `min16int`) which "
-                        "Slang's HLSL frontend doesn't accept. AST-only rules still ran. "
-                        "Migrate to `float16_t` / `uint16_t` / `int16_t` to enable "
-                        "reflection-aware rules. (Slang detail: "} +
+            std::string{
+                "Slang reflection skipped for this file: it uses DXC minimum-"
+                "precision types (`min16float` / `min16uint` / `min16int`) which "
+                "Slang's HLSL frontend doesn't accept. AST-only rules still ran. "
+                "Migrate to `float16_t` / `uint16_t` / `int16_t` to enable "
+                "reflection-aware rules. (Slang detail: "} +
             std::move(message) + ")";
     } else {
         diag.message = std::move(message);
@@ -299,8 +300,7 @@ namespace {
     // Untyped buffers don't have a meaningful DXGI format.
     const SlangResourceShape shape = resource_type->getResourceShape();
     const auto base_shape = static_cast<unsigned>(shape) & SLANG_RESOURCE_BASE_SHAPE_MASK;
-    if (base_shape == SLANG_BYTE_ADDRESS_BUFFER ||
-        base_shape == SLANG_STRUCTURED_BUFFER ||
+    if (base_shape == SLANG_BYTE_ADDRESS_BUFFER || base_shape == SLANG_STRUCTURED_BUFFER ||
         base_shape == SLANG_ACCELERATION_STRUCTURE) {
         return std::string{};
     }

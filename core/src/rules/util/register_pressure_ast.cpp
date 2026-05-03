@@ -41,8 +41,9 @@
 #include "hlsl_clippy/control_flow.hpp"
 #include "hlsl_clippy/reflection.hpp"
 #include "hlsl_clippy/source.hpp"
-#include "parser_internal.hpp"
 #include "rules/util/liveness.hpp"
+
+#include "parser_internal.hpp"
 
 namespace hlsl_clippy::util {
 
@@ -89,9 +90,21 @@ namespace {
     }
     // Strip leading qualifiers: `row_major float4x4` -> `float4x4`.
     static constexpr std::string_view k_prefixes[] = {
-        "row_major ", "column_major ", "snorm ", "unorm ", "centroid ", "noperspective ",
-        "linear ",    "sample ",       "nointerpolation ", "precise ", "uniform ",
-        "static ",    "const ",        "globallycoherent ", "groupshared ",
+        "row_major ",
+        "column_major ",
+        "snorm ",
+        "unorm ",
+        "centroid ",
+        "noperspective ",
+        "linear ",
+        "sample ",
+        "nointerpolation ",
+        "precise ",
+        "uniform ",
+        "static ",
+        "const ",
+        "globallycoherent ",
+        "groupshared ",
     };
     while (true) {
         bool stripped = false;
@@ -114,14 +127,11 @@ namespace {
     std::uint32_t scalar_bits = 0U;
     std::string_view rest;
     static constexpr std::pair<std::string_view, std::uint32_t> k_scalar_prefixes[] = {
-        {"min16float",  16U}, {"min10float",  16U}, {"min16int",    16U},
-        {"min12int",    16U}, {"min16uint",   16U},
-        {"float16_t",   16U}, {"int16_t",     16U}, {"uint16_t",    16U},
-        {"float32_t",   32U}, {"int32_t",     32U}, {"uint32_t",    32U},
-        {"float64_t",   64U}, {"int64_t",     64U}, {"uint64_t",    64U},
-        {"double",      64U},
-        {"float",       32U}, {"half",        16U},
-        {"uint",        32U}, {"int",         32U}, {"bool",        32U},
+        {"min16float", 16U}, {"min10float", 16U}, {"min16int", 16U}, {"min12int", 16U},
+        {"min16uint", 16U},  {"float16_t", 16U},  {"int16_t", 16U},  {"uint16_t", 16U},
+        {"float32_t", 32U},  {"int32_t", 32U},    {"uint32_t", 32U}, {"float64_t", 64U},
+        {"int64_t", 64U},    {"uint64_t", 64U},   {"double", 64U},   {"float", 32U},
+        {"half", 16U},       {"uint", 32U},       {"int", 32U},      {"bool", 32U},
     };
     for (const auto& [pfx, bits] : k_scalar_prefixes) {
         if (type_name.starts_with(pfx)) {
@@ -140,13 +150,16 @@ namespace {
                 const auto inner = type_name.substr(open + 1U, close - open - 1U);
                 // First template arg is the scalar type.
                 const auto comma = inner.find(',');
-                const auto scalar = comma == std::string_view::npos ? inner : inner.substr(0U, comma);
+                const auto scalar =
+                    comma == std::string_view::npos ? inner : inner.substr(0U, comma);
                 std::string scalar_str{scalar};
                 // Trim whitespace from the scalar string.
-                while (!scalar_str.empty() && (scalar_str.front() == ' ' || scalar_str.front() == '\t')) {
+                while (!scalar_str.empty() &&
+                       (scalar_str.front() == ' ' || scalar_str.front() == '\t')) {
                     scalar_str.erase(0, 1);
                 }
-                while (!scalar_str.empty() && (scalar_str.back() == ' ' || scalar_str.back() == '\t')) {
+                while (!scalar_str.empty() &&
+                       (scalar_str.back() == ' ' || scalar_str.back() == '\t')) {
                     scalar_str.pop_back();
                 }
                 std::uint32_t inner_bits = type_lexeme_bits(scalar_str);
@@ -160,7 +173,8 @@ namespace {
                     auto rem = inner.substr(comma + 1U);
                     while (!rem.empty()) {
                         const auto next_comma = rem.find(',');
-                        const auto tok = next_comma == std::string_view::npos ? rem : rem.substr(0U, next_comma);
+                        const auto tok =
+                            next_comma == std::string_view::npos ? rem : rem.substr(0U, next_comma);
                         std::uint32_t v = 0U;
                         for (const char c : tok) {
                             if (c >= '0' && c <= '9') {
@@ -236,9 +250,8 @@ void collect_decl_types(::TSNode root, std::string_view bytes, DeclTypeMap& out)
                     continue;
                 }
                 const auto ck = node_kind(child);
-                if (ck == "primitive_type" || ck == "type_identifier" ||
-                    ck == "template_type" || ck == "type_specifier" ||
-                    ck == "sized_type_specifier") {
+                if (ck == "primitive_type" || ck == "type_identifier" || ck == "template_type" ||
+                    ck == "type_specifier" || ck == "sized_type_specifier") {
                     type_text = node_text(child, bytes);
                     break;
                 }
@@ -272,8 +285,7 @@ void collect_decl_types(::TSNode root, std::string_view bytes, DeclTypeMap& out)
                 sub.pop_back();
                 const auto ck = node_kind(cur);
                 if (ck == "init_declarator" || ck == "field_identifier") {
-                    ::TSNode declarator =
-                        ::ts_node_child_by_field_name(cur, "declarator", 10U);
+                    ::TSNode declarator = ::ts_node_child_by_field_name(cur, "declarator", 10U);
                     if (::ts_node_is_null(declarator)) {
                         declarator = ::ts_node_child(cur, 0U);
                     }

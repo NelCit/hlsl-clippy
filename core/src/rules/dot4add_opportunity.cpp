@@ -103,9 +103,7 @@ constexpr std::string_view k_category = "math";
 
 /// Flatten a left-leaning `+` tree into a list of operand nodes. Stops at
 /// any non-`+`-binary node. Returns true on success.
-void flatten_addition(::TSNode node,
-                      std::string_view bytes,
-                      std::vector<::TSNode>& out) noexcept {
+void flatten_addition(::TSNode node, std::string_view bytes, std::vector<::TSNode>& out) noexcept {
     if (::ts_node_is_null(node)) {
         return;
     }
@@ -120,8 +118,7 @@ void flatten_addition(::TSNode node,
             return;
         }
     }
-    if (node_kind(node) == "parenthesized_expression" &&
-        ::ts_node_named_child_count(node) == 1U) {
+    if (node_kind(node) == "parenthesized_expression" && ::ts_node_named_child_count(node) == 1U) {
         flatten_addition(::ts_node_named_child(node, 0), bytes, out);
         return;
     }
@@ -158,10 +155,7 @@ void flatten_addition(::TSNode node,
     }
 }
 
-void check_addition(::TSNode node,
-                    std::string_view bytes,
-                    const AstTree& tree,
-                    RuleContext& ctx) {
+void check_addition(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
     if (node_kind(node) != "binary_expression") {
         return;
     }
@@ -209,12 +203,11 @@ void check_addition(::TSNode node,
         diag.code = std::string{k_rule_id};
         diag.severity = Severity::Warning;
         diag.primary_span = Span{.source = tree.source_id(), .bytes = tree.byte_range(node)};
-        diag.message =
-            std::string{"4-element dot product expanded as `"} + std::string{first_a} +
-            ".x*" + std::string{first_b} +
-            ".x + ...`; SM 6.4 `dot4add_u8packed` / `dot4add_i8packed` (or `dot(a, b)` "
-            "for floats) compresses the 19-instruction unrolled form into 1 instruction "
-            "on RDNA 2+ / Turing+ / Xe-HPG";
+        diag.message = std::string{"4-element dot product expanded as `"} + std::string{first_a} +
+                       ".x*" + std::string{first_b} +
+                       ".x + ...`; SM 6.4 `dot4add_u8packed` / `dot4add_i8packed` (or `dot(a, b)` "
+                       "for floats) compresses the 19-instruction unrolled form into 1 instruction "
+                       "on RDNA 2+ / Turing+ / Xe-HPG";
         ctx.emit(std::move(diag));
     }
 }

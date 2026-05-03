@@ -41,7 +41,10 @@ constexpr std::string_view k_category = "control-flow";
 
 [[nodiscard]] bool is_sample_callee(std::string_view fn_text) noexcept {
     static constexpr std::array<std::string_view, 4> k_methods{
-        ".Sample", ".SampleLevel", ".SampleGrad", ".SampleBias",
+        ".Sample",
+        ".SampleLevel",
+        ".SampleGrad",
+        ".SampleBias",
     };
     for (const auto m : k_methods) {
         const auto pos = fn_text.rfind(m);
@@ -52,9 +55,7 @@ constexpr std::string_view k_category = "control-flow";
     return false;
 }
 
-void collect_sample_calls(::TSNode node,
-                          std::string_view bytes,
-                          std::vector<::TSNode>& out) {
+void collect_sample_calls(::TSNode node, std::string_view bytes, std::vector<::TSNode>& out) {
     if (::ts_node_is_null(node))
         return;
     if (node_kind(node) == "call_expression") {

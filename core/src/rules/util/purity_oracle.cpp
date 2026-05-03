@@ -22,8 +22,9 @@
 
 #include <tree_sitter/api.h>
 
-#include "parser_internal.hpp"
 #include "rules/util/ast_helpers.hpp"
+
+#include "parser_internal.hpp"
 
 namespace hlsl_clippy::rules::util {
 
@@ -105,9 +106,8 @@ constexpr std::array<std::string_view, 49> k_pure_intrinsic_allowlist{
 
 /// Pure-value leaf node kinds: cheap loads with no observable effect.
 [[nodiscard]] bool is_pure_leaf(std::string_view kind) noexcept {
-    return kind == "identifier" || kind == "field_expression" ||
-           kind == "subscript_expression" || kind == "number_literal" ||
-           kind == "string_literal";
+    return kind == "identifier" || kind == "field_expression" || kind == "subscript_expression" ||
+           kind == "number_literal" || kind == "string_literal";
 }
 
 /// Combine two purity values with the "iff every operand is SideEffectFree"
