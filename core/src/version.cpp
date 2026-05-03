@@ -3,7 +3,7 @@
 namespace hlsl_clippy {
 
 std::string_view version() noexcept {
-    return "1.5.0";
+    return "1.5.1";
 }
 
 }  // namespace hlsl_clippy

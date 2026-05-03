@@ -66,7 +66,8 @@ public:
             diag.primary_span = Span{
                 .source = tree.source_id(),
                 .bytes = ByteSpan{static_cast<std::uint32_t>(pos),
-                                  static_cast<std::uint32_t>(pos + std::string_view{"SV_ShadingRate"}.size())},
+                                  static_cast<std::uint32_t>(
+                                      pos + std::string_view{"SV_ShadingRate"}.size())},
             };
             diag.message =
                 "PS writes `SV_ShadingRate` AND the source declares a per-primitive / "

@@ -226,8 +226,11 @@ jobs:
           echo "Using binary: $BIN"
           OUTPUT=$("$BIN" --version)
           echo "Output: $OUTPUT"
-          if [ "$OUTPUT" != "0.6.7" ]; then
-            echo "ERROR: expected '0.6.7', got '$OUTPUT'" >&2
+          # Expected version is read from core/src/version.cpp at runtime so
+          # the smoke test stays current without per-bump workflow edits.
+          EXPECTED=$(grep -oE 'return[[:space:]]+"[0-9]+\.[0-9]+\.[0-9]+"' core/src/version.cpp | sed -E 's/.*"([^"]+)".*/\1/')
+          if [ "$OUTPUT" != "$EXPECTED" ]; then
+            echo "ERROR: expected '$EXPECTED', got '$OUTPUT'" >&2
             exit 1
           fi
           echo "Smoke test passed."
@@ -255,8 +258,9 @@ jobs:
           Write-Host "Using binary: $bin"
           $output = & $bin --version
           Write-Host "Output: $output"
-          if ($output -ne "0.6.7") {
-            Write-Error "ERROR: expected '0.6.7', got '$output'"
+          $expected = (Select-String -Path core\src\version.cpp -Pattern 'return\s+"(\d+\.\d+\.\d+)"').Matches[0].Groups[1].Value
+          if ($output -ne $expected) {
+            Write-Error "ERROR: expected '$expected', got '$output'"
             exit 1
           }
           Write-Host "Smoke test passed."
@@ -281,8 +285,9 @@ jobs:
           echo "Using binary: $BIN"
           OUTPUT=$("$BIN" --version)
           echo "Output: $OUTPUT"
-          if [ "$OUTPUT" != "0.6.7" ]; then
-            echo "ERROR: expected '0.6.7', got '$OUTPUT'" >&2
+          EXPECTED=$(grep -oE 'return[[:space:]]+"[0-9]+\.[0-9]+\.[0-9]+"' core/src/version.cpp | sed -E 's/.*"([^"]+)".*/\1/')
+          if [ "$OUTPUT" != "$EXPECTED" ]; then
+            echo "ERROR: expected '$EXPECTED', got '$OUTPUT'" >&2
             exit 1
           fi
           echo "Smoke test passed."

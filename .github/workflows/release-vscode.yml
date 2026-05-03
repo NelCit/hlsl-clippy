@@ -376,9 +376,28 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Marketplace API has occasional 3-minute timeouts on the
+          # `/_apis/gallery/publishers/.../extensions/...` endpoint
+          # (observed on the v1.4.0 win32-x64 publish). Retry up to 3
+          # times with 30s backoff per platform .vsix; the API is
+          # idempotent on republish-of-same-version (it 409s with a
+          # human-readable error if the upload already succeeded, which
+          # we treat as a soft success on retry).
           for v in vsix/*.vsix; do
             echo "::group::Publishing $v"
-            npx --yes @vscode/vsce publish --packagePath "$v" --pat "$VSCE_PAT"
+            attempt=0
+            until [ $attempt -ge 3 ]; do
+              if npx --yes @vscode/vsce publish --packagePath "$v" --pat "$VSCE_PAT"; then
+                break
+              fi
+              attempt=$((attempt + 1))
+              if [ $attempt -ge 3 ]; then
+                echo "ERROR: vsce publish failed for $v after 3 attempts"
+                exit 1
+              fi
+              echo "vsce publish failed for $v (attempt $attempt/3); waiting 30s before retry..."
+              sleep 30
+            done
             echo "::endgroup::"
           done
 

@@ -69,6 +69,13 @@ export default defineConfig({
     // Sibling rules referenced in cross-link sections that haven't been
     // authored yet — listed in ROADMAP.md and tracked for a later pack.
     /(samplecmp-without-comparison-sampler|shadow-bias-too-small|unused-vs-output|discard-after-heavy-work|redundant-rcp-mul)$/,
+    // The 205 v1.0.0 stub blog posts each link to `../decisions/0018-...md`
+    // (and a couple of stubs to other ADRs). `srcExclude: ['decisions/**']`
+    // above keeps ADRs off the docs site (they have `${{ runner.os }}`
+    // expressions that confuse Vue's SSR), so every blog → decision link is
+    // dead from VitePress's perspective. The link still resolves on
+    // GitHub.com where the files live; tolerate them on the rendered site.
+    /\/decisions\/\d{4}-/,
   ],
 
   themeConfig: {

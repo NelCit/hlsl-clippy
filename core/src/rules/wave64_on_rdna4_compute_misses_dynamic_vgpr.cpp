@@ -60,11 +60,10 @@ public:
                 diag.code = std::string{k_rule_id};
                 diag.severity = Severity::Warning;
                 diag.primary_span = ep.declaration_span;
-                diag.message =
-                    std::string{"compute entry point `"} + ep.name +
-                    "` is declared `[WaveSize(64)]`; RDNA 4 dynamic-VGPR mode is "
-                    "wave32-only, so wave64 compute on RDNA 4 silently misses the "
-                    "per-block occupancy gain";
+                diag.message = std::string{"compute entry point `"} + ep.name +
+                               "` is declared `[WaveSize(64)]`; RDNA 4 dynamic-VGPR mode is "
+                               "wave32-only, so wave64 compute on RDNA 4 silently misses the "
+                               "per-block occupancy gain";
                 ctx.emit(std::move(diag));
             }
         }

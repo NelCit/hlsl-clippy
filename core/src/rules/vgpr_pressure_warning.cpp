@@ -15,6 +15,7 @@
 #include <string_view>
 #include <utility>
 
+#include "control_flow/cfg_storage.hpp"
 #include "hlsl_clippy/control_flow.hpp"
 #include "hlsl_clippy/diagnostic.hpp"
 #include "hlsl_clippy/rule.hpp"
@@ -22,7 +23,6 @@
 #include "rules/util/liveness.hpp"
 #include "rules/util/register_pressure_ast.hpp"
 
-#include "control_flow/cfg_storage.hpp"
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
@@ -53,8 +53,8 @@ public:
         const auto liveness = hlsl_clippy::util::compute_liveness(cfg, tree);
         if (liveness.live_in_per_block.empty())
             return;
-        const auto pressure = hlsl_clippy::util::estimate_pressure(
-            cfg, liveness, tree, nullptr, k_default_threshold);
+        const auto pressure =
+            hlsl_clippy::util::estimate_pressure(cfg, liveness, tree, nullptr, k_default_threshold);
         if (pressure.empty())
             return;
 
@@ -88,13 +88,13 @@ public:
         diag.code = std::string{k_rule_id};
         diag.severity = Severity::Warning;
         diag.primary_span = block_span;
-        diag.message =
-            std::string{"basic block holds an estimated "} + std::to_string(worst.estimated_vgprs) +
-            " VGPRs live (heuristic over AST-level liveness; > " +
-            std::to_string(k_default_threshold) +
-            " threshold) -- on RDNA / Turing+ / Xe-HPG this caps wave occupancy and "
-            "likely forces register spills to scratch; consider scoping locals more "
-            "tightly or restructuring the kernel into smaller phases";
+        diag.message = std::string{"basic block holds an estimated "} +
+                       std::to_string(worst.estimated_vgprs) +
+                       " VGPRs live (heuristic over AST-level liveness; > " +
+                       std::to_string(k_default_threshold) +
+                       " threshold) -- on RDNA / Turing+ / Xe-HPG this caps wave occupancy and "
+                       "likely forces register spills to scratch; consider scoping locals more "
+                       "tightly or restructuring the kernel into smaller phases";
         ctx.emit(std::move(diag));
     }
 };

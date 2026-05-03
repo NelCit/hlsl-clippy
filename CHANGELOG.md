@@ -13,6 +13,46 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [1.5.1] — 2026-05-02
+
+**Patch — CI repair round 2.** Four more workflows that had been
+silently failing surfaced after v1.5.0's tag. Continues v1.4.1's CI
+rehabilitation.
+
+### Fixed
+
+- **`.github/workflows/ci.yml` smoke test** — the Linux / Windows /
+  macOS smoke-test steps hardcoded `expected '0.6.7'` from the
+  session-start baseline; never updated across the v0.6.8 → v1.5.0
+  trajectory. Replaced with a dynamic read from `core/src/version.cpp`
+  so the check stays current without per-bump workflow edits.
+- **`.github/workflows/lint.yml` clang-format** — five Phase 7/8
+  rule TUs (`vgpr_pressure_warning.cpp`, `vrs_rate_conflict_with_target.cpp`,
+  `vrs_without_perprimitive_or_screenspace_source.cpp`,
+  `wave64_on_rdna4_compute_misses_dynamic_vgpr.cpp`,
+  `wavesize_32_on_xe2_misses_simd16.cpp`) had clang-format
+  violations from the multi-agent dispatch in v0.7-v0.8. Ran
+  clang-format-22 locally; CI's clang-format-18 is stable on the
+  diff.
+- **`.github/workflows/docs.yml` VitePress dead-link checker** —
+  `srcExclude: ['decisions/**']` keeps ADRs off the rendered site
+  (Vue SSR mis-parses the `${{ runner.os }}` expressions inside
+  ADR markdown tables), so every blog → ADR cross-link looks dead
+  to VitePress. The 205 v1.0.0 stub blog posts each link to
+  `../decisions/0018-...` twice = 410 dead links. Added
+  `/\/decisions\/\d{4}-/` to `ignoreDeadLinks` in
+  `docs/.vitepress/config.mts`. ADR links still resolve on
+  github.com where the files live.
+- **`.github/workflows/release-vscode.yml` Marketplace publish** —
+  v1.4.0's win32-x64 publish hit a 3-minute API timeout from the
+  Marketplace gallery endpoint and aborted the workflow (macOS +
+  Linux had already published successfully). Wrapped the per-`.vsix`
+  publish in a 3-attempt loop with 30s backoff. The API is
+  idempotent on republish-of-same-version, so retries are safe.
+
+Test count unchanged: 856 cases / 2246 assertions, all green.
+HLSL + Slang behaviour bit-identical.
+
 ## [1.5.0] — 2026-05-02
 
 **v1.5.0 — Slang sub-phase C: 4 Slang-language-specific rules.** Per
@@ -1564,6 +1604,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[1.5.1]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/NelCit/hlsl-clippy/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.3.1...v1.4.0
