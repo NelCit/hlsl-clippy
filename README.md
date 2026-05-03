@@ -1,6 +1,6 @@
 # shader-clippy
 
-> Performance + correctness rules for HLSL -- beyond what `dxc` catches.
+> Performance + correctness rules for HLSL **and Slang** -- beyond what `dxc` catches.
 
 [![CI](https://github.com/NelCit/shader-clippy/actions/workflows/ci.yml/badge.svg)](https://github.com/NelCit/shader-clippy/actions/workflows/ci.yml)
 [![Lint](https://github.com/NelCit/shader-clippy/actions/workflows/lint.yml/badge.svg)](https://github.com/NelCit/shader-clippy/actions/workflows/lint.yml)
@@ -11,8 +11,9 @@
 
 ## What it is
 
-Static linter for HLSL. AST via tree-sitter-hlsl, compile + reflection via
-Slang. **154 rules** across math, bindings, texture, workgroup, control-flow,
+Static linter for HLSL and Slang. AST via tree-sitter-hlsl +
+tree-sitter-slang, compile + reflection via Slang. **154 rules** across
+math, bindings, texture, workgroup, control-flow,
 mesh, DXR, work-graphs, SER, cooperative-vector, long-vectors, opacity-
 micromaps, sampler-feedback, VRS, and wave-helper-lane. Surfaces portable
 anti-patterns that `dxc` and vendor analyzers don't flag -- patterns rooted

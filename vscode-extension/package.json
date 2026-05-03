@@ -1,7 +1,7 @@
 {
   "name": "shader-clippy",
   "displayName": "Shader Clippy",
-  "description": "Linter for HLSL — performance + correctness rules beyond what dxc catches. Lints .slang files end-to-end (AST + CFG + reflection) via tree-sitter-slang; ADR 0021 sub-phase B.",
+  "description": "Linter for HLSL and Slang — performance + correctness rules beyond what dxc catches. End-to-end coverage of both languages (AST + CFG + reflection) via tree-sitter-hlsl + tree-sitter-slang.",
   "publisher": "nelcit",
   "version": "2.0.0",
   "license": "Apache-2.0",
@@ -193,7 +193,7 @@
       {
         "id": "shaderClippy.gettingStarted",
         "title": "Get started with Shader Clippy",
-        "description": "Squiggle-by-squiggle introduction to the HLSL linter.",
+        "description": "Squiggle-by-squiggle introduction to the HLSL + Slang linter.",
         "steps": [
           {
             "id": "openHlslFile",

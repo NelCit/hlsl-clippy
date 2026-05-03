@@ -294,7 +294,7 @@ the next priority for the v0.6 release.
 
 ---
 
-`shader-clippy` is an open-source HLSL linter. Rules, issues, and
+`shader-clippy` is an open-source HLSL + Slang linter. Rules, issues, and
 discussion live at
 [github.com/NelCit/shader-clippy](https://github.com/NelCit/shader-clippy).
 If you have encountered a shader pattern that should be a lint rule,

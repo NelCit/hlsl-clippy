@@ -12,8 +12,9 @@ decisions, see [docs/decisions/](docs/decisions/).
 
 ## What this project is
 
-`shader-clippy` is a static linter for HLSL written in C++23, built on
-tree-sitter-hlsl (AST) and Slang (compile + reflection + IR). It surfaces
+`shader-clippy` is a static linter for HLSL **and Slang** written in
+C++23, built on tree-sitter-hlsl + tree-sitter-slang (AST) and Slang
+(compile + reflection + IR). It surfaces
 portable anti-patterns that hurt GPU performance or hide correctness bugs —
 patterns that `dxc` and vendor analyzers do not flag. Phases 0 → 5 are
 complete and v0.5.3 has shipped with **154 rules** end-to-end across math,
