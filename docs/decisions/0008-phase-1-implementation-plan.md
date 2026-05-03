@@ -12,7 +12,7 @@ tags: [phase-1, rule-engine, quick-fix, suppression, config, planning]
 The `pow-const-squared` agent (`ab32e0402af2a13c7`, in flight) lands the Phase 0
 + minimum Phase 1 substrate: `SourceManager`, `Diagnostic`, `Rule` interface, a
 tree-sitter parser bridge, a lint orchestration loop, Catch2 v3, and the
-`hlsl-clippy lint <file>` subcommand. That work proves a single imperative rule
+`shader-clippy lint <file>` subcommand. That work proves a single imperative rule
 end-to-end on a real shader.
 
 Phase 1's full deliverable set per `ROADMAP.md` (lines 59-66) is broader. Beyond
@@ -23,9 +23,9 @@ the seed rule, Phase 1 must ship:
 2. A **quick-fix framework** (`Rewriter`, `--fix` CLI flag, conflict
    detection). Quick-fixes are the clippy comparison; they belong here, not
    Phase 5.
-3. **Inline suppression** parsing for `// hlsl-clippy: allow(rule-name)`,
+3. **Inline suppression** parsing for `// shader-clippy: allow(rule-name)`,
    line-scoped and block-scoped.
-4. **`.hlsl-clippy.toml` config** for severity, includes/excludes, per-dir
+4. **`.shader-clippy.toml` config** for severity, includes/excludes, per-dir
    overrides.
 5. **Two new end-to-end rules** with quick-fixes and doc pages:
    `redundant-saturate` and `clamp01-to-saturate`.
@@ -55,9 +55,9 @@ Phase 1 adds (all under `core/`):
 
 | Public header                          | Source                  | Purpose                            |
 | -------------------------------------- | ----------------------- | ---------------------------------- |
-| `include/hlsl_clippy/rewriter.hpp`     | `src/rewriter.cpp`      | `Rewriter`, `TextEdit`, `Fix`      |
-| `include/hlsl_clippy/suppress.hpp`     | `src/suppress.cpp`      | `SuppressionSet`, comment scanner  |
-| `include/hlsl_clippy/config.hpp`       | `src/config.cpp`        | `Config`, TOML loader, resolver    |
+| `include/shader_clippy/rewriter.hpp`     | `src/rewriter.cpp`      | `Rewriter`, `TextEdit`, `Fix`      |
+| `include/shader_clippy/suppress.hpp`     | `src/suppress.cpp`      | `SuppressionSet`, comment scanner  |
+| `include/shader_clippy/config.hpp`       | `src/config.cpp`        | `Config`, TOML loader, resolver    |
 
 Private (no public header):
 
@@ -68,7 +68,7 @@ Private (no public header):
 
 CLI changes (`cli/src/main.cpp`): add `--fix` (apply machine-applicable fixes
 in place) and `--config <path>` (override auto-resolution). `lint` reads
-`.hlsl-clippy.toml` from the file's parent chain.
+`.shader-clippy.toml` from the file's parent chain.
 
 Tests (new `tests/unit/` directory): `test_query.cpp`, `test_rewriter.cpp`,
 `test_suppress.cpp`, `test_config.cpp`,
@@ -87,7 +87,7 @@ callback-driven match loop.
 
 ```cpp
 // core/src/query/query.hpp  (private)
-namespace hlsl_clippy::query {
+namespace shader_clippy::query {
 
 struct Capture { std::string_view name; TSNode node; };
 
@@ -109,7 +109,7 @@ public:
     void run(const Query& q, TSTree* tree,
              std::function<void(const QueryMatch&)> cb);
 };
-}  // namespace hlsl_clippy::query
+}  // namespace shader_clippy::query
 ```
 
 A `redundant-saturate` rule expressed declaratively:
@@ -145,7 +145,7 @@ call (`compile().value()` trips immediately); CI smoke-runs every rule's
 ### 3. Rewriter design
 
 ```cpp
-// core/include/hlsl_clippy/rewriter.hpp
+// core/include/shader_clippy/rewriter.hpp
 struct TextEdit { uint32_t byte_lo, byte_hi; std::string replacement; };
 
 struct Fix {
@@ -197,7 +197,7 @@ raw source bytes is faster and decouples suppression from grammar gaps.
 The scanner tracks three states: `kCode`, `kLineComment` (after `//`),
 `kBlockComment` (after `/*`). String literals are skipped to avoid
 `// inside a string` false matches. On entering `kLineComment`,
-lookahead-match `\s*hlsl-clippy:\s*allow\s*\(`, parse rule names until `)`,
+lookahead-match `\s*shader-clippy:\s*allow\s*\(`, parse rule names until `)`,
 record `(rule_id, comment_line, scope)`.
 
 Scope inference: scan forward from end-of-line for the next non-whitespace,
@@ -206,7 +206,7 @@ non-comment token. If `{`, scope is `kBlock` and runs to the matching `}`
 runs to the next non-blank, non-comment line.
 
 ```cpp
-// core/include/hlsl_clippy/suppress.hpp
+// core/include/shader_clippy/suppress.hpp
 struct Suppression { std::string rule_id; uint32_t byte_lo, byte_hi; };
 
 class SuppressionSet {
@@ -245,7 +245,7 @@ Clang job; if exceeded, swap to `toml11`.
 **Schema.**
 
 ```toml
-# .hlsl-clippy.toml
+# .shader-clippy.toml
 [rules]
 pow-const-squared    = "warn"   # "allow" | "warn" | "deny"
 redundant-saturate   = "warn"
@@ -263,7 +263,7 @@ rules = { redundant-saturate = "allow" }
 ```
 
 ```cpp
-// core/include/hlsl_clippy/config.hpp
+// core/include/shader_clippy/config.hpp
 struct Config {
     std::flat_map<std::string, Severity> rule_severity;
     std::vector<std::string> includes, excludes;
@@ -276,7 +276,7 @@ std::expected<Config, Diagnostic>
 ```
 
 **Resolution.** (1) From the directory of the file being linted, walk
-parents collecting every `.hlsl-clippy.toml`. (2) Stop at the first parent
+parents collecting every `.shader-clippy.toml`. (2) Stop at the first parent
 containing `.git/` (workspace boundary). (3) Merge top-down: workspace root
 first, file-local last; later wins on severity, `[[overrides]]` arrays
 concatenate. (4) `--config <path>` short-circuits the search.
@@ -356,7 +356,7 @@ correctly; (2) overlaps yield a conflict diagnostic + lower-priority dropped;
 
 `test_suppress.cpp` covers line, block, wildcard, comma-list, malformed
 emits its own diagnostic, and an end-to-end test where
-`// hlsl-clippy: allow(redundant-saturate)` above a nested-saturate call
+`// shader-clippy: allow(redundant-saturate)` above a nested-saturate call
 drops the diagnostic.
 
 `test_config.cpp` covers TOML parse, walk-up resolution, merge ordering
@@ -375,15 +375,15 @@ Six commits, each independently buildable and green:
    `core/src/query/`, `tests/unit/test_query.cpp`. No rule uses it yet; seed
    rule keeps imperative path.
 2. **`feat(rewriter): Fix, TextEdit, Rewriter with conflict detection`** —
-   `core/include/hlsl_clippy/rewriter.hpp`, `core/src/rewriter.cpp`,
+   `core/include/shader_clippy/rewriter.hpp`, `core/src/rewriter.cpp`,
    `tests/unit/test_rewriter.cpp`. Wire `--fix` flag in CLI;
    `pow-const-squared` gains its `Fix` payload here.
 3. **`feat(suppress): comment scanner + SuppressionSet`** —
-   `core/include/hlsl_clippy/suppress.hpp`, `core/src/suppress.cpp`,
+   `core/include/shader_clippy/suppress.hpp`, `core/src/suppress.cpp`,
    `tests/unit/test_suppress.cpp`. Wire into `lint_file`'s diag sink.
 4. **`feat(config): toml++ vendor + Config loader`** —
    `external/tomlplusplus/` submodule, `cmake/UseTomlPlusPlus.cmake`,
-   `core/include/hlsl_clippy/config.hpp`, `core/src/config.cpp`,
+   `core/include/shader_clippy/config.hpp`, `core/src/config.cpp`,
    `tests/unit/test_config.cpp`. Wire `--config` and walk-up in CLI.
 5. **`feat(rules): redundant-saturate via Query`** —
    `core/src/rules/redundant_saturate.{hpp,cpp}`, unit + golden tests, doc
@@ -408,12 +408,12 @@ Cold-build budget: 8s on Linux Clang CI. Measure first; fall back to
 `toml11` or precompile a wrapper if exceeded.
 
 **Suppression scope ambiguity for compound statements.** A
-`// hlsl-clippy: allow(rule)` above a four-line fluent chain — is "next
+`// shader-clippy: allow(rule)` above a four-line fluent chain — is "next
 statement-bearing line" the first line, or the whole chain? Phase 1 chooses
 first-line (matches Rust `#[allow(...)]` placement); rule firings on lines
 2-4 won't be suppressed. Documented; revisit if it bites.
 
-**Multiple `.hlsl-clippy.toml` resolution.** Closer-to-file wins on severity;
+**Multiple `.shader-clippy.toml` resolution.** Closer-to-file wins on severity;
 `[[overrides]]` arrays concatenate (deeper files can add but not delete
 inherited overrides). Open: should there be a `[meta] inherit = false`
 opt-out? Defer to Phase 5 (LSP multi-root) where it actually matters.
@@ -431,14 +431,14 @@ file pins it); CI normalizes line endings (autocrlf foot-gun on Windows).
 
 When Phase 1 closes:
 
-- `core/include/hlsl_clippy/` contains exactly four headers: `version.hpp`,
+- `core/include/shader_clippy/` contains exactly four headers: `version.hpp`,
   `rewriter.hpp`, `suppress.hpp`, `config.hpp` (plus what Phase 0 ships:
   `source_manager.hpp`, `diagnostic.hpp`, `rule.hpp`).
-- `hlsl-clippy lint --fix tests/fixtures/phase2/redundant.hlsl` rewrites
+- `shader-clippy lint --fix tests/fixtures/phase2/redundant.hlsl` rewrites
   every HIT line; re-running with `--fix` is a no-op.
-- `// hlsl-clippy: allow(redundant-saturate)` above a nested saturate call
+- `// shader-clippy: allow(redundant-saturate)` above a nested saturate call
   drops the diagnostic.
-- A `.hlsl-clippy.toml` with `redundant-saturate = "allow"` drops every
+- A `.shader-clippy.toml` with `redundant-saturate = "allow"` drops every
   `redundant-saturate` diagnostic project-wide.
 - Five Catch2 unit-test files plus two golden tests pass on Windows + Linux
   (ADR 0005 matrix).

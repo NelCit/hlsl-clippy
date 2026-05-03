@@ -15,14 +15,14 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 constexpr std::string_view k_rule_id = "reference-data-type-not-supported-pre-sm610";
@@ -95,4 +95,4 @@ std::unique_ptr<Rule> make_reference_data_type_not_supported_pre_sm610() {
     return std::make_unique<ReferenceDataTypeNotSupportedPreSm610>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

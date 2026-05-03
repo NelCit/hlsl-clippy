@@ -6,7 +6,7 @@
 > that the v1.0 freeze is explicit, reviewable, and mechanically
 > enforceable. See [ADR 0018 §5 criterion #1](decisions/0018-v08-research-direction.md).
 
-`hlsl-clippy` v1.0 freezes a curated set of source-level, binary, and
+`shader-clippy` v1.0 freezes a curated set of source-level, binary, and
 wire-protocol surfaces. A v1.0 → v1.x bump may not change the *binary
 shape* of any item in the "Stable surface" table below. Removing or
 renaming a public type is a v2.0 break. New rules, new optional fields,
@@ -17,9 +17,9 @@ v1.x-compatible.
 
 The following surfaces are covered by the v1.0 stability commitment.
 
-### C++ public-header surface (`core/include/hlsl_clippy/`)
+### C++ public-header surface (`core/include/shader_clippy/`)
 
-Every type and function declared under `core/include/hlsl_clippy/` is
+Every type and function declared under `core/include/shader_clippy/` is
 part of the stable surface. Adding a new field to an aggregate at the
 end of the layout is permitted; reordering or removing an existing
 field is a v2.0 break.
@@ -40,7 +40,7 @@ field is a v2.0 break.
 
 ### CLI surface
 
-The `hlsl-clippy` executable contract is stable for the following
+The `shader-clippy` executable contract is stable for the following
 flags. Their stdout/stderr formats are part of the contract:
 
 | Flag | Contract |
@@ -49,14 +49,14 @@ flags. Their stdout/stderr formats are part of the contract:
 | `--help` | Prints usage to stdout, exits 0. Layout may add new sections; existing sections may not be removed. |
 | `--format=human\|json\|github-annotations` | Selects diagnostic rendering. JSON schema is additive-only across v1.x. |
 | `--fix` | Applies machine-applicable rewrites in place. Idempotent. |
-| `--config <path>` | Overrides `.hlsl-clippy.toml` lookup. |
+| `--config <path>` | Overrides `.shader-clippy.toml` lookup. |
 | `--target-profile <p>` | Overrides the per-stage Slang reflection profile. |
 
 Exit codes — `0` success, `1` lint findings emitted, `2` invocation
 error — are stable. The default `--format` (auto-detection of
 `GITHUB_ACTIONS=true`) is stable.
 
-### LSP wire-protocol surface (`hlsl-clippy-lsp`)
+### LSP wire-protocol surface (`shader-clippy-lsp`)
 
 The LSP server speaks standard LSP over stdio. The server-specific
 extensions covered by the stability commitment:
@@ -94,7 +94,7 @@ change without a major-version bump.
 | `core/src/parser_internal.hpp` | tree-sitter `TSNode` wrapper details. The forward-declared `AstCursor` / `AstTree` in `rule.hpp` are stable, the underlying definitions are not. |
 | `tools/dev-shell.ps1`, `tools/fetch-slang.{ps1,sh}`, `tools/release-audit.{ps1,sh}` | Developer-facing scripts, version-tied to internal layout. |
 | `tools/refactor-ast-helpers.ps1`, `tools/refresh-rule-doc-*.ps1` | One-off / maintenance scripts. May be removed without notice. |
-| Undocumented `.hlsl-clippy.toml` keys | Anything not listed in `docs/configuration.md`. Recognised undocumented keys may be promoted to documented keys (additive) or silently dropped. |
+| Undocumented `.shader-clippy.toml` keys | Anything not listed in `docs/configuration.md`. Recognised undocumented keys may be promoted to documented keys (additive) or silently dropped. |
 | Exact wording of diagnostic *messages* | Only the diagnostic *code* (the rule id, e.g. `pow-const-squared`) is stable. The human-readable message text may be tightened, retranslated, or rephrased in any release. |
 | Performance characteristics | We aim to not regress lint time or memory; we do not make that a contract. |
 | `[experimental]` config keys | Anything under `[experimental]` (including the IHV target gates `rdna4` / `blackwell` / `xe2`) is v1.x-mutable. |
@@ -106,7 +106,7 @@ change without a major-version bump.
 
 If a v1.x release breaks a surface listed in the "Stable surface" table
 above, file a bug at
-[github.com/NelCit/hlsl-clippy/issues](https://github.com/NelCit/hlsl-clippy/issues)
+[github.com/NelCit/shader-clippy/issues](https://github.com/NelCit/shader-clippy/issues)
 with the `regression` label. Include the previous and current version
 strings, a minimal repro (one .hlsl file is ideal), and the diff in
 behaviour. Stability bugs are treated as release blockers — the next

@@ -49,7 +49,7 @@ a uniformity oracle plus a *light* data-flow facility to the lint
 engine, without violating the constraints already locked elsewhere in
 the codebase:
 
-1. **Public headers under `core/include/hlsl_clippy/` MUST NOT leak
+1. **Public headers under `core/include/shader_clippy/` MUST NOT leak
    `<tree_sitter/api.h>` or `<slang.h>`.** CI grep enforces this.
    Rules see `(SourceId, ByteSpan)` only — never `TSNode`. Same
    discipline applies to any CFG-node identifier crossing the
@@ -224,13 +224,13 @@ gaps.
 The proposed architecture, broken into the six concrete API additions
 that constitute it.
 
-### 1. New public header `core/include/hlsl_clippy/control_flow.hpp` (opaque types only)
+### 1. New public header `core/include/shader_clippy/control_flow.hpp` (opaque types only)
 
 No `<tree_sitter/api.h>` include. No `<slang.h>` include. Pure value
 types. Sketch:
 
 ```cpp
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 enum class Uniformity : std::uint8_t {
     Unknown,
@@ -307,14 +307,14 @@ struct ControlFlowInfo {
         Span span) const noexcept;
 };
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy
 ```
 
 Every type is a copyable / movable value. `BasicBlockId` is an opaque
 handle; the engine owns the actual block storage. No `unique_ptr`s
 to opaque tree-sitter or Slang handles cross the public boundary.
 
-### 2. Extend `Stage` enum in `core/include/hlsl_clippy/rule.hpp`
+### 2. Extend `Stage` enum in `core/include/shader_clippy/rule.hpp`
 
 ```cpp
 enum class Stage : std::uint8_t {
@@ -497,7 +497,7 @@ merge-time drift. Sub-phase 4c is the parallel-pack dispatch.
 
 Single PR, single agent. Lands:
 
-- `core/include/hlsl_clippy/control_flow.hpp` (opaque types per §1).
+- `core/include/shader_clippy/control_flow.hpp` (opaque types per §1).
 - New private module `core/src/control_flow/` (engine, cfg_builder,
   dominators, uniformity_analyzer, helper_lane_analyzer per §4).
 - Extend `Stage` enum (§2) and `Rule::on_cfg` virtual (§3).
@@ -652,7 +652,7 @@ Phase N+1 with unmerged Phase N branches outstanding").
   `flag` is 0 or 1 at runtime is dynamically uniform but the AST
   taint pass cannot prove it. Mitigation: rules treat uniformity
   as best-effort and ship at *warn* severity. The
-  `// hlsl-clippy: ignore <rule-id>` inline-suppression mechanism
+  `// shader-clippy: ignore <rule-id>` inline-suppression mechanism
   (per ADR 0008) lets authors annotate provably-uniform-by-runtime
   patterns without masking the wider rule. The Option C hybrid (AST
   CFG + Slang IR refinement) is the documented escape hatch if
@@ -722,7 +722,7 @@ Phase N+1 with unmerged Phase N branches outstanding").
 ## Open question
 
 Should `cfg_inlining_depth` be a per-project knob in
-`.hlsl-clippy.toml`, a per-rule knob, or a per-lint-run option only?
+`.shader-clippy.toml`, a per-rule knob, or a per-lint-run option only?
 Today the proposal is **per-lint-run only** (via `LintOptions`).
 This matches the simplest case — a project picks one inlining depth
 and every CFG-stage rule uses it.

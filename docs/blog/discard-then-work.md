@@ -1,7 +1,7 @@
-﻿---
+---
 title: "discard-then-work"
 date: 2026-05-02
-author: hlsl-clippy maintainers
+author: shader-clippy maintainers
 category: control-flow
 tags: [hlsl, performance, control-flow]
 status: stub
@@ -47,4 +47,4 @@ The bad / good code snippets are kept canonical on the rule page; see
 ---
 
 *This is a v1.0-ship stub. Full analysis pending; track [issue link
-TBD](https://github.com/NelCit/hlsl-clippy/issues).*
+TBD](https://github.com/NelCit/shader-clippy/issues).*

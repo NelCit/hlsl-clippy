@@ -7,29 +7,29 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 [[nodiscard]] std::unique_ptr<Rule> make_output_count_overrun();
 }
 
 namespace {
 
-using hlsl_clippy::Diagnostic;
-using hlsl_clippy::lint;
-using hlsl_clippy::LintOptions;
-using hlsl_clippy::Rule;
-using hlsl_clippy::SourceManager;
+using shader_clippy::Diagnostic;
+using shader_clippy::lint;
+using shader_clippy::LintOptions;
+using shader_clippy::Rule;
+using shader_clippy::SourceManager;
 
 [[nodiscard]] std::vector<Diagnostic> lint_buffer(const std::string& hlsl) {
     SourceManager sources;
     const auto src = sources.add_buffer("oco.hlsl", hlsl);
     REQUIRE(src.valid());
     std::vector<std::unique_ptr<Rule>> rules;
-    rules.push_back(hlsl_clippy::rules::make_output_count_overrun());
+    rules.push_back(shader_clippy::rules::make_output_count_overrun());
     LintOptions opts;
     opts.enable_control_flow = true;
     opts.enable_reflection = false;

@@ -10,7 +10,7 @@ language_applicability: ["hlsl", "slang"]
 
 # mesh-node-missing-output-topology
 
-> **Pre-v0 status:** this rule page is published ahead of the implementation (preview / experimental, gated behind `[experimental] work-graph-mesh-nodes = true` in `.hlsl-clippy.toml`).
+> **Pre-v0 status:** this rule page is published ahead of the implementation (preview / experimental, gated behind `[experimental] work-graph-mesh-nodes = true` in `.shader-clippy.toml`).
 
 *(via ADR 0010)*
 
@@ -65,7 +65,7 @@ void MeshNode(
 
 ## Options
 
-This rule is gated behind `[experimental] work-graph-mesh-nodes = true` in `.hlsl-clippy.toml`.
+This rule is gated behind `[experimental] work-graph-mesh-nodes = true` in `.shader-clippy.toml`.
 
 ## Fix availability
 
@@ -80,6 +80,6 @@ This rule is gated behind `[experimental] work-graph-mesh-nodes = true` in `.hls
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/mesh-node-missing-output-topology.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/mesh-node-missing-output-topology.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

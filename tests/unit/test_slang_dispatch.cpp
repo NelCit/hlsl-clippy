@@ -40,26 +40,26 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "hlsl_clippy/config.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/language.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/config.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/language.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 #include "reflection/engine.hpp"
 
 #include "test_config.hpp"
 
 namespace {
 
-using hlsl_clippy::detect_language;
-using hlsl_clippy::Diagnostic;
-using hlsl_clippy::lint;
-using hlsl_clippy::make_default_rules;
-using hlsl_clippy::resolve_language;
-using hlsl_clippy::SourceLanguage;
-using hlsl_clippy::SourceManager;
+using shader_clippy::detect_language;
+using shader_clippy::Diagnostic;
+using shader_clippy::lint;
+using shader_clippy::make_default_rules;
+using shader_clippy::resolve_language;
+using shader_clippy::SourceLanguage;
+using shader_clippy::SourceManager;
 
 [[nodiscard]] std::size_t count_code(const std::vector<Diagnostic>& diags, std::string_view code) {
     return static_cast<std::size_t>(std::count_if(
@@ -67,7 +67,7 @@ using hlsl_clippy::SourceManager;
 }
 
 [[nodiscard]] std::filesystem::path slang_fixture(std::string_view name) {
-    std::filesystem::path p{std::string{hlsl_clippy::test::k_fixtures_dir}};
+    std::filesystem::path p{std::string{shader_clippy::test::k_fixtures_dir}};
     p /= "slang";
     p /= std::string{name};
     return p;
@@ -111,7 +111,7 @@ TEST_CASE("resolve_language honours explicit overrides", "[slang][language]") {
 // the path as a Slang source and routes it through its native frontend.
 TEST_CASE("ReflectionEngine reflects a `.slang` source without crashing",
           "[slang][bridge][regression]") {
-    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -145,7 +145,7 @@ float4 ps_main(float2 uv : TEXCOORD0) : SV_Target {
 // reflection-stage dispatch on `.slang` sources.
 TEST_CASE("ReflectionEngine reflects a `.slang` source containing only a free function",
           "[slang][bridge][regression]") {
-    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -197,7 +197,7 @@ float4 ps_main() : SV_Target {
     REQUIRE(src.valid());
 
     auto rules = make_default_rules();
-    hlsl_clippy::LintOptions options;
+    shader_clippy::LintOptions options;
     options.enable_reflection = true;
     options.target_profile = std::string{"sm_6_6"};
     const auto diagnostics = lint(sources, src, rules, options);
@@ -281,7 +281,7 @@ float squared(float x) {
     const auto src = sources.add_buffer("synthetic.hlsl", body);
     REQUIRE(src.valid());
 
-    hlsl_clippy::Config cfg;
+    shader_clippy::Config cfg;
     cfg.source_language_value = SourceLanguage::Slang;
 
     auto rules = make_default_rules();
@@ -298,7 +298,7 @@ float squared(float x) {
 TEST_CASE("Inline allow(clippy::language-skip-ast) is a no-op under sub-phase B",
           "[slang][suppression]") {
     SourceManager sources;
-    const std::string body = R"slang(// hlsl-clippy: allow(clippy::language-skip-ast)
+    const std::string body = R"slang(// shader-clippy: allow(clippy::language-skip-ast)
 float squared(float x) {
     return pow(x, 2.0);
 }

@@ -225,10 +225,10 @@ $preambleClean = $preamble
 #
 # Triage decisions need the per-shader firing list (which categories fired
 # on which corpus shaders). The base markdown table only carries totals;
-# we reconstruct the detail by re-running `hlsl-clippy lint --format=json`
+# we reconstruct the detail by re-running `shader-clippy lint --format=json`
 # across the corpus, mirroring fp-rate-baseline.ps1.
 
-$CliPath   = Join-Path $RepoRoot 'build\cli\hlsl-clippy.exe'
+$CliPath   = Join-Path $RepoRoot 'build\cli\shader-clippy.exe'
 $CorpusDir = Join-Path $RepoRoot 'tests\corpus'
 if (-not (Test-Path -LiteralPath $CliPath)) {
     Write-Error "fp-rate-triage: cli not found at $CliPath. Run cmake --build build first."
@@ -414,7 +414,7 @@ foreach ($row in $tableRows) {
 $aboveBudgetSection = New-Object System.Collections.ArrayList
 [void]$aboveBudgetSection.Add('## Above-budget rules (FP rate > 5%)')
 [void]$aboveBudgetSection.Add('')
-[void]$aboveBudgetSection.Add('Per ADR 0018 §5 criterion #3, every warn-severity rule must carry an FP rate <= 5% against the corpus. The rules below exceed that budget on the v1.1 deterministic triage pass and need maintainer review (typically: tighten the rule''s detection, suppress the rule on the offending category via `.hlsl-clippy.toml`, or downgrade severity).')
+[void]$aboveBudgetSection.Add('Per ADR 0018 §5 criterion #3, every warn-severity rule must carry an FP rate <= 5% against the corpus. The rules below exceed that budget on the v1.1 deterministic triage pass and need maintainer review (typically: tighten the rule''s detection, suppress the rule on the offending category via `.shader-clippy.toml`, or downgrade severity).')
 [void]$aboveBudgetSection.Add('')
 if ($aboveBudget.Count -eq 0) {
     [void]$aboveBudgetSection.Add('_(none — every rule is within the 5% FP-rate budget.)_')

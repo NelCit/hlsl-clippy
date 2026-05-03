@@ -15,11 +15,11 @@
 #include <memory>
 #include <string_view>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::reflection {
+namespace shader_clippy::reflection {
 
 /// PIMPL'd Slang-talking bridge. Construction is non-trivial (creates the
 /// ISession pool); copy / move are deleted to keep the pool in one place.
@@ -45,4 +45,4 @@ private:
     std::unique_ptr<Impl> impl_;
 };
 
-}  // namespace hlsl_clippy::reflection
+}  // namespace shader_clippy::reflection

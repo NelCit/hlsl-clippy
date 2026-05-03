@@ -26,27 +26,27 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "control_flow/engine.hpp"
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 namespace {
 
-using hlsl_clippy::AstTree;
-using hlsl_clippy::BasicBlockId;
-using hlsl_clippy::ByteSpan;
-using hlsl_clippy::ControlFlowInfo;
-using hlsl_clippy::Diagnostic;
-using hlsl_clippy::lint;
-using hlsl_clippy::LintOptions;
-using hlsl_clippy::Rule;
-using hlsl_clippy::RuleContext;
-using hlsl_clippy::SourceManager;
-using hlsl_clippy::Span;
-using hlsl_clippy::Stage;
-using hlsl_clippy::Uniformity;
+using shader_clippy::AstTree;
+using shader_clippy::BasicBlockId;
+using shader_clippy::ByteSpan;
+using shader_clippy::ControlFlowInfo;
+using shader_clippy::Diagnostic;
+using shader_clippy::lint;
+using shader_clippy::LintOptions;
+using shader_clippy::Rule;
+using shader_clippy::RuleContext;
+using shader_clippy::SourceManager;
+using shader_clippy::Span;
+using shader_clippy::Stage;
+using shader_clippy::Uniformity;
 
 /// Spy rule used to verify the orchestrator actually dispatches `on_cfg`.
 class CfgSpyRule : public Rule {
@@ -129,7 +129,7 @@ void cs_main(uint3 tid : SV_DispatchThreadID)
 }  // namespace
 
 TEST_CASE("CfgEngine builds a populated CFG for a simple function", "[cfg][engine]") {
-    auto& engine = hlsl_clippy::control_flow::CfgEngine::instance();
+    auto& engine = shader_clippy::control_flow::CfgEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -147,7 +147,7 @@ TEST_CASE("CfgEngine builds a populated CFG for a simple function", "[cfg][engin
 
 TEST_CASE("CfgEngine identifies multiple basic blocks across an if/else branch",
           "[cfg][engine][branch]") {
-    auto& engine = hlsl_clippy::control_flow::CfgEngine::instance();
+    auto& engine = shader_clippy::control_flow::CfgEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -166,7 +166,7 @@ TEST_CASE("CfgEngine identifies multiple basic blocks across an if/else branch",
 
 TEST_CASE("CfgEngine tolerates ERROR nodes via clippy::cfg-skip",
           "[cfg][engine][error-tolerance]") {
-    auto& engine = hlsl_clippy::control_flow::CfgEngine::instance();
+    auto& engine = shader_clippy::control_flow::CfgEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -197,13 +197,13 @@ TEST_CASE("CfgEngine tolerates ERROR nodes via clippy::cfg-skip",
     // and either no skip diagnostic OR a well-formed one is produced.
     for (const auto& d : diagnostics) {
         if (d.code == "clippy::cfg-skip") {
-            CHECK(d.severity == hlsl_clippy::Severity::Warning);
+            CHECK(d.severity == shader_clippy::Severity::Warning);
         }
     }
 }
 
 TEST_CASE("CFG entry block dominates every reachable block", "[cfg][engine][dominators]") {
-    auto& engine = hlsl_clippy::control_flow::CfgEngine::instance();
+    auto& engine = shader_clippy::control_flow::CfgEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -235,7 +235,7 @@ TEST_CASE("CFG entry block dominates every reachable block", "[cfg][engine][domi
 
 TEST_CASE("UniformityOracle classifies SV_DispatchThreadID identifiers as Divergent",
           "[cfg][uniformity][divergent]") {
-    auto& engine = hlsl_clippy::control_flow::CfgEngine::instance();
+    auto& engine = shader_clippy::control_flow::CfgEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -264,7 +264,7 @@ TEST_CASE("UniformityOracle classifies SV_DispatchThreadID identifiers as Diverg
 }
 
 TEST_CASE("UniformityOracle classifies a literal 1.0 as Uniform", "[cfg][uniformity][uniform]") {
-    auto& engine = hlsl_clippy::control_flow::CfgEngine::instance();
+    auto& engine = shader_clippy::control_flow::CfgEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -289,7 +289,7 @@ TEST_CASE("UniformityOracle classifies a literal 1.0 as Uniform", "[cfg][uniform
 
 TEST_CASE("UniformityOracle classifies an SV_DispatchThreadID-driven branch as Divergent",
           "[cfg][uniformity][branch]") {
-    auto& engine = hlsl_clippy::control_flow::CfgEngine::instance();
+    auto& engine = shader_clippy::control_flow::CfgEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -343,7 +343,7 @@ TEST_CASE("LintOptions::enable_control_flow = false skips on_cfg dispatch", "[cf
 }
 
 TEST_CASE("LintOptions::enable_control_flow = true dispatches on_cfg once", "[cfg][orchestrator]") {
-    auto& engine = hlsl_clippy::control_flow::CfgEngine::instance();
+    auto& engine = shader_clippy::control_flow::CfgEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;

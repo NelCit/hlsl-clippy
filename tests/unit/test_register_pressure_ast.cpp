@@ -18,33 +18,33 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "control_flow/engine.hpp"
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 #include "parser_internal.hpp"
 #include "rules/util/liveness.hpp"
 #include "rules/util/register_pressure_ast.hpp"
 
 namespace {
 
-using hlsl_clippy::AstTree;
-using hlsl_clippy::ControlFlowInfo;
-using hlsl_clippy::SourceId;
-using hlsl_clippy::SourceManager;
+using shader_clippy::AstTree;
+using shader_clippy::ControlFlowInfo;
+using shader_clippy::SourceId;
+using shader_clippy::SourceManager;
 
-namespace util = hlsl_clippy::util;
+namespace util = shader_clippy::util;
 
 struct Built {
-    hlsl_clippy::parser::ParsedSource parsed;
+    shader_clippy::parser::ParsedSource parsed;
     ControlFlowInfo cfg;
     SourceId source;
 };
 
 [[nodiscard]] Built build(SourceManager& sources, const std::string& name, std::string_view src) {
-    auto& engine = hlsl_clippy::control_flow::CfgEngine::instance();
+    auto& engine = shader_clippy::control_flow::CfgEngine::instance();
     engine.clear_cache();
     const auto sid = sources.add_buffer(name, std::string{src});
     REQUIRE(sid.valid());
-    auto parsed_opt = hlsl_clippy::parser::parse(sources, sid);
+    auto parsed_opt = shader_clippy::parser::parse(sources, sid);
     REQUIRE(parsed_opt.has_value());
     auto parsed = std::move(parsed_opt.value());
     const ::TSNode root = ::ts_tree_root_node(parsed.tree.get());

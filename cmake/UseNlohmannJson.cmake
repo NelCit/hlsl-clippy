@@ -25,7 +25,7 @@ set(_nlohmann_json_include_dir
 
 if(NOT EXISTS "${_nlohmann_json_include_dir}/nlohmann/json.hpp")
     message(FATAL_ERROR
-        "hlsl-clippy: nlohmann/json submodule appears uninitialised. "
+        "shader-clippy: nlohmann/json submodule appears uninitialised. "
         "Expected header at ${_nlohmann_json_include_dir}/nlohmann/json.hpp. "
         "Run `git submodule update --init --recursive`."
     )
@@ -37,4 +37,4 @@ target_include_directories(nlohmann_json_headers SYSTEM INTERFACE
 
 add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json_headers)
 
-message(STATUS "hlsl-clippy: using nlohmann/json ${HLSL_CLIPPY_NLOHMANN_JSON_VERSION} from ${_nlohmann_json_include_dir}")
+message(STATUS "shader-clippy: using nlohmann/json ${SHADER_CLIPPY_NLOHMANN_JSON_VERSION} from ${_nlohmann_json_include_dir}")

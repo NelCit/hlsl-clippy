@@ -61,7 +61,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — When the disorder is a swap of two arguments and the swap produces a well-ordered attribute, `hlsl-clippy fix` rewrites the attribute. When the bounds need a deeper fix (e.g., a semantic change to the kernel's wave-size assumption), the rule emits a suggestion-tier diagnostic instead.
+**machine-applicable** — When the disorder is a swap of two arguments and the swap produces a well-ordered attribute, `shader-clippy fix` rewrites the attribute. When the bounds need a deeper fix (e.g., a semantic change to the kernel's wave-size assumption), the rule emits a suggestion-tier diagnostic instead.
 
 ## See also
 
@@ -72,6 +72,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/wavesize-range-disordered.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/wavesize-range-disordered.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

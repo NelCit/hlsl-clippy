@@ -19,7 +19,7 @@
 #                     tag version all agree.
 #   5. ADR index    — every `Accepted` ADR file under `docs/decisions/`
 #                     appears as an `Accepted` row in the CLAUDE.md table.
-#   6. Public hdrs  — every file under `core/include/hlsl_clippy/` has
+#   6. Public hdrs  — every file under `core/include/shader_clippy/` has
 #                     `#pragma once` and ends in `.hpp`.
 #
 # Usage:
@@ -286,8 +286,8 @@ fi
 # ──────────────────────────────────────────────────────────────────────────
 # Check 6 — every public header has `#pragma once` and ends in `.hpp`.
 # ──────────────────────────────────────────────────────────────────────────
-echo "[6/6] Public-header guard (core/include/hlsl_clippy/)"
-HEADERS_DIR="$REPO_ROOT/core/include/hlsl_clippy"
+echo "[6/6] Public-header guard (core/include/shader_clippy/)"
+HEADERS_DIR="$REPO_ROOT/core/include/shader_clippy"
 HEADER_FAILS=0
 if [ ! -d "$HEADERS_DIR" ]; then
     fail "missing $HEADERS_DIR"
@@ -317,7 +317,7 @@ else
         esac
     done
     if [ "$HEADER_FAILS" -eq 0 ]; then
-        pass "every file under core/include/hlsl_clippy/ ends in .hpp + has #pragma once"
+        pass "every file under core/include/shader_clippy/ ends in .hpp + has #pragma once"
     else
         fail "${HEADER_FAILS} public-header guard violation(s)"
     fi

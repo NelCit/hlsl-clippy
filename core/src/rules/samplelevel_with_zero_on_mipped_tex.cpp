@@ -19,15 +19,15 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "query/query.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 constexpr std::string_view k_rule_id = "samplelevel-with-zero-on-mipped-tex";
@@ -133,4 +133,4 @@ std::unique_ptr<Rule> make_samplelevel_with_zero_on_mipped_tex() {
     return std::make_unique<SampleLevelWithZero>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

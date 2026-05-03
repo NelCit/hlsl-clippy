@@ -3,8 +3,8 @@
 # VS Code so you can test BEFORE tagging a release. POSIX equivalent of
 # tools/build-vsix-local.ps1; same five steps:
 #
-#   1. cmake build hlsl_clippy_lsp.
-#   2. Stage hlsl-clippy-lsp + sibling shared libs into
+#   1. cmake build shader_clippy_lsp.
+#   2. Stage shader-clippy-lsp + sibling shared libs into
 #      vscode-extension/server/<platform>/.
 #   3. npx tsc -p ./vscode-extension (catches strict-mode TS errors).
 #   4. vsce package --target <platform>.
@@ -14,8 +14,8 @@
 #   bash tools/build-vsix-local.sh
 #
 # Optional environment variables:
-#   HLSL_CLIPPY_SKIP_INSTALL=1   build the .vsix but don't install it
-#   HLSL_CLIPPY_SKIP_BUILD=1     reuse the existing build/ tree
+#   SHADER_CLIPPY_SKIP_INSTALL=1   build the .vsix but don't install it
+#   SHADER_CLIPPY_SKIP_BUILD=1     reuse the existing build/ tree
 
 set -euo pipefail
 
@@ -36,24 +36,24 @@ case "$(uname -s)-$(uname -m)" in
         ;;
 esac
 
-# 1. Build hlsl_clippy_lsp.
-if [ -z "${HLSL_CLIPPY_SKIP_BUILD:-}" ]; then
-    echo "==> Building hlsl_clippy_lsp..."
-    cmake --build build --target hlsl_clippy_lsp >/dev/null
+# 1. Build shader_clippy_lsp.
+if [ -z "${SHADER_CLIPPY_SKIP_BUILD:-}" ]; then
+    echo "==> Building shader_clippy_lsp..."
+    cmake --build build --target shader_clippy_lsp >/dev/null
 fi
 
 # 2. Stage LSP exe + sibling shared libs.
 dest="vscode-extension/server/$platform"
 mkdir -p "$dest"
 src=""
-for c in ./build/lsp/hlsl-clippy-lsp ./build/hlsl-clippy-lsp; do
+for c in ./build/lsp/shader-clippy-lsp ./build/shader-clippy-lsp; do
     if [ -x "$c" ]; then
         src="$c"
         break
     fi
 done
 if [ -z "$src" ]; then
-    echo "ERROR: could not locate hlsl-clippy-lsp binary" >&2
+    echo "ERROR: could not locate shader-clippy-lsp binary" >&2
     exit 1
 fi
 echo "==> Staging $src + sibling libs into $dest"
@@ -77,7 +77,7 @@ npx tsc -p .
 
 # 4. Package per-platform .vsix.
 version=$(node -p "require('./package.json').version")
-vsix="hlsl-clippy-${version}-${vsce_target}-local.vsix"
+vsix="shader-clippy-${version}-${vsce_target}-local.vsix"
 echo "==> Packaging $vsix..."
 npx --yes @vscode/vsce package --target "$vsce_target" --out "$vsix"
 
@@ -86,8 +86,8 @@ echo
 echo "Built $vsix ($vsix_size)"
 
 # 5. Install into local VS Code.
-if [ -n "${HLSL_CLIPPY_SKIP_INSTALL:-}" ]; then
-    echo "Skipping install (HLSL_CLIPPY_SKIP_INSTALL=1)."
+if [ -n "${SHADER_CLIPPY_SKIP_INSTALL:-}" ]; then
+    echo "Skipping install (SHADER_CLIPPY_SKIP_INSTALL=1)."
     echo "To install manually: code --install-extension vscode-extension/$vsix --force"
 elif command -v code >/dev/null; then
     echo "==> Installing into VS Code..."

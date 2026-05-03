@@ -35,13 +35,13 @@
 #include <tuple>
 #include <utility>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/ir.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "reflection/engine.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/ir.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::ir {
+namespace shader_clippy::ir {
 
 namespace {
 
@@ -167,4 +167,4 @@ void IrEngine::clear_cache() {
     cache_.clear();
 }
 
-}  // namespace hlsl_clippy::ir
+}  // namespace shader_clippy::ir

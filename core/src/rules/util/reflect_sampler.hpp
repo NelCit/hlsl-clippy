@@ -2,7 +2,7 @@
 // (ADR 0012 sub-phase 3b).
 //
 // Forward-compatible API. The current `ResourceBinding` struct in
-// `hlsl_clippy/reflection.hpp` does not yet expose sampler descriptor state
+// `shader_clippy/reflection.hpp` does not yet expose sampler descriptor state
 // (filter / address mode / MaxLOD / MaxAnisotropy / ComparisonFunc) -- the
 // SlangBridge surface that lands in sub-phase 3a does not pull those fields
 // out of Slang's reflection tree. This header exists so Phase 3 sampler rules
@@ -20,9 +20,9 @@
 #include <string>
 #include <string_view>
 
-#include "hlsl_clippy/reflection.hpp"
+#include "shader_clippy/reflection.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 /// Best-effort sampler descriptor. Each field is `std::optional<...>` because
 /// the SlangBridge surfaces these incrementally; rules MUST handle the
@@ -64,4 +64,4 @@ struct SamplerDescriptor {
 [[nodiscard]] std::optional<SamplerDescriptor> sampler_descriptor_for(
     const ReflectionInfo& reflection, std::string_view sampler_name) noexcept;
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

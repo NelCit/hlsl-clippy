@@ -9,10 +9,10 @@ or the script's own header comment) where the rationale lives.
 - **`dev-shell.{ps1,sh}`** — enter a shell with VS Build Tools (Windows)
   / Homebrew LLVM (macOS) / apt LLVM (Linux) on PATH plus the Slang
   prebuilt cache wired up so `cmake` / `ninja` / `ctest` resolve. Idempotent
-  via `HLSL_CLIPPY_DEV_SHELL_READY`. See CLAUDE.md §"Build from source".
+  via `SHADER_CLIPPY_DEV_SHELL_READY`. See CLAUDE.md §"Build from source".
 - **`fetch-slang.{ps1,sh}`** — populate the per-user Slang prebuilt cache
-  at `%LOCALAPPDATA%/hlsl-clippy/slang/<version>/` (Windows) or
-  `$HOME/.cache/hlsl-clippy/slang/<version>/` (Linux + macOS). Pinned by
+  at `%LOCALAPPDATA%/shader-clippy/slang/<version>/` (Windows) or
+  `$HOME/.cache/shader-clippy/slang/<version>/` (Linux + macOS). Pinned by
   `cmake/SlangVersion.cmake`. See CLAUDE.md §"Slang prebuilt cache".
 - **`install-hooks.{ps1,sh}`** + `git-hooks/` — install the project
   pre-commit clang-format gate. See `tools/git-hooks/README.md`.

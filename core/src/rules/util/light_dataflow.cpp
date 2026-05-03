@@ -11,12 +11,12 @@
 
 #include "rules/util/light_dataflow.hpp"
 
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "rules/util/cfg_query.hpp"
 #include "rules/util/uniformity.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 bool groupshared_read_before_write(const ControlFlowInfo& cfg, Span gs_decl_span) noexcept {
     // Forward-compatible stub: see header. We at least exercise the
@@ -44,4 +44,4 @@ bool loop_invariant_expr(const ControlFlowInfo& cfg, Span expr_span) noexcept {
     return is_uniform(cfg, expr_span) || is_loop_invariant(cfg, expr_span);
 }
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

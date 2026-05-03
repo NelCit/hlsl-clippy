@@ -78,6 +78,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/startvertexlocation-not-vs-input.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/startvertexlocation-not-vs-input.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

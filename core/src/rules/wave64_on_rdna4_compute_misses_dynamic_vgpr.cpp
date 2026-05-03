@@ -15,17 +15,17 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
 #include "rules/util/reflect_stage.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 constexpr std::string_view k_rule_id = "wave64-on-rdna4-compute-misses-dynamic-vgpr";
@@ -76,4 +76,4 @@ std::unique_ptr<Rule> make_wave64_on_rdna4_compute_misses_dynamic_vgpr() {
     return std::make_unique<Wave64OnRdna4ComputeMissesDynamicVgpr>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

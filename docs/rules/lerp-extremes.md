@@ -59,7 +59,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Replacing `lerp(a, b, 0.0)` with `a` and `lerp(a, b, 1.0)` with `b` are pure textual substitutions with no observable semantic change for finite inputs. `hlsl-clippy fix` applies both variants automatically.
+**machine-applicable** — Replacing `lerp(a, b, 0.0)` with `a` and `lerp(a, b, 1.0)` with `b` are pure textual substitutions with no observable semantic change for finite inputs. `shader-clippy fix` applies both variants automatically.
 
 ## See also
 
@@ -69,6 +69,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/lerp-extremes.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/lerp-extremes.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

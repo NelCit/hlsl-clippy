@@ -1,6 +1,6 @@
 # Architecture
 
-A high-level guide to the `hlsl-clippy` internals for new contributors. For the full phase plan see [ROADMAP](../ROADMAP.md).
+A high-level guide to the `shader-clippy` internals for new contributors. For the full phase plan see [ROADMAP](../ROADMAP.md).
 
 ## Pipeline
 
@@ -22,7 +22,7 @@ Owns the canonical UTF-8 buffer for every file in the lint session. All componen
 
 ### tree-sitter parse
 
-`tree-sitter-hlsl` produces a concrete syntax tree from the source buffer. The tree covers every token — including comments, which carry the inline suppression annotations (`// hlsl-clippy: allow(...)`). The parse is incremental: when the LSP server receives a file-change notification, only the changed region is re-parsed. Each node carries a byte-range `[start, end)` that maps directly into `SourceManager`'s buffer.
+`tree-sitter-hlsl` produces a concrete syntax tree from the source buffer. The tree covers every token — including comments, which carry the inline suppression annotations (`// shader-clippy: allow(...)`). The parse is incremental: when the LSP server receives a file-change notification, only the changed region is re-parsed. Each node carries a byte-range `[start, end)` that maps directly into `SourceManager`'s buffer.
 
 The tree is the primary substrate for Phase 2 (AST-only) rules. It is also the span source for all later phases: even when a rule fires on a Slang reflection property, the diagnostic span points to the tree-sitter node that corresponds to the offending source construct.
 
@@ -61,7 +61,7 @@ Diagnostic {
 }
 ```
 
-A `Fix` is a list of `TextEdit` values (offset, length, replacement string), enough for a range-based source rewriter. Machine-applicable fixes are applied by `hlsl-clippy fix`; suggestion-level fixes are shown but not auto-applied.
+A `Fix` is a list of `TextEdit` values (offset, length, replacement string), enough for a range-based source rewriter. Machine-applicable fixes are applied by `shader-clippy fix`; suggestion-level fixes are shown but not auto-applied.
 
 ### Output formatters
 

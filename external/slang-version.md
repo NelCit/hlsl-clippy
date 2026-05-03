@@ -9,7 +9,7 @@ GitHub release page: <https://github.com/shader-slang/slang/releases/tag/v2026.7
 This version is pinned in `cmake/SlangVersion.cmake`:
 
 ```cmake
-set(HLSL_CLIPPY_SLANG_VERSION "2026.7.1" ...)
+set(SHADER_CLIPPY_SLANG_VERSION "2026.7.1" ...)
 ```
 
 ## How Slang reaches the build
@@ -25,15 +25,15 @@ Resolution order in `cmake/UseSlang.cmake`:
    need a custom Slang build).
 2. **Per-user prebuilt cache** — populated by
    `tools/fetch-slang.{sh,ps1}`. Cache root:
-   - Windows: `%LOCALAPPDATA%/hlsl-clippy/slang/<version>/`
-   - Linux/macOS: `$HOME/.cache/hlsl-clippy/slang/<version>/`
+   - Windows: `%LOCALAPPDATA%/shader-clippy/slang/<version>/`
+   - Linux/macOS: `$HOME/.cache/shader-clippy/slang/<version>/`
 
 If neither resolves, the configure step fails with a `FATAL_ERROR`
 that prints the exact `tools/fetch-slang.{sh,ps1}` command to run.
 
 ## Bumping the Slang version
 
-1. Edit `HLSL_CLIPPY_SLANG_VERSION` in `cmake/SlangVersion.cmake`.
+1. Edit `SHADER_CLIPPY_SLANG_VERSION` in `cmake/SlangVersion.cmake`.
    The fetch scripts parse this line with a regex; keep it on one
    line and quoted.
 2. Run `tools/fetch-slang.{sh,ps1}` locally to populate the new

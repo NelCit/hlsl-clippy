@@ -54,7 +54,7 @@ cbuffer HugeFixed : register(b3) {
 
 - `threshold-bytes` (integer, default: `4096`) — fire when the cbuffer's total byte size exceeds this value. Set higher (e.g., `8192`) to tolerate larger cbuffers in projects that deliberately use a mega-cbuffer pattern, or lower (e.g., `256`) to enforce tighter constant budgets.
 
-  Example in `.hlsl-clippy.toml`:
+  Example in `.shader-clippy.toml`:
   ```toml
   [rules.oversized-cbuffer]
   threshold-bytes = 2048
@@ -62,7 +62,7 @@ cbuffer HugeFixed : register(b3) {
 
 ## Fix availability
 
-**suggestion** — Reducing cbuffer size typically requires moving data to a different resource type (e.g., `StructuredBuffer`, `Texture1D`) or splitting the cbuffer across multiple bind points. These changes cross file and API boundaries and require human verification. `hlsl-clippy fix` does not apply a fix automatically.
+**suggestion** — Reducing cbuffer size typically requires moving data to a different resource type (e.g., `StructuredBuffer`, `Texture1D`) or splitting the cbuffer across multiple bind points. These changes cross file and API boundaries and require human verification. `shader-clippy fix` does not apply a fix automatically.
 
 ## See also
 
@@ -74,6 +74,6 @@ cbuffer HugeFixed : register(b3) {
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/oversized-cbuffer.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/oversized-cbuffer.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

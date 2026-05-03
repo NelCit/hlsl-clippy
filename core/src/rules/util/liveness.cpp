@@ -36,12 +36,12 @@
 #include <tree_sitter/api.h>
 
 #include "control_flow/cfg_storage.hpp"
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 
-namespace hlsl_clippy::util {
+namespace shader_clippy::util {
 
 namespace {
 
@@ -890,4 +890,4 @@ LivenessInfo compute_liveness(const ControlFlowInfo& cfg, const AstTree& tree) {
     return result;
 }
 
-}  // namespace hlsl_clippy::util
+}  // namespace shader_clippy::util

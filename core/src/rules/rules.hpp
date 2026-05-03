@@ -6,9 +6,9 @@
 
 #include <memory>
 
-#include "hlsl_clippy/rule.hpp"
+#include "shader_clippy/rule.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 
 [[nodiscard]] std::unique_ptr<Rule> make_pow_const_squared();
 [[nodiscard]] std::unique_ptr<Rule> make_redundant_saturate();
@@ -246,4 +246,4 @@ namespace hlsl_clippy::rules {
 [[nodiscard]] std::unique_ptr<Rule> make_slang_module_import_without_use();
 [[nodiscard]] std::unique_ptr<Rule> make_slang_associatedtype_shadowing_builtin();
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

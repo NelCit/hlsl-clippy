@@ -23,15 +23,15 @@
 #include <cstdint>
 #include <vector>
 
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 class AstTree;          // forward declaration; defined in `parser_internal.hpp`.
 struct ReflectionInfo;  // forward declaration; defined in `reflection.hpp`.
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy
 
-namespace hlsl_clippy::util {
+namespace shader_clippy::util {
 
 struct LivenessInfo;  // forward declaration; defined in `liveness.hpp`.
 
@@ -64,4 +64,4 @@ struct PressureEstimate {
                                                               const ReflectionInfo* reflection,
                                                               std::uint32_t threshold);
 
-}  // namespace hlsl_clippy::util
+}  // namespace shader_clippy::util

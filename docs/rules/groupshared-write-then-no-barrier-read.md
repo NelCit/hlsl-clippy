@@ -82,6 +82,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/groupshared-write-then-no-barrier-read.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/groupshared-write-then-no-barrier-read.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

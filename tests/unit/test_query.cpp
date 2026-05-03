@@ -9,7 +9,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/source.hpp"
 #include "query/query.hpp"
 
 #include "parser_internal.hpp"
@@ -20,13 +20,13 @@ const ::TSLanguage* tree_sitter_hlsl(void);
 
 namespace {
 
-using hlsl_clippy::query::Query;
-using hlsl_clippy::query::QueryEngine;
-using hlsl_clippy::query::QueryMatch;
+using shader_clippy::query::Query;
+using shader_clippy::query::QueryEngine;
+using shader_clippy::query::QueryMatch;
 
-[[nodiscard]] hlsl_clippy::SourceManager make_sources(const std::string& hlsl,
-                                                      hlsl_clippy::SourceId& src_out) {
-    hlsl_clippy::SourceManager sm;
+[[nodiscard]] shader_clippy::SourceManager make_sources(const std::string& hlsl,
+                                                      shader_clippy::SourceId& src_out) {
+    shader_clippy::SourceManager sm;
     src_out = sm.add_buffer("synthetic.hlsl", hlsl);
     REQUIRE(src_out.valid());
     return sm;
@@ -46,12 +46,12 @@ TEST_CASE("Query::compile accepts a simple call-expression pattern", "[query]") 
 }
 
 TEST_CASE("QueryEngine::run iterates every match in source order", "[query]") {
-    hlsl_clippy::SourceId src{};
+    shader_clippy::SourceId src{};
     const std::string hlsl =
         "float3 f(float3 c) { return saturate(saturate(c)); }\n"
         "float3 g(float3 d) { return saturate(d); }\n";
     auto sm = make_sources(hlsl, src);
-    auto parsed_opt = hlsl_clippy::parser::parse(sm, src);
+    auto parsed_opt = shader_clippy::parser::parse(sm, src);
     REQUIRE(parsed_opt.has_value());
     const auto& parsed = parsed_opt.value();
 
@@ -80,10 +80,10 @@ TEST_CASE("QueryEngine::run iterates every match in source order", "[query]") {
 }
 
 TEST_CASE("QueryMatch::capture returns null for missing names", "[query]") {
-    hlsl_clippy::SourceId src{};
+    shader_clippy::SourceId src{};
     const std::string hlsl = "float3 f(float3 c) { return saturate(c); }\n";
     auto sm = make_sources(hlsl, src);
-    auto parsed_opt = hlsl_clippy::parser::parse(sm, src);
+    auto parsed_opt = shader_clippy::parser::parse(sm, src);
     REQUIRE(parsed_opt.has_value());
     const auto& parsed = parsed_opt.value();
 

@@ -70,7 +70,7 @@ threshold-bytes = 32768
 
 ## Fix availability
 
-**none** — Reducing groupshared usage requires algorithmic restructuring (tiling, packing, or eliminating cross-thread data sharing), which cannot be automated. The diagnostic reports the total computed size and the threshold. Add `// hlsl-clippy: allow(groupshared-too-large)` to suppress the diagnostic when a large LDS allocation is intentional and the occupancy trade-off is accepted by the author.
+**none** — Reducing groupshared usage requires algorithmic restructuring (tiling, packing, or eliminating cross-thread data sharing), which cannot be automated. The diagnostic reports the total computed size and the threshold. Add `// shader-clippy: allow(groupshared-too-large)` to suppress the diagnostic when a large LDS allocation is intentional and the occupancy trade-off is accepted by the author.
 
 ## See also
 
@@ -81,6 +81,6 @@ threshold-bytes = 32768
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/groupshared-too-large.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/groupshared-too-large.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

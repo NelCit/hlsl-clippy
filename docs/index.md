@@ -1,7 +1,7 @@
 ---
 layout: home
 hero:
-  name: "hlsl-clippy"
+  name: "shader-clippy"
   tagline: "Performance + correctness rules for HLSL — beyond what dxc catches"
   actions:
     - theme: brand
@@ -9,7 +9,7 @@ hero:
       link: /rules/
     - theme: alt
       text: Read on GitHub
-      link: https://github.com/NelCit/hlsl-clippy
+      link: https://github.com/NelCit/shader-clippy
 features:
   - title: 154 rules across 5 phases
     details: AST-only math + redundancy, reflection-aware bindings, CFG-aware divergence, SM 6.7 / 6.8 / 6.9 surfaces.

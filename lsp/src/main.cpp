@@ -1,4 +1,4 @@
-// hlsl-clippy-lsp entry point.
+// shader-clippy-lsp entry point.
 //
 // stdio transport (the canonical transport VS Code uses to spawn LSP
 // servers). Read framed JSON-RPC messages from stdin; dispatch via
@@ -27,28 +27,28 @@
 namespace {
 
 void write_framed(std::ostream& out, const std::string& body) {
-    out << hlsl_clippy::lsp::rpc::frame_message(body);
+    out << shader_clippy::lsp::rpc::frame_message(body);
     out.flush();
 }
 
 [[nodiscard]] int run_server(std::istream& in, std::ostream& out) {
-    hlsl_clippy::lsp::rpc::JsonRpcDispatcher dispatcher;
-    hlsl_clippy::lsp::document::DocumentManager docs;
+    shader_clippy::lsp::rpc::JsonRpcDispatcher dispatcher;
+    shader_clippy::lsp::document::DocumentManager docs;
 
     auto sink = [&out](const nlohmann::json& envelope) { write_framed(out, envelope.dump()); };
 
-    hlsl_clippy::lsp::server::Server server(dispatcher, docs, sink);
+    shader_clippy::lsp::server::Server server(dispatcher, docs, sink);
     server.register_handlers();
 
     while (!server.should_exit()) {
-        const auto msg = hlsl_clippy::lsp::rpc::read_message(in);
-        if (msg.status == hlsl_clippy::lsp::rpc::FramingStatus::EndOfStream) {
+        const auto msg = shader_clippy::lsp::rpc::read_message(in);
+        if (msg.status == shader_clippy::lsp::rpc::FramingStatus::EndOfStream) {
             // Lost stdin without a clean `exit` — treat as abnormal exit per
             // LSP §"exit Notification": exit code 1 unless `shutdown` was
             // already received.
             break;
         }
-        if (msg.status != hlsl_clippy::lsp::rpc::FramingStatus::Ok) {
+        if (msg.status != shader_clippy::lsp::rpc::FramingStatus::Ok) {
             // Framing error — ignore the malformed message and try to
             // continue. A persistently broken stream will eventually hit
             // the EndOfStream branch above.
@@ -85,20 +85,20 @@ int main() {
 #if defined(_WIN32)
         std::ios_base::sync_with_stdio(false);
         if (_setmode(_fileno(stdin), _O_BINARY) == -1) {
-            std::cerr << "hlsl-clippy-lsp: failed to switch stdin to binary mode\n";
+            std::cerr << "shader-clippy-lsp: failed to switch stdin to binary mode\n";
             return 1;
         }
         if (_setmode(_fileno(stdout), _O_BINARY) == -1) {
-            std::cerr << "hlsl-clippy-lsp: failed to switch stdout to binary mode\n";
+            std::cerr << "shader-clippy-lsp: failed to switch stdout to binary mode\n";
             return 1;
         }
 #endif
         return run_server(std::cin, std::cout);
     } catch (const std::exception& ex) {
-        std::cerr << "hlsl-clippy-lsp: fatal: " << ex.what() << '\n';
+        std::cerr << "shader-clippy-lsp: fatal: " << ex.what() << '\n';
         return 1;
     } catch (...) {
-        std::cerr << "hlsl-clippy-lsp: fatal: unknown exception\n";
+        std::cerr << "shader-clippy-lsp: fatal: unknown exception\n";
         return 1;
     }
 }

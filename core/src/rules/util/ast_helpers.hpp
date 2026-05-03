@@ -11,7 +11,7 @@
 // empty `std::string_view` instead of crashing keeps the rule pack robust on
 // the corpus's deliberately malformed fixtures.
 //
-// All helpers live in `hlsl_clippy::rules::util` so call sites read as
+// All helpers live in `shader_clippy::rules::util` so call sites read as
 // `util::node_kind(...)`, matching the existing `util::reflect_stage` /
 // `util::cfg_query` conventions from sub-phases 3b / 4b.
 
@@ -21,7 +21,7 @@
 
 #include <tree_sitter/api.h>
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 /// Symbolic node type as a `string_view`, e.g. `"call_expression"`. Returns an
 /// empty view for null nodes or when tree-sitter reports a null type pointer.
@@ -38,4 +38,4 @@ namespace hlsl_clippy::rules::util {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
 }
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

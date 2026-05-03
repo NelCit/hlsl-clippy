@@ -37,7 +37,7 @@ cleanly the hardware treats as a contract violation, and the visual
 symptom is something between "intermittent missing geometry" and
 "device removed".
 
-This is the family of bugs `hlsl-clippy`'s mesh and DXR rules target.
+This is the family of bugs `shader-clippy`'s mesh and DXR rules target.
 The mesh-pipeline rules are well-developed; five of them ship in v0.5
 and cover the largest mesh-shader footguns: the per-group thread cap,
 the per-group output declaration cap, the amplification payload cap,
@@ -270,7 +270,7 @@ enough to be useful as a CI gate today. The DXR side is honestly
 thin and grows over the next two releases.
 
 ```sh
-hlsl-clippy lint --format=github-annotations shaders/mesh
+shader-clippy lint --format=github-annotations shaders/mesh
 ```
 
 Per-rule severity, suppression, and `--fix` rewrites work the same
@@ -282,7 +282,7 @@ correctness bug). Per-line suppression follows the project-wide
 convention:
 
 ```hlsl
-DispatchMesh(0, 1, 1, p); // hlsl-clippy: allow(dispatchmesh-not-called)
+DispatchMesh(0, 1, 1, p); // shader-clippy: allow(dispatchmesh-not-called)
 ```
 
 Use it in CI to catch the failures before they hit the device. If
@@ -294,9 +294,9 @@ the next priority for the v0.6 release.
 
 ---
 
-`hlsl-clippy` is an open-source HLSL linter. Rules, issues, and
+`shader-clippy` is an open-source HLSL + Slang linter. Rules, issues, and
 discussion live at
-[github.com/NelCit/hlsl-clippy](https://github.com/NelCit/hlsl-clippy).
+[github.com/NelCit/shader-clippy](https://github.com/NelCit/shader-clippy).
 If you have encountered a shader pattern that should be a lint rule,
 open an issue.
 

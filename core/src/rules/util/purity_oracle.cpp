@@ -26,7 +26,7 @@
 
 #include "parser_internal.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 namespace {
 
@@ -215,4 +215,4 @@ Purity classify_expression(const AstTree& tree, ::TSNode expr) noexcept {
     return classify_recursive(tree.source_bytes(), expr);
 }
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

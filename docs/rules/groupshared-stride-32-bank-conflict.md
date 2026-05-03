@@ -77,6 +77,6 @@ void cs_transpose_padded(uint3 dtid : SV_DispatchThreadID, uint gi : SV_GroupInd
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/groupshared-stride-32-bank-conflict.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/groupshared-stride-32-bank-conflict.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

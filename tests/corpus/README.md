@@ -1,6 +1,6 @@
-# hlsl-clippy Test Corpus
+# shader-clippy Test Corpus
 
-This directory contains a curated set of real, publicly licensed HLSL shaders used as the validation set for hlsl-clippy's linting rules. All shaders are sourced verbatim (or with only a mandatory header comment prepended) from open-source repositories under permissive licenses.
+This directory contains a curated set of real, publicly licensed HLSL shaders used as the validation set for shader-clippy's linting rules. All shaders are sourced verbatim (or with only a mandatory header comment prepended) from open-source repositories under permissive licenses.
 
 > **Canonical per-shader registry:** [`SOURCES.md`](SOURCES.md) is the authoritative
 > provenance and license table for every file in this corpus, per ADR 0006. The inventory

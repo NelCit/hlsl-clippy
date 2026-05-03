@@ -26,23 +26,23 @@
 // (typically < 100 entries per lint run) so std::map is fine here.
 #if defined(__cpp_lib_flat_map) && __cpp_lib_flat_map >= 202207L
 #include <flat_map>
-namespace hlsl_clippy::reflection::detail {
+namespace shader_clippy::reflection::detail {
 template<typename K, typename V>
 using ReflectionCacheMap = std::flat_map<K, V>;
-}  // namespace hlsl_clippy::reflection::detail
+}  // namespace shader_clippy::reflection::detail
 #else
 #include <map>
-namespace hlsl_clippy::reflection::detail {
+namespace shader_clippy::reflection::detail {
 template<typename K, typename V>
 using ReflectionCacheMap = std::map<K, V>;
-}  // namespace hlsl_clippy::reflection::detail
+}  // namespace shader_clippy::reflection::detail
 #endif
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::reflection {
+namespace shader_clippy::reflection {
 
 class SlangBridge;
 
@@ -83,4 +83,4 @@ private:
     detail::ReflectionCacheMap<CacheKey, std::shared_ptr<const ReflectionInfo>> cache_;
 };
 
-}  // namespace hlsl_clippy::reflection
+}  // namespace shader_clippy::reflection

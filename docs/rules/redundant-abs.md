@@ -77,7 +77,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Dropping `abs` from any of the three matched patterns is a pure textual substitution with no observable semantic change. For `x * x`: IEEE 754 guarantees that a finite float squared is non-negative (negative zero squares to positive zero). For `dot(v, v)`: the result is a sum of squares, always non-negative. For `saturate(expr)`: the output is clamped to [0, 1]. `hlsl-clippy fix` applies it automatically.
+**machine-applicable** — Dropping `abs` from any of the three matched patterns is a pure textual substitution with no observable semantic change. For `x * x`: IEEE 754 guarantees that a finite float squared is non-negative (negative zero squares to positive zero). For `dot(v, v)`: the result is a sum of squares, always non-negative. For `saturate(expr)`: the output is clamped to [0, 1]. `shader-clippy fix` applies it automatically.
 
 ## See also
 
@@ -88,6 +88,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/redundant-abs.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/redundant-abs.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

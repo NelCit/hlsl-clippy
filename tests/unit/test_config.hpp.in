@@ -3,8 +3,8 @@
 
 #include <string_view>
 
-namespace hlsl_clippy::test {
+namespace shader_clippy::test {
 
-inline constexpr std::string_view k_fixtures_dir = "@HLSL_CLIPPY_FIXTURES_DIR@";
+inline constexpr std::string_view k_fixtures_dir = "@SHADER_CLIPPY_FIXTURES_DIR@";
 
-}  // namespace hlsl_clippy::test
+}  // namespace shader_clippy::test

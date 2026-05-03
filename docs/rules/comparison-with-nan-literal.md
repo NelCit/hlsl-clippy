@@ -68,11 +68,11 @@ bool nan_literal_compare_fixed(float x) {
 none — this rule has no configurable thresholds. To silence it on a specific call site, use inline suppression:
 
 ```hlsl
-// hlsl-clippy: allow(comparison-with-nan-literal)
+// shader-clippy: allow(comparison-with-nan-literal)
 return x < (0.0 / 0.0);
 ```
 
-To silence it project-wide, add to `.hlsl-clippy.toml`:
+To silence it project-wide, add to `.shader-clippy.toml`:
 
 ```toml
 [rules]
@@ -81,7 +81,7 @@ comparison-with-nan-literal = "allow"
 
 ## Fix availability
 
-**machine-applicable** — When the comparison is provably constant-false (ordered comparison against a NaN literal), `hlsl-clippy fix` replaces the entire comparison expression with `false`. When the comparison is provably constant-true (unordered comparison), it is replaced with `true`. The surrounding control flow is not restructured automatically; dead branches produced by this substitution are candidates for the `dead-code-branch` rule (Phase 4).
+**machine-applicable** — When the comparison is provably constant-false (ordered comparison against a NaN literal), `shader-clippy fix` replaces the entire comparison expression with `false`. When the comparison is provably constant-true (unordered comparison), it is replaced with `true`. The surrounding control flow is not restructured automatically; dead branches produced by this substitution are candidates for the `dead-code-branch` rule (Phase 4).
 
 ## See also
 
@@ -93,4 +93,4 @@ comparison-with-nan-literal = "allow"
 
 *© 2026 NelCit, CC-BY-4.0.*
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/comparison-with-nan-literal.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/comparison-with-nan-literal.md)

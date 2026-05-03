@@ -1,5 +1,5 @@
 // Phase 7 — packed math / fp16 rules (SM 6.4+ / SM 6.6+).
-// Hand-written fixture for hlsl-clippy rule validation.
+// Hand-written fixture for shader-clippy rule validation.
 // Convention: `// HIT(rule-id): reason` on offending lines.
 // `// SHOULD-NOT-HIT(rule-id): reason` on near-miss lines that must NOT fire.
 

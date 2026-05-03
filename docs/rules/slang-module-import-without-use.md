@@ -10,8 +10,8 @@ language_applicability:
 references:
   - title: "Slang User's Guide -- Modules and Imports"
     url: "https://shader-slang.com/slang/user-guide/modules.html"
-  - title: "hlsl-clippy unused-cbuffer-field rule"
-    url: "https://nelcit.github.io/hlsl-clippy/rules/unused-cbuffer-field.html"
+  - title: "shader-clippy unused-cbuffer-field rule"
+    url: "https://nelcit.github.io/shader-clippy/rules/unused-cbuffer-field.html"
 ---
 
 # slang-module-import-without-use
@@ -95,4 +95,4 @@ expected to verify before applying.
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/slang-module-import-without-use.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/slang-module-import-without-use.md)

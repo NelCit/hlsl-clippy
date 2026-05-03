@@ -16,10 +16,10 @@
 
 #include <string_view>
 
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 /// True when the oracle classifies `expr_span` as `Uniformity::Uniform`.
 /// Returns `false` for `LoopInvariant` (use `is_loop_invariant` for that
@@ -54,4 +54,4 @@ namespace hlsl_clippy::rules::util {
 /// list `uniformity_analyzer.cpp` uses.
 [[nodiscard]] bool is_inherently_divergent_semantic(std::string_view sv_semantic_name) noexcept;
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

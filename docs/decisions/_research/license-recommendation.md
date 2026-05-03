@@ -1,11 +1,11 @@
 <!--
 date: 2026-04-30
-prompt-summary: pick the going-forward license for hlsl-clippy code, test corpus, fixtures, and documentation; weigh CLA vs DCO; assess naming / branding / trademark risk; recommend distribution-surface and marketing posture.
+prompt-summary: pick the going-forward license for shader-clippy code, test corpus, fixtures, and documentation; weigh CLA vs DCO; assess naming / branding / trademark risk; recommend distribution-surface and marketing posture.
 preserved-verbatim: yes — see ../0006-license-apache-2-0.md for the distilled decision.
 follow-up: the LICENSE file at the repo root currently still shows MIT. Replacing it with the verbatim Apache-2.0 text is a separate task tracked in ROADMAP.md "Licensing".
 -->
 
-# hlsl-clippy license + branding recommendation
+# shader-clippy license + branding recommendation
 
 Primary recommendation: Apache License 2.0 for the code, CC-BY-4.0 for prose, project license for fixtures, DCO for contributions.
 
@@ -47,7 +47,7 @@ For "Anthropic / IHV interest later" growth, DCO is the safer reputation move. C
 
 ## 6. Trademark, naming, branding
 
-Risk: low. Don't change the name. HLSL is descriptive; tools like dxc, glslang, naga coexist. Clippy-as-meme has rust-clippy precedent (2014, no Microsoft action). hlsl-clippy is homage, not impersonation.
+Risk: low. Don't change the name. HLSL is descriptive; tools like dxc, glslang, naga coexist. Clippy-as-meme has rust-clippy precedent (2014, no Microsoft action). shader-clippy is homage, not impersonation.
 
 Don't register a trademark now (USPTO ~$350/class + attorney + premature for pre-v0). Keep the name.
 
@@ -61,6 +61,6 @@ Don't register a trademark now (USPTO ~$350/class + attorney + premature for pre
 
 README badges: build · license: Apache-2.0 · version · sponsors. Skip "PRs welcome" badge.
 
-"Why this license?" blurb in CONTRIBUTING.md (paraphrase): hlsl-clippy is Apache-2.0 because Slang is Apache-2.0, because patent grants matter for tools in GPU-compilation territory, because Apache-2.0 is the friction-free choice for game-engine and IHV consumers. Contributions accepted under DCO — no CLA.
+"Why this license?" blurb in CONTRIBUTING.md (paraphrase): shader-clippy is Apache-2.0 because Slang is Apache-2.0, because patent grants matter for tools in GPU-compilation territory, because Apache-2.0 is the friction-free choice for game-engine and IHV consumers. Contributions accepted under DCO — no CLA.
 
 Funding: GitHub Sponsors primary. Open Collective optional. Skip Patreon (off-brand for dev tool).

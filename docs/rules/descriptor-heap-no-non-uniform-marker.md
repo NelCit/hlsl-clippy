@@ -60,7 +60,7 @@ none
 
 ## Fix availability
 
-**suggestion** — Wrapping the index in `NonUniformResourceIndex(...)` is a one-line textual change, but `hlsl-clippy` cannot be certain the index is divergent in all call contexts (it may be uniform at some call sites). The fix is suggested with a note that it is correct to add the marker even on uniform indices (it may slow uniform paths slightly on some drivers, but it is never incorrect).
+**suggestion** — Wrapping the index in `NonUniformResourceIndex(...)` is a one-line textual change, but `shader-clippy` cannot be certain the index is divergent in all call contexts (it may be uniform at some call sites). The fix is suggested with a note that it is correct to add the marker even on uniform indices (it may slow uniform paths slightly on some drivers, but it is never incorrect).
 
 ## See also
 
@@ -72,6 +72,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/descriptor-heap-no-non-uniform-marker.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/descriptor-heap-no-non-uniform-marker.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

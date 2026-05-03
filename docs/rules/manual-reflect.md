@@ -50,7 +50,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Replacing the manual formula with `reflect(v, n)` is a pure textual substitution. The HLSL specification defines `reflect(i, n)` as `i - 2 * dot(n, i) * n`, matching the pattern exactly. `hlsl-clippy fix` applies it automatically.
+**machine-applicable** — Replacing the manual formula with `reflect(v, n)` is a pure textual substitution. The HLSL specification defines `reflect(i, n)` as `i - 2 * dot(n, i) * n`, matching the pattern exactly. `shader-clippy fix` applies it automatically.
 
 ## See also
 
@@ -59,6 +59,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/manual-reflect.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/manual-reflect.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

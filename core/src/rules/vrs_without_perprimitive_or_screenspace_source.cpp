@@ -16,14 +16,14 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 constexpr std::string_view k_rule_id = "vrs-without-perprimitive-or-screenspace-source";
@@ -88,4 +88,4 @@ std::unique_ptr<Rule> make_vrs_without_perprimitive_or_screenspace_source() {
     return std::make_unique<VrsWithoutPerPrimitiveOrScreenSpaceSource>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

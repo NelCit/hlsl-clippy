@@ -39,14 +39,14 @@
 #include <tree_sitter/api.h>
 
 #include "control_flow/cfg_storage.hpp"
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "rules/util/liveness.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 
-namespace hlsl_clippy::util {
+namespace shader_clippy::util {
 
 namespace {
 
@@ -439,4 +439,4 @@ std::vector<PressureEstimate> estimate_pressure(const ControlFlowInfo& cfg,
     return result;
 }
 
-}  // namespace hlsl_clippy::util
+}  // namespace shader_clippy::util

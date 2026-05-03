@@ -33,17 +33,17 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/config.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "query/query.hpp"
 #include "rules/util/purity_oracle.hpp"
+#include "shader_clippy/config.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 
 namespace {
 
@@ -83,7 +83,7 @@ constexpr std::string_view k_pattern = R"(
 }
 
 /// Render a float as a HLSL-grammar-valid literal with `f` suffix. We aim
-/// for a spelling the user will recognise in their `.hlsl-clippy.toml`:
+/// for a spelling the user will recognise in their `.shader-clippy.toml`:
 ///   * the default `compare_epsilon` (1e-4) renders as `0.0001f`;
 ///   * the default `div_epsilon` (1e-6) renders as `1e-06f`;
 ///   * other values fall through to a precision-7 rendering (one short of
@@ -250,4 +250,4 @@ std::unique_ptr<Rule> make_compare_equal_float() {
     return std::make_unique<CompareEqualFloat>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

@@ -75,7 +75,7 @@ none
 
 ## Fix availability
 
-**suggestion** — The rule proposes replacing `Sample(s, uv).r < ref` with `SampleCmp(cmpSampler, uv, ref)`. Because this change requires swapping the `SamplerState` binding for a `SamplerComparisonState` and updating the root signature on the CPU side, `hlsl-clippy fix` shows a candidate edit but does not apply it automatically. Verify the sampler binding before accepting the suggestion.
+**suggestion** — The rule proposes replacing `Sample(s, uv).r < ref` with `SampleCmp(cmpSampler, uv, ref)`. Because this change requires swapping the `SamplerState` binding for a `SamplerComparisonState` and updating the root signature on the CPU side, `shader-clippy fix` shows a candidate edit but does not apply it automatically. Verify the sampler binding before accepting the suggestion.
 
 ## See also
 
@@ -86,6 +86,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/samplecmp-vs-manual-compare.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/samplecmp-vs-manual-compare.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

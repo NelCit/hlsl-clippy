@@ -24,7 +24,7 @@ has hardware-defined consequences, and helper lanes are not a polite
 fiction the framebuffer cleans up afterwards — they are real lanes that
 consume real cycles and participate in real cross-lane operations.
 
-The control-flow rule pack in `hlsl-clippy` exists to surface the patterns
+The control-flow rule pack in `shader-clippy` exists to surface the patterns
 that go wrong when shader authors think in scalar threads instead of waves.
 Twenty-one rules, all rooted in mechanics that are documented in the DXIL
 spec, the AMD RDNA ISA reference, and the NVIDIA PTX manual — but rarely
@@ -273,7 +273,7 @@ The static-analysis layer that closes this gap builds a control-flow
 graph over the tree-sitter AST, runs a uniformity oracle over the CFG,
 and reasons about helper-lane state and barrier reachability path-
 sensitively. Infrastructure is documented in
-[ADR 0013](https://github.com/NelCit/hlsl-clippy/blob/main/docs/decisions/0013-phase-4-control-flow-infrastructure.md);
+[ADR 0013](https://github.com/NelCit/shader-clippy/blob/main/docs/decisions/0013-phase-4-control-flow-infrastructure.md);
 the rule pages explain the surface.
 
 ## Run the control-flow rules on your shaders
@@ -297,8 +297,8 @@ rule pack is designed to close.
 
 ---
 
-`hlsl-clippy` is open source. Rules, issues, and discussion live at
-[github.com/NelCit/hlsl-clippy](https://github.com/NelCit/hlsl-clippy).
+`shader-clippy` is open source. Rules, issues, and discussion live at
+[github.com/NelCit/shader-clippy](https://github.com/NelCit/shader-clippy).
 If you have encountered a control-flow pattern that should be a lint
 rule, open an issue.
 

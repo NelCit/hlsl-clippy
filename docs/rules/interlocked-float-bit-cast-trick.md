@@ -70,6 +70,6 @@ void update_min_depth_native(uint slot, float depth) {
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/interlocked-float-bit-cast-trick.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/interlocked-float-bit-cast-trick.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

@@ -108,7 +108,7 @@ source line of the second sample; the fix is a one-line change.
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/redundant-texture-sample.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/redundant-texture-sample.md)
 
 ---
 

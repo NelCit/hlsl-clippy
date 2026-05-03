@@ -94,7 +94,7 @@ uint fast_dot4_accumulate(uint a, uint b, uint acc) {
 **suggestion** — The rewrite to `dot4add_u8packed` is correct only when the
 accumulator initial value is zero (or when it is the `acc` parameter of a
 multi-tap accumulation). The rule proposes the substitution and requests
-confirmation; `hlsl-clippy fix` applies it with the accumulator set to `0u`
+confirmation; `shader-clippy fix` applies it with the accumulator set to `0u`
 unless the surrounding code already provides one.
 
 ## See also
@@ -108,7 +108,7 @@ unless the surrounding code already provides one.
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/dot4add-opportunity.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/dot4add-opportunity.md)
 
 ---
 

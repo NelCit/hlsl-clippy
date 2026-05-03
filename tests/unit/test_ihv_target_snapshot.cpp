@@ -37,27 +37,27 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "hlsl_clippy/config.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/config.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "test_config.hpp"
 
 namespace {
 
-using hlsl_clippy::Config;
-using hlsl_clippy::Diagnostic;
-using hlsl_clippy::ExperimentalTarget;
-using hlsl_clippy::lint;
-using hlsl_clippy::LintOptions;
-using hlsl_clippy::make_default_rules;
-using hlsl_clippy::Rule;
-using hlsl_clippy::SourceManager;
+using shader_clippy::Config;
+using shader_clippy::Diagnostic;
+using shader_clippy::ExperimentalTarget;
+using shader_clippy::lint;
+using shader_clippy::LintOptions;
+using shader_clippy::make_default_rules;
+using shader_clippy::Rule;
+using shader_clippy::SourceManager;
 
 [[nodiscard]] std::filesystem::path fixture_path() {
-    std::filesystem::path fixtures{std::string{hlsl_clippy::test::k_fixtures_dir}};
+    std::filesystem::path fixtures{std::string{shader_clippy::test::k_fixtures_dir}};
     return fixtures / "phase8" / "experimental_targets.hlsl";
 }
 
@@ -131,7 +131,7 @@ using hlsl_clippy::SourceManager;
 TEST_CASE("Default config emits zero IHV-target-gated diagnostics on the experimental fixture",
           "[ihv-target][snapshot][experimental]") {
     const auto diags = lint_under(ExperimentalTarget::None);
-    // Criterion #11 of ADR 0018 §5: default `.hlsl-clippy.toml` produces
+    // Criterion #11 of ADR 0018 §5: default `.shader-clippy.toml` produces
     // zero IHV-specific diagnostics. We allow other rules to fire (the
     // fixture is real HLSL and trips e.g. `numthreads-too-small` /
     // `dispatchmesh-grid-too-small-for-wave`) but no rule whose id encodes

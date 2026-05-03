@@ -16,8 +16,8 @@
 #        Darwin + x86_64  → macos-x86_64
 #      Override the resolved triple with `--triple <value>` when needed.
 #   3. Computes the cache target dir:
-#        $HOME/.cache/hlsl-clippy/slang/<version>/
-#      (or $HLSL_CLIPPY_SLANG_CACHE/<version>/ if that env var is set)
+#        $HOME/.cache/shader-clippy/slang/<version>/
+#      (or $SHADER_CLIPPY_SLANG_CACHE/<version>/ if that env var is set)
 #      The cache root is shared across Linux + macOS for cross-platform
 #      consistency with cmake/UseSlang.cmake's resolver.
 #   4. If that dir already has a non-empty include/ subdir, exits 0.
@@ -80,15 +80,15 @@ VERSION_FILE="$REPO_ROOT/cmake/SlangVersion.cmake"
 # --- Resolve pinned version ------------------------------------------------
 if [[ -z "$VERSION" ]]; then
     if [[ ! -f "$VERSION_FILE" ]]; then
-        echo "fetch-slang: cannot find $VERSION_FILE. Are you running this from a clone of hlsl-clippy?" >&2
+        echo "fetch-slang: cannot find $VERSION_FILE. Are you running this from a clone of shader-clippy?" >&2
         exit 1
     fi
-    # Match: set(HLSL_CLIPPY_SLANG_VERSION "X.Y.Z" ...)
-    VERSION="$(grep -oE 'HLSL_CLIPPY_SLANG_VERSION[[:space:]]+"[^"]+"' "$VERSION_FILE" \
+    # Match: set(SHADER_CLIPPY_SLANG_VERSION "X.Y.Z" ...)
+    VERSION="$(grep -oE 'SHADER_CLIPPY_SLANG_VERSION[[:space:]]+"[^"]+"' "$VERSION_FILE" \
         | head -n1 \
         | sed -E 's/.*"([^"]+)".*/\1/')"
     if [[ -z "$VERSION" ]]; then
-        echo "fetch-slang: failed to parse HLSL_CLIPPY_SLANG_VERSION from $VERSION_FILE" >&2
+        echo "fetch-slang: failed to parse SHADER_CLIPPY_SLANG_VERSION from $VERSION_FILE" >&2
         exit 1
     fi
 fi
@@ -138,13 +138,13 @@ fi
 echo "fetch-slang: target host triple   = $TRIPLE"
 
 # --- Resolve cache dir ------------------------------------------------------
-CACHE_ROOT="${HLSL_CLIPPY_SLANG_CACHE:-}"
+CACHE_ROOT="${SHADER_CLIPPY_SLANG_CACHE:-}"
 if [[ -z "$CACHE_ROOT" ]]; then
     if [[ -z "${HOME:-}" ]]; then
-        echo "fetch-slang: neither HLSL_CLIPPY_SLANG_CACHE nor HOME is set." >&2
+        echo "fetch-slang: neither SHADER_CLIPPY_SLANG_CACHE nor HOME is set." >&2
         exit 1
     fi
-    CACHE_ROOT="$HOME/.cache/hlsl-clippy/slang"
+    CACHE_ROOT="$HOME/.cache/shader-clippy/slang"
 fi
 CACHE_DIR="$CACHE_ROOT/$VERSION"
 
@@ -196,20 +196,20 @@ if [[ "$MAGIC" != "1f8b" ]]; then
 fi
 
 # --- SHA-256 verification (optional but strongly recommended) ---------------
-# When `HLSL_CLIPPY_SLANG_SHA256` is set, the downloaded tarball's hash MUST
+# When `SHADER_CLIPPY_SLANG_SHA256` is set, the downloaded tarball's hash MUST
 # match exactly. Mismatch → abort, leaving the cache untouched. Unset →
 # warn-and-continue (the gzip-magic check above is the only integrity gate).
 #
 # Per-triple expected hashes can also be supplied via
-# `HLSL_CLIPPY_SLANG_SHA256_<UPPER_TRIPLE_WITH_UNDERSCORES>`; e.g. for
-# the `linux-x86_64` tarball, set `HLSL_CLIPPY_SLANG_SHA256_LINUX_X86_64`.
+# `SHADER_CLIPPY_SLANG_SHA256_<UPPER_TRIPLE_WITH_UNDERSCORES>`; e.g. for
+# the `linux-x86_64` tarball, set `SHADER_CLIPPY_SLANG_SHA256_LINUX_X86_64`.
 # The per-triple variable wins over the generic one when both are set.
 EXPECTED_SHA256=""
-TRIPLE_VAR="HLSL_CLIPPY_SLANG_SHA256_$(echo "$TRIPLE" | tr 'a-z-' 'A-Z_')"
+TRIPLE_VAR="SHADER_CLIPPY_SLANG_SHA256_$(echo "$TRIPLE" | tr 'a-z-' 'A-Z_')"
 if [[ -n "${!TRIPLE_VAR:-}" ]]; then
     EXPECTED_SHA256="${!TRIPLE_VAR}"
-elif [[ -n "${HLSL_CLIPPY_SLANG_SHA256:-}" ]]; then
-    EXPECTED_SHA256="${HLSL_CLIPPY_SLANG_SHA256}"
+elif [[ -n "${SHADER_CLIPPY_SLANG_SHA256:-}" ]]; then
+    EXPECTED_SHA256="${SHADER_CLIPPY_SLANG_SHA256}"
 fi
 
 if [[ -n "$EXPECTED_SHA256" ]]; then
@@ -231,8 +231,8 @@ if [[ -n "$EXPECTED_SHA256" ]]; then
     fi
     echo "fetch-slang: SHA-256 verified ($ACTUAL_SHA256)"
 else
-    echo "fetch-slang: warning — no HLSL_CLIPPY_SLANG_SHA256 set; skipping integrity verification." >&2
-    echo "fetch-slang: set HLSL_CLIPPY_SLANG_SHA256_${TRIPLE_VAR#HLSL_CLIPPY_SLANG_SHA256_} for hardened CI." >&2
+    echo "fetch-slang: warning — no SHADER_CLIPPY_SLANG_SHA256 set; skipping integrity verification." >&2
+    echo "fetch-slang: set SHADER_CLIPPY_SLANG_SHA256_${TRIPLE_VAR#SHADER_CLIPPY_SLANG_SHA256_} for hardened CI." >&2
 fi
 
 # --- Extract ---------------------------------------------------------------

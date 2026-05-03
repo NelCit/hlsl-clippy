@@ -1,5 +1,5 @@
 // Phase 3 — realistic deferred tile-shading compute shader with deliberate rule firings.
-// Hand-written fixture for hlsl-clippy rule validation.
+// Hand-written fixture for shader-clippy rule validation.
 // Convention: `// HIT(rule-id): reason` on offending lines.
 
 // G-Buffer inputs.

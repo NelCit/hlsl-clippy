@@ -70,7 +70,7 @@ struct VsToPs {
 
 - `slot-budget` (integer, default: `16`) — fire when the total `TEXCOORDn` slot count of a vertex-output struct exceeds this value. Set to `8` for tighter mobile budgets (Adreno 7xx, Mali-G7xx) or `32` to match the absolute D3D12 SM6.x ceiling.
 
-  Example in `.hlsl-clippy.toml`:
+  Example in `.shader-clippy.toml`:
   ```toml
   [rules.excess-interpolators]
   slot-budget = 12
@@ -90,6 +90,6 @@ struct VsToPs {
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/excess-interpolators.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/excess-interpolators.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

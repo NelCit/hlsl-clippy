@@ -15,7 +15,7 @@ mismatch fails the workflow. The other surfaces are best-effort consistency
 — bump them in the same commit so reviewers can grep the bump trivially.
 
 - [ ] `core/src/version.cpp` — update the literal returned by
-      `hlsl_clippy::version()`. The CLI's `--version` reads through here.
+      `shader_clippy::version()`. The CLI's `--version` reads through here.
 - [ ] `vscode-extension/package.json` — `"version": "X.Y.Z"`. Must equal
       the tag (without the `v` prefix). CI fails fast if this drifts.
 - [ ] `CHANGELOG.md` — add a `## [X.Y.Z] — YYYY-MM-DD` heading with the
@@ -30,15 +30,15 @@ Format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 - [ ] Leave `## [Unreleased]` in place with empty `Added / Changed / Fixed
       / Deprecated` subsections so the next cycle has a place to land.
 - [ ] At the bottom of the file, append a comparison link:
-      `[X.Y.Z]: https://github.com/NelCit/hlsl-clippy/compare/vX.Y.W...vX.Y.Z`
+      `[X.Y.Z]: https://github.com/NelCit/shader-clippy/compare/vX.Y.W...vX.Y.Z`
 
 ## 3. Local clean build + tests
 
 - [ ] `cmake -B build --preset dev-release` (or `ci-msvc` on Windows)
 - [ ] `cmake --build build` — Release config, no warnings.
 - [ ] `ctest --test-dir build --output-on-failure` — all green.
-- [ ] `./build/cli/hlsl-clippy --version` prints the new version string.
-- [ ] `./build/lsp/hlsl-clippy-lsp --version` (or `--help` if no version
+- [ ] `./build/cli/shader-clippy --version` prints the new version string.
+- [ ] `./build/lsp/shader-clippy-lsp --version` (or `--help` if no version
       flag yet) starts cleanly.
 
 ## 4. Commit + push the bump
@@ -57,25 +57,25 @@ The tag push triggers both release workflows simultaneously.
 ## 6. Verify GitHub Release
 
 After ~10–20 minutes the workflows finish. Open the release page at
-`https://github.com/NelCit/hlsl-clippy/releases/tag/vX.Y.Z` and verify:
+`https://github.com/NelCit/shader-clippy/releases/tag/vX.Y.Z` and verify:
 
 - [ ] **3 binary archives** attached:
-  - `hlsl-clippy-X.Y.Z-windows-x86_64.zip`
-  - `hlsl-clippy-X.Y.Z-linux-x86_64.tar.gz`
-  - `hlsl-clippy-X.Y.Z-macos-aarch64.tar.gz`
+  - `shader-clippy-X.Y.Z-windows-x86_64.zip`
+  - `shader-clippy-X.Y.Z-linux-x86_64.tar.gz`
+  - `shader-clippy-X.Y.Z-macos-aarch64.tar.gz`
 - [ ] **3 SHA-256 sum files** alongside each archive (`.sha256`).
-- [ ] **1 `.vsix` artifact**: `hlsl-clippy-X.Y.Z.vsix`.
+- [ ] **1 `.vsix` artifact**: `shader-clippy-X.Y.Z.vsix`.
 - [ ] At least one binary downloads, extracts, and runs `--version`
       successfully on the appropriate platform.
 
 ## 7. Verify Marketplace listing (only if VSCE_PAT was set)
 
-- [ ] Open `https://marketplace.visualstudio.com/items?itemName=nelcit.hlsl-clippy`
+- [ ] Open `https://marketplace.visualstudio.com/items?itemName=nelcit.shader-clippy`
       — listing shows version `X.Y.Z`.
-- [ ] `code --install-extension nelcit.hlsl-clippy` from a clean VS Code
+- [ ] `code --install-extension nelcit.shader-clippy` from a clean VS Code
       profile installs successfully.
 - [ ] Open a `.hlsl` file in the test profile; the extension activates,
-      downloads the matching `hlsl-clippy-lsp` binary, and lints.
+      downloads the matching `shader-clippy-lsp` binary, and lints.
 
 If `VSCE_PAT` was *not* set (e.g. on a release cut from a fork), the
 Marketplace step is skipped; users sideload the `.vsix` from the GitHub

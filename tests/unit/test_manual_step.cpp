@@ -7,19 +7,19 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "test_config.hpp"
 
 namespace {
 
-using hlsl_clippy::Diagnostic;
-using hlsl_clippy::lint;
-using hlsl_clippy::make_default_rules;
-using hlsl_clippy::SourceManager;
+using shader_clippy::Diagnostic;
+using shader_clippy::lint;
+using shader_clippy::make_default_rules;
+using shader_clippy::SourceManager;
 
 [[nodiscard]] std::vector<Diagnostic> lint_buffer(const std::string& hlsl, SourceManager& sources) {
     const auto src = sources.add_buffer("synthetic.hlsl", hlsl);
@@ -102,7 +102,7 @@ float f(float x, float threshold) { return x > threshold ? 1.0 : 0.0; }
 }
 
 TEST_CASE("manual-step fires on math.hlsl fixture", "[rules][manual-step][fixture]") {
-    std::filesystem::path fixture{std::string{hlsl_clippy::test::k_fixtures_dir}};
+    std::filesystem::path fixture{std::string{shader_clippy::test::k_fixtures_dir}};
     fixture /= "phase2";
     fixture /= "math.hlsl";
     REQUIRE(std::filesystem::exists(fixture));
@@ -122,7 +122,7 @@ TEST_CASE("manual-step fires on math.hlsl fixture", "[rules][manual-step][fixtur
 
 TEST_CASE("manual-step does not fire on negative_lookalikes fixture",
           "[rules][manual-step][fixture]") {
-    std::filesystem::path fixture{std::string{hlsl_clippy::test::k_fixtures_dir}};
+    std::filesystem::path fixture{std::string{shader_clippy::test::k_fixtures_dir}};
     fixture /= "phase2";
     fixture /= "negative_lookalikes.hlsl";
     REQUIRE(std::filesystem::exists(fixture));

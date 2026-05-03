@@ -8,11 +8,11 @@
 #include <string>
 #include <vector>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 struct Config;
 
@@ -51,7 +51,7 @@ struct LintOptions {
     /// When false, the IR stage is skipped entirely even if IR-stage rules
     /// are enabled (ADR 0016). Useful for CI runs that want to isolate
     /// Phase 7 cost, or for downstream consumers built with
-    /// `HLSL_CLIPPY_ENABLE_IR=OFF` where the engine simply isn't linked in.
+    /// `SHADER_CLIPPY_ENABLE_IR=OFF` where the engine simply isn't linked in.
     /// Ignored when no enabled rule has `stage() == Stage::Ir`.
     bool enable_ir = true;
 
@@ -112,4 +112,4 @@ struct LintOptions {
 /// `pow-const-squared` only.
 [[nodiscard]] std::vector<std::unique_ptr<Rule>> make_default_rules();
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

@@ -11,20 +11,20 @@
 
 #include "document/manager.hpp"
 #include "document/uri.hpp"
-#include "hlsl_clippy/config.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
-#include "hlsl_clippy/version.hpp"
 #include "rpc/dispatcher.hpp"
 #include "rpc/message.hpp"
 #include "server/code_actions.hpp"
 #include "server/diagnostic_convert.hpp"
+#include "shader_clippy/config.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
+#include "shader_clippy/version.hpp"
 
 #include "config_resolver.hpp"
 
-namespace hlsl_clippy::lsp::server {
+namespace shader_clippy::lsp::server {
 
 namespace {
 
@@ -196,8 +196,8 @@ std::expected<nlohmann::json, rpc::ErrorObject> Server::on_initialize(
     nlohmann::json result = nlohmann::json::object();
     result["capabilities"] = build_server_capabilities();
     nlohmann::json server_info = nlohmann::json::object();
-    server_info["name"] = "hlsl-clippy-lsp";
-    server_info["version"] = std::string{hlsl_clippy::version()};
+    server_info["name"] = "shader-clippy-lsp";
+    server_info["version"] = std::string{shader_clippy::version()};
     result["serverInfo"] = std::move(server_info);
     return result;
 }
@@ -253,9 +253,9 @@ namespace {
 /// SourceManager construction is cheap (one unique_ptr allocation + a copy
 /// of `doc->contents`); the diagnostics already live on the OpenDocument.
 struct DocumentView {
-    hlsl_clippy::SourceManager sources;
-    const std::vector<hlsl_clippy::Diagnostic>* diagnostics = nullptr;
-    hlsl_clippy::SourceId src_id;
+    shader_clippy::SourceManager sources;
+    const std::vector<shader_clippy::Diagnostic>* diagnostics = nullptr;
+    shader_clippy::SourceId src_id;
 };
 
 [[nodiscard]] std::optional<DocumentView> view_for(document::DocumentManager& docs,
@@ -397,13 +397,13 @@ void Server::on_did_change_configuration(const nlohmann::json& /*params*/) {
     // accept the notification (so the dispatcher does not log an
     // unknown-method warning) but do not act on it; the next didChange /
     // didSave on each open document picks up the new config naturally
-    // because resolve_config_for() re-reads .hlsl-clippy.toml every call.
+    // because resolve_config_for() re-reads .shader-clippy.toml every call.
 }
 
 void Server::on_did_change_watched_files(const nlohmann::json& /*params*/) {
     // Same shape as on_did_change_configuration — accept the notification
     // but defer the re-lint loop to sub-phase 5b. Until then, edits to
-    // .hlsl-clippy.toml are picked up on the next didChange / didSave per
+    // .shader-clippy.toml are picked up on the next didChange / didSave per
     // affected document.
 }
 
@@ -417,21 +417,21 @@ void Server::lint_and_publish(const std::string& uri) {
         return;
     }
 
-    hlsl_clippy::SourceManager sources;
+    shader_clippy::SourceManager sources;
     const auto src_id = sources.add_buffer(doc->path.string(), doc->contents);
     if (!src_id.valid()) {
         return;
     }
 
-    auto rules = hlsl_clippy::make_default_rules();
+    auto rules = shader_clippy::make_default_rules();
 
-    std::vector<hlsl_clippy::Diagnostic> diagnostics;
+    std::vector<shader_clippy::Diagnostic> diagnostics;
     auto config = lsp::resolve_config_for(doc->path);
-    hlsl_clippy::LintOptions options;
+    shader_clippy::LintOptions options;
     if (config.has_value()) {
-        diagnostics = hlsl_clippy::lint(sources, src_id, rules, *config, doc->path, options);
+        diagnostics = shader_clippy::lint(sources, src_id, rules, *config, doc->path, options);
     } else {
-        diagnostics = hlsl_clippy::lint(sources, src_id, rules, options);
+        diagnostics = shader_clippy::lint(sources, src_id, rules, options);
     }
 
     doc->latest_diagnostics = diagnostics;
@@ -455,4 +455,4 @@ void Server::send_notification(const std::string& method, nlohmann::json params)
     sink_(envelope);
 }
 
-}  // namespace hlsl_clippy::lsp::server
+}  // namespace shader_clippy::lsp::server

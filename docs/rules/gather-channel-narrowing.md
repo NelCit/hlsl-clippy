@@ -74,7 +74,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Replacing `texture.Gather(s, uv).r` with `texture.GatherRed(s, uv).r` (and analogously for `.g` → `GatherGreen`, `.b` → `GatherBlue`, `.a` → `GatherAlpha`) is a pure textual substitution. The instruction selected by the hardware is identical in both cases on all SM4.1+ targets. `hlsl-clippy fix` applies it without human confirmation.
+**machine-applicable** — Replacing `texture.Gather(s, uv).r` with `texture.GatherRed(s, uv).r` (and analogously for `.g` → `GatherGreen`, `.b` → `GatherBlue`, `.a` → `GatherAlpha`) is a pure textual substitution. The instruction selected by the hardware is identical in both cases on all SM4.1+ targets. `shader-clippy fix` applies it without human confirmation.
 
 ## See also
 
@@ -84,6 +84,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/gather-channel-narrowing.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/gather-channel-narrowing.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

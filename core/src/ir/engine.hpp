@@ -32,23 +32,23 @@
 // reflection engine (cache cardinality is small; std::map is fine).
 #if defined(__cpp_lib_flat_map) && __cpp_lib_flat_map >= 202207L
 #include <flat_map>
-namespace hlsl_clippy::ir::detail {
+namespace shader_clippy::ir::detail {
 template<typename K, typename V>
 using IrCacheMap = std::flat_map<K, V>;
-}  // namespace hlsl_clippy::ir::detail
+}  // namespace shader_clippy::ir::detail
 #else
 #include <map>
-namespace hlsl_clippy::ir::detail {
+namespace shader_clippy::ir::detail {
 template<typename K, typename V>
 using IrCacheMap = std::map<K, V>;
-}  // namespace hlsl_clippy::ir::detail
+}  // namespace shader_clippy::ir::detail
 #endif
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/ir.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/ir.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::ir {
+namespace shader_clippy::ir {
 
 class DxilBridge;  // forward decl; defined in dxil_bridge.hpp once 7a.2 lands.
 
@@ -98,4 +98,4 @@ private:
     detail::IrCacheMap<CacheKey, std::shared_ptr<const IrInfo>> cache_;
 };
 
-}  // namespace hlsl_clippy::ir
+}  // namespace shader_clippy::ir

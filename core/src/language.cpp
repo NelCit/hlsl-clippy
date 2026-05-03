@@ -9,7 +9,7 @@
 // (`lsp/src/server/handlers.cpp`) so a single source of truth governs how a
 // given path's language is resolved.
 
-#include "hlsl_clippy/language.hpp"
+#include "shader_clippy/language.hpp"
 
 #include <cctype>
 #include <cstddef>
@@ -17,7 +17,7 @@
 #include <string>
 #include <string_view>
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 namespace {
 
@@ -68,4 +68,4 @@ std::string_view language_label(SourceLanguage lang) noexcept {
     return "hlsl";
 }
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

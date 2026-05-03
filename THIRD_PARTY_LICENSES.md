@@ -1,6 +1,6 @@
 # Third-Party Licenses
 
-hlsl-clippy bundles or links the following third-party software. Each section
+shader-clippy bundles or links the following third-party software. Each section
 reproduces the upstream license verbatim.
 
 ---
@@ -196,7 +196,7 @@ SOFTWARE.
 
 Fetched at configure time via CMake `FetchContent` from
 <https://github.com/marzer/tomlplusplus> at the version pinned in
-`CMakeLists.txt`. Statically linked into `hlsl_clippy_core` and from
+`CMakeLists.txt`. Statically linked into `shader_clippy_core` and from
 there into the shipped CLI / LSP binaries.
 
 Source: https://github.com/marzer/tomlplusplus

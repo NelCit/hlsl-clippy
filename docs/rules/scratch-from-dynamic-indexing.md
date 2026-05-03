@@ -97,7 +97,7 @@ none — no configurable thresholds. To silence on a specific array, use inline
 suppression:
 
 ```hlsl
-// hlsl-clippy: allow(scratch-from-dynamic-indexing)
+// shader-clippy: allow(scratch-from-dynamic-indexing)
 return lut[DynIdx & 7u] * Exposure;
 ```
 
@@ -118,7 +118,7 @@ always manual.
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/scratch-from-dynamic-indexing.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/scratch-from-dynamic-indexing.md)
 
 ---
 

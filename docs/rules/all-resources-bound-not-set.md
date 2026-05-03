@@ -78,7 +78,7 @@ none
 
 ## Fix availability
 
-**suggestion** — Adding `-all-resources-bound` to the compilation invocation is a single-flag change, but the application must actually guarantee that all declared resources are bound on every draw and dispatch. `hlsl-clippy fix` does not modify build scripts; it generates a diagnostic message naming the missing flag and the Slang API equivalent, leaving the author to verify the binding completeness guarantee before enabling the flag.
+**suggestion** — Adding `-all-resources-bound` to the compilation invocation is a single-flag change, but the application must actually guarantee that all declared resources are bound on every draw and dispatch. `shader-clippy fix` does not modify build scripts; it generates a diagnostic message naming the missing flag and the Slang API equivalent, leaving the author to verify the binding completeness guarantee before enabling the flag.
 
 ## See also
 
@@ -92,6 +92,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/all-resources-bound-not-set.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/all-resources-bound-not-set.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

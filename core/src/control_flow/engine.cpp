@@ -21,14 +21,14 @@
 #include "control_flow/cfg_storage.hpp"
 #include "control_flow/dominators.hpp"
 #include "control_flow/uniformity_analyzer.hpp"
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 
-namespace hlsl_clippy::control_flow {
+namespace shader_clippy::control_flow {
 
 namespace {
 
@@ -161,4 +161,4 @@ std::vector<Diagnostic> CfgEngine::take_diagnostics(SourceId source) {
     return {};
 }
 
-}  // namespace hlsl_clippy::control_flow
+}  // namespace shader_clippy::control_flow

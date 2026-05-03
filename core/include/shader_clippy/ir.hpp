@@ -26,9 +26,9 @@
 #include <string_view>
 #include <vector>
 
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 /// Coarse-grained IR opcode tags rules switch on. The IR engine maps DXIL
 /// LLVM opcodes onto this enum; rules never see raw DXIL. New opcodes are
@@ -207,4 +207,4 @@ struct IrInfo {
     [[nodiscard]] const IrInstruction* find_instruction(IrInstructionId id) const noexcept;
 };
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

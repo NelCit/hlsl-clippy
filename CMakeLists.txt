@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(hlsl-clippy LANGUAGES C CXX VERSION 0.6.7)
+project(shader-clippy LANGUAGES C CXX VERSION 0.6.7)
 
 # Compiler floor: MSVC 14.44 (VS 17.14, _MSC_VER == 1944) required for full
 # C++23 support (std::expected, std::print, deducing-this, std::flat_map).
@@ -19,18 +19,18 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # instantiations tend to bloat unmerged.
 #
 # Gated to Release (and RelWithDebInfo) so Debug builds stay fast.
-# Default-on; opt out with `-DHLSL_CLIPPY_USE_LTO=OFF` if a contributor
+# Default-on; opt out with `-DSHADER_CLIPPY_USE_LTO=OFF` if a contributor
 # is debugging a codegen issue or hitting an MSVC LTCG ICE.
-option(HLSL_CLIPPY_USE_LTO "Enable IPO/LTO for Release / RelWithDebInfo builds" ON)
-if(HLSL_CLIPPY_USE_LTO)
+option(SHADER_CLIPPY_USE_LTO "Enable IPO/LTO for Release / RelWithDebInfo builds" ON)
+if(SHADER_CLIPPY_USE_LTO)
     include(CheckIPOSupported)
     check_ipo_supported(RESULT _ipo_ok OUTPUT _ipo_msg LANGUAGES CXX)
     if(_ipo_ok)
         set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
         set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO ON)
-        message(STATUS "hlsl-clippy: IPO/LTO enabled for Release + RelWithDebInfo")
+        message(STATUS "shader-clippy: IPO/LTO enabled for Release + RelWithDebInfo")
     else()
-        message(STATUS "hlsl-clippy: IPO/LTO not supported by this toolchain (${_ipo_msg})")
+        message(STATUS "shader-clippy: IPO/LTO not supported by this toolchain (${_ipo_msg})")
     endif()
 endif()
 
@@ -39,11 +39,11 @@ endif()
 # no-op. CI provisions sccache in `.github/workflows/ci.yml` + `release.yml`.
 # Local contributors get the win for free if they run `cargo install
 # sccache` (or apt/brew/winget equivalent).
-find_program(HLSL_CLIPPY_SCCACHE sccache)
-if(HLSL_CLIPPY_SCCACHE)
-    set(CMAKE_C_COMPILER_LAUNCHER   "${HLSL_CLIPPY_SCCACHE}")
-    set(CMAKE_CXX_COMPILER_LAUNCHER "${HLSL_CLIPPY_SCCACHE}")
-    message(STATUS "hlsl-clippy: using sccache at ${HLSL_CLIPPY_SCCACHE}")
+find_program(SHADER_CLIPPY_SCCACHE sccache)
+if(SHADER_CLIPPY_SCCACHE)
+    set(CMAKE_C_COMPILER_LAUNCHER   "${SHADER_CLIPPY_SCCACHE}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${SHADER_CLIPPY_SCCACHE}")
+    message(STATUS "shader-clippy: using sccache at ${SHADER_CLIPPY_SCCACHE}")
 endif()
 
 # CTest opt-in. Defaults to ON for development; pass -DBUILD_TESTING=OFF for
@@ -54,11 +54,11 @@ include(CTest)
 # apply these via add_compile_options() at the top level, because that would
 # propagate /WX -Werror into vendored third-party submodules (Slang, miniz,
 # tree-sitter, etc.) and break their builds. Our own targets (core, cli, the
-# smoke tools) opt in by linking to hlsl_clippy_warnings.
-add_library(hlsl_clippy_warnings INTERFACE)
+# smoke tools) opt in by linking to shader_clippy_warnings.
+add_library(shader_clippy_warnings INTERFACE)
 
 if(MSVC)
-    target_compile_options(hlsl_clippy_warnings INTERFACE
+    target_compile_options(shader_clippy_warnings INTERFACE
         /W4
         /WX
         /permissive-
@@ -71,13 +71,13 @@ if(MSVC)
         /utf-8
         /EHsc
     )
-    target_compile_definitions(hlsl_clippy_warnings INTERFACE
+    target_compile_definitions(shader_clippy_warnings INTERFACE
         _CRT_SECURE_NO_WARNINGS
         NOMINMAX
         WIN32_LEAN_AND_MEAN
     )
 else()
-    target_compile_options(hlsl_clippy_warnings INTERFACE
+    target_compile_options(shader_clippy_warnings INTERFACE
         -Wall
         -Wextra
         -Wpedantic
@@ -112,7 +112,7 @@ include(cmake/UseSlang.cmake)
 # (Phase 5, ADR 0014). Header-only; only `lsp/` consumes it.
 include(cmake/UseNlohmannJson.cmake)
 
-# toml++ for `.hlsl-clippy.toml` parsing (per ADR 0008 §5). Header-only;
+# toml++ for `.shader-clippy.toml` parsing (per ADR 0008 §5). Header-only;
 # fetched in single-include mode so only `core/src/config.cpp` pays the
 # compile cost.
 include(FetchContent)
@@ -138,12 +138,12 @@ add_subdirectory(lsp)
 # resolved by cmake/UseSlang.cmake, tree-sitter via its submodule). Useful
 # for diagnosing the third-party surface but optional for day-to-day rule-
 # engine work — default-on with an opt-out flag.
-option(HLSL_CLIPPY_BUILD_SLANG_SMOKE "Build the Slang smoke-test tool" ON)
-option(HLSL_CLIPPY_BUILD_TREESITTER_SMOKE "Build the tree-sitter smoke-test tool" ON)
-if(HLSL_CLIPPY_BUILD_SLANG_SMOKE)
+option(SHADER_CLIPPY_BUILD_SLANG_SMOKE "Build the Slang smoke-test tool" ON)
+option(SHADER_CLIPPY_BUILD_TREESITTER_SMOKE "Build the tree-sitter smoke-test tool" ON)
+if(SHADER_CLIPPY_BUILD_SLANG_SMOKE)
     add_subdirectory(tools/slang-smoke)
 endif()
-if(HLSL_CLIPPY_BUILD_TREESITTER_SMOKE)
+if(SHADER_CLIPPY_BUILD_TREESITTER_SMOKE)
     add_subdirectory(tools/treesitter-smoke)
 endif()
 

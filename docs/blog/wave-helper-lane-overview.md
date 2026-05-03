@@ -235,7 +235,7 @@ The two shipped rules fire by default at `warn` severity. To see them
 on a shader with helper-lane interactions:
 
 ```sh
-./build/cli/hlsl-clippy lint --format=github-annotations shaders/PS_*.hlsl
+./build/cli/shader-clippy lint --format=github-annotations shaders/PS_*.hlsl
 ```
 
 If your shader genuinely wants to exclude helpers from a wave
@@ -243,7 +243,7 @@ reduction (debug visualisation, coverage-aware paths), suppress
 per-line:
 
 ```hlsl
-float waveAvg = WaveActiveSum(uv.x) // hlsl-clippy: allow(wave-reduction-pixel-without-helper-attribute)
+float waveAvg = WaveActiveSum(uv.x) // shader-clippy: allow(wave-reduction-pixel-without-helper-attribute)
               / WaveActiveCountBits(true);
 ```
 
@@ -255,8 +255,8 @@ rules in it.
 
 ---
 
-`hlsl-clippy` is open source. Rules, issues, and discussion live at
-[github.com/NelCit/hlsl-clippy](https://github.com/NelCit/hlsl-clippy).
+`shader-clippy` is open source. Rules, issues, and discussion live at
+[github.com/NelCit/shader-clippy](https://github.com/NelCit/shader-clippy).
 If you have encountered a wave-intrinsic or helper-lane pattern that
 should be a lint rule, open an issue.
 

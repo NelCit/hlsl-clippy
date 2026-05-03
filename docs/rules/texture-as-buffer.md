@@ -64,7 +64,7 @@ none
 
 ## Fix availability
 
-**suggestion** — The rule can propose a replacement declaration (`Buffer<T>` or `StructuredBuffer<T>`) and updated load call syntax. The rename must be verified by the author because it changes the resource descriptor type, which may affect root-signature or descriptor-heap layout on the CPU side. Use `// hlsl-clippy: allow(texture-as-buffer)` at the declaration site to suppress when the 2D texture declaration is required for API compatibility reasons (for example, when the same register slot is shared between an opaque 2D texture and a buffer in different shader permutations).
+**suggestion** — The rule can propose a replacement declaration (`Buffer<T>` or `StructuredBuffer<T>`) and updated load call syntax. The rename must be verified by the author because it changes the resource descriptor type, which may affect root-signature or descriptor-heap layout on the CPU side. Use `// shader-clippy: allow(texture-as-buffer)` at the declaration site to suppress when the 2D texture declaration is required for API compatibility reasons (for example, when the same register slot is shared between an opaque 2D texture and a buffer in different shader permutations).
 
 ## See also
 
@@ -74,6 +74,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/texture-as-buffer.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/texture-as-buffer.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

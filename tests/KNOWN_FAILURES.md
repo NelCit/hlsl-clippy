@@ -89,7 +89,7 @@ ctest --test-dir build --output-on-failure --label-exclude golden
 `tests/CMakeLists.txt`), or filter by Catch2 tag:
 
 ```sh
-./build/tests/hlsl_clippy_unit_tests \
+./build/tests/shader_clippy_unit_tests \
   '[!.]'                       # all tests not tagged hidden, OR
   '~[golden-snapshot]'         # exclude only golden tests
 ```

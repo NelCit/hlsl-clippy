@@ -80,6 +80,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/omm-traceray-force-omm-2state-without-pipeline-flag.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/omm-traceray-force-omm-2state-without-pipeline-flag.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

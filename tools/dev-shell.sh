@@ -4,12 +4,12 @@
 #
 # POSIX (Linux + macOS) equivalent of tools/dev-shell.ps1. Source this
 # script (don't execute it) to set up a contributor's shell for
-# building hlsl-clippy:
+# building shader-clippy:
 #
 #     . tools/dev-shell.sh
 #
-# Re-running is idempotent (HLSL_CLIPPY_DEV_SHELL_READY guard); set
-# HLSL_CLIPPY_DEV_SHELL_FORCE=1 to force a reinit.
+# Re-running is idempotent (SHADER_CLIPPY_DEV_SHELL_READY guard); set
+# SHADER_CLIPPY_DEV_SHELL_FORCE=1 to force a reinit.
 #
 # What it does:
 #   1. Sanity-check the toolchain (clang-18 / clang++-18 on Linux,
@@ -24,8 +24,8 @@
 # but only the env vars set inside the function survive.
 
 # --- Idempotency guard -----------------------------------------------------
-if [[ "${HLSL_CLIPPY_DEV_SHELL_READY:-}" == "1" && "${HLSL_CLIPPY_DEV_SHELL_FORCE:-}" != "1" ]]; then
-    echo "dev-shell: already configured (set HLSL_CLIPPY_DEV_SHELL_FORCE=1 to redo)"
+if [[ "${SHADER_CLIPPY_DEV_SHELL_READY:-}" == "1" && "${SHADER_CLIPPY_DEV_SHELL_FORCE:-}" != "1" ]]; then
+    echo "dev-shell: already configured (set SHADER_CLIPPY_DEV_SHELL_FORCE=1 to redo)"
     return 0 2>/dev/null || exit 0
 fi
 
@@ -83,9 +83,9 @@ if [[ "$_os" == "macOS" && -d "$_llvm_prefix/bin" ]]; then
 fi
 
 # --- Slang prebuilt cache --------------------------------------------------
-_slang_version="$(grep -E '^set\(HLSL_CLIPPY_SLANG_VERSION ' "$_dev_shell_dir/cmake/SlangVersion.cmake" \
+_slang_version="$(grep -E '^set\(SHADER_CLIPPY_SLANG_VERSION ' "$_dev_shell_dir/cmake/SlangVersion.cmake" \
     | sed -E 's/.*"([^"]+)".*/\1/')"
-_slang_cache_root="${HLSL_CLIPPY_SLANG_CACHE:-$HOME/.cache/hlsl-clippy/slang}"
+_slang_cache_root="${SHADER_CLIPPY_SLANG_CACHE:-$HOME/.cache/shader-clippy/slang}"
 _slang_cache_dir="$_slang_cache_root/$_slang_version"
 
 if [[ ! -d "$_slang_cache_dir/include" || ! -e "$_slang_cache_dir/include/slang.h" ]]; then
@@ -100,7 +100,7 @@ fi
 export Slang_ROOT="$_slang_cache_dir"
 
 # --- Done ------------------------------------------------------------------
-export HLSL_CLIPPY_DEV_SHELL_READY=1
+export SHADER_CLIPPY_DEV_SHELL_READY=1
 
 echo "dev-shell: $_os toolchain wired"
 echo "dev-shell:   CC=$_expected_cc"

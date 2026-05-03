@@ -1,13 +1,13 @@
 // Copyright 2026 NelCit
 // SPDX-License-Identifier: Apache-2.0
 //
-// Locate (and lazily download) the `hlsl-clippy-lsp` binary the extension
+// Locate (and lazily download) the `shader-clippy-lsp` binary the extension
 // will spawn. Resolution order per ADR 0014 §6:
 //
-//   1. `hlslClippy.serverPath` setting (if set + file exists).
-//   2. `hlsl-clippy-lsp[.exe]` on `process.env.PATH`.
-//   3. Bundled binary at `<extension_root>/server/<platform>/hlsl-clippy-lsp[.exe]`.
-//   4. Cached download at `<global_storage>/hlsl-clippy-lsp-<version>/...`.
+//   1. `shaderClippy.serverPath` setting (if set + file exists).
+//   2. `shader-clippy-lsp[.exe]` on `process.env.PATH`.
+//   3. Bundled binary at `<extension_root>/server/<platform>/shader-clippy-lsp[.exe]`.
+//   4. Cached download at `<global_storage>/shader-clippy-lsp-<version>/...`.
 //   5. Trigger download (via `download.ts`).
 //
 // As of v0.5.3 the Marketplace ships per-platform .vsix files that bundle
@@ -31,7 +31,7 @@ export class ServerResolutionError extends Error {
     }
 }
 
-const k_binaryBaseName = "hlsl-clippy-lsp";
+const k_binaryBaseName = "shader-clippy-lsp";
 
 function binaryName(): string {
     return process.platform === "win32" ? `${k_binaryBaseName}.exe` : k_binaryBaseName;
@@ -128,17 +128,17 @@ export async function resolveServerBinary(
     settings: ClippySettings,
     output: vscode.OutputChannel | undefined,
 ): Promise<string> {
-    const log = (msg: string) => output?.appendLine(`[hlsl-clippy] ${msg}`);
+    const log = (msg: string) => output?.appendLine(`[shader-clippy] ${msg}`);
 
     // 1. Explicit override.
     if (settings.serverPath.length > 0) {
         const explicit = path.normalize(settings.serverPath);
         if (await isExecutable(explicit)) {
-            log(`Using hlslClippy.serverPath: ${explicit}`);
+            log(`Using shaderClippy.serverPath: ${explicit}`);
             return explicit;
         }
         throw new ServerResolutionError(
-            `hlslClippy.serverPath points to "${explicit}" but the file is not executable.`,
+            `shaderClippy.serverPath points to "${explicit}" but the file is not executable.`,
         );
     }
 
@@ -168,7 +168,7 @@ export async function resolveServerBinary(
     //
     // IMPORTANT: Until sub-phase 5e ships per-platform release artifacts,
     // this step will fail. Surface a clear error so the user knows to
-    // configure hlslClippy.serverPath manually.
+    // configure shaderClippy.serverPath manually.
     log(
         `No bundled or cached binary found; attempting download for v${version}.`,
     );
@@ -179,7 +179,7 @@ export async function resolveServerBinary(
         const detail = err instanceof Error ? err.message : String(err);
         const platformHint = currentPlatform() ?? `${os.platform()}-${os.arch()}`;
         throw new ServerResolutionError(
-            `Could not locate or download hlsl-clippy-lsp for ${platformHint}: ${detail}`,
+            `Could not locate or download shader-clippy-lsp for ${platformHint}: ${detail}`,
         );
     }
 }

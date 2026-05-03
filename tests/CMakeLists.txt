@@ -18,7 +18,7 @@ set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(Catch2)
 
-# Mark Catch2 headers as SYSTEM includes so hlsl_clippy_warnings's -Werror +
+# Mark Catch2 headers as SYSTEM includes so shader_clippy_warnings's -Werror +
 # -Wnon-virtual-dtor (and friends) don't trigger on Catch2's internals.
 # macOS Clang 18 surfaces `-Wnon-virtual-dtor` inside catch_decomposer.hpp
 # even though the warning is correct (Catch2 designs around it for its
@@ -39,14 +39,14 @@ endif()
 
 # Path to the fixtures directory, embedded into the test binary so it can find
 # the source files regardless of cwd at run-time.
-set(HLSL_CLIPPY_FIXTURES_DIR "${CMAKE_SOURCE_DIR}/tests/fixtures")
+set(SHADER_CLIPPY_FIXTURES_DIR "${CMAKE_SOURCE_DIR}/tests/fixtures")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/unit/test_config.hpp.in"
     "${CMAKE_CURRENT_BINARY_DIR}/test_config.hpp"
     @ONLY
 )
 
-add_executable(hlsl_clippy_unit_tests
+add_executable(shader_clippy_unit_tests
     unit/test_pow_const_squared.cpp
     unit/test_suppress.cpp
     unit/test_query.cpp
@@ -335,11 +335,11 @@ add_executable(hlsl_clippy_unit_tests
     unit/test_golden_snapshots.cpp
 )
 
-target_include_directories(hlsl_clippy_unit_tests PRIVATE
+target_include_directories(shader_clippy_unit_tests PRIVATE
     "${CMAKE_CURRENT_BINARY_DIR}"
     # Tests touching the declarative query wrapper need the private core/src
     # headers (parser_internal.hpp, query/query.hpp). Public headers live in
-    # core/include and are picked up via the hlsl_clippy_core target's
+    # core/include and are picked up via the shader_clippy_core target's
     # PUBLIC include directory.
     "${CMAKE_SOURCE_DIR}/core/src"
     # LSP private headers — test_lsp.cpp pokes at the dispatcher / handlers
@@ -347,23 +347,23 @@ target_include_directories(hlsl_clippy_unit_tests PRIVATE
     "${CMAKE_SOURCE_DIR}/lsp/src"
 )
 
-target_link_libraries(hlsl_clippy_unit_tests
+target_link_libraries(shader_clippy_unit_tests
     PRIVATE
-        hlsl_clippy_core
+        shader_clippy_core
         # Static lib factor of the LSP TUs (lsp/CMakeLists.txt). Pre-v0.6
         # the test target compiled all 8 LSP source files itself, doubling
         # the per-clean-build compile cost for the LSP surface (each TU
-        # pulls ~25 k LOC of nlohmann/json). Now `hlsl_clippy_lsp_lib`
+        # pulls ~25 k LOC of nlohmann/json). Now `shader_clippy_lsp_lib`
         # is built once and linked here + into the lsp executable.
-        hlsl_clippy_lsp_lib
-        hlsl_clippy_warnings
+        shader_clippy_lsp_lib
+        shader_clippy_warnings
         Catch2::Catch2WithMain
         tree_sitter::tree_sitter
         tree_sitter::hlsl
         nlohmann_json::nlohmann_json
 )
 
-set_target_properties(hlsl_clippy_unit_tests PROPERTIES
+set_target_properties(shader_clippy_unit_tests PROPERTIES
     CXX_STANDARD 23
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
@@ -375,11 +375,11 @@ set_target_properties(hlsl_clippy_unit_tests PROPERTIES
 # and the eventual ctest runs can resolve dependencies without polluting
 # the system PATH. No-op on Linux/macOS where the RPATH handles this.
 # See cmake/UseSlang.cmake for details.
-hlsl_clippy_deploy_slang_dlls(hlsl_clippy_unit_tests)
+shader_clippy_deploy_slang_dlls(shader_clippy_unit_tests)
 
 # Discover Catch2 test cases as individual ctest entries.
 include(Catch)
-catch_discover_tests(hlsl_clippy_unit_tests)
+catch_discover_tests(shader_clippy_unit_tests)
 
 # Performance benchmark target (Release / RelWithDebInfo only).
 add_subdirectory(bench)

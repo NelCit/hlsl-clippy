@@ -66,7 +66,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — The fix removes the `volatile` token from the declaration's qualifier list and leaves everything else untouched. Because `volatile` on `groupshared` storage delivers no cross-thread guarantee in HLSL's memory model, the removal cannot change observable behaviour: any code that relied on cross-thread visibility was already racy and needs an explicit `GroupMemoryBarrier*` call. `hlsl-clippy fix` applies the rewrite automatically and emits a one-line note pointing at `GroupMemoryBarrierWithGroupSync` for cases where the developer intended cross-thread synchronisation.
+**machine-applicable** — The fix removes the `volatile` token from the declaration's qualifier list and leaves everything else untouched. Because `volatile` on `groupshared` storage delivers no cross-thread guarantee in HLSL's memory model, the removal cannot change observable behaviour: any code that relied on cross-thread visibility was already racy and needs an explicit `GroupMemoryBarrier*` call. `shader-clippy fix` applies the rewrite automatically and emits a one-line note pointing at `GroupMemoryBarrierWithGroupSync` for cases where the developer intended cross-thread synchronisation.
 
 ## See also
 
@@ -78,6 +78,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/groupshared-volatile.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/groupshared-volatile.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

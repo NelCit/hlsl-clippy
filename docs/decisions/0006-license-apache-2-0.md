@@ -12,7 +12,7 @@ tags: [license, governance, phase-0]
 The repository currently ships an MIT `LICENSE` file. Before any third-party contribution lands and before any binary is uploaded to a release page, we need a deliberate license choice that:
 
 - Is compatible with our vendored dependencies (Slang under Apache-2.0 + LLVM exception, tree-sitter under MIT, tree-sitter-hlsl under MIT, toml++ under MIT, nlohmann/json under MIT).
-- Carries a patent grant — `hlsl-clippy` operates in GPU-compilation territory where multiple IHVs hold patents.
+- Carries a patent grant — `shader-clippy` operates in GPU-compilation territory where multiple IHVs hold patents.
 - Reads as a credible, non-amateur choice to AAA studios, IHVs, and engine teams who might want to integrate the linter into their CI.
 - Makes contribution friction-free for a solo project (no CLA paperwork dance).
 - Has a sensible answer for the prose side — the rule-catalog pages, the "why this matters on a GPU" blog series, are the reputation engine and want maximum reach with attribution preserved.
@@ -63,7 +63,7 @@ For **`tests/corpus/`** (third-party shaders): each file retains its upstream li
   - `LICENSE` — verbatim Apache-2.0 text, unmodified.
   - `NOTICE` — short attribution paragraph + per-vendored-dep one-liners (Slang Apache-2.0 + LLVM exception; tree-sitter MIT; tree-sitter-hlsl MIT; toml++ MIT; nlohmann/json MIT; vscode-languageclient MIT).
   - `THIRD_PARTY_LICENSES.md` — full text of each vendored dep license, sectioned. Ships inside binary releases.
-- **Naming**: keep `hlsl-clippy`. Rust-clippy precedent (2014, no Microsoft action); HLSL is descriptive; `dxc`, `glslang`, `naga` already coexist. No trademark filing pre-v0.
+- **Naming**: keep `shader-clippy`. Rust-clippy precedent (2014, no Microsoft action); HLSL is descriptive; `dxc`, `glslang`, `naga` already coexist. No trademark filing pre-v0.
 
 ### Consequences
 
@@ -86,7 +86,7 @@ Bad:
 - `LICENSE` replaced with verbatim Apache-2.0 text.
 - `NOTICE` created at repo root.
 - `THIRD_PARTY_LICENSES.md` created at repo root.
-- `CONTRIBUTING.md` includes a "Why this license?" blurb (paraphrase): _"hlsl-clippy is Apache-2.0 because Slang is Apache-2.0, because patent grants matter for tools in GPU-compilation territory, because Apache-2.0 is the friction-free choice for game-engine and IHV consumers. Contributions accepted under DCO — no CLA."_
+- `CONTRIBUTING.md` includes a "Why this license?" blurb (paraphrase): _"shader-clippy is Apache-2.0 because Slang is Apache-2.0, because patent grants matter for tools in GPU-compilation territory, because Apache-2.0 is the friction-free choice for game-engine and IHV consumers. Contributions accepted under DCO — no CLA."_
 - DCO check enforced on PRs (DCO GitHub App or workflow).
 - README badges: `build` · `license: Apache-2.0` · `version` · `sponsors`. Skip "PRs welcome" badge.
 

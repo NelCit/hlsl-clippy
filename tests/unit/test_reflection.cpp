@@ -18,24 +18,24 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 #include "reflection/engine.hpp"
 
 namespace {
 
-using hlsl_clippy::AstTree;
-using hlsl_clippy::Diagnostic;
-using hlsl_clippy::lint;
-using hlsl_clippy::LintOptions;
-using hlsl_clippy::ReflectionInfo;
-using hlsl_clippy::Rule;
-using hlsl_clippy::RuleContext;
-using hlsl_clippy::SourceManager;
-using hlsl_clippy::Stage;
+using shader_clippy::AstTree;
+using shader_clippy::Diagnostic;
+using shader_clippy::lint;
+using shader_clippy::LintOptions;
+using shader_clippy::ReflectionInfo;
+using shader_clippy::Rule;
+using shader_clippy::RuleContext;
+using shader_clippy::SourceManager;
+using shader_clippy::Stage;
 
 /// Test rule that records every `on_reflection` invocation it sees so the test
 /// can assert the orchestrator dispatched (or did not dispatch) reflection.
@@ -129,7 +129,7 @@ float4 ps_bad(float2 uv : TEXCOORD0) : SV_Target
 }  // namespace
 
 TEST_CASE("ReflectionEngine reflects a simple cbuffer plus one binding", "[reflection][engine]") {
-    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -151,7 +151,7 @@ TEST_CASE("ReflectionEngine reflects a simple cbuffer plus one binding", "[refle
 }
 
 TEST_CASE("ReflectionEngine cache hit on repeated reflect call", "[reflection][engine]") {
-    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -180,7 +180,7 @@ TEST_CASE("ReflectionEngine cache hit on repeated reflect call", "[reflection][e
 // with DISTINCT sources to lock the fix in.
 TEST_CASE("ReflectionEngine handles multiple successive reflect calls without collision",
           "[reflection][engine][regression]") {
-    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -217,7 +217,7 @@ TEST_CASE("ReflectionEngine handles multiple successive reflect calls without co
 
 TEST_CASE("ReflectionEngine surfaces bad HLSL as a clippy::reflection diagnostic",
           "[reflection][engine][error]") {
-    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -227,7 +227,7 @@ TEST_CASE("ReflectionEngine surfaces bad HLSL as a clippy::reflection diagnostic
     const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"});
     REQUIRE_FALSE(result.has_value());
     CHECK(result.error().code == "clippy::reflection");
-    CHECK(result.error().severity == hlsl_clippy::Severity::Error);
+    CHECK(result.error().severity == shader_clippy::Severity::Error);
 }
 
 TEST_CASE("ReflectionEngine demotes min-precision-only Slang failures to Note severity",
@@ -241,7 +241,7 @@ TEST_CASE("ReflectionEngine demotes min-precision-only Slang failures to Note se
     // Severity::Note (LSP Information) when the only thing Slang complains
     // about is those types — AST rules still ran, the file is otherwise
     // valid HLSL on a DXC target.
-    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -256,7 +256,7 @@ bool min16uint_equal(min16uint a, min16uint b) {
     const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"});
     REQUIRE_FALSE(result.has_value());
     CHECK(result.error().code == "clippy::reflection");
-    CHECK(result.error().severity == hlsl_clippy::Severity::Note);
+    CHECK(result.error().severity == shader_clippy::Severity::Note);
     // Message must call out the specific limitation so users can act on it.
     CHECK(result.error().message.find("min16") != std::string::npos);
     CHECK(result.error().message.find("AST-only rules still ran") != std::string::npos);
@@ -267,7 +267,7 @@ TEST_CASE("ReflectionEngine keeps Severity::Error for non-min-precision Slang fa
     // Negative test for the demotion above: a file with a *real* user error
     // (undefined identifier that's not a min-precision type) must still
     // surface as Severity::Error so users see it in the Problems panel.
-    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -282,12 +282,12 @@ float ps_main(float2 uv : TEXCOORD) : SV_Target {
     const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"});
     REQUIRE_FALSE(result.has_value());
     CHECK(result.error().code == "clippy::reflection");
-    CHECK(result.error().severity == hlsl_clippy::Severity::Error);
+    CHECK(result.error().severity == shader_clippy::Severity::Error);
 }
 
 TEST_CASE("ReflectionEngine produces multiple EntryPointInfo entries for multi-entry sources",
           "[reflection][engine][entry-points]") {
-    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -365,7 +365,7 @@ void cs_main(uint3 tid : SV_DispatchThreadID)
 
 TEST_CASE("ResourceBinding surfaces DXGI format for `Texture2D<float4>`",
           "[reflection][engine][dxgi-format]") {
-    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -385,7 +385,7 @@ TEST_CASE("ResourceBinding surfaces DXGI format for `Texture2D<float4>`",
 
 TEST_CASE("ResourceBinding either surfaces UNORM or empty for `RWTexture2D<unorm float4>`",
           "[reflection][engine][dxgi-format]") {
-    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -424,7 +424,7 @@ TEST_CASE("ResourceBinding either surfaces UNORM or empty for `RWTexture2D<unorm
 
 TEST_CASE("ResourceBinding leaves DXGI format empty for `ByteAddressBuffer`",
           "[reflection][engine][dxgi-format]") {
-    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;
@@ -442,7 +442,7 @@ TEST_CASE("ResourceBinding leaves DXGI format empty for `ByteAddressBuffer`",
 
 TEST_CASE("LintOptions::enable_reflection = true dispatches on_reflection once",
           "[reflection][orchestrator]") {
-    auto& engine = hlsl_clippy::reflection::ReflectionEngine::instance();
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
     engine.clear_cache();
 
     SourceManager sources;

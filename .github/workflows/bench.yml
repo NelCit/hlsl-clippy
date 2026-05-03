@@ -86,14 +86,14 @@ jobs:
         if: runner.os != 'Windows'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ~/.cache/hlsl-clippy/slang
+          path: ~/.cache/shader-clippy/slang
           key: slang-${{ runner.os }}-${{ hashFiles('cmake/SlangVersion.cmake') }}
 
       - name: Cache Slang prebuilt (Windows)
         if: runner.os == 'Windows'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ${{ env.LOCALAPPDATA }}\hlsl-clippy\slang
+          path: ${{ env.LOCALAPPDATA }}\shader-clippy\slang
           key: slang-${{ runner.os }}-${{ hashFiles('cmake/SlangVersion.cmake') }}
 
       - name: Fetch Slang prebuilt (Linux + macOS)
@@ -134,7 +134,7 @@ jobs:
         run: cmake -B build-bench -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
       - name: Build bench target
-        run: cmake --build build-bench --target hlsl_clippy_bench
+        run: cmake --build build-bench --target shader_clippy_bench
 
       # ── Run the bench, capture XML for trend tracking ──────────────────
       # 200 samples per benchmark gives a stable median on shared runners.
@@ -145,7 +145,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p bench-out
-          ./build-bench/tests/bench/hlsl_clippy_bench \
+          ./build-bench/tests/bench/shader_clippy_bench \
             --reporter=xml --out=bench-out/bench-${{ runner.os }}.xml \
             --reporter=compact \
             --benchmark-samples=200
@@ -155,7 +155,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path bench-out | Out-Null
-          & .\build-bench\tests\bench\hlsl_clippy_bench.exe `
+          & .\build-bench\tests\bench\shader_clippy_bench.exe `
             --reporter=xml --out=bench-out/bench-${{ runner.os }}.xml `
             --reporter=compact `
             --benchmark-samples=200

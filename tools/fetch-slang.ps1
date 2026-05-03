@@ -7,7 +7,7 @@
 #   1. Reads the pinned Slang version from cmake/SlangVersion.cmake
 #      (regex-parsed; CMake is NOT invoked).
 #   2. Computes the cache target dir:
-#        %LOCALAPPDATA%\hlsl-clippy\slang\<version>\
+#        %LOCALAPPDATA%\shader-clippy\slang\<version>\
 #   3. If that dir already has a non-empty include\ subdir, exits 0 (cached).
 #   4. Otherwise downloads
 #        https://github.com/shader-slang/slang/releases/download/v<version>/slang-<version>-windows-x86_64.zip
@@ -41,18 +41,18 @@ $VersionFile = Join-Path $RepoRoot 'cmake\SlangVersion.cmake'
 # --- Resolve the pinned version --------------------------------------------
 if (-not $Version -or $Version -eq '') {
     if (-not (Test-Path -LiteralPath $VersionFile)) {
-        Write-Error "fetch-slang: cannot find $VersionFile. Are you running this from a clone of hlsl-clippy?"
+        Write-Error "fetch-slang: cannot find $VersionFile. Are you running this from a clone of shader-clippy?"
         exit 1
     }
 
     $content = Get-Content -LiteralPath $VersionFile -Raw
-    # Match: set(HLSL_CLIPPY_SLANG_VERSION "X.Y.Z" ...)
+    # Match: set(SHADER_CLIPPY_SLANG_VERSION "X.Y.Z" ...)
     $match = [regex]::Match(
         $content,
-        'set\s*\(\s*HLSL_CLIPPY_SLANG_VERSION\s+"([^"]+)"'
+        'set\s*\(\s*SHADER_CLIPPY_SLANG_VERSION\s+"([^"]+)"'
     )
     if (-not $match.Success) {
-        Write-Error "fetch-slang: failed to parse HLSL_CLIPPY_SLANG_VERSION from $VersionFile."
+        Write-Error "fetch-slang: failed to parse SHADER_CLIPPY_SLANG_VERSION from $VersionFile."
         exit 1
     }
     $Version = $match.Groups[1].Value
@@ -61,13 +61,13 @@ if (-not $Version -or $Version -eq '') {
 Write-Host "fetch-slang: target Slang version = $Version"
 
 # --- Resolve the cache dir --------------------------------------------------
-$CacheRoot = $env:HLSL_CLIPPY_SLANG_CACHE
+$CacheRoot = $env:SHADER_CLIPPY_SLANG_CACHE
 if (-not $CacheRoot -or $CacheRoot -eq '') {
     if (-not $env:LOCALAPPDATA -or $env:LOCALAPPDATA -eq '') {
-        Write-Error "fetch-slang: neither HLSL_CLIPPY_SLANG_CACHE nor LOCALAPPDATA is set."
+        Write-Error "fetch-slang: neither SHADER_CLIPPY_SLANG_CACHE nor LOCALAPPDATA is set."
         exit 1
     }
-    $CacheRoot = Join-Path $env:LOCALAPPDATA 'hlsl-clippy\slang'
+    $CacheRoot = Join-Path $env:LOCALAPPDATA 'shader-clippy\slang'
 }
 $CacheDir = Join-Path $CacheRoot $Version
 
@@ -134,16 +134,16 @@ if (-not ($magic[0] -eq 0x50 -and $magic[1] -eq 0x4B -and $magic[2] -eq 0x03 -an
 }
 
 # --- SHA-256 verification (optional but strongly recommended) --------------
-# When `HLSL_CLIPPY_SLANG_SHA256` (or the per-triple variant
-# `HLSL_CLIPPY_SLANG_SHA256_WINDOWS_X86_64`) is set, the downloaded zip's
+# When `SHADER_CLIPPY_SLANG_SHA256` (or the per-triple variant
+# `SHADER_CLIPPY_SLANG_SHA256_WINDOWS_X86_64`) is set, the downloaded zip's
 # hash MUST match exactly. Mismatch → abort, leaving the cache untouched.
 # Unset → warn-and-continue (the zip-magic check above is the only gate).
 # fetch-slang.ps1 is Windows-only and hardcodes the windows-x86_64 triple
 # in the URL above. The matching env var name therefore stays fixed too.
-$TripleVarName = 'HLSL_CLIPPY_SLANG_SHA256_WINDOWS_X86_64'
+$TripleVarName = 'SHADER_CLIPPY_SLANG_SHA256_WINDOWS_X86_64'
 $ExpectedSha256 = [System.Environment]::GetEnvironmentVariable($TripleVarName)
 if (-not $ExpectedSha256) {
-    $ExpectedSha256 = $env:HLSL_CLIPPY_SLANG_SHA256
+    $ExpectedSha256 = $env:SHADER_CLIPPY_SLANG_SHA256
 }
 
 if ($ExpectedSha256) {
@@ -159,7 +159,7 @@ if ($ExpectedSha256) {
     }
     Write-Host "fetch-slang: SHA-256 verified ($actual)"
 } else {
-    Write-Warning "fetch-slang: no $TripleVarName / HLSL_CLIPPY_SLANG_SHA256 set; skipping integrity verification."
+    Write-Warning "fetch-slang: no $TripleVarName / SHADER_CLIPPY_SLANG_SHA256 set; skipping integrity verification."
     Write-Warning "fetch-slang: set the env var for hardened CI runs."
 }
 

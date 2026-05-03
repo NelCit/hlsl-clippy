@@ -27,15 +27,15 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::node_kind;
@@ -58,8 +58,8 @@ constexpr std::string_view k_category = "bindings";
             return static_cast<std::uint32_t>(c - '0');
         return 1U;
     };
-    auto matrix_dims =
-        [&](std::size_t prefix_len) noexcept -> std::pair<std::uint32_t, std::uint32_t> {
+    using Dims = std::pair<std::uint32_t, std::uint32_t>;
+    auto matrix_dims = [&](std::size_t prefix_len) noexcept -> Dims {
         if (t.size() < prefix_len + 3U)
             return {1U, 1U};
         const char r = t[prefix_len];
@@ -291,4 +291,4 @@ std::unique_ptr<Rule> make_structured_buffer_stride_mismatch() {
     return std::make_unique<StructuredBufferStrideMismatch>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

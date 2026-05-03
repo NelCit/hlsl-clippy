@@ -15,10 +15,10 @@
 #include <optional>
 #include <string_view>
 
-#include "hlsl_clippy/reflection.hpp"
 #include "rules/util/reflect_resource.hpp"
+#include "shader_clippy/reflection.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 std::optional<SamplerDescriptor> sampler_descriptor_for(const ReflectionInfo& reflection,
                                                         std::string_view sampler_name) noexcept {
@@ -37,4 +37,4 @@ std::optional<SamplerDescriptor> sampler_descriptor_for(const ReflectionInfo& re
     return std::nullopt;
 }
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

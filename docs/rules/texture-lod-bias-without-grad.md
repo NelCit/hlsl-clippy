@@ -87,7 +87,7 @@ none
 
 ## Fix availability
 
-**suggestion** — The rule can propose replacing `SampleBias(s, uv, bias)` with `SampleLevel(s, uv, CalculateLevelOfDetail(s, uv) + bias)` when the call site is inside a pixel shader and derivatives can be moved to a quad-uniform point. In compute shaders, no automatic LOD can be computed and the fix is instead to replace with `SampleLevel(s, uv, explicitLod)` using a value the author must supply. `hlsl-clippy fix` shows the candidate edit but requires the author to supply or verify the explicit LOD expression.
+**suggestion** — The rule can propose replacing `SampleBias(s, uv, bias)` with `SampleLevel(s, uv, CalculateLevelOfDetail(s, uv) + bias)` when the call site is inside a pixel shader and derivatives can be moved to a quad-uniform point. In compute shaders, no automatic LOD can be computed and the fix is instead to replace with `SampleLevel(s, uv, explicitLod)` using a value the author must supply. `shader-clippy fix` shows the candidate edit but requires the author to supply or verify the explicit LOD expression.
 
 ## See also
 
@@ -98,6 +98,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/texture-lod-bias-without-grad.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/texture-lod-bias-without-grad.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

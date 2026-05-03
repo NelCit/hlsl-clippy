@@ -10,11 +10,11 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/language.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/language.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::parser {
+namespace shader_clippy::parser {
 
 // RAII wrappers around the opaque tree-sitter handles.
 
@@ -65,9 +65,9 @@ struct ParsedSource {
                                                 SourceId source,
                                                 SourceLanguage language);
 
-}  // namespace hlsl_clippy::parser
+}  // namespace shader_clippy::parser
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 /// Concrete tree handle backing the public `AstTree` forward declaration.
 /// Holds the parsed `TSTree*`, the language used to parse it, the source
@@ -167,4 +167,4 @@ private:
     SourceId source_;
 };
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

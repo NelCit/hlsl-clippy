@@ -63,7 +63,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — The fix is a pure textual substitution with no observable semantic change. `saturate` is idempotent: for any `x`, `saturate(saturate(x)) == saturate(x)`. `hlsl-clippy fix` applies it automatically.
+**machine-applicable** — The fix is a pure textual substitution with no observable semantic change. `saturate` is idempotent: for any `x`, `saturate(saturate(x)) == saturate(x)`. `shader-clippy fix` applies it automatically.
 
 ## See also
 
@@ -74,6 +74,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/redundant-saturate.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/redundant-saturate.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

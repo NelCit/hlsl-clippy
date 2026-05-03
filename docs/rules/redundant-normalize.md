@@ -51,7 +51,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — The fix is a pure textual substitution with no observable semantic change. A unit vector is its own normalisation: for any finite non-zero vector `v`, `normalize(normalize(v)) == normalize(v)` in exact arithmetic, and the floating-point error of the double-normalise is strictly larger than the single form. `hlsl-clippy fix` applies it automatically.
+**machine-applicable** — The fix is a pure textual substitution with no observable semantic change. A unit vector is its own normalisation: for any finite non-zero vector `v`, `normalize(normalize(v)) == normalize(v)` in exact arithmetic, and the floating-point error of the double-normalise is strictly larger than the single form. `shader-clippy fix` applies it automatically.
 
 ## See also
 
@@ -62,6 +62,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/redundant-normalize.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/redundant-normalize.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

@@ -7,9 +7,9 @@
 #include <utility>
 #include <vector>
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
-/// One inline-suppression annotation parsed from a `// hlsl-clippy: allow(...)`
+/// One inline-suppression annotation parsed from a `// shader-clippy: allow(...)`
 /// comment. Spans are half-open `[byte_lo, byte_hi)` byte ranges into the
 /// source buffer. The wildcard rule id `"*"` matches any rule.
 struct Suppression {
@@ -24,7 +24,7 @@ class SuppressionSet {
 public:
     SuppressionSet() = default;
 
-    /// Scan `source` for `// hlsl-clippy: allow(...)` annotations. The scanner
+    /// Scan `source` for `// shader-clippy: allow(...)` annotations. The scanner
     /// is grammar-agnostic — it walks raw bytes, tracks a small state machine
     /// for line/block comments and string literals, and resolves each
     /// annotation's scope from the surrounding code.
@@ -65,4 +65,4 @@ private:
     std::vector<std::pair<std::uint32_t, std::uint32_t>> wildcard_;
 };
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

@@ -1,4 +1,4 @@
-# CI — build hlsl-clippy on Linux (Clang), Windows (MSVC/Ninja), macOS (Clang/Ninja)
+# CI — build shader-clippy on Linux (Clang), Windows (MSVC/Ninja), macOS (Clang/Ninja)
 #
 # Third-party action SHAs pinned for supply-chain safety.
 # Update them with: gh api /repos/<owner>/<repo>/git/ref/tags/<tag>
@@ -138,14 +138,14 @@ jobs:
         if: runner.os != 'Windows'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ~/.cache/hlsl-clippy/slang
+          path: ~/.cache/shader-clippy/slang
           key: slang-${{ runner.os }}-${{ hashFiles('cmake/SlangVersion.cmake') }}
 
       - name: Cache Slang prebuilt (Windows)
         if: runner.os == 'Windows'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ${{ env.LOCALAPPDATA }}\hlsl-clippy\slang
+          path: ${{ env.LOCALAPPDATA }}\shader-clippy\slang
           key: slang-${{ runner.os }}-${{ hashFiles('cmake/SlangVersion.cmake') }}
 
       - name: Fetch Slang prebuilt (Linux + macOS)
@@ -197,13 +197,13 @@ jobs:
       # ── 7. Smoke test ─────────────────────────────────────────────────────
       # The rename agent restructures crates/cli + crates/core → cli/ + core/,
       # placing the executable at:
-      #   ./build/cli/hlsl-clippy          (Linux, Ninja single-config)
-      #   ./build/cli/hlsl-clippy.exe      (Windows, Ninja single-config)
-      #   ./build/cli/Release/hlsl-clippy.exe  (MSVC multi-config — not used
+      #   ./build/cli/shader-clippy          (Linux, Ninja single-config)
+      #   ./build/cli/shader-clippy.exe      (Windows, Ninja single-config)
+      #   ./build/cli/Release/shader-clippy.exe  (MSVC multi-config — not used
       #                                          here because we force Ninja,
       #                                          but kept as a fallback)
       # Before the rename lands the binary sits at:
-      #   ./build/hlsl-clippy   /   ./build/hlsl-clippy.exe
+      #   ./build/shader-clippy   /   ./build/shader-clippy.exe
       # We probe all candidate paths and run whichever we find first.
 
       - name: Smoke test (Linux)
@@ -212,15 +212,15 @@ jobs:
           set -euo pipefail
           BIN=""
           for candidate in \
-              "./build/cli/hlsl-clippy" \
-              "./build/hlsl-clippy"; do
+              "./build/cli/shader-clippy" \
+              "./build/shader-clippy"; do
             if [ -x "$candidate" ]; then
               BIN="$candidate"
               break
             fi
           done
           if [ -z "$BIN" ]; then
-            echo "ERROR: could not locate hlsl-clippy binary" >&2
+            echo "ERROR: could not locate shader-clippy binary" >&2
             exit 1
           fi
           echo "Using binary: $BIN"
@@ -240,9 +240,9 @@ jobs:
         shell: pwsh
         run: |
           $candidates = @(
-            ".\build\cli\hlsl-clippy.exe",
-            ".\build\cli\Release\hlsl-clippy.exe",
-            ".\build\hlsl-clippy.exe"
+            ".\build\cli\shader-clippy.exe",
+            ".\build\cli\Release\shader-clippy.exe",
+            ".\build\shader-clippy.exe"
           )
           $bin = $null
           foreach ($c in $candidates) {
@@ -252,7 +252,7 @@ jobs:
             }
           }
           if (-not $bin) {
-            Write-Error "ERROR: could not locate hlsl-clippy binary"
+            Write-Error "ERROR: could not locate shader-clippy binary"
             exit 1
           }
           Write-Host "Using binary: $bin"
@@ -271,15 +271,15 @@ jobs:
           set -euo pipefail
           BIN=""
           for candidate in \
-              "./build/cli/hlsl-clippy" \
-              "./build/hlsl-clippy"; do
+              "./build/cli/shader-clippy" \
+              "./build/shader-clippy"; do
             if [ -x "$candidate" ]; then
               BIN="$candidate"
               break
             fi
           done
           if [ -z "$BIN" ]; then
-            echo "ERROR: could not locate hlsl-clippy binary" >&2
+            echo "ERROR: could not locate shader-clippy binary" >&2
             exit 1
           fi
           echo "Using binary: $BIN"
@@ -339,7 +339,7 @@ jobs:
       - name: Cache Slang prebuilt
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ~/.cache/hlsl-clippy/slang
+          path: ~/.cache/shader-clippy/slang
           key: slang-${{ runner.os }}-${{ hashFiles('cmake/SlangVersion.cmake') }}
 
       - name: Fetch Slang prebuilt
@@ -354,23 +354,23 @@ jobs:
             -DCMAKE_CXX_FLAGS="-stdlib=libc++"
 
       - name: Build
-        run: cmake --build build --target hlsl-clippy
+        run: cmake --build build --target shader-clippy
 
-      - name: Locate hlsl-clippy binary
+      - name: Locate shader-clippy binary
         id: locate
         run: |
           set -euo pipefail
           BIN=""
           for candidate in \
-              "./build/cli/hlsl-clippy" \
-              "./build/hlsl-clippy"; do
+              "./build/cli/shader-clippy" \
+              "./build/shader-clippy"; do
             if [ -x "$candidate" ]; then
               BIN="$candidate"
               break
             fi
           done
           if [ -z "$BIN" ]; then
-            echo "ERROR: could not locate hlsl-clippy binary" >&2
+            echo "ERROR: could not locate shader-clippy binary" >&2
             exit 1
           fi
           echo "bin=$BIN" >> "$GITHUB_OUTPUT"
@@ -503,7 +503,7 @@ jobs:
       - name: Cache Slang prebuilt
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ~/.cache/hlsl-clippy/slang
+          path: ~/.cache/shader-clippy/slang
           key: slang-Linux-${{ hashFiles('cmake/SlangVersion.cmake') }}
 
       - name: Fetch Slang prebuilt
@@ -518,11 +518,11 @@ jobs:
         run: |
           cmake -B build-cov -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
-            -DHLSL_CLIPPY_USE_PCH=OFF \
-            -DHLSL_CLIPPY_USE_LTO=OFF
+            -DSHADER_CLIPPY_USE_PCH=OFF \
+            -DSHADER_CLIPPY_USE_LTO=OFF
 
       - name: Build core + tests
-        run: cmake --build build-cov --target hlsl_clippy_unit_tests
+        run: cmake --build build-cov --target shader_clippy_unit_tests
 
       - name: Run tests with profile output
         env:
@@ -537,7 +537,7 @@ jobs:
           # (per tests/KNOWN_FAILURES.md). They occasionally
           # STATUS_STACK_BUFFER_OVERRUN on Windows + occasionally trip
           # CRLF/LF mismatches — neither is meaningful for coverage.
-          ./build-cov/tests/hlsl_clippy_unit_tests "~[golden]"
+          ./build-cov/tests/shader_clippy_unit_tests "~[golden]"
 
       - name: Merge profile data
         run: |
@@ -549,14 +549,14 @@ jobs:
         run: |
           set -euo pipefail
           # `-instr-profile` consumes the merged profdata; the binary is
-          # the unit-test exe (which links hlsl_clippy_core statically).
+          # the unit-test exe (which links shader_clippy_core statically).
           # `--ignore-filename-regex` drops vendored / test code so the
           # percentage reflects rule-engine coverage.
           llvm-cov-18 export \
             -format=lcov \
             -instr-profile=build-cov/coverage.profdata \
             -ignore-filename-regex='(external|tests|build|/usr/)' \
-            ./build-cov/tests/hlsl_clippy_unit_tests \
+            ./build-cov/tests/shader_clippy_unit_tests \
             > build-cov/coverage.lcov
           # Quick console summary so the failure mode in PR review is
           # legible without downloading the lcov. Saved to file so the
@@ -565,7 +565,7 @@ jobs:
             -instr-profile=build-cov/coverage.profdata \
             -ignore-filename-regex='(external|tests|build|/usr/)' \
             -show-branch-summary \
-            ./build-cov/tests/hlsl_clippy_unit_tests \
+            ./build-cov/tests/shader_clippy_unit_tests \
             > build-cov/coverage-summary.txt
           tail -20 build-cov/coverage-summary.txt
 
@@ -647,8 +647,8 @@ jobs:
 
   # ── API symbol diff (v1.0 readiness criterion #1) ──────────────────────
   # ADR 0018 §5 #1 — every type / function declared in
-  # `core/include/hlsl_clippy/*.hpp` is part of the v1.0 stable surface.
-  # We extract the post-link symbol list from `hlsl_clippy_core` and
+  # `core/include/shader_clippy/*.hpp` is part of the v1.0 stable surface.
+  # We extract the post-link symbol list from `shader_clippy_core` and
   # publish it as a build artifact. v1.0 will check this artifact into
   # `tools/api/v1-symbols.txt` and a follow-up patch will gate PRs on
   # `diff` against that baseline.
@@ -679,7 +679,7 @@ jobs:
       - name: Cache Slang prebuilt
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ~/.cache/hlsl-clippy/slang
+          path: ~/.cache/shader-clippy/slang
           key: slang-Linux-${{ hashFiles('cmake/SlangVersion.cmake') }}
 
       - name: Fetch Slang prebuilt
@@ -693,8 +693,8 @@ jobs:
           LDFLAGS: "-stdlib=libc++"
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
-      - name: Build hlsl_clippy_core
-        run: cmake --build build --target hlsl_clippy_core
+      - name: Build shader_clippy_core
+        run: cmake --build build --target shader_clippy_core
 
       - name: Extract public symbols
         run: |
@@ -705,18 +705,18 @@ jobs:
           # BUILD_SHARED_LIBS. Pick whichever exists.
           LIB=""
           for candidate in \
-              build/core/libhlsl_clippy_core.a \
-              build/core/libhlsl_clippy_core.so \
-              build/libhlsl_clippy_core.a \
-              build/libhlsl_clippy_core.so; do
+              build/core/libshader_clippy_core.a \
+              build/core/libshader_clippy_core.so \
+              build/libshader_clippy_core.a \
+              build/libshader_clippy_core.so; do
             if [ -f "$candidate" ]; then
               LIB="$candidate"
               break
             fi
           done
           if [ -z "$LIB" ]; then
-            echo "ERROR: no hlsl_clippy_core lib found under build/" >&2
-            find build -maxdepth 4 -name 'libhlsl_clippy_core*' >&2 || true
+            echo "ERROR: no shader_clippy_core lib found under build/" >&2
+            find build -maxdepth 4 -name 'libshader_clippy_core*' >&2 || true
             exit 1
           fi
           echo "Extracting symbols from: $LIB"
@@ -749,7 +749,7 @@ jobs:
   # ── Slang bump regression (v1.0 readiness criterion #10) ───────────────
   # ADR 0018 §5 #10 — reflection-driven rules survive Slang submodule
   # bumps without source changes. We bump `cmake/SlangVersion.cmake`'s
-  # `HLSL_CLIPPY_SLANG_VERSION` to the next-patch synthetic value
+  # `SHADER_CLIPPY_SLANG_VERSION` to the next-patch synthetic value
   # (2026.7.2), re-fetch, and run the full ctest baseline. Failure means
   # a Slang patch broke our reflection — the maintainer has overnight
   # lead time before the user-visible bump.
@@ -783,11 +783,11 @@ jobs:
       - name: Bump pinned Slang version
         run: |
           set -euo pipefail
-          # Bump the patch component of HLSL_CLIPPY_SLANG_VERSION by 1 to
+          # Bump the patch component of SHADER_CLIPPY_SLANG_VERSION by 1 to
           # force a fresh download from the upstream Slang releases. We
           # capture the original value so the failure message tells the
           # maintainer exactly which transition broke.
-          ORIGINAL=$(grep -oE 'HLSL_CLIPPY_SLANG_VERSION[[:space:]]+"[^"]+"' \
+          ORIGINAL=$(grep -oE 'SHADER_CLIPPY_SLANG_VERSION[[:space:]]+"[^"]+"' \
               cmake/SlangVersion.cmake \
               | head -n1 \
               | sed -E 's/.*"([^"]+)".*/\1/')
@@ -800,9 +800,9 @@ jobs:
           NEXT="${MAJOR}.${MINOR}.$((PATCH + 1))"
           echo "Synthetic next-patch:   $NEXT"
           sed -i -E \
-            "s/(HLSL_CLIPPY_SLANG_VERSION[[:space:]]+\")[^\"]+(\")/\1${NEXT}\2/" \
+            "s/(SHADER_CLIPPY_SLANG_VERSION[[:space:]]+\")[^\"]+(\")/\1${NEXT}\2/" \
             cmake/SlangVersion.cmake
-          grep HLSL_CLIPPY_SLANG_VERSION cmake/SlangVersion.cmake
+          grep SHADER_CLIPPY_SLANG_VERSION cmake/SlangVersion.cmake
 
       - name: Fetch bumped Slang prebuilt
         run: bash tools/fetch-slang.sh
@@ -852,7 +852,7 @@ jobs:
       - name: Cache Slang prebuilt
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ~/.cache/hlsl-clippy/slang
+          path: ~/.cache/shader-clippy/slang
           key: slang-Linux-${{ hashFiles('cmake/SlangVersion.cmake') }}
 
       - name: Fetch Slang prebuilt
@@ -867,23 +867,23 @@ jobs:
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: Build CLI
-        run: cmake --build build --target hlsl-clippy
+        run: cmake --build build --target shader-clippy
 
-      - name: Locate hlsl-clippy binary
+      - name: Locate shader-clippy binary
         id: locate
         run: |
           set -euo pipefail
           BIN=""
           for candidate in \
-              "./build/cli/hlsl-clippy" \
-              "./build/hlsl-clippy"; do
+              "./build/cli/shader-clippy" \
+              "./build/shader-clippy"; do
             if [ -x "$candidate" ]; then
               BIN="$candidate"
               break
             fi
           done
           if [ -z "$BIN" ]; then
-            echo "ERROR: could not locate hlsl-clippy binary" >&2
+            echo "ERROR: could not locate shader-clippy binary" >&2
             exit 1
           fi
           echo "bin=$BIN" >> "$GITHUB_OUTPUT"

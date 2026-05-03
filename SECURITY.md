@@ -2,11 +2,11 @@
 
 ## Reporting a vulnerability
 
-**Preferred channel:** [GitHub's private vulnerability reporting](https://github.com/NelCit/hlsl-clippy/security/advisories/new) —
+**Preferred channel:** [GitHub's private vulnerability reporting](https://github.com/NelCit/shader-clippy/security/advisories/new) —
 this creates a private advisory visible only to maintainers and you.
 
 If you cannot use GitHub advisories, contact the maintainer privately
-at <vin.legrand11@gmail.com> with subject prefix `[hlsl-clippy security]`.
+at <vin.legrand11@gmail.com> with subject prefix `[shader-clippy security]`.
 
 **Do not open a public GitHub issue for security reports.**
 
@@ -38,8 +38,8 @@ unreleased main branch. The current shipped version is reflected in
 ## Scope
 
 **In scope:**
-- The `hlsl-clippy` CLI binary
-- The `hlsl-clippy-lsp` LSP server binary
+- The `shader-clippy` CLI binary
+- The `shader-clippy-lsp` LSP server binary
 - The VS Code extension under `vscode-extension/`
 - The rule engine (`core/`) including the parser bridge and reflection
   bridge
@@ -52,13 +52,13 @@ unreleased main branch. The current shipped version is reflected in
 - Vulnerabilities in tree-sitter / tree-sitter-hlsl — report upstream
 - Vulnerabilities in nlohmann/json, toml++, or other vendored deps —
   report upstream
-- Issues that require a malicious workspace's `.hlsl-clippy.toml` to
+- Issues that require a malicious workspace's `.shader-clippy.toml` to
   exploit a user opening that workspace (treated as social-engineering
   at the editor / CI layer, not the linter's responsibility)
 
 ## Threat model
 
-`hlsl-clippy` parses HLSL source code that may be attacker-controlled
+`shader-clippy` parses HLSL source code that may be attacker-controlled
 (e.g. a downloaded shader, a third-party submodule). The linter must
 not be exploitable by parsing such input.
 
@@ -68,10 +68,10 @@ Known limitations as of v0.5.x (tracked for hardening):
   pathological shader can consume large amounts of memory or CPU. Caps
   land in v0.5.4.
 - **Slang prebuilt downloads are not signature-verified end-to-end.**
-  Tarball checksums land in v0.5.4 (`HLSL_CLIPPY_SLANG_SHA256_*` in
+  Tarball checksums land in v0.5.4 (`SHADER_CLIPPY_SLANG_SHA256_*` in
   `cmake/SlangVersion.cmake`).
 - **The LSP runs unsandboxed in the editor process tree** — standard
-  for VS Code language servers. Treat `hlsl-clippy-lsp` as you would
+  for VS Code language servers. Treat `shader-clippy-lsp` as you would
   any compiler frontend you invoke on attacker-supplied source.
 - **No fuzz harness yet.** Tracked for v0.7+ per ROADMAP Phase 7.
 
@@ -81,5 +81,5 @@ Known limitations as of v0.5.x (tracked for hardening):
   the suppression scanner, and the LSP framing layer.
 - CodeQL workflow with `cpp` + `javascript` query packs.
 - `npm audit --audit-level=high` step in CI.
-- `seccomp` / Windows AppContainer sandbox for `hlsl-clippy-lsp`.
+- `seccomp` / Windows AppContainer sandbox for `shader-clippy-lsp`.
 - SBOM emission alongside each release archive.

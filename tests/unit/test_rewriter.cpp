@@ -6,22 +6,22 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rewriter.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rewriter.hpp"
+#include "shader_clippy/source.hpp"
 
 namespace {
 
-using hlsl_clippy::ByteSpan;
-using hlsl_clippy::Fix;
-using hlsl_clippy::FixConflict;
-using hlsl_clippy::FixPriority;
-using hlsl_clippy::PrioritisedFix;
-using hlsl_clippy::Rewriter;
-using hlsl_clippy::Severity;
-using hlsl_clippy::SourceId;
-using hlsl_clippy::Span;
-using hlsl_clippy::TextEdit;
+using shader_clippy::ByteSpan;
+using shader_clippy::Fix;
+using shader_clippy::FixConflict;
+using shader_clippy::FixPriority;
+using shader_clippy::PrioritisedFix;
+using shader_clippy::Rewriter;
+using shader_clippy::Severity;
+using shader_clippy::SourceId;
+using shader_clippy::Span;
+using shader_clippy::TextEdit;
 
 [[nodiscard]] PrioritisedFix make_fix(std::string rule_id,
                                       Severity sev,

@@ -11,9 +11,9 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
+#include "shader_clippy/diagnostic.hpp"
 
-namespace hlsl_clippy::query {
+namespace shader_clippy::query {
 
 ::TSNode QueryMatch::capture(std::string_view name) const noexcept {
     for (const auto& c : captures_) {
@@ -90,4 +90,4 @@ void QueryEngine::run(const Query& query,
     }
 }
 
-}  // namespace hlsl_clippy::query
+}  // namespace shader_clippy::query

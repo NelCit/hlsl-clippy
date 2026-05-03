@@ -180,12 +180,12 @@ The `pow-const-squared` rule as initially defined catches exponents 2, 3, and
 4. For exponent 5 (Schlick), the break-even is higher and is tracked
 separately. But the mechanism — and the fix — are identical.
 
-## Using hlsl-clippy to catch this
+## Using shader-clippy to catch this
 
 Once the `pow-const-squared` rule ships in v0.1, running:
 
 ```
-hlsl-clippy lint shaders/
+shader-clippy lint shaders/
 ```
 
 will emit a warning on every `pow(x, n)` call where `n` is a constant integer
@@ -201,7 +201,7 @@ If you have verified that your specific compiler + SM target folds the pattern
 correctly, you can suppress per-callsite:
 
 ```hlsl
-float r = pow(roughness, 2.0); // hlsl-clippy: allow(pow-const-squared)
+float r = pow(roughness, 2.0); // shader-clippy: allow(pow-const-squared)
 ```
 
 The full rule specification — including edge cases and the exact exponent
@@ -218,14 +218,14 @@ from removing `pow` calls. The right workflow is:
 2. If SFU is in the hot path, `pow-const-squared` is actionable.
 3. If bandwidth is the bottleneck, look elsewhere.
 
-`hlsl-clippy` is a static linter, not a profiler. It flags portable patterns
+`shader-clippy` is a static linter, not a profiler. It flags portable patterns
 that are provably suboptimal at the ISA level. The profiler tells you which
 patterns are actually costing you frames. Use both.
 
 ---
 
-`hlsl-clippy` is an open-source HLSL linter. Rules, issues, and discussion
-live at [github.com/NelCit/hlsl-clippy](https://github.com/NelCit/hlsl-clippy).
+`shader-clippy` is an open-source HLSL + Slang linter. Rules, issues, and discussion
+live at [github.com/NelCit/shader-clippy](https://github.com/NelCit/shader-clippy).
 If you have encountered a shader pattern that should be a lint rule, open an
 issue.
 

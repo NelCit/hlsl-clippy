@@ -20,9 +20,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "hlsl_clippy/diagnostic.hpp"
+#include "shader_clippy/diagnostic.hpp"
 
-namespace hlsl_clippy::lsp::document {
+namespace shader_clippy::lsp::document {
 
 /// One change record from a `textDocument/didChange` notification. LSP 3.x
 /// allows either a full-document replace (range absent) or an
@@ -44,7 +44,7 @@ struct OpenDocument {
     std::filesystem::path path;
     std::string contents;
     std::int32_t version = 0;
-    std::vector<hlsl_clippy::Diagnostic> latest_diagnostics;
+    std::vector<shader_clippy::Diagnostic> latest_diagnostics;
     std::chrono::steady_clock::time_point last_change_time;
     std::chrono::steady_clock::time_point last_lint_time;
 };
@@ -110,4 +110,4 @@ private:
     std::unordered_map<std::string, OpenDocument> docs_;
 };
 
-}  // namespace hlsl_clippy::lsp::document
+}  // namespace shader_clippy::lsp::document

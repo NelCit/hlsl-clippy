@@ -22,7 +22,7 @@
 
 #include <nlohmann/json.hpp>
 
-namespace hlsl_clippy::lsp::rpc {
+namespace shader_clippy::lsp::rpc {
 
 using Json = nlohmann::json;
 
@@ -68,4 +68,4 @@ constexpr std::int32_t k_request_failed = -32803;
     return std::visit([](const auto& v) -> Json { return Json(v); }, id);
 }
 
-}  // namespace hlsl_clippy::lsp::rpc
+}  // namespace shader_clippy::lsp::rpc

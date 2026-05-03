@@ -9,13 +9,13 @@
 #include <variant>
 #include <vector>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/language.hpp"
-#include "hlsl_clippy/rule.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/language.hpp"
+#include "shader_clippy/rule.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
-/// Per-rule severity dial selectable from `.hlsl-clippy.toml`. The mapping to
+/// Per-rule severity dial selectable from `.shader-clippy.toml`. The mapping to
 /// the diagnostic `Severity` enum is:
 ///
 /// - `Allow` — drop every diagnostic for this rule (the rule does not even
@@ -31,7 +31,7 @@ enum class RuleSeverity {
     Deny,
 };
 
-// `ExperimentalTarget` is declared in `hlsl_clippy/rule.hpp` (included
+// `ExperimentalTarget` is declared in `shader_clippy/rule.hpp` (included
 // above) so that rule TUs can reference its enumerators without pulling in
 // the heavier config header.
 
@@ -53,7 +53,7 @@ inline constexpr float k_default_compare_epsilon = 0.0001F;
 /// hard-coded value used by `div-without-epsilon` and friends.
 inline constexpr float k_default_div_epsilon = 1.0e-6F;
 
-/// Parsed `.hlsl-clippy.toml`. Constructed via `load_config`.
+/// Parsed `.shader-clippy.toml`. Constructed via `load_config`.
 struct Config {
     /// Top-level `[rules]` table.
     std::unordered_map<std::string, RuleSeverity> rule_severity;
@@ -172,7 +172,7 @@ private:
     std::variant<Config, ConfigError> payload_;
 };
 
-/// Load `.hlsl-clippy.toml` from disk.
+/// Load `.shader-clippy.toml` from disk.
 [[nodiscard]] ConfigResult load_config(const std::filesystem::path& path);
 
 /// Parse a TOML config from an in-memory string. The optional `origin`
@@ -181,8 +181,8 @@ private:
 [[nodiscard]] ConfigResult load_config_string(std::string_view contents,
                                               const std::filesystem::path& origin = {});
 
-/// Walk parents of `start` looking for `.hlsl-clippy.toml`. Stops at:
-/// 1. The first parent that contains a `.hlsl-clippy.toml`, returning that path.
+/// Walk parents of `start` looking for `.shader-clippy.toml`. Stops at:
+/// 1. The first parent that contains a `.shader-clippy.toml`, returning that path.
 /// 2. The first parent that contains a `.git/` entry (workspace boundary):
 ///    no further search is performed and `std::nullopt` is returned.
 /// 3. The filesystem root.
@@ -198,4 +198,4 @@ private:
 /// before matching.
 [[nodiscard]] bool path_glob_match(std::string_view glob, const std::filesystem::path& path);
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

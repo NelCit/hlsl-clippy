@@ -6,10 +6,10 @@
 
 #include <string_view>
 
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 bool is_uniform(const ControlFlowInfo& cfg, Span expr_span) noexcept {
     return cfg.uniformity.of_expr(expr_span) == Uniformity::Uniform;
@@ -39,4 +39,4 @@ bool is_inherently_divergent_semantic(std::string_view sv_semantic_name) noexcep
            sv_semantic_name == "SV_SampleIndex";
 }
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

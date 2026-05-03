@@ -1,4 +1,4 @@
-# Contributing to hlsl-clippy
+# Contributing to shader-clippy
 
 Thank you for your interest in contributing. This document covers everything needed to go from zero to a merged pull request.
 
@@ -23,7 +23,7 @@ Thank you for your interest in contributing. This document covers everything nee
 
 ## Code of conduct
 
-This project follows the [Contributor Covenant 2.1](CODE_OF_CONDUCT.md). By participating, you agree to abide by its terms. Reports go to the maintainer (<vin.legrand11@gmail.com>) — for security-sensitive concerns, use [GitHub's private advisory channel](https://github.com/NelCit/hlsl-clippy/security/advisories/new) per [SECURITY.md](SECURITY.md).
+This project follows the [Contributor Covenant 2.1](CODE_OF_CONDUCT.md). By participating, you agree to abide by its terms. Reports go to the maintainer (<vin.legrand11@gmail.com>) — for security-sensitive concerns, use [GitHub's private advisory channel](https://github.com/NelCit/shader-clippy/security/advisories/new) per [SECURITY.md](SECURITY.md).
 
 ---
 
@@ -50,8 +50,8 @@ Optional but recommended:
 **Clone:**
 
 ```sh
-git clone https://github.com/NelCit/hlsl-clippy.git
-cd hlsl-clippy
+git clone https://github.com/NelCit/shader-clippy.git
+cd shader-clippy
 ```
 
 ### Setting up locally
@@ -75,8 +75,8 @@ under `cli/`, `core/`, `tools/`, `lsp/`. It requires `clang-format` 18
 | Variable                                  | Purpose                                                         |
 |-------------------------------------------|-----------------------------------------------------------------|
 | `CLANG_FORMAT`                            | Explicit path to `clang-format` (overrides PATH lookup)         |
-| `HLSL_CLIPPY_HOOK_ALLOW_ANY_CLANG_FORMAT` | Set to `1` to skip the major-version-18 check                   |
-| `HLSL_CLIPPY_HOOK_FIX`                    | Set to `1` to auto-run `clang-format -i` and re-stage instead of rejecting the commit |
+| `SHADER_CLIPPY_HOOK_ALLOW_ANY_CLANG_FORMAT` | Set to `1` to skip the major-version-18 check                   |
+| `SHADER_CLIPPY_HOOK_FIX`                    | Set to `1` to auto-run `clang-format -i` and re-stage instead of rejecting the commit |
 
 See [tools/git-hooks/README.md](tools/git-hooks/README.md) for full
 details.
@@ -96,7 +96,7 @@ cmake -B build-debug -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 cmake --build build
 
 # Run the binary
-./build/hlsl-clippy --help
+./build/shader-clippy --help
 ```
 
 On Windows with MSVC:
@@ -104,7 +104,7 @@ On Windows with MSVC:
 ```cmd
 cmake -B build
 cmake --build build --config Release
-.\build\Release\hlsl-clippy.exe --help
+.\build\Release\shader-clippy.exe --help
 ```
 
 ---
@@ -247,7 +247,7 @@ This is a walkthrough for adding a new lint rule. Rules that do not yet have a w
 
 ### Step 1 — Propose the rule
 
-Open a [rule proposal issue](https://github.com/NelCit/hlsl-clippy/issues/new?template=rule_proposal.yml). The template requires:
+Open a [rule proposal issue](https://github.com/NelCit/shader-clippy/issues/new?template=rule_proposal.yml). The template requires:
 
 - Rule name (kebab-case ID)
 - Category (`math`, `bindings`, `texture`, `control-flow`, `performance`)
@@ -322,13 +322,13 @@ Apache-2.0 is also the license used by several projects in this ecosystem (LLVM,
 
 **For first-time contributors:**
 
-- Issues labelled [`good first issue`](https://github.com/NelCit/hlsl-clippy/labels/good%20first%20issue) — small, well-scoped tasks.
+- Issues labelled [`good first issue`](https://github.com/NelCit/shader-clippy/labels/good%20first%20issue) — small, well-scoped tasks.
 - Documentation improvements — the `docs/` directory is the seed of the docs site; errors, unclear phrasing, and missing content are all welcome fixes.
 - Test fixture additions — add `tests/fixtures/` examples for patterns you want to see covered.
 
 **For graphics engineers:**
 
-- [Rule proposals](https://github.com/NelCit/hlsl-clippy/issues/new?template=rule_proposal.yml) — if you know a portable HLSL pattern that hurts GPU performance or hides a correctness bug, open a proposal. The "why it matters on a GPU" section is where your knowledge has the most impact.
+- [Rule proposals](https://github.com/NelCit/shader-clippy/issues/new?template=rule_proposal.yml) — if you know a portable HLSL pattern that hurts GPU performance or hides a correctness bug, open a proposal. The "why it matters on a GPU" section is where your knowledge has the most impact.
 
 **For tooling contributors:**
 

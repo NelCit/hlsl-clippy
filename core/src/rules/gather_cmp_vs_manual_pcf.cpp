@@ -20,15 +20,15 @@
 #include <utility>
 #include <vector>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::is_id_char;
@@ -130,4 +130,4 @@ std::unique_ptr<Rule> make_gather_cmp_vs_manual_pcf() {
     return std::make_unique<GatherCmpVsManualPcf>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

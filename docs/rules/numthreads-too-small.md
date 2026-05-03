@@ -61,7 +61,7 @@ none
 
 ## Fix availability
 
-**none** — Increasing the thread group size requires restructuring shader logic, updating CPU-side `Dispatch` parameters, and reviewing groupshared memory layout and indexing. No automated fix is offered. Add `// hlsl-clippy: allow(numthreads-too-small)` to suppress the diagnostic on a specific kernel where a small thread count is intentional (for example, a wave-intrinsic kernel that must run exactly 8 threads for algorithmic reasons).
+**none** — Increasing the thread group size requires restructuring shader logic, updating CPU-side `Dispatch` parameters, and reviewing groupshared memory layout and indexing. No automated fix is offered. Add `// shader-clippy: allow(numthreads-too-small)` to suppress the diagnostic on a specific kernel where a small thread count is intentional (for example, a wave-intrinsic kernel that must run exactly 8 threads for algorithmic reasons).
 
 ## See also
 
@@ -72,6 +72,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/numthreads-too-small.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/numthreads-too-small.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

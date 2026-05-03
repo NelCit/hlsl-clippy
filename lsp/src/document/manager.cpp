@@ -9,7 +9,7 @@
 #include <string_view>
 #include <utility>
 
-namespace hlsl_clippy::lsp::document {
+namespace shader_clippy::lsp::document {
 
 namespace {
 
@@ -159,4 +159,4 @@ void DocumentManager::mark_linted(std::string_view uri) {
     }
 }
 
-}  // namespace hlsl_clippy::lsp::document
+}  // namespace shader_clippy::lsp::document

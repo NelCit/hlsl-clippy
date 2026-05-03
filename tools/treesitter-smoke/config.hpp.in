@@ -5,5 +5,5 @@
 
 namespace smoke {
 // Absolute path to the project root, injected at configure time.
-inline constexpr std::string_view k_project_root = "@HLSL_CLIPPY_ROOT@";
+inline constexpr std::string_view k_project_root = "@SHADER_CLIPPY_ROOT@";
 } // namespace smoke

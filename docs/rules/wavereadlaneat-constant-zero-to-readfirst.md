@@ -60,7 +60,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — The fix replaces `WaveReadLaneAt(expr, 0)` with `WaveReadLaneFirst(expr)`, dropping the lane-index argument. The rewrite is strictly safer than the original: where the original is UB on a partially-active wave (lane 0 not in the active mask), the rewrite is well-defined as "the first active lane", which is the behaviour every well-written program written as `WaveReadLaneAt(x, 0)` actually wants. Codegen is also strictly cheaper on every IHV (RDNA `v_readfirstlane_b32` vs `v_readlane_b32`; Turing/Ada folded-source `SHFL.IDX`; Xe-HPG thread-broadcast fast path). `hlsl-clippy fix` applies the rewrite automatically.
+**machine-applicable** — The fix replaces `WaveReadLaneAt(expr, 0)` with `WaveReadLaneFirst(expr)`, dropping the lane-index argument. The rewrite is strictly safer than the original: where the original is UB on a partially-active wave (lane 0 not in the active mask), the rewrite is well-defined as "the first active lane", which is the behaviour every well-written program written as `WaveReadLaneAt(x, 0)` actually wants. Codegen is also strictly cheaper on every IHV (RDNA `v_readfirstlane_b32` vs `v_readlane_b32`; Turing/Ada folded-source `SHFL.IDX`; Xe-HPG thread-broadcast fast path). `shader-clippy fix` applies the rewrite automatically.
 
 ## See also
 
@@ -72,6 +72,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/wavereadlaneat-constant-zero-to-readfirst.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/wavereadlaneat-constant-zero-to-readfirst.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

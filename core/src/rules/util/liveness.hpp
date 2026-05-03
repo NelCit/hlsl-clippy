@@ -36,14 +36,14 @@
 #include <utility>
 #include <vector>
 
-#include "hlsl_clippy/control_flow.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/control_flow.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 class AstTree;  // forward declaration; defined in `parser_internal.hpp`
 }
 
-namespace hlsl_clippy::util {
+namespace shader_clippy::util {
 
 /// Per-block live-variable summary. Keys are AST-level identifier names
 /// extracted from the source; values are sorted vectors of names so that
@@ -80,4 +80,4 @@ struct LivenessInfo {
 /// block in the CFG.
 [[nodiscard]] LivenessInfo compute_liveness(const ControlFlowInfo& cfg, const AstTree& tree);
 
-}  // namespace hlsl_clippy::util
+}  // namespace shader_clippy::util

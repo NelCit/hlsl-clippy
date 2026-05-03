@@ -60,7 +60,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Replacing `length(v) < r` with `dot(v, v) < r * r` is valid for any `r >= 0`. For `r < 0`, the original `length(v) < r` is always false (length is non-negative), whereas `r * r` would yield a positive right-hand side, making the comparison potentially true — a semantic mismatch. The tool checks whether `r` is statically non-negative (a positive literal, `abs(...)`, a `saturate(...)` output, or similar); if it cannot verify this, it emits a `suggestion` instead of applying automatically. For the common case of a literal or `abs`-wrapped radius, `hlsl-clippy fix` applies the transformation automatically.
+**machine-applicable** — Replacing `length(v) < r` with `dot(v, v) < r * r` is valid for any `r >= 0`. For `r < 0`, the original `length(v) < r` is always false (length is non-negative), whereas `r * r` would yield a positive right-hand side, making the comparison potentially true — a semantic mismatch. The tool checks whether `r` is statically non-negative (a positive literal, `abs(...)`, a `saturate(...)` output, or similar); if it cannot verify this, it emits a `suggestion` instead of applying automatically. For the common case of a literal or `abs`-wrapped radius, `shader-clippy fix` applies the transformation automatically.
 
 ## See also
 
@@ -71,6 +71,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/length-comparison.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/length-comparison.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

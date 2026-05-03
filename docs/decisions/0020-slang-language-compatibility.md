@@ -101,7 +101,7 @@ Slang the *compiler* (the binary `slangc` and library `libslang.so` /
 either by file extension (`.hlsl` → HLSL frontend, `.slang` → Slang
 frontend) or by an explicit `-source-language` flag.
 
-### What's currently parseable in `hlsl-clippy`
+### What's currently parseable in `shader-clippy`
 
 This linter today (v1.2.0) plumbs Slang as the **compiler** for reflection
 (ADR 0001, ADR 0012) and uses **tree-sitter-hlsl** (ADR 0002) as the
@@ -120,7 +120,7 @@ for reflection today** — that's why sub-phase A is a tractable v1.3 ship.
 ### Why this matters now
 
 - **Brand confusion in the marketplace.** Searching "slang" on the VS Code
-  Marketplace turns up our `nelcit.hlsl-clippy` extension as a
+  Marketplace turns up our `nelcit.shader-clippy` extension as a
   "performance + correctness rules beyond what dxc catches" listing,
   alongside `shader-slang.slang` (the official language extension). Users
   open a `.slang` file and the linter does nothing — confusing without an
@@ -134,7 +134,7 @@ for reflection today** — that's why sub-phase A is a tractable v1.3 ship.
 - **ADR 0019's v1.x maintenance contract.** v1.x adds features without
   breaking ABI. Slang language support is purely additive: new file
   extension recognition, new VS Code language contribution, new
-  config knob. No public type changes in `core/include/hlsl_clippy/`.
+  config knob. No public type changes in `core/include/shader_clippy/`.
   Lands cleanly as v1.3.
 
 This ADR mirrors the **research-direction shape** of [ADR
@@ -159,7 +159,7 @@ all sub-phase A work is plumbing.
 - **No ABI break.** v1.3 ships within the v1.x stability commitment
   (ADR 0019). All sub-phase A changes are additive: a new method or two
   on `Config`, a new file-extension list in the VS Code manifest, a new
-  language registration. Public types in `core/include/hlsl_clippy/`
+  language registration. Public types in `core/include/shader_clippy/`
   are untouched.
 - **Telemetry-gated B and C.** Don't do tree-sitter-slang work
   speculatively. Ship sub-phase A, observe whether `.slang` users
@@ -247,7 +247,7 @@ considered an implementation detail and may change between releases.
 normalise HLSL and Slang sources into the same `IModule` /
 `TypeReflection` / `EntryPointReflection` types. From the linter's
 perspective, a `.hlsl` and a `.slang` file produce the same shape of
-`ReflectionInfo` (`core/include/hlsl_clippy/reflection.hpp`'s
+`ReflectionInfo` (`core/include/shader_clippy/reflection.hpp`'s
 public types). Slang-specific metadata (generic specialisations,
 interface conformances, capability requirements) *is* surfaced
 through additional `TypeReflection` queries (`getGenericContainer()`,
@@ -349,7 +349,7 @@ none exist today and none ship in v1.3.
 
 **CLI today** (`cli/src/main.cpp`): the `lint` subcommand accepts
 arbitrary path arguments — there is no extension whitelist. Users can
-already run `hlsl-clippy lint foo.slang`; the file is read, passed to
+already run `shader-clippy lint foo.slang`; the file is read, passed to
 the parser (which produces ERROR tree), and Reflection-stage rules
 *do* fire (Slang reflection ingests `.slang` natively) while AST/CFG
 rules silently produce noise or nothing.
@@ -397,7 +397,7 @@ gate command palette items, status-bar updates, etc.
   contributes `slang`. VS Code resolves this by either letting both
   extensions handle the document (typical case — one provides syntax
   highlighting, the other diagnostics) or by user-side preference.
-  We add a config knob `hlslClippy.slang.enable` (default `true`,
+  We add a config knob `shaderClippy.slang.enable` (default `true`,
   suppressible) for users who prefer the official extension to handle
   `.slang` exclusively.
 - Update `documentSelector` to include `{ scheme: "file", language: "slang" }`.
@@ -483,8 +483,8 @@ surface we need to justify (B)'s investment.
      `clippy::language-skip-ast` at line 1, column 1:
      > "[clippy::language-skip-ast] AST and CFG rules disabled on Slang
      >  source. 32 of 189 rules ran. Suppress this notice with
-     >  `// hlsl-clippy: allow(language-skip-ast)` or in the workspace
-     >  `.hlsl-clippy.toml` under `[rules]` `language-skip-ast = "allow"`."
+     >  `// shader-clippy: allow(language-skip-ast)` or in the workspace
+     >  `.shader-clippy.toml` under `[rules]` `language-skip-ast = "allow"`."
    - The rule ID `clippy::language-skip-ast` joins the tiny set of
      `clippy::*` infrastructure diagnostics already emitted (the
      parse-error and reflection-error families).
@@ -504,7 +504,7 @@ surface we need to justify (B)'s investment.
      - Update `documentSelector` to a 4-entry array (file/untitled ×
        hlsl/slang).
      - Update walkthrough `description` strings to include `.slang`.
-   - Add a config knob `hlslClippy.slang.enable` (boolean, default
+   - Add a config knob `shaderClippy.slang.enable` (boolean, default
      `true`) in `package.json` `contributes.configuration.properties`.
      When `false`, the VS Code extension does NOT register the `slang`
      language contribution at activation time (users who run
@@ -512,10 +512,10 @@ surface we need to justify (B)'s investment.
    - Marketplace `keywords` already contains `"slang"`; no change.
 
 4. **Config surface.**
-   - `core/include/hlsl_clippy/config.hpp`: add `enum class SourceLanguage { Auto, Hlsl, Slang };`
+   - `core/include/shader_clippy/config.hpp`: add `enum class SourceLanguage { Auto, Hlsl, Slang };`
      and `Config::source_language()` getter (default `Auto`). Set per
      `[lint] source-language = "auto" | "hlsl" | "slang"` in
-     `.hlsl-clippy.toml`. Per-file extension inference happens at the
+     `.shader-clippy.toml`. Per-file extension inference happens at the
      orchestrator when `Auto`.
    - **No ABI break:** new enum, new getter, new TOML key. Existing code
      paths default to `Auto`, which behaves exactly as v1.2.0 did for
@@ -620,7 +620,7 @@ ready. Sub-phase C lands on top of sub-phase B.
   intentionally diagnostic-only. Not in scope.
 - **`shader-slang.slang` cross-extension coordination.** If the official
   extension begins emitting LSP diagnostics that overlap ours, we add
-  a config knob `hlslClippy.slang.suppressOnConflict` to defer to
+  a config knob `shaderClippy.slang.suppressOnConflict` to defer to
   the official extension. Not in scope until conflict observed.
 - **Slang `interface`-conformance-aware reflection.** Sub-phase C will
   surface interface conformance through a new `ReflectionInfo` field,
@@ -654,11 +654,11 @@ ready. Sub-phase C lands on top of sub-phase B.
   VS Code but can produce double-squiggling or competing diagnostic
   scopes if the official extension also lints (it currently does not,
   but may grow that capability).
-  - *Mitigation 1:* config knob `hlslClippy.slang.enable` (default `true`).
+  - *Mitigation 1:* config knob `shaderClippy.slang.enable` (default `true`).
     Users who prefer the official extension toggle to `false`.
   - *Mitigation 2:* on activation, log a one-time message to the output
-    channel: "[hlsl-clippy] also handling .slang files. Set
-    `hlslClippy.slang.enable=false` to defer to shader-slang.slang."
+    channel: "[shader-clippy] also handling .slang files. Set
+    `shaderClippy.slang.enable=false` to defer to shader-slang.slang."
 - **Risk: false-positive rate on `.slang` is unmeasured.** v1.0 readiness
   criterion #3 (FP-rate ≤ 5% per warn-grade rule) was measured against
   HLSL corpus only.
@@ -687,7 +687,7 @@ ready. Sub-phase C lands on top of sub-phase B.
     a one-line "tested against .slang? yes/no/n.a." note in the rule's
     PR description. Honest disclosure, not blocking.
 - **Risk: `clippy::language-skip-ast` informational diagnostic spams
-  CI gate-mode runs.** Users running `hlsl-clippy lint --format=github-annotations
+  CI gate-mode runs.** Users running `shader-clippy lint --format=github-annotations
   shaders/**/*.{hlsl,slang}` see one info diagnostic per `.slang`
   file in their CI logs.
   - *Mitigation:* the diagnostic is `Severity::Info` (not Warning).

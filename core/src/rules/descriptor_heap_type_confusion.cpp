@@ -21,15 +21,15 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::is_id_char;
@@ -182,4 +182,4 @@ std::unique_ptr<Rule> make_descriptor_heap_type_confusion() {
     return std::make_unique<DescriptorHeapTypeConfusion>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

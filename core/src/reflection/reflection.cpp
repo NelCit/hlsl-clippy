@@ -1,15 +1,15 @@
 // Implementation of the public helpers declared in
-// `core/include/hlsl_clippy/reflection.hpp`. Pure value-type accessors -- no
+// `core/include/shader_clippy/reflection.hpp`. Pure value-type accessors -- no
 // Slang dependency. Lives under `core/src/reflection/` for code-organisation
 // reasons; the bridge / engine in this directory are unrelated to these
 // no-op helpers.
 
-#include "hlsl_clippy/reflection.hpp"
+#include "shader_clippy/reflection.hpp"
 
 #include <cstdint>
 #include <string_view>
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 std::uint32_t CBufferLayout::padding_bytes() const noexcept {
     std::uint32_t used = 0U;
@@ -53,4 +53,4 @@ const EntryPointInfo* ReflectionInfo::find_entry_point_by_name(
     return nullptr;
 }
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

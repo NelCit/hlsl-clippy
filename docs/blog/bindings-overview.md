@@ -27,7 +27,7 @@ index was wave-uniform. That is the shape of nearly every bindings footgun
 on D3D12: the syntax is fine, the API call is fine, the perf is gone.
 
 This post walks the four root signature parameter types, then digs into five
-specific patterns that the bindings rules in `hlsl-clippy` flag and explains
+specific patterns that the bindings rules in `shader-clippy` flag and explains
 the GPU mechanism behind each one. The companion [bindings rules
 catalogue](/rules/) has the full list; the deep dives below cover the
 mechanism buckets that account for most of the cost we have observed in real
@@ -267,7 +267,7 @@ Most of these rules are reflection-driven, not AST-driven. The pattern
 descriptor; only Slang's reflection knows the binding kind and only Slang's
 uniformity analysis knows whether `i` is divergent. The Phase 3
 infrastructure that plumbs Slang reflection into `RuleContext` is
-[ADR 0012](https://github.com/NelCit/hlsl-clippy/blob/main/docs/decisions/0012-phase-3-reflection-infrastructure.md);
+[ADR 0012](https://github.com/NelCit/shader-clippy/blob/main/docs/decisions/0012-phase-3-reflection-infrastructure.md);
 it lazily builds a per-source reflection cache, exposes a typed
 `ReflectionInfo` to rules, and confines `<slang.h>` to a single
 implementation file. The bindings rules above all live on top of that
@@ -296,8 +296,8 @@ morning before ship.
 
 ---
 
-`hlsl-clippy` is open source. Rules, issues, and discussion live at
-[github.com/NelCit/hlsl-clippy](https://github.com/NelCit/hlsl-clippy). If
+`shader-clippy` is open source. Rules, issues, and discussion live at
+[github.com/NelCit/shader-clippy](https://github.com/NelCit/shader-clippy). If
 you have encountered a binding-shape pattern that should be a lint rule,
 open an issue.
 

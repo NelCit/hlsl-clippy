@@ -17,7 +17,7 @@
 #                     tag version all agree.
 #   5. ADR index    — every `Accepted` ADR file under `docs/decisions/`
 #                     appears as an `Accepted` row in the CLAUDE.md table.
-#   6. Public hdrs  — every file under `core/include/hlsl_clippy/` has
+#   6. Public hdrs  — every file under `core/include/shader_clippy/` has
 #                     `#pragma once` and ends in `.hpp`.
 #
 # Usage:
@@ -266,8 +266,8 @@ if (-not (Test-Path -LiteralPath $decisionsDir) -or
 # ──────────────────────────────────────────────────────────────────────────
 # Check 6 — every public header has `#pragma once` and ends in `.hpp`.
 # ──────────────────────────────────────────────────────────────────────────
-Write-Host "[6/6] Public-header guard (core/include/hlsl_clippy/)"
-$headersDir = Join-Path $RepoRoot 'core\include\hlsl_clippy'
+Write-Host "[6/6] Public-header guard (core/include/shader_clippy/)"
+$headersDir = Join-Path $RepoRoot 'core\include\shader_clippy'
 $headerFails = 0
 if (-not (Test-Path -LiteralPath $headersDir)) {
     Fail "missing $headersDir"
@@ -288,7 +288,7 @@ if (-not (Test-Path -LiteralPath $headersDir)) {
         }
     }
     if ($headerFails -eq 0) {
-        Pass "every file under core/include/hlsl_clippy/ ends in .hpp + has #pragma once"
+        Pass "every file under core/include/shader_clippy/ ends in .hpp + has #pragma once"
     } else {
         Fail "$headerFails public-header guard violation(s)"
     }

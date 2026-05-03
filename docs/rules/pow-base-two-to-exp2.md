@@ -50,7 +50,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Replacing `pow(2.0, x)` with `exp2(x)` is a pure textual substitution. The result is mathematically identical for all finite `x` and is semantically safer (removes an unnecessary `log2` step that would be undefined for non-positive bases). `hlsl-clippy fix` applies it automatically.
+**machine-applicable** — Replacing `pow(2.0, x)` with `exp2(x)` is a pure textual substitution. The result is mathematically identical for all finite `x` and is semantically safer (removes an unnecessary `log2` step that would be undefined for non-positive bases). `shader-clippy fix` applies it automatically.
 
 ## See also
 
@@ -62,6 +62,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/pow-base-two-to-exp2.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/pow-base-two-to-exp2.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

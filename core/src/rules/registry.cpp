@@ -1,12 +1,12 @@
 #include <memory>
 #include <vector>
 
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rule.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rule.hpp"
 
 #include "rules.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 std::vector<std::unique_ptr<Rule>> make_default_rules() {
     std::vector<std::unique_ptr<Rule>> rules;
@@ -228,4 +228,4 @@ std::vector<std::unique_ptr<Rule>> make_default_rules() {
     return rules;
 }
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

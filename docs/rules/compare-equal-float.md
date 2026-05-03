@@ -22,7 +22,7 @@ Floating-point numbers represent values with finite precision: a 32-bit `float` 
 
 On GPU hardware, this fragility is amplified. Different shader stages run on different execution units and may use different rounding modes. Driver shader compilation pipelines are not required to preserve associativity, and compilers for RDNA, Turing, and Xe-HPG routinely reorder multiplications and additions to improve ILP or reduce register pressure. A value that compares equal on one driver version or GPU SKU may not compare equal on another, making float `==` a latent cross-vendor portability hazard as well as a correctness issue.
 
-The industry-standard fix is an epsilon comparison: `abs(a - b) < epsilon`, where `epsilon` is chosen based on the domain (world-space distances have different tolerances than normalised direction vectors). Because the correct epsilon is inherently domain-specific, `hlsl-clippy` cannot generate it automatically — hence `suggestion` applicability. The rule's job is to flag the smell; the programmer supplies the tolerance.
+The industry-standard fix is an epsilon comparison: `abs(a - b) < epsilon`, where `epsilon` is chosen based on the domain (world-space distances have different tolerances than normalised direction vectors). Because the correct epsilon is inherently domain-specific, `shader-clippy` cannot generate it automatically — hence `suggestion` applicability. The rule's job is to flag the smell; the programmer supplies the tolerance.
 
 ## Examples
 
@@ -75,9 +75,9 @@ bool integer_equal(int x) {
 
 ## Options
 
-- `tolerance-required` (bool, default: `false`) — When `false` (default), the rule fires on any float `==` or `!=`, regardless of context. When `true`, the rule still fires unless `hlsl-clippy` can statically detect that the comparison is guarded by an epsilon expression of the form `abs(a - b) < expr` or `distance(a, b) < expr` in the same scope. Setting `true` reduces noise on codebases where epsilon patterns are already established but not consistently applied.
+- `tolerance-required` (bool, default: `false`) — When `false` (default), the rule fires on any float `==` or `!=`, regardless of context. When `true`, the rule still fires unless `shader-clippy` can statically detect that the comparison is guarded by an epsilon expression of the form `abs(a - b) < expr` or `distance(a, b) < expr` in the same scope. Setting `true` reduces noise on codebases where epsilon patterns are already established but not consistently applied.
 
-Configure in `.hlsl-clippy.toml`:
+Configure in `.shader-clippy.toml`:
 
 ```toml
 [rules.compare-equal-float]
@@ -86,14 +86,14 @@ tolerance-required = true
 
 ## Fix availability
 
-**machine-applicable** (since v1.2 — ADR 0019) — The fix rewrites `a == b` to `abs((a) - (b)) < <epsilon>` and `a != b` to `abs((a) - (b)) >= <epsilon>`, where `<epsilon>` is taken from the project-tuned `Config::compare_epsilon()` (see `[float] compare-epsilon` in `.hlsl-clippy.toml`, default `1e-4`).
+**machine-applicable** (since v1.2 — ADR 0019) — The fix rewrites `a == b` to `abs((a) - (b)) < <epsilon>` and `a != b` to `abs((a) - (b)) >= <epsilon>`, where `<epsilon>` is taken from the project-tuned `Config::compare_epsilon()` (see `[float] compare-epsilon` in `.shader-clippy.toml`, default `1e-4`).
 
 The rewrite is machine-applicable when **both operands classify as side-effect-free** under the v1.2 purity oracle. Because the textual rewrite preserves operand evaluation count (each appears exactly once on both sides), purity is sufficient to make the substitution safe.
 
 The fix downgrades to **suggestion-only** when either operand contains a non-allowlisted call (e.g. `g(x)`), an assignment, or any other observable side effect. Hand-review the rewrite in that case.
 
 ```toml
-# .hlsl-clippy.toml — tune the inserted epsilon to your project's dynamic range.
+# .shader-clippy.toml — tune the inserted epsilon to your project's dynamic range.
 [float]
 compare-epsilon = 1e-3
 ```
@@ -108,4 +108,4 @@ compare-epsilon = 1e-3
 
 *© 2026 NelCit, CC-BY-4.0.*
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/compare-equal-float.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/compare-equal-float.md)

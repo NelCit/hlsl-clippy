@@ -62,7 +62,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — All three patterns are pure textual substitutions with no observable semantic change for finite, non-NaN inputs. The `x * 0.0` case assumes the author intends a literal zero rather than NaN propagation; if the surrounding code uses `x * 0.0` deliberately for NaN-sentinel purposes (uncommon), use an inline suppression comment. `hlsl-clippy fix` applies all three variants automatically.
+**machine-applicable** — All three patterns are pure textual substitutions with no observable semantic change for finite, non-NaN inputs. The `x * 0.0` case assumes the author intends a literal zero rather than NaN propagation; if the surrounding code uses `x * 0.0` deliberately for NaN-sentinel purposes (uncommon), use an inline suppression comment. `shader-clippy fix` applies all three variants automatically.
 
 ## See also
 
@@ -71,6 +71,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/mul-identity.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/mul-identity.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

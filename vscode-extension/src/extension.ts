@@ -1,8 +1,8 @@
 // Copyright 2026 NelCit
 // SPDX-License-Identifier: Apache-2.0
 //
-// Activation entry point for the HLSL Clippy VS Code extension. Spawns the
-// `hlsl-clippy-lsp` subprocess as a stdio LSP server (per ADR 0014, sub-phase
+// Activation entry point for the Shader Clippy VS Code extension. Spawns the
+// `shader-clippy-lsp` subprocess as a stdio LSP server (per ADR 0014, sub-phase
 // 5a — no socket transport in v0.5) and bridges it to VS Code via
 // `vscode-languageclient` v9.
 
@@ -39,7 +39,7 @@ let inlineDecorationTypes: {
 // (the LSP server emits a one-shot `clippy::language-skip-ast` notice the
 // first time a Slang document opens). Users who run the official
 // `shader-slang.slang` extension exclusively can opt out via the
-// `hlslClippy.slang.enable` config knob — when `false`, the activation path
+// `shaderClippy.slang.enable` config knob — when `false`, the activation path
 // strips `slang` from the language-id list before the document selector
 // is built.
 const k_languageIdsAlways = ["hlsl"] as const;
@@ -47,7 +47,7 @@ const k_languageIdSlang = "slang" as const;
 
 function getActiveLanguageIds(): readonly string[] {
     const enableSlang = vscode.workspace
-        .getConfiguration("hlslClippy")
+        .getConfiguration("shaderClippy")
         .get<boolean>("slang.enable", true);
     return enableSlang
         ? [...k_languageIdsAlways, k_languageIdSlang]
@@ -58,28 +58,28 @@ function isClippyLanguage(languageId: string): boolean {
     return getActiveLanguageIds().includes(languageId);
 }
 
-const k_clientId = "hlslClippy";
-const k_clientName = "HLSL Clippy";
+const k_clientId = "shaderClippy";
+const k_clientName = "Shader Clippy";
 
 // Visible signal in the status bar so users can tell at a glance whether
 // the extension activated, is in the middle of starting, or failed
 // silently. Without this, a working install and a broken install (e.g.
-// missing Slang DLLs on Windows -- the hlsl-clippy-lsp.exe load fails
+// missing Slang DLLs on Windows -- the shader-clippy-lsp.exe load fails
 // before the JSON-RPC handshake) look identical from the editor.
 // Most recent state, kept around so the diagnostic-count refresh can rebuild
 // the status text without losing the last health signal.
 let lastState: "starting" | "ready" | "error" = "starting";
-let lastTooltip = "HLSL Clippy: starting...";
+let lastTooltip = "Shader Clippy: starting...";
 
 function renderStatus() {
     if (!statusBarItem) {
         return;
     }
-    // Respect the user's preference: set `hlslClippy.showStatusBar` to
+    // Respect the user's preference: set `shaderClippy.showStatusBar` to
     // `false` to hide the badge entirely (it stays around for command
     // routing but is not shown in the status bar).
     const showStatusBar = vscode.workspace
-        .getConfiguration("hlslClippy")
+        .getConfiguration("shaderClippy")
         .get<boolean>("showStatusBar", true);
     if (!showStatusBar) {
         statusBarItem.hide();
@@ -93,7 +93,7 @@ function renderStatus() {
             : "$(error)";
 
     // Per-severity counts on the active editor. When there are zero
-    // diagnostics the badge collapses to just `$(check) HLSL Clippy` so
+    // diagnostics the badge collapses to just `$(check) Shader Clippy` so
     // the status bar stays quiet for clean files; when there is at least
     // one, we render `$(error) N $(warning) M $(info) K` (omitting any
     // tier with 0 to save real estate).
@@ -104,7 +104,7 @@ function renderStatus() {
         const uri = vscode.window.activeTextEditor.document.uri;
         if (uri.scheme === "file" || uri.scheme === "untitled") {
             for (const d of vscode.languages.getDiagnostics(uri)) {
-                if (d.source !== undefined && d.source !== "hlsl-clippy" && d.source !== "HLSL Clippy") {
+                if (d.source !== undefined && d.source !== "shader-clippy" && d.source !== "Shader Clippy") {
                     continue;
                 }
                 if (d.severity === vscode.DiagnosticSeverity.Error) errors++;
@@ -113,7 +113,7 @@ function renderStatus() {
             }
         }
     }
-    const parts: string[] = [`${icon} HLSL Clippy`];
+    const parts: string[] = [`${icon} Shader Clippy`];
     if (lastState === "ready") {
         if (errors > 0) parts.push(`$(error) ${errors}`);
         if (warnings > 0) parts.push(`$(warning) ${warnings}`);
@@ -121,7 +121,7 @@ function renderStatus() {
     }
     statusBarItem.text = parts.join(" ");
     statusBarItem.tooltip =
-        `${lastTooltip}\n\nClick for HLSL Clippy actions.`;
+        `${lastTooltip}\n\nClick for Shader Clippy actions.`;
     statusBarItem.backgroundColor =
         lastState === "error"
             ? new vscode.ThemeColor("statusBarItem.errorBackground")
@@ -137,7 +137,7 @@ function setStatus(state: "starting" | "ready" | "error", tooltip: string) {
         // Click the badge -> quick-pick of all extension actions instead
         // of the old single jump straight to the output channel. Output
         // channel is still on the menu, just not the only option.
-        statusBarItem.command = "hlslClippy.quickActions";
+        statusBarItem.command = "shaderClippy.quickActions";
         statusBarItem.show();
     }
     lastState = state;
@@ -148,18 +148,18 @@ function setStatus(state: "starting" | "ready" | "error", tooltip: string) {
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     outputChannel = vscode.window.createOutputChannel(k_clientName);
     context.subscriptions.push(outputChannel);
-    setStatus("starting", "HLSL Clippy: starting LSP server...");
+    setStatus("starting", "Shader Clippy: starting LSP server...");
     context.subscriptions.push({
         dispose: () => statusBarItem?.dispose(),
     });
 
     context.subscriptions.push(
-        vscode.commands.registerCommand("hlslClippy.restart", async () => {
+        vscode.commands.registerCommand("shaderClippy.restart", async () => {
             await restartServer(context);
         }),
     );
     context.subscriptions.push(
-        vscode.commands.registerCommand("hlslClippy.showOutput", () => {
+        vscode.commands.registerCommand("shaderClippy.showOutput", () => {
             outputChannel?.show(true);
         }),
     );
@@ -167,57 +167,57 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Lists every user-facing extension command in one place; works even
     // when no HLSL file is open (commands gate themselves internally).
     context.subscriptions.push(
-        vscode.commands.registerCommand("hlslClippy.quickActions", async () => {
+        vscode.commands.registerCommand("shaderClippy.quickActions", async () => {
             type QPItem = vscode.QuickPickItem & { command: string };
             const items: QPItem[] = [
                 {
                     label: "$(refresh) Re-lint Active Document",
                     description: "Force a re-run of the linter (Ctrl+Alt+L)",
-                    command: "hlslClippy.relintDocument",
+                    command: "shaderClippy.relintDocument",
                 },
                 {
                     label: "$(book) Open Rule Docs",
                     description: "Open the per-rule docs page for the diagnostic at the cursor (Ctrl+Alt+D)",
-                    command: "hlslClippy.openRuleDocs",
+                    command: "shaderClippy.openRuleDocs",
                 },
                 {
                     label: "$(comment-discussion) Suppress Rule for This Line",
-                    description: "Append `// hlsl-clippy: allow(rule)` to the current line",
-                    command: "hlslClippy.suppressRuleForLine",
+                    description: "Append `// shader-clippy: allow(rule)` to the current line",
+                    command: "shaderClippy.suppressRuleForLine",
                 },
                 {
                     label: "$(file) Suppress Rule for Entire File",
-                    description: "Insert a top-of-file `// hlsl-clippy: allow(rule)` directive",
-                    command: "hlslClippy.suppressRuleForFile",
+                    description: "Insert a top-of-file `// shader-clippy: allow(rule)` directive",
+                    command: "shaderClippy.suppressRuleForFile",
                 },
                 {
                     label: "$(wand) Fix All in Document",
                     description: "Apply every machine-applicable fix in the active document at once",
-                    command: "hlslClippy.fixAllInDocument",
+                    command: "shaderClippy.fixAllInDocument",
                 },
                 {
                     label: "$(list-tree) Show All Rules",
                     description: "Open the rule catalog in a side panel",
-                    command: "hlslClippy.showAllRules",
+                    command: "shaderClippy.showAllRules",
                 },
                 {
                     label: "$(output) Show Output Channel",
-                    description: "Reveal the HLSL Clippy log output",
-                    command: "hlslClippy.showOutput",
+                    description: "Reveal the Shader Clippy log output",
+                    command: "shaderClippy.showOutput",
                 },
                 {
                     label: "$(debug-restart) Restart LSP Server",
-                    description: "Stop and re-spawn hlsl-clippy-lsp",
-                    command: "hlslClippy.restart",
+                    description: "Stop and re-spawn shader-clippy-lsp",
+                    command: "shaderClippy.restart",
                 },
                 {
                     label: "$(rocket) Open Welcome Walkthrough",
                     description: "Re-open the first-install guided tour",
-                    command: "hlslClippy.openWalkthrough",
+                    command: "shaderClippy.openWalkthrough",
                 },
             ];
             const picked = await vscode.window.showQuickPick(items, {
-                title: "HLSL Clippy",
+                title: "Shader Clippy",
                 placeHolder: "Pick an action...",
             });
             if (picked) {
@@ -229,23 +229,23 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // walkthroughs through the Welcome page; this command offers a
     // command-palette path for users who closed the Welcome tab.
     context.subscriptions.push(
-        vscode.commands.registerCommand("hlslClippy.openWalkthrough", async () => {
+        vscode.commands.registerCommand("shaderClippy.openWalkthrough", async () => {
             await vscode.commands.executeCommand(
                 "workbench.action.openWalkthrough",
-                { category: "nelcit.hlsl-clippy#hlslClippy.gettingStarted" },
+                { category: "nelcit.shader-clippy#shaderClippy.gettingStarted" },
                 false,
             );
         }),
     );
     // Force a re-lint of the active document. Useful after editing
-    // .hlsl-clippy.toml or after enabling/disabling a rule via settings,
+    // .shader-clippy.toml or after enabling/disabling a rule via settings,
     // when the user wants to see the new behaviour without typing.
     context.subscriptions.push(
-        vscode.commands.registerCommand("hlslClippy.relintDocument", async () => {
+        vscode.commands.registerCommand("shaderClippy.relintDocument", async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor || !isClippyLanguage(editor.document.languageId)) {
                 void vscode.window.showInformationMessage(
-                    "HLSL Clippy: open a .hlsl document to re-lint it.",
+                    "Shader Clippy: open a .hlsl document to re-lint it.",
                 );
                 return;
             }
@@ -258,7 +258,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             // editor we just verified is HLSL.
             await vscode.commands.executeCommand("workbench.action.files.save");
             outputChannel?.appendLine(
-                `[hlsl-clippy] Re-lint requested for ${editor.document.uri.fsPath}`,
+                `[shader-clippy] Re-lint requested for ${editor.document.uri.fsPath}`,
             );
         }),
     );
@@ -267,7 +267,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // pair; we accept both. Falls back to listing all diagnostics if the
     // cursor isn't on one.
     context.subscriptions.push(
-        vscode.commands.registerCommand("hlslClippy.openRuleDocs", async (ruleArg?: string) => {
+        vscode.commands.registerCommand("shaderClippy.openRuleDocs", async (ruleArg?: string) => {
             let ruleId: string | undefined = typeof ruleArg === "string" ? ruleArg : undefined;
             if (!ruleId) {
                 const editor = vscode.window.activeTextEditor;
@@ -286,28 +286,28 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             }
             if (!ruleId || ruleId.startsWith("clippy::")) {
                 void vscode.window.showInformationMessage(
-                    "HLSL Clippy: place the cursor on a diagnostic to open its rule docs.",
+                    "Shader Clippy: place the cursor on a diagnostic to open its rule docs.",
                 );
                 return;
             }
-            const url = `https://github.com/NelCit/hlsl-clippy/blob/main/docs/rules/${ruleId}.md`;
+            const url = `https://github.com/NelCit/shader-clippy/blob/main/docs/rules/${ruleId}.md`;
             await vscode.env.openExternal(vscode.Uri.parse(url));
         }),
     );
 
     // Suppress a single rule for one line by inserting the inline-suppression
-    // comment the core understands (`// hlsl-clippy: allow(rule-id)`). When
+    // comment the core understands (`// shader-clippy: allow(rule-id)`). When
     // invoked from the right-click menu we infer the rule id from the
     // diagnostic at the cursor; when invoked programmatically the caller
     // can pass the rule id as the first argument.
     context.subscriptions.push(
         vscode.commands.registerCommand(
-            "hlslClippy.suppressRuleForLine",
+            "shaderClippy.suppressRuleForLine",
             async (ruleArg?: string, lineArg?: number) => {
                 const editor = vscode.window.activeTextEditor;
                 if (!editor || !isClippyLanguage(editor.document.languageId)) {
                     void vscode.window.showInformationMessage(
-                        "HLSL Clippy: open a .hlsl document to suppress a rule.",
+                        "Shader Clippy: open a .hlsl document to suppress a rule.",
                     );
                     return;
                 }
@@ -318,20 +318,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 const line = typeof lineArg === "number" ? lineArg : editor.selection.active.line;
                 const lineText = editor.document.lineAt(line).text;
                 // Append an inline suppression to the existing line. If the
-                // line already contains a `// hlsl-clippy: allow(...)` comment
+                // line already contains a `// shader-clippy: allow(...)` comment
                 // we extend the existing list rather than appending a second.
-                const existingMatch = lineText.match(/\/\/\s*hlsl-clippy:\s*allow\(([^)]*)\)/);
+                const existingMatch = lineText.match(/\/\/\s*shader-clippy:\s*allow\(([^)]*)\)/);
                 let edit: vscode.TextEdit;
                 if (existingMatch) {
                     const existingIds = existingMatch[1]!.split(",").map((s) => s.trim()).filter(Boolean);
                     if (existingIds.includes(ruleId)) {
                         void vscode.window.showInformationMessage(
-                            `HLSL Clippy: rule '${ruleId}' is already suppressed on this line.`,
+                            `Shader Clippy: rule '${ruleId}' is already suppressed on this line.`,
                         );
                         return;
                     }
                     existingIds.push(ruleId);
-                    const newComment = `// hlsl-clippy: allow(${existingIds.join(", ")})`;
+                    const newComment = `// shader-clippy: allow(${existingIds.join(", ")})`;
                     const start = lineText.indexOf(existingMatch[0]);
                     const range = new vscode.Range(line, start, line, start + existingMatch[0].length);
                     edit = vscode.TextEdit.replace(range, newComment);
@@ -339,7 +339,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                     const insertionPos = new vscode.Position(line, lineText.length);
                     edit = vscode.TextEdit.insert(
                         insertionPos,
-                        `  // hlsl-clippy: allow(${ruleId})`,
+                        `  // shader-clippy: allow(${ruleId})`,
                     );
                 }
                 const wsEdit = new vscode.WorkspaceEdit();
@@ -350,17 +350,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
 
     // Suppress a single rule for the entire file by inserting (or extending)
-    // a top-of-file `// hlsl-clippy: allow(rule-id)` directive. The same
+    // a top-of-file `// shader-clippy: allow(rule-id)` directive. The same
     // inline-suppression syntax is honoured at file scope when the comment
     // sits in the first 30 lines.
     context.subscriptions.push(
         vscode.commands.registerCommand(
-            "hlslClippy.suppressRuleForFile",
+            "shaderClippy.suppressRuleForFile",
             async (ruleArg?: string) => {
                 const editor = vscode.window.activeTextEditor;
                 if (!editor || !isClippyLanguage(editor.document.languageId)) {
                     void vscode.window.showInformationMessage(
-                        "HLSL Clippy: open a .hlsl document to suppress a rule.",
+                        "Shader Clippy: open a .hlsl document to suppress a rule.",
                     );
                     return;
                 }
@@ -376,12 +376,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 let edit: vscode.TextEdit | undefined;
                 for (let i = 0; i < scanLines; i++) {
                     const text = doc.lineAt(i).text;
-                    const m = text.match(/\/\/\s*hlsl-clippy:\s*allow\(([^)]*)\)/);
+                    const m = text.match(/\/\/\s*shader-clippy:\s*allow\(([^)]*)\)/);
                     if (m) {
                         const ids = m[1]!.split(",").map((s) => s.trim()).filter(Boolean);
                         if (ids.includes(ruleId)) {
                             void vscode.window.showInformationMessage(
-                                `HLSL Clippy: rule '${ruleId}' is already file-suppressed.`,
+                                `Shader Clippy: rule '${ruleId}' is already file-suppressed.`,
                             );
                             return;
                         }
@@ -390,7 +390,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                         const range = new vscode.Range(i, start, i, start + m[0].length);
                         edit = vscode.TextEdit.replace(
                             range,
-                            `// hlsl-clippy: allow(${ids.join(", ")})`,
+                            `// shader-clippy: allow(${ids.join(", ")})`,
                         );
                         extendedExisting = true;
                         break;
@@ -399,14 +399,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 if (!edit) {
                     edit = vscode.TextEdit.insert(
                         new vscode.Position(0, 0),
-                        `// hlsl-clippy: allow(${ruleId})\n`,
+                        `// shader-clippy: allow(${ruleId})\n`,
                     );
                 }
                 const wsEdit = new vscode.WorkspaceEdit();
                 wsEdit.set(doc.uri, [edit]);
                 await vscode.workspace.applyEdit(wsEdit);
                 outputChannel?.appendLine(
-                    `[hlsl-clippy] ${extendedExisting ? "Extended" : "Inserted"} file-scope allow for '${ruleId}'.`,
+                    `[shader-clippy] ${extendedExisting ? "Extended" : "Inserted"} file-scope allow for '${ruleId}'.`,
                 );
             },
         ),
@@ -416,10 +416,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // documented under docs/rules/ on github.com. Cheap markdown-style
     // table; no Marketplace asset bloat from local doc snapshots.
     context.subscriptions.push(
-        vscode.commands.registerCommand("hlslClippy.showAllRules", () => {
+        vscode.commands.registerCommand("shaderClippy.showAllRules", () => {
             const panel = vscode.window.createWebviewPanel(
-                "hlslClippyRules",
-                "HLSL Clippy — All Rules",
+                "shaderClippyRules",
+                "Shader Clippy — All Rules",
                 vscode.ViewColumn.Active,
                 { enableScripts: false },
             );
@@ -448,14 +448,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         ),
     );
 
-    // `source.fixAll.hlslClippy` -- the canonical "fix everything in this
+    // `source.fixAll.shaderClippy` -- the canonical "fix everything in this
     // document" code-action kind. Pairs with `editor.codeActionsOnSave`
     // so users can opt into auto-fixing on save:
-    //   "editor.codeActionsOnSave": { "source.fixAll.hlslClippy": "always" }
+    //   "editor.codeActionsOnSave": { "source.fixAll.shaderClippy": "always" }
     // Implementation: gather every diagnostic for the document, ask the
     // LSP for code actions on each, keep only the ones that are
     // machine-applicable, merge their edits into a single WorkspaceEdit.
-    const fixAllKind = vscode.CodeActionKind.SourceFixAll.append("hlslClippy");
+    const fixAllKind = vscode.CodeActionKind.SourceFixAll.append("shaderClippy");
     context.subscriptions.push(
         vscode.languages.registerCodeActionsProvider(
             codeActionSelector,
@@ -472,30 +472,30 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // code-action kind: that path adds a layer of provider re-entry but
     // doesn't add any edits the QuickFix gather doesn't already see.
     context.subscriptions.push(
-        vscode.commands.registerCommand("hlslClippy.fixAllInDocument", async () => {
+        vscode.commands.registerCommand("shaderClippy.fixAllInDocument", async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor || !isClippyLanguage(editor.document.languageId)) {
                 void vscode.window.showInformationMessage(
-                    "HLSL Clippy: open a .hlsl document to apply fix-all.",
+                    "Shader Clippy: open a .hlsl document to apply fix-all.",
                 );
                 return;
             }
             const result = await gatherFixAllEdit(editor.document);
             if (!result) {
                 void vscode.window.showInformationMessage(
-                    "HLSL Clippy: no auto-applicable fixes in this document.",
+                    "Shader Clippy: no auto-applicable fixes in this document.",
                 );
                 return;
             }
             const ok = await vscode.workspace.applyEdit(result.edit);
             const verb = ok ? "applied" : "rejected";
             outputChannel?.appendLine(
-                `[hlsl-clippy] Fix-all on ${editor.document.uri.fsPath}: ${result.count} ` +
+                `[shader-clippy] Fix-all on ${editor.document.uri.fsPath}: ${result.count} ` +
                     `fix${result.count === 1 ? "" : "es"} ${verb}.`,
             );
             if (!ok) {
                 void vscode.window.showWarningMessage(
-                    "HLSL Clippy: fix-all edit was rejected by VS Code (likely an overlap or stale range). Re-lint and try again.",
+                    "Shader Clippy: fix-all edit was rejected by VS Code (likely an overlap or stale range). Re-lint and try again.",
                 );
             }
         }),
@@ -515,8 +515,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }),
         vscode.workspace.onDidChangeConfiguration((event) => {
             if (
-                event.affectsConfiguration("hlslClippy.inlineDiagnostics") ||
-                event.affectsConfiguration("hlslClippy.showStatusBar")
+                event.affectsConfiguration("shaderClippy.inlineDiagnostics") ||
+                event.affectsConfiguration("shaderClippy.showStatusBar")
             ) {
                 renderStatus();
                 renderInlineDecorations();
@@ -530,14 +530,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(async (event) => {
             if (
-                event.affectsConfiguration("hlslClippy.serverPath") ||
-                event.affectsConfiguration("hlslClippy.targetProfile") ||
-                event.affectsConfiguration("hlslClippy.enableReflection") ||
-                event.affectsConfiguration("hlslClippy.enableControlFlow") ||
-                event.affectsConfiguration("hlslClippy.slang.enable")
+                event.affectsConfiguration("shaderClippy.serverPath") ||
+                event.affectsConfiguration("shaderClippy.targetProfile") ||
+                event.affectsConfiguration("shaderClippy.enableReflection") ||
+                event.affectsConfiguration("shaderClippy.enableControlFlow") ||
+                event.affectsConfiguration("shaderClippy.slang.enable")
             ) {
                 outputChannel?.appendLine(
-                    "[hlsl-clippy] Settings changed; restarting server.",
+                    "[shader-clippy] Settings changed; restarting server.",
                 );
                 await restartServer(context);
             }
@@ -552,29 +552,29 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             : ".hlsl / .hlsli";
         setStatus(
             "ready",
-            `HLSL Clippy: LSP server running. Open a ${langSummary} file to see diagnostics.`,
+            `Shader Clippy: LSP server running. Open a ${langSummary} file to see diagnostics.`,
         );
         outputChannel.appendLine(
-            `[hlsl-clippy] LSP server ready. Open a ${langSummary} file to see diagnostics in the Problems panel.`,
+            `[shader-clippy] LSP server ready. Open a ${langSummary} file to see diagnostics in the Problems panel.`,
         );
         if (langs.includes("slang")) {
             outputChannel.appendLine(
-                "[hlsl-clippy] Also handling .slang files (reflection-only baseline; ADR 0020 " +
-                    "sub-phase A). Set `hlslClippy.slang.enable=false` to defer to shader-slang.slang.",
+                "[shader-clippy] Also handling .slang files (reflection-only baseline; ADR 0020 " +
+                    "sub-phase A). Set `shaderClippy.slang.enable=false` to defer to shader-slang.slang.",
             );
         }
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        outputChannel.appendLine(`[hlsl-clippy] Failed to start: ${message}`);
-        setStatus("error", `HLSL Clippy: failed to start LSP server.\n${message}`);
+        outputChannel.appendLine(`[shader-clippy] Failed to start: ${message}`);
+        setStatus("error", `Shader Clippy: failed to start LSP server.\n${message}`);
         if (err instanceof ServerResolutionError) {
             void vscode.window.showErrorMessage(
-                `HLSL Clippy: ${err.message} ` +
-                    `Set "hlslClippy.serverPath" to the hlsl-clippy-lsp binary.`,
+                `Shader Clippy: ${err.message} ` +
+                    `Set "shaderClippy.serverPath" to the shader-clippy-lsp binary.`,
             );
         } else {
             void vscode.window.showErrorMessage(
-                `HLSL Clippy failed to start: ${message}`,
+                `Shader Clippy failed to start: ${message}`,
             );
         }
     }
@@ -596,7 +596,7 @@ async function startServer(context: vscode.ExtensionContext): Promise<void> {
     const settings = readSettings();
     const serverPath = await resolveServerBinary(context, settings, outputChannel);
 
-    outputChannel?.appendLine(`[hlsl-clippy] Spawning server: ${serverPath}`);
+    outputChannel?.appendLine(`[shader-clippy] Spawning server: ${serverPath}`);
 
     const cwd = workspaceCwd();
 
@@ -609,13 +609,13 @@ async function startServer(context: vscode.ExtensionContext): Promise<void> {
         debug: {
             command: serverPath,
             transport: TransportKind.stdio,
-            options: { cwd, env: { ...process.env, HLSL_CLIPPY_LSP_DEBUG: "1" } },
+            options: { cwd, env: { ...process.env, SHADER_CLIPPY_LSP_DEBUG: "1" } },
         },
     };
 
     // ADR 0020 sub-phase A — v1.3.0. The selector covers file/untitled URIs
     // for every language id we currently handle (`hlsl` always; `slang`
-    // when `hlslClippy.slang.enable` is true). Activation reads the knob
+    // when `shaderClippy.slang.enable` is true). Activation reads the knob
     // once; toggling it requires a server restart, which the
     // `onDidChangeConfiguration` handler below already triggers.
     const activeIds = getActiveLanguageIds();
@@ -629,13 +629,13 @@ async function startServer(context: vscode.ExtensionContext): Promise<void> {
         documentSelector,
         synchronize: {
             // Server-side file watcher will be the canonical one (per ADR 0014
-            // §4 — `client/registerCapability` for `**/.hlsl-clippy.toml`),
+            // §4 — `client/registerCapability` for `**/.shader-clippy.toml`),
             // but mirror it here so settings-changes round-trip cleanly under
             // older clients.
             fileEvents: vscode.workspace.createFileSystemWatcher(
-                "**/.hlsl-clippy.toml",
+                "**/.shader-clippy.toml",
             ),
-            configurationSection: "hlslClippy",
+            configurationSection: "shaderClippy",
         },
         initializationOptions: toInitializationOptions(settings),
         outputChannel,
@@ -650,7 +650,7 @@ async function startServer(context: vscode.ExtensionContext): Promise<void> {
     // through the client's own settings observer.
     const traceLevel = getTraceLevel();
     if (traceLevel !== "off") {
-        outputChannel?.appendLine(`[hlsl-clippy] Trace level: ${traceLevel}`);
+        outputChannel?.appendLine(`[shader-clippy] Trace level: ${traceLevel}`);
     }
 
     await client.start();
@@ -658,19 +658,19 @@ async function startServer(context: vscode.ExtensionContext): Promise<void> {
 }
 
 async function restartServer(context: vscode.ExtensionContext): Promise<void> {
-    setStatus("starting", "HLSL Clippy: restarting LSP server...");
+    setStatus("starting", "Shader Clippy: restarting LSP server...");
     if (client !== undefined && client.state !== State.Stopped) {
         await client.stop();
         client = undefined;
     }
     try {
         await startServer(context);
-        setStatus("ready", "HLSL Clippy: LSP server running.");
+        setStatus("ready", "Shader Clippy: LSP server running.");
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        setStatus("error", `HLSL Clippy: restart failed.\n${message}`);
+        setStatus("error", `Shader Clippy: restart failed.\n${message}`);
         void vscode.window.showErrorMessage(
-            `HLSL Clippy restart failed: ${message}`,
+            `Shader Clippy restart failed: ${message}`,
         );
     }
 }
@@ -688,7 +688,7 @@ function workspaceCwd(): string | undefined {
 
 /// Resolve a rule id from either an explicit caller argument or the
 /// diagnostic at the active editor's cursor. Returns `undefined` and shows
-/// a friendly message when the cursor is not on an HLSL Clippy diagnostic.
+/// a friendly message when the cursor is not on an Shader Clippy diagnostic.
 async function resolveRuleAtCursor(
     editor: vscode.TextEditor,
     ruleArg?: string,
@@ -700,7 +700,7 @@ async function resolveRuleAtCursor(
     const here = diags.find((d) => d.range.contains(editor.selection.active));
     if (!here || !here.code) {
         void vscode.window.showInformationMessage(
-            "HLSL Clippy: place the cursor on a diagnostic squiggle, then re-run the command.",
+            "Shader Clippy: place the cursor on a diagnostic squiggle, then re-run the command.",
         );
         return undefined;
     }
@@ -712,7 +712,7 @@ async function resolveRuleAtCursor(
             : code.value.toString();
     if (id.startsWith("clippy::")) {
         void vscode.window.showInformationMessage(
-            `HLSL Clippy: '${id}' is an engine diagnostic, not a rule -- nothing to suppress.`,
+            `Shader Clippy: '${id}' is an engine diagnostic, not a rule -- nothing to suppress.`,
         );
         return undefined;
     }
@@ -756,18 +756,18 @@ class ClippyAuxCodeActionProvider implements vscode.CodeActionProvider {
 
             out.push(
                 lineActions(
-                    `HLSL Clippy: suppress '${ruleId}' for this line`,
-                    "hlslClippy.suppressRuleForLine",
+                    `Shader Clippy: suppress '${ruleId}' for this line`,
+                    "shaderClippy.suppressRuleForLine",
                     [ruleId, range.start.line],
                 ),
                 lineActions(
-                    `HLSL Clippy: suppress '${ruleId}' for entire file`,
-                    "hlslClippy.suppressRuleForFile",
+                    `Shader Clippy: suppress '${ruleId}' for entire file`,
+                    "shaderClippy.suppressRuleForFile",
                     [ruleId],
                 ),
                 lineActions(
-                    `HLSL Clippy: open '${ruleId}' docs`,
-                    "hlslClippy.openRuleDocs",
+                    `Shader Clippy: open '${ruleId}' docs`,
+                    "shaderClippy.openRuleDocs",
                     [ruleId],
                 ),
             );
@@ -777,7 +777,7 @@ class ClippyAuxCodeActionProvider implements vscode.CodeActionProvider {
 }
 
 /// Inline-diagnostic decoration renderer (Error Lens style). Reads the
-/// `hlslClippy.inlineDiagnostics` setting:
+/// `shaderClippy.inlineDiagnostics` setting:
 ///   - `"off"`         (default for now -- opt-in to avoid surprising users)
 ///   - `"errors-only"` -- only Severity::Error gets a trailing message
 ///   - `"all"`         -- every severity gets one
@@ -827,7 +827,7 @@ function renderInlineDecorations() {
         return;
     }
 
-    const cfg = vscode.workspace.getConfiguration("hlslClippy");
+    const cfg = vscode.workspace.getConfiguration("shaderClippy");
     const mode = cfg.get<string>("inlineDiagnostics", "off");
     const types = ensureInlineDecorationTypes();
     if (mode === "off") {
@@ -843,7 +843,7 @@ function renderInlineDecorations() {
 
     const seenLines = new Set<number>();
     for (const d of vscode.languages.getDiagnostics(editor.document.uri)) {
-        if (d.source !== undefined && d.source !== "hlsl-clippy" && d.source !== "HLSL Clippy") {
+        if (d.source !== undefined && d.source !== "shader-clippy" && d.source !== "Shader Clippy") {
             continue;
         }
         if (mode === "errors-only" && d.severity !== vscode.DiagnosticSeverity.Error) {
@@ -886,7 +886,7 @@ function renderInlineDecorations() {
 /// edits or re-pick the same first fix), and the outer
 /// CancellationToken can race the inner calls on large files.
 ///
-/// Aux actions ("HLSL Clippy: suppress ...", "HLSL Clippy: open ... docs")
+/// Aux actions ("Shader Clippy: suppress ...", "Shader Clippy: open ... docs")
 /// don't carry edits today, but the title-prefix guard keeps them out
 /// in case a future aux action does carry one.
 async function gatherFixAllEdit(
@@ -909,8 +909,8 @@ async function gatherFixAllEdit(
         (a) =>
             a.kind?.contains(vscode.CodeActionKind.QuickFix) === true &&
             a.edit !== undefined &&
-            !a.title.startsWith("HLSL Clippy: suppress") &&
-            !a.title.startsWith("HLSL Clippy: open"),
+            !a.title.startsWith("Shader Clippy: suppress") &&
+            !a.title.startsWith("Shader Clippy: open"),
     );
     if (fixes.length === 0) {
         return undefined;
@@ -927,7 +927,7 @@ async function gatherFixAllEdit(
     return { edit: merged, count: fixes.length };
 }
 
-/// `source.fixAll.hlslClippy` provider. Backs the `editor.codeActionsOnSave`
+/// `source.fixAll.shaderClippy` provider. Backs the `editor.codeActionsOnSave`
 /// flow plus any caller that asks VS Code for a SourceFixAll action.
 class ClippyFixAllProvider implements vscode.CodeActionProvider {
     constructor(private readonly fixAllKind: vscode.CodeActionKind) {}
@@ -947,7 +947,7 @@ class ClippyFixAllProvider implements vscode.CodeActionProvider {
             return [];
         }
         const action = new vscode.CodeAction(
-            `HLSL Clippy: apply ${result.count} fix${result.count === 1 ? "" : "es"}`,
+            `Shader Clippy: apply ${result.count} fix${result.count === 1 ? "" : "es"}`,
             this.fixAllKind,
         );
         action.edit = result.edit;
@@ -979,7 +979,7 @@ function renderRulesPanelHtml(): string {
     const rows = categories
         .map(([id, blurb]) => `
             <tr>
-              <td><a href="https://github.com/NelCit/hlsl-clippy/tree/main/docs/rules#${id}">${id}</a></td>
+              <td><a href="https://github.com/NelCit/shader-clippy/tree/main/docs/rules#${id}">${id}</a></td>
               <td>${blurb}</td>
             </tr>`)
         .join("");
@@ -989,7 +989,7 @@ function renderRulesPanelHtml(): string {
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';" />
-  <title>HLSL Clippy — All Rules</title>
+  <title>Shader Clippy — All Rules</title>
   <style>
     body { font-family: var(--vscode-font-family); padding: 16px; line-height: 1.5; }
     h1 { font-size: 20px; margin-bottom: 8px; }
@@ -1003,7 +1003,7 @@ function renderRulesPanelHtml(): string {
   </style>
 </head>
 <body>
-  <h1>HLSL Clippy — Rule Catalog</h1>
+  <h1>Shader Clippy — Rule Catalog</h1>
   <p class="lead">
     154 rules ship in v0.6.x across 15 categories. Click a category to jump
     to its section in the docs site. Per-rule pages are at
@@ -1018,7 +1018,7 @@ function renderRulesPanelHtml(): string {
     </tbody>
   </table>
   <p style="margin-top:24px;">
-    Tip: <code>HLSL Clippy: Open Rule Docs</code>
+    Tip: <code>Shader Clippy: Open Rule Docs</code>
     (<code>Ctrl+Alt+D</code> / <code>Cmd+Alt+D</code>) opens the per-rule
     page for the diagnostic at the cursor.
   </p>

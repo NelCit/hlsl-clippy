@@ -58,7 +58,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — Replacing the matched hand-rolled form with `smoothstep(edge0, edge1, x)` is a pure textual substitution. The HLSL specification defines `smoothstep(edge0, edge1, x)` as exactly the matched pattern: clamp-normalize then apply the cubic Hermite polynomial. The output is identical for all finite inputs where `edge0 != edge1`. When `edge0 == edge1` the result is implementation-defined (division by zero in both the manual form and the intrinsic); the tool emits a note if the edges are statically equal. `hlsl-clippy fix` applies it automatically.
+**machine-applicable** — Replacing the matched hand-rolled form with `smoothstep(edge0, edge1, x)` is a pure textual substitution. The HLSL specification defines `smoothstep(edge0, edge1, x)` as exactly the matched pattern: clamp-normalize then apply the cubic Hermite polynomial. The output is identical for all finite inputs where `edge0 != edge1`. When `edge0 == edge1` the result is implementation-defined (division by zero in both the manual form and the intrinsic); the tool emits a note if the edges are statically equal. `shader-clippy fix` applies it automatically.
 
 ## See also
 
@@ -68,6 +68,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/manual-smoothstep.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/manual-smoothstep.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

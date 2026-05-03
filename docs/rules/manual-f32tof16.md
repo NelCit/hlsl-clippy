@@ -96,7 +96,7 @@ none
 **machine-applicable** — Replacing the hand-rolled sequence with `f32tof16` or
 `f16tof32` is a safe textual substitution. The intrinsic is strictly more
 correct (handles denormals, NaN, infinity) and the semantic change for normal
-values is zero. `hlsl-clippy fix` applies the substitution automatically.
+values is zero. `shader-clippy fix` applies the substitution automatically.
 
 ## See also
 
@@ -110,7 +110,7 @@ values is zero. `hlsl-clippy fix` applies the substitution automatically.
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/manual-f32tof16.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/manual-f32tof16.md)
 
 ---
 

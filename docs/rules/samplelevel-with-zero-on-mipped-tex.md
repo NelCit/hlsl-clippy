@@ -64,7 +64,7 @@ none
 
 ## Fix availability
 
-**suggestion** — The rule can propose replacing `SampleLevel(s, uv, 0)` with `Sample(s, uv)` in pixel shader entry points. Because the correct substitute depends on the call site's shader stage and the intent of the original author, the fix requires verification before application. Use `// hlsl-clippy: allow(samplelevel-with-zero-on-mipped-tex)` to suppress at a specific call site when locking mip 0 is intentional (for example, when sampling a single-mip render target masquerading as a full-mip resource).
+**suggestion** — The rule can propose replacing `SampleLevel(s, uv, 0)` with `Sample(s, uv)` in pixel shader entry points. Because the correct substitute depends on the call site's shader stage and the intent of the original author, the fix requires verification before application. Use `// shader-clippy: allow(samplelevel-with-zero-on-mipped-tex)` to suppress at a specific call site when locking mip 0 is intentional (for example, when sampling a single-mip render target masquerading as a full-mip resource).
 
 ## See also
 
@@ -75,6 +75,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/samplelevel-with-zero-on-mipped-tex.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/samplelevel-with-zero-on-mipped-tex.md)
 
 *© 2026 NelCit, [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).*

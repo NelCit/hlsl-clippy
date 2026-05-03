@@ -18,14 +18,14 @@
 #include <utility>
 #include <vector>
 
-#include "hlsl_clippy/config.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/language.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rewriter.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
-#include "hlsl_clippy/version.hpp"
+#include "shader_clippy/config.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/language.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rewriter.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
+#include "shader_clippy/version.hpp"
 
 namespace {
 
@@ -46,7 +46,7 @@ enum class OutputFormat : std::uint8_t {
 // whitelist filtering happens) and is consumed by `--source-language=auto`
 // inference inside `core/src/language.cpp`. Adding `.slang` here documents
 // the v1.3 surface (ADR 0020 sub-phase A) and pre-positions the list for
-// future glob-walking work (e.g. `hlsl-clippy lint --recursive shaders/`).
+// future glob-walking work (e.g. `shader-clippy lint --recursive shaders/`).
 [[maybe_unused]] constexpr std::array<std::string_view, 11> k_recognized_extensions = {
     ".hlsl",
     ".hlsli",
@@ -62,8 +62,8 @@ enum class OutputFormat : std::uint8_t {
 };
 
 void print_usage() {
-    std::cout << "hlsl-clippy " << hlsl_clippy::version() << "\n"
-              << "Usage: hlsl-clippy <command> [args]\n"
+    std::cout << "shader-clippy " << shader_clippy::version() << "\n"
+              << "Usage: shader-clippy <command> [args]\n"
               << "\n"
               << "Commands:\n"
               << "  lint <file>...  [--fix] [--config <path>] [--target-profile <p>]\n"
@@ -76,7 +76,7 @@ void print_usage() {
               << "                (3-10x speedup vs N separate invocations on a\n"
               << "                shader tree). With --fix, apply\n"
               << "                machine-applicable rewrites in place. With\n"
-              << "                --config, use the given .hlsl-clippy.toml\n"
+              << "                --config, use the given .shader-clippy.toml\n"
               << "                instead of walking up from the file's parent.\n"
               << "                With --target-profile, override the Slang\n"
               << "                reflection profile (default: per-stage sm_6_6).\n"
@@ -95,22 +95,22 @@ void print_usage() {
               << "  --version     Print version\n";
 }
 
-[[nodiscard]] std::string_view severity_label(hlsl_clippy::Severity sev) noexcept {
+[[nodiscard]] std::string_view severity_label(shader_clippy::Severity sev) noexcept {
     switch (sev) {
-        case hlsl_clippy::Severity::Error:
+        case shader_clippy::Severity::Error:
             return "error";
-        case hlsl_clippy::Severity::Warning:
+        case shader_clippy::Severity::Warning:
             return "warning";
-        case hlsl_clippy::Severity::Note:
+        case shader_clippy::Severity::Note:
             return "note";
     }
     return "warning";
 }
 
-void render_diagnostic(const hlsl_clippy::Diagnostic& diag,
-                       const hlsl_clippy::SourceManager& sources,
+void render_diagnostic(const shader_clippy::Diagnostic& diag,
+                       const shader_clippy::SourceManager& sources,
                        std::ostream& out) {
-    const hlsl_clippy::SourceFile* file = sources.get(diag.primary_span.source);
+    const shader_clippy::SourceFile* file = sources.get(diag.primary_span.source);
     const auto lo = diag.primary_span.bytes.lo;
     const auto hi = diag.primary_span.bytes.hi;
     const auto loc = sources.resolve(diag.primary_span.source, lo);
@@ -203,10 +203,10 @@ void json_escape(std::string_view s, std::ostream& out) {
     out << '"';
 }
 
-void render_json_diagnostic(const hlsl_clippy::Diagnostic& diag,
-                            const hlsl_clippy::SourceManager& sources,
+void render_json_diagnostic(const shader_clippy::Diagnostic& diag,
+                            const shader_clippy::SourceManager& sources,
                             std::ostream& out) {
-    const hlsl_clippy::SourceFile* file = sources.get(diag.primary_span.source);
+    const shader_clippy::SourceFile* file = sources.get(diag.primary_span.source);
     const auto lo = diag.primary_span.bytes.lo;
     const auto hi = diag.primary_span.bytes.hi;
     const auto loc = sources.resolve(diag.primary_span.source, lo);
@@ -256,19 +256,19 @@ void github_escape(std::string_view s, std::ostream& out) {
     }
 }
 
-void render_github_annotation(const hlsl_clippy::Diagnostic& diag,
-                              const hlsl_clippy::SourceManager& sources,
+void render_github_annotation(const shader_clippy::Diagnostic& diag,
+                              const shader_clippy::SourceManager& sources,
                               std::ostream& out) {
-    const hlsl_clippy::SourceFile* file = sources.get(diag.primary_span.source);
+    const shader_clippy::SourceFile* file = sources.get(diag.primary_span.source);
     const auto lo = diag.primary_span.bytes.lo;
     const auto loc = sources.resolve(diag.primary_span.source, lo);
     const std::string path = file != nullptr ? file->path().string() : std::string{"<unknown>"};
 
     // Severity → workflow command. GH supports `error`, `warning`, `notice`.
     std::string_view command = "warning";
-    if (diag.severity == hlsl_clippy::Severity::Error) {
+    if (diag.severity == shader_clippy::Severity::Error) {
         command = "error";
-    } else if (diag.severity == hlsl_clippy::Severity::Note) {
+    } else if (diag.severity == shader_clippy::Severity::Note) {
         command = "notice";
     }
 
@@ -297,23 +297,23 @@ void render_github_annotation(const hlsl_clippy::Diagnostic& diag,
 // Parse `--source-language=<auto|hlsl|slang>` (ADR 0020 sub-phase A).
 // `auto` (default) defers the decision to per-file extension inference;
 // explicit values force the corresponding frontend regardless of extension.
-[[nodiscard]] std::optional<hlsl_clippy::SourceLanguage> parse_source_language(
+[[nodiscard]] std::optional<shader_clippy::SourceLanguage> parse_source_language(
     std::string_view value) noexcept {
     if (value == "auto") {
-        return hlsl_clippy::SourceLanguage::Auto;
+        return shader_clippy::SourceLanguage::Auto;
     }
     if (value == "hlsl") {
-        return hlsl_clippy::SourceLanguage::Hlsl;
+        return shader_clippy::SourceLanguage::Hlsl;
     }
     if (value == "slang") {
-        return hlsl_clippy::SourceLanguage::Slang;
+        return shader_clippy::SourceLanguage::Slang;
     }
     return std::nullopt;
 }
 
 // Auto-detect: if the user did not pass `--format`, default to
 // `github-annotations` when running inside a GitHub Actions runner so
-// `hlsl-clippy lint shader.hlsl` Just Works as a CI step. Outside Actions,
+// `shader-clippy lint shader.hlsl` Just Works as a CI step. Outside Actions,
 // keep `human` for interactive shell use.
 [[nodiscard]] OutputFormat detect_default_format() noexcept {
     const char* gh = std::getenv("GITHUB_ACTIONS");  // NOLINT(concurrency-mt-unsafe)
@@ -332,7 +332,7 @@ struct LintOptions {
     /// `--source-language=<auto|hlsl|slang>` (ADR 0020 sub-phase A — v1.3).
     /// `Auto` defers to per-file extension inference; explicit `Hlsl` or
     /// `Slang` overrides the inference for every path passed in argv.
-    hlsl_clippy::SourceLanguage source_language = hlsl_clippy::SourceLanguage::Auto;
+    shader_clippy::SourceLanguage source_language = shader_clippy::SourceLanguage::Auto;
 };
 
 [[nodiscard]] std::string read_file(const std::filesystem::path& path) {
@@ -352,16 +352,16 @@ bool write_file(const std::filesystem::path& path, std::string_view contents) {
     return stream.good();
 }
 
-[[nodiscard]] std::vector<hlsl_clippy::PrioritisedFix> collect_fixes(
-    const std::vector<hlsl_clippy::Diagnostic>& diagnostics) {
-    std::vector<hlsl_clippy::PrioritisedFix> out;
+[[nodiscard]] std::vector<shader_clippy::PrioritisedFix> collect_fixes(
+    const std::vector<shader_clippy::Diagnostic>& diagnostics) {
+    std::vector<shader_clippy::PrioritisedFix> out;
     for (const auto& d : diagnostics) {
         for (const auto& f : d.fixes) {
             if (!f.machine_applicable) {
                 continue;
             }
-            hlsl_clippy::PrioritisedFix pf;
-            pf.priority = hlsl_clippy::FixPriority{.severity = d.severity, .rule_id = d.code};
+            shader_clippy::PrioritisedFix pf;
+            pf.priority = shader_clippy::FixPriority{.severity = d.severity, .rule_id = d.code};
             pf.fix = f;
             out.push_back(std::move(pf));
         }
@@ -390,33 +390,33 @@ struct PerFileResult {
     PerFileResult result;
 
     if (!std::filesystem::exists(path)) {
-        std::cerr << "hlsl-clippy: file not found: " << path.string() << '\n';
+        std::cerr << "shader-clippy: file not found: " << path.string() << '\n';
         result.fatal = true;
         return result;
     }
 
-    hlsl_clippy::SourceManager sources;
+    shader_clippy::SourceManager sources;
     const auto src_id = sources.add_file(path);
     if (!src_id.valid()) {
-        std::cerr << "hlsl-clippy: could not read " << path.string() << '\n';
+        std::cerr << "shader-clippy: could not read " << path.string() << '\n';
         result.fatal = true;
         return result;
     }
 
-    auto rules = hlsl_clippy::make_default_rules();
+    auto rules = shader_clippy::make_default_rules();
 
     // Resolve a config: explicit `--config` first, then per-file walk-up.
     // Walk-up is per-file deliberately — a multi-file invocation can span
-    // multiple workspaces with their own `.hlsl-clippy.toml`.
-    std::optional<hlsl_clippy::Config> config;
+    // multiple workspaces with their own `.shader-clippy.toml`.
+    std::optional<shader_clippy::Config> config;
     std::filesystem::path resolved_config_path;
     if (!opts.config_path.empty()) {
         resolved_config_path = opts.config_path;
-    } else if (auto found = hlsl_clippy::find_config(path); found.has_value()) {
+    } else if (auto found = shader_clippy::find_config(path); found.has_value()) {
         resolved_config_path = *found;
     }
     if (!resolved_config_path.empty()) {
-        auto config_result = hlsl_clippy::load_config(resolved_config_path);
+        auto config_result = shader_clippy::load_config(resolved_config_path);
         if (!config_result) {
             const auto& err = config_result.error();
             std::cerr << err.source.string() << ':' << err.line << ':' << err.column
@@ -427,7 +427,7 @@ struct PerFileResult {
         config = std::move(config_result).value();
     }
 
-    hlsl_clippy::LintOptions lint_options;
+    shader_clippy::LintOptions lint_options;
     if (!opts.target_profile.empty()) {
         lint_options.target_profile = opts.target_profile;
     }
@@ -439,8 +439,8 @@ struct PerFileResult {
     // override is non-Auto: leaving it Auto preserves whatever the TOML
     // declared (or, if no TOML exists, the orchestrator's default
     // extension-based inference).
-    std::optional<hlsl_clippy::Config> effective_config = config;
-    if (opts.source_language != hlsl_clippy::SourceLanguage::Auto) {
+    std::optional<shader_clippy::Config> effective_config = config;
+    if (opts.source_language != shader_clippy::SourceLanguage::Auto) {
         if (!effective_config.has_value()) {
             effective_config.emplace();
         }
@@ -449,8 +449,8 @@ struct PerFileResult {
 
     const auto diagnostics =
         effective_config.has_value()
-            ? hlsl_clippy::lint(sources, src_id, rules, *effective_config, path, lint_options)
-            : hlsl_clippy::lint(sources, src_id, rules, lint_options);
+            ? shader_clippy::lint(sources, src_id, rules, *effective_config, path, lint_options)
+            : shader_clippy::lint(sources, src_id, rules, lint_options);
 
     result.diag_count = diagnostics.size();
 
@@ -473,9 +473,9 @@ struct PerFileResult {
     }
 
     for (const auto& diag : diagnostics) {
-        if (diag.severity == hlsl_clippy::Severity::Error) {
+        if (diag.severity == shader_clippy::Severity::Error) {
             result.any_error = true;
-        } else if (diag.severity == hlsl_clippy::Severity::Warning) {
+        } else if (diag.severity == shader_clippy::Severity::Warning) {
             result.any_warning = true;
         }
     }
@@ -487,27 +487,27 @@ struct PerFileResult {
             // Per-file no-op note only emitted in human format to keep
             // JSON/GH output strictly machine-parseable.
             if (format == OutputFormat::Human) {
-                std::cout << "hlsl-clippy: --fix had nothing to apply for " << path.string()
+                std::cout << "shader-clippy: --fix had nothing to apply for " << path.string()
                           << '\n';
             }
         } else {
             const std::string original = read_file(path);
             if (original.empty() && !std::filesystem::is_empty(path)) {
-                std::cerr << "hlsl-clippy: could not read " << path.string() << " for --fix\n";
+                std::cerr << "shader-clippy: could not read " << path.string() << " for --fix\n";
                 result.fatal = true;
                 return result;
             }
-            const hlsl_clippy::Rewriter rewriter;
-            std::vector<hlsl_clippy::FixConflict> conflicts;
+            const shader_clippy::Rewriter rewriter;
+            std::vector<shader_clippy::FixConflict> conflicts;
             const std::string rewritten = rewriter.apply(original, fixes, &conflicts);
             if (!write_file(path, rewritten)) {
-                std::cerr << "hlsl-clippy: could not write " << path.string() << '\n';
+                std::cerr << "shader-clippy: could not write " << path.string() << '\n';
                 result.fatal = true;
                 return result;
             }
             if (format == OutputFormat::Human) {
                 const auto applied_count = fixes.size() - conflicts.size();
-                std::cout << "hlsl-clippy: applied " << applied_count << " fix"
+                std::cout << "shader-clippy: applied " << applied_count << " fix"
                           << (applied_count == 1U ? "" : "es") << " to " << path.string() << '\n';
             }
             for (const auto& c : conflicts) {
@@ -523,7 +523,7 @@ struct PerFileResult {
 
 [[nodiscard]] int run_lint(const LintOptions& opts) {
     if (opts.paths.empty()) {
-        std::cerr << "hlsl-clippy: lint requires at least one file argument\n";
+        std::cerr << "shader-clippy: lint requires at least one file argument\n";
         return 2;
     }
 
@@ -558,7 +558,7 @@ struct PerFileResult {
         std::cout << "]\n";
     } else if (format == OutputFormat::Human && total_diags > 0U) {
         std::cout << '\n'
-                  << "hlsl-clippy: " << total_diags << " diagnostic"
+                  << "shader-clippy: " << total_diags << " diagnostic"
                   << (total_diags == 1U ? "" : "s") << " emitted across " << opts.paths.size()
                   << (opts.paths.size() == 1U ? " file\n" : " files\n");
     }
@@ -576,7 +576,7 @@ struct PerFileResult {
 [[nodiscard]] int parse_lint_args(std::span<const std::string_view> args, LintOptions& opts) {
     // args here is the tail after the `lint` subcommand.
     if (args.empty()) {
-        std::cerr << "hlsl-clippy: lint requires a file argument\n";
+        std::cerr << "shader-clippy: lint requires a file argument\n";
         return 2;
     }
     for (std::size_t i = 0; i < args.size(); ++i) {
@@ -587,7 +587,7 @@ struct PerFileResult {
         }
         if (a == "--config") {
             if (i + 1U >= args.size()) {
-                std::cerr << "hlsl-clippy: --config requires a path argument\n";
+                std::cerr << "shader-clippy: --config requires a path argument\n";
                 return 2;
             }
             opts.config_path = std::string{args[i + 1U]};
@@ -596,7 +596,7 @@ struct PerFileResult {
         }
         if (a == "--target-profile") {
             if (i + 1U >= args.size()) {
-                std::cerr << "hlsl-clippy: --target-profile requires a profile argument\n";
+                std::cerr << "shader-clippy: --target-profile requires a profile argument\n";
                 return 2;
             }
             opts.target_profile = std::string{args[i + 1U]};
@@ -609,7 +609,7 @@ struct PerFileResult {
             const auto value = a.substr(std::string_view{"--source-language="}.size());
             const auto parsed = parse_source_language(value);
             if (!parsed) {
-                std::cerr << "hlsl-clippy: unknown --source-language value: " << value
+                std::cerr << "shader-clippy: unknown --source-language value: " << value
                           << " (expected auto|hlsl|slang)\n";
                 return 2;
             }
@@ -618,12 +618,13 @@ struct PerFileResult {
         }
         if (a == "--source-language") {
             if (i + 1U >= args.size()) {
-                std::cerr << "hlsl-clippy: --source-language requires a value (auto|hlsl|slang)\n";
+                std::cerr
+                    << "shader-clippy: --source-language requires a value (auto|hlsl|slang)\n";
                 return 2;
             }
             const auto parsed = parse_source_language(args[i + 1U]);
             if (!parsed) {
-                std::cerr << "hlsl-clippy: unknown --source-language value: " << args[i + 1U]
+                std::cerr << "shader-clippy: unknown --source-language value: " << args[i + 1U]
                           << " (expected auto|hlsl|slang)\n";
                 return 2;
             }
@@ -636,7 +637,7 @@ struct PerFileResult {
             const auto value = a.substr(std::string_view{"--format="}.size());
             const auto parsed = parse_format(value);
             if (!parsed) {
-                std::cerr << "hlsl-clippy: unknown --format value: " << value
+                std::cerr << "shader-clippy: unknown --format value: " << value
                           << " (expected human|json|github-annotations)\n";
                 return 2;
             }
@@ -647,12 +648,12 @@ struct PerFileResult {
         if (a == "--format") {
             if (i + 1U >= args.size()) {
                 std::cerr
-                    << "hlsl-clippy: --format requires a value (human|json|github-annotations)\n";
+                    << "shader-clippy: --format requires a value (human|json|github-annotations)\n";
                 return 2;
             }
             const auto parsed = parse_format(args[i + 1U]);
             if (!parsed) {
-                std::cerr << "hlsl-clippy: unknown --format value: " << args[i + 1U]
+                std::cerr << "shader-clippy: unknown --format value: " << args[i + 1U]
                           << " (expected human|json|github-annotations)\n";
                 return 2;
             }
@@ -661,17 +662,17 @@ struct PerFileResult {
             continue;
         }
         if (a.starts_with("--")) {
-            std::cerr << "hlsl-clippy: unknown lint option: " << a << '\n';
+            std::cerr << "shader-clippy: unknown lint option: " << a << '\n';
             return 2;
         }
         // Positional argument — accumulate as a shader path. Multi-file
         // invocations amortize Slang init / rule registry / reflection
         // cache across all files in one process. Useful for tree-wide CI
-        // gates (`hlsl-clippy lint shaders/**/*.hlsl`).
+        // gates (`shader-clippy lint shaders/**/*.hlsl`).
         opts.paths.emplace_back(a);
     }
     if (opts.paths.empty()) {
-        std::cerr << "hlsl-clippy: lint requires at least one file argument\n";
+        std::cerr << "shader-clippy: lint requires at least one file argument\n";
         return 2;
     }
     return -1;  // sentinel: continue with run_lint.
@@ -696,7 +697,7 @@ struct PerFileResult {
         return 0;
     }
     if (cmd == "--version" || cmd == "-v") {
-        std::cout << hlsl_clippy::version() << "\n";
+        std::cout << shader_clippy::version() << "\n";
         return 0;
     }
     if (cmd == "lint") {
@@ -718,10 +719,10 @@ int main(int argc, char** argv) {
     try {
         return run_main(argc, argv);
     } catch (const std::exception& ex) {
-        std::cerr << "hlsl-clippy: fatal: " << ex.what() << '\n';
+        std::cerr << "shader-clippy: fatal: " << ex.what() << '\n';
         return 2;
     } catch (...) {
-        std::cerr << "hlsl-clippy: fatal: unknown exception\n";
+        std::cerr << "shader-clippy: fatal: unknown exception\n";
         return 2;
     }
 }

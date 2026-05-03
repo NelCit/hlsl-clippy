@@ -17,14 +17,14 @@ it is the wrong shape for the developer loop. Authors editing an HLSL file
 in VS Code want diagnostics squiggled inline as they type, code actions
 that apply quick-fixes from the lightbulb menu, hover tooltips that link
 to the rule documentation, and per-document config that follows the
-`.hlsl-clippy.toml` workspace boundary the CLI already understands.
+`.shader-clippy.toml` workspace boundary the CLI already understands.
 
 Per `ROADMAP.md` §"Phase 5 — Ergonomics: LSP + IDE":
 
 > - LSP server (small JSON-RPC layer; reuse the diagnostic + fix engine)
 > - VS Code extension (thin wrapper around LSP)
 > - Quick-fix surfaced as VS Code code actions
-> - Workspace-aware: respects `.hlsl-clippy.toml`, multi-root projects
+> - Workspace-aware: respects `.shader-clippy.toml`, multi-root projects
 > - Slang module / `#include` resolution wired into LSP
 
 Per CLAUDE.md "macOS CI deferred to Phase 5" and ADR 0005 §"Runners +
@@ -37,7 +37,7 @@ This ADR proposes the smallest viable architecture that hits all five
 ROADMAP bullets, brings macOS into CI, and respects every locked
 constraint already in the codebase:
 
-1. **`<slang.h>` MUST NOT appear in `core/include/hlsl_clippy/`.** ADR
+1. **`<slang.h>` MUST NOT appear in `core/include/shader_clippy/`.** ADR
    0001 + CLAUDE.md "What NOT to do". The LSP frontend MUST not introduce
    a fresh leak of Slang types through any new header it adds.
 2. **No exceptions across the `core` API boundary.** ADR 0004 + CLAUDE.md
@@ -69,11 +69,11 @@ Accepted.
   LSP-protocol responses. This is what keeps the rule-pack work in
   Phases 2/3/4 from blocking on Phase 5 infrastructure.
 
-- **Workspace-awareness.** `.hlsl-clippy.toml` is resolved per-document
+- **Workspace-awareness.** `.shader-clippy.toml` is resolved per-document
   via the existing `find_config()` walk-up (bounded by the first
-  `.git/` ancestor; see `core/include/hlsl_clippy/config.hpp`). The LSP
+  `.git/` ancestor; see `core/include/shader_clippy/config.hpp`). The LSP
   server reuses that resolver verbatim — no new resolution logic. A
-  file-watcher on `.hlsl-clippy.toml` invalidates the cached `Config`
+  file-watcher on `.shader-clippy.toml` invalidates the cached `Config`
   for every open document under that config root.
 
 - **Latency budget.** <100 ms p50 for incremental re-lint of a saved
@@ -107,7 +107,7 @@ Accepted.
 
 - **Distribution.** VS Code Marketplace + GitHub Releases. The CLI
   artifact pipeline (per ADR 0005) extends to ship a second per-platform
-  binary (`hlsl-clippy-lsp`) alongside the CLI; the extension binary
+  binary (`shader-clippy-lsp`) alongside the CLI; the extension binary
   bundles or lazily downloads them on first activation.
 
 - **Vendor-neutral LSP.** The server speaks plain LSP (3.17). VS Code
@@ -120,7 +120,7 @@ Accepted.
 
 ### Option A — Embed the LSP in the existing `cli` binary
 
-`hlsl-clippy --lsp` would put the LSP server behind a flag on the
+`shader-clippy --lsp` would put the LSP server behind a flag on the
 existing executable. One binary; one release artifact; the rule
 registry is already wired up.
 
@@ -143,8 +143,8 @@ registry is already wired up.
 ### Option B — Separate `lsp/` target binary, thin wrapper around `core`
 
 A new top-level `lsp/` directory mirroring `cli/`'s shape. New target
-`hlsl_clippy_lsp` (CMake naming convention; produces a binary called
-`hlsl-clippy-lsp`). Built on the same `core` library; uses the same
+`shader_clippy_lsp` (CMake naming convention; produces a binary called
+`shader-clippy-lsp`). Built on the same `core` library; uses the same
 Slang and tree-sitter dependencies; ships as its own Release artifact;
 the VS Code extension launches it as a subprocess.
 
@@ -215,14 +215,14 @@ lsp/
         CMakeLists.txt
 ```
 
-CMake target name: `hlsl_clippy_lsp` (per the `hlsl_clippy_*` naming
-convention used by `hlsl_clippy_warnings` and the existing `core`
-library). Produces a binary called `hlsl-clippy-lsp` (matching the
-`hlsl-clippy` CLI's hyphenated user-facing name).
+CMake target name: `shader_clippy_lsp` (per the `shader_clippy_*` naming
+convention used by `shader_clippy_warnings` and the existing `core`
+library). Produces a binary called `shader-clippy-lsp` (matching the
+`shader-clippy` CLI's hyphenated user-facing name).
 
 Built against the same vendored Slang + tree-sitter + tomlplusplus
-submodules as `core`. Links `hlsl_clippy_core` (PUBLIC) and
-`hlsl_clippy_warnings` (PRIVATE), same as the CLI.
+submodules as `core`. Links `shader_clippy_core` (PUBLIC) and
+`shader_clippy_warnings` (PRIVATE), same as the CLI.
 
 ### 2. JSON-RPC layer choice
 
@@ -313,12 +313,12 @@ exactly as the CLI behaves today.
 LSP-specific additions:
 
 - **`workspace/configuration` pull**. When the client supports it, the
-  server can pull `hlslClippy.*` settings from the editor instead of
+  server can pull `shaderClippy.*` settings from the editor instead of
   resolving from disk. Used for editor-only overrides (target-profile
   override, reflection toggle) that don't live in the project's
-  checked-in `.hlsl-clippy.toml`.
+  checked-in `.shader-clippy.toml`.
 - **`client/registerCapability` for file-watcher**. Server registers a
-  watch on `**/.hlsl-clippy.toml` at `initialize`. On
+  watch on `**/.shader-clippy.toml` at `initialize`. On
   `workspace/didChangeWatchedFiles`, the server re-resolves config
   for every open document whose `config_path` matches the changed
   file (or whose walk-up would now resolve differently if the file is
@@ -346,8 +346,8 @@ Initial scope, in scope for v0.5:
 | `textDocument/hover` | Rule id → docs page link + one-line description |
 | `workspace/configuration` | Pull editor-only settings on demand |
 | `workspace/didChangeConfiguration` | Re-resolve config; re-lint open docs |
-| `workspace/didChangeWatchedFiles` | Re-lint on `.hlsl-clippy.toml` change |
-| `client/registerCapability` | Server-side: register the `.hlsl-clippy.toml` watcher |
+| `workspace/didChangeWatchedFiles` | Re-lint on `.shader-clippy.toml` change |
+| `client/registerCapability` | Server-side: register the `.shader-clippy.toml` watcher |
 
 **Deferred to Phase 5+ / out of scope for v0.5:**
 
@@ -400,29 +400,29 @@ pairs) so the extension is functional even if no other HLSL extension
 is installed; if a community HLSL grammar is the conventional one,
 activation contributes to it rather than replacing it.
 
-**Settings (`hlslClippy.*`):**
+**Settings (`shaderClippy.*`):**
 
 | Setting | Type | Default | Purpose |
 | --- | --- | --- | --- |
-| `hlslClippy.serverPath` | `string` | `""` | Explicit path to `hlsl-clippy-lsp` binary; empty triggers download/cache resolution |
-| `hlslClippy.targetProfile` | `string` | `""` | Forwards to `LintOptions::target_profile` per ADR 0012; empty means per-stage default |
-| `hlslClippy.enableReflection` | `boolean` | `true` | Phase 3 toggle — `LintOptions::enable_reflection` |
-| `hlslClippy.enableControlFlow` | `boolean` | `true` | Phase 4 toggle (placeholder; ADR for Phase 4 infra cross-references this setting) |
-| `hlslClippy.trace.server` | `string` | `"off"` | Standard `vscode-languageclient` trace setting |
+| `shaderClippy.serverPath` | `string` | `""` | Explicit path to `shader-clippy-lsp` binary; empty triggers download/cache resolution |
+| `shaderClippy.targetProfile` | `string` | `""` | Forwards to `LintOptions::target_profile` per ADR 0012; empty means per-stage default |
+| `shaderClippy.enableReflection` | `boolean` | `true` | Phase 3 toggle — `LintOptions::enable_reflection` |
+| `shaderClippy.enableControlFlow` | `boolean` | `true` | Phase 4 toggle (placeholder; ADR for Phase 4 infra cross-references this setting) |
+| `shaderClippy.trace.server` | `string` | `"off"` | Standard `vscode-languageclient` trace setting |
 
 **Server-binary resolution.** On activation:
 
-1. If `hlslClippy.serverPath` is set, use it.
+1. If `shaderClippy.serverPath` is set, use it.
 2. Else, look for the binary in the extension's persistent storage
-   (`extensionContext.globalStorageUri / hlsl-clippy-lsp/<version>/`).
+   (`extensionContext.globalStorageUri / shader-clippy-lsp/<version>/`).
 3. If absent, download from the matching GitHub Release asset for
    the user's `process.platform` × `process.arch`; verify the
    release's published SHA-256; cache it.
 4. If the user is offline and no cache exists, surface a Marketplace-
    visible error message with instructions to install the binary
-   manually and set `hlslClippy.serverPath`.
+   manually and set `shaderClippy.serverPath`.
 
-The download manifest URL is hard-coded to the `NelCit/hlsl-clippy`
+The download manifest URL is hard-coded to the `NelCit/shader-clippy`
 GitHub Releases endpoint and pinned to the extension's version (so a
 v0.5.0 extension downloads a v0.5.0 LSP binary, never trips into a
 v0.6 binary mid-session).
@@ -480,9 +480,9 @@ Two parallel artifact tracks per Release tag:
 
 **GitHub Releases** (per ADR 0005's `softprops/action-gh-release@v2`):
 
-- `hlsl-clippy-cli-<version>-<os>-<arch>.tar.gz` (existing, extended to
+- `shader-clippy-cli-<version>-<os>-<arch>.tar.gz` (existing, extended to
   three OSes).
-- `hlsl-clippy-lsp-<version>-<os>-<arch>.tar.gz` (new).
+- `shader-clippy-lsp-<version>-<os>-<arch>.tar.gz` (new).
 - Signed where the platform requires it:
   - **macOS**: notarized via `notarytool`. Requires an Apple Developer
     ID; the project obtains one before Phase 5 v0.5 ships, separately
@@ -500,7 +500,7 @@ Two parallel artifact tracks per Release tag:
 
 - Publisher namespace: `nelcit` (lower-case; matches the GitHub org).
   Register early — Marketplace publisher verification can take days.
-- Extension identifier: `nelcit.hlsl-clippy`.
+- Extension identifier: `nelcit.shader-clippy`.
 - Publishing CI workflow gated on a release tag (`v*.*.*`): builds the
   `.vsix`, signs with the publisher token from a `VSCE_PAT` secret,
   uploads via `vsce publish`. Workflow is a separate `.github/workflows/
@@ -521,7 +521,7 @@ share design surface and serialise; 5c, 5d, 5e parallelise after 5a.
 
 Single PR, single agent. Lands:
 
-- `lsp/` directory + `hlsl_clippy_lsp` CMake target.
+- `lsp/` directory + `shader_clippy_lsp` CMake target.
 - `external/nlohmann_json/` git submodule + `cmake/UseNlohmannJson.cmake`.
 - `cmake/NlohmannJsonVersion.cmake` pinning the version.
 - `lsp/src/rpc/{dispatcher,framing}.{hpp,cpp}` — Content-Length-framed
@@ -549,7 +549,7 @@ Single PR, single agent. Builds on 5a. Lands:
   `WorkspaceEdit::changes[uri]: TextEdit[]`. One CodeAction per Fix.
 - `lsp/src/capabilities/hover.cpp` — diagnostic-at-cursor → docs page
   link. Docs URL pattern is hard-coded to
-  `https://nelcit.github.io/hlsl-clippy/rules/<rule-id>/` (matching
+  `https://nelcit.github.io/shader-clippy/rules/<rule-id>/` (matching
   the docs site Phase 6 ships); pre-Phase-6, link to the GitHub
   source path under `docs/rules/<rule-id>.md`.
 - Tests: `tests/unit/test_lsp_code_actions.cpp` — recorded transcript
@@ -604,7 +604,7 @@ Single PR, single agent. Requires 5a + 5b + 5c + 5d to have landed.
 Lands:
 
 - `.github/workflows/release.yml` extended:
-  - Builds `hlsl-clippy-lsp` artifact per OS × arch.
+  - Builds `shader-clippy-lsp` artifact per OS × arch.
   - macOS notarization step gated on `APPLE_NOTARY_KEY` secret.
   - SHA-256 sum file published alongside artifacts.
 - New `.github/workflows/release-vscode.yml`:
@@ -621,7 +621,7 @@ Effort: ~1 dev week, dominated by the first-time signing / notarization
 
 - **LSP becomes the primary developer-facing entry point; the CLI
   remains for CI.** Both surfaces share the same `core` library, the
-  same rule registry, the same `.hlsl-clippy.toml` schema, and the
+  same rule registry, the same `.shader-clippy.toml` schema, and the
   same `Fix` / `TextEdit` shape. Diagnostics in VS Code's Problems
   panel match diagnostics in CI logs byte-for-byte (modulo formatting).
 - **New JSON dependency on `nlohmann/json` (MIT, header-only).**
@@ -656,7 +656,7 @@ Effort: ~1 dev week, dominated by the first-time signing / notarization
   what the current layout absorbs cleanly.
 - **`<slang.h>` containment continues to hold.** The LSP binary links
   `core` and inherits the same boundary — the CI grep that already
-  forbids `<slang.h>` in `core/include/hlsl_clippy/` keeps passing
+  forbids `<slang.h>` in `core/include/shader_clippy/` keeps passing
   unchanged. ADR 0012 also forbids it under `core/src/rules/`; the
   `lsp/` binary should not include `<slang.h>` either, and the CI
   grep is extended to `lsp/src/`.
@@ -673,8 +673,8 @@ Effort: ~1 dev week, dominated by the first-time signing / notarization
   per profile within one lint run; in the long-lived LSP, that cache
   persists across re-lints, so steady-state is cache-hit. Debounced
   re-lint (~150 ms) on `didChange` smooths burst typing. Hard
-  opt-out via `hlslClippy.enableReflection = false` /
-  `hlslClippy.enableControlFlow = false` for users on slow machines
+  opt-out via `shaderClippy.enableReflection = false` /
+  `shaderClippy.enableControlFlow = false` for users on slow machines
   who want only AST rules. Status-bar item shows linting state so
   long-running first-compile is observable rather than mysterious.
 
@@ -689,7 +689,7 @@ Effort: ~1 dev week, dominated by the first-time signing / notarization
   Mitigation: the pinned Slang version (currently `2026.7.1`) is
   validated on Linux + Windows; macOS surfaces are historically the
   rocky ones. Stop-gap path: ship a "no-reflection macOS build" for
-  v0.5 — the LSP compiles `core` with `HLSL_CLIPPY_DISABLE_REFLECTION`
+  v0.5 — the LSP compiles `core` with `SHADER_CLIPPY_DISABLE_REFLECTION`
   defined, AST rule packs (Phases 0/1/2) work, reflection-stage
   rule packs are silently skipped on macOS until v0.6 reaches full
   feature parity. Accept a documented gap rather than blocking the
@@ -716,8 +716,8 @@ Effort: ~1 dev week, dominated by the first-time signing / notarization
   ADR 0013 (Phase 4 control-flow infrastructure — the
   `enableControlFlow` setting placeholder defers to it).
 - **LSP version targeted**: 3.17 (current at 2026-05-01). Server
-  declares `serverInfo.version = HLSL_CLIPPY_VERSION` from
-  `core/include/hlsl_clippy/version.hpp`.
+  declares `serverInfo.version = SHADER_CLIPPY_VERSION` from
+  `core/include/shader_clippy/version.hpp`.
 - **Editor-client compatibility**: tested at v0.5 release on VS Code
   ≥ 1.85. Neovim / Helix / Sublime LSP / emacs `lsp-mode`
   compatibility is best-effort — vendor-neutral LSP shape means it
@@ -730,7 +730,7 @@ Phase 5 v0.5 launch, or defer to community contributions?
 
 The proposal is **defer to community**. The LSP server contract is
 the long-term stable surface; once it ships, configuring
-`nvim-lspconfig` to spawn `hlsl-clippy-lsp` is ~10 lines of Lua that
+`nvim-lspconfig` to spawn `shader-clippy-lsp` is ~10 lines of Lua that
 any Neovim user can write themselves. Bundling our own Neovim plugin
 implies maintaining it — Neovim plugin conventions, `health.check()`
 integration, `:Mason` packaging coordination — and the maintenance

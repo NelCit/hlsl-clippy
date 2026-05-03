@@ -8,22 +8,22 @@ const rules_dir = fileURLToPath(new URL('../rules', import.meta.url))
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: 'hlsl-clippy',
+  title: 'shader-clippy',
   description:
     'Linter for HLSL — performance + correctness rules beyond what dxc catches',
 
-  // GitHub Pages project page lives at https://nelcit.github.io/hlsl-clippy/.
+  // GitHub Pages project page lives at https://nelcit.github.io/shader-clippy/.
   // The trailing slash on `base` is required by VitePress for asset paths.
-  base: '/hlsl-clippy/',
+  base: '/shader-clippy/',
 
   cleanUrls: true,
   lastUpdated: true,
 
   // Sitemap: lets crawlers discover every page without spidering. Hostname
-  // matches the GitHub Pages project page (must include the `/hlsl-clippy/`
+  // matches the GitHub Pages project page (must include the `/shader-clippy/`
   // base path; sitemap URLs auto-derive from `base`).
   sitemap: {
-    hostname: 'https://nelcit.github.io/hlsl-clippy/',
+    hostname: 'https://nelcit.github.io/shader-clippy/',
   },
 
   // Social-card meta for HN / Reddit / Twitter / Discord previews. The
@@ -31,12 +31,12 @@ export default defineConfig({
   // VitePress will fall back to the favicon.
   head: [
     ['meta', { name: 'description', content: 'Linter for HLSL — 154 portable performance + correctness rules beyond what dxc catches.' }],
-    ['meta', { property: 'og:title', content: 'hlsl-clippy' }],
+    ['meta', { property: 'og:title', content: 'shader-clippy' }],
     ['meta', { property: 'og:description', content: 'Linter for HLSL — 154 portable performance + correctness rules beyond what dxc catches.' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:url', content: 'https://nelcit.github.io/hlsl-clippy/' }],
+    ['meta', { property: 'og:url', content: 'https://nelcit.github.io/shader-clippy/' }],
     ['meta', { name: 'twitter:card', content: 'summary' }],
-    ['meta', { name: 'twitter:title', content: 'hlsl-clippy' }],
+    ['meta', { name: 'twitter:title', content: 'shader-clippy' }],
     ['meta', { name: 'twitter:description', content: 'Linter for HLSL — 154 portable performance + correctness rules beyond what dxc catches.' }],
   ],
 
@@ -86,7 +86,7 @@ export default defineConfig({
       { text: 'Roadmap', link: '/roadmap' },
       {
         text: 'GitHub',
-        link: 'https://github.com/NelCit/hlsl-clippy',
+        link: 'https://github.com/NelCit/shader-clippy',
       },
     ],
 
@@ -154,11 +154,11 @@ export default defineConfig({
     outline: [2, 3],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/NelCit/hlsl-clippy' },
+      { icon: 'github', link: 'https://github.com/NelCit/shader-clippy' },
     ],
 
     editLink: {
-      pattern: 'https://github.com/NelCit/hlsl-clippy/edit/main/docs/:path',
+      pattern: 'https://github.com/NelCit/shader-clippy/edit/main/docs/:path',
       text: 'Edit this page on GitHub',
     },
 

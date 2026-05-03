@@ -74,6 +74,6 @@ psoSubobjects.push_back({ D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_PIPELINE_CONFIG,
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/recursion-depth-not-declared.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/recursion-depth-not-declared.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

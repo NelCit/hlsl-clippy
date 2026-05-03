@@ -17,10 +17,10 @@ pwsh  tools/fetch-slang.ps1        # Windows
 ```
 
 `cmake/UseSlang.cmake` looks for the prebuilt at
-`$HOME/.cache/hlsl-clippy/slang/<version>/` (POSIX) or
-`%LOCALAPPDATA%\hlsl-clippy\slang\<version>\` (Windows). Power users can
+`$HOME/.cache/shader-clippy/slang/<version>/` (POSIX) or
+`%LOCALAPPDATA%\shader-clippy\slang\<version>\` (Windows). Power users can
 also export `Slang_ROOT=/path/to/your/slang/install` to point at a
-custom build. See [`external/slang-version.md`](https://github.com/NelCit/hlsl-clippy/blob/main/external/slang-version.md)
+custom build. See [`external/slang-version.md`](https://github.com/NelCit/shader-clippy/blob/main/external/slang-version.md)
 for details.
 
 ### macOS: "no template named 'expected' in namespace 'std'"
@@ -71,7 +71,7 @@ dot-source again (idempotent).
 
 Expected. Four pre-existing `STATUS_STACK_BUFFER_OVERRUN` crashes in
 `test_golden_snapshots.cpp` are tracked in
-[tests/KNOWN_FAILURES.md](https://github.com/NelCit/hlsl-clippy/blob/main/tests/KNOWN_FAILURES.md).
+[tests/KNOWN_FAILURES.md](https://github.com/NelCit/shader-clippy/blob/main/tests/KNOWN_FAILURES.md).
 The other 667 tests should all pass.
 
 ### CMake preset `dev-debug` / `ci-msvc` "No such preset"
@@ -91,10 +91,10 @@ Three escalation levels:
 
 1. **Per-line / per-block** — drop a comment:
    ```hlsl
-   float k = pow(x, 2.0);  // hlsl-clippy: allow(pow-const-squared)
+   float k = pow(x, 2.0);  // shader-clippy: allow(pow-const-squared)
    ```
 2. **Per-directory** — add an `[[overrides]]` block to your
-   `.hlsl-clippy.toml` ([reference](/configuration#per-directory-rule-tuning)).
+   `.shader-clippy.toml` ([reference](/configuration#per-directory-rule-tuning)).
 3. **Globally** — set the rule to `"off"` in `[rules]`:
    ```toml
    [rules]
@@ -136,7 +136,7 @@ A few possible causes:
 
 ### `--fix` produces broken HLSL
 
-File a [bug report](https://github.com/NelCit/hlsl-clippy/issues/new?template=bug_report.yml)
+File a [bug report](https://github.com/NelCit/shader-clippy/issues/new?template=bug_report.yml)
 with the input shader, the rule id that fired, and the broken output.
 Machine-applicable fixes should be type-safe; if one isn't, that's a
 correctness bug.
@@ -145,18 +145,18 @@ correctness bug.
 
 ### Extension installed but no diagnostics show
 
-1. Open the Output panel (`View → Output`) and pick **HLSL Clippy** from
+1. Open the Output panel (`View → Output`) and pick **Shader Clippy** from
    the dropdown. Look for an error from the LSP server lookup.
 2. The most common cause behind a corporate firewall is that the
    bundled binary path didn't resolve — ensure you installed the
    per-platform `.vsix` matching your OS+arch (Marketplace handles this
    automatically; if you sideloaded, double-check the filename).
-3. Set `hlslClippy.serverPath` in VS Code settings to point at a
-   manually-installed `hlsl-clippy-lsp` binary as a fallback.
+3. Set `shaderClippy.serverPath` in VS Code settings to point at a
+   manually-installed `shader-clippy-lsp` binary as a fallback.
 
 ### Hover shows "untrusted workspace" warning
 
-VS Code marks workspaces as untrusted by default. The HLSL Clippy
+VS Code marks workspaces as untrusted by default. The Shader Clippy
 extension is a normal extension that doesn't need elevated trust.
 "Trust this workspace" once and the LSP starts.
 
@@ -166,7 +166,7 @@ Disable Phase 4 control-flow rules:
 
 ```jsonc
 {
-  "hlslClippy.enableControlFlow": false
+  "shaderClippy.enableControlFlow": false
 }
 ```
 
@@ -174,7 +174,7 @@ Or Phase 3 reflection rules too:
 
 ```jsonc
 {
-  "hlslClippy.enableReflection": false
+  "shaderClippy.enableReflection": false
 }
 ```
 
@@ -199,13 +199,13 @@ is on the v0.6 backlog.
 
 Include:
 
-- Output of `hlsl-clippy --version`
+- Output of `shader-clippy --version`
 - Your OS + version (`uname -a` / `winver`)
 - The shader that triggered the issue (simplify if possible)
-- Your `.hlsl-clippy.toml` (or note "no config")
+- Your `.shader-clippy.toml` (or note "no config")
 - The full `--format=json` output (it carries byte offsets that help
   reproduce the issue)
-- For LSP issues: contents of the **HLSL Clippy** output channel
+- For LSP issues: contents of the **Shader Clippy** output channel
 
-The [bug-report template](https://github.com/NelCit/hlsl-clippy/issues/new?template=bug_report.yml)
+The [bug-report template](https://github.com/NelCit/shader-clippy/issues/new?template=bug_report.yml)
 prompts for these fields.

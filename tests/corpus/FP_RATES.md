@@ -1,4 +1,4 @@
-﻿# Corpus FP-rate baseline (v1.0 readiness criterion #3)
+# Corpus FP-rate baseline (v1.0 readiness criterion #3)
 
 This file is the per-rule firing-count baseline against `tests/corpus/`
 (see [tests/corpus/SOURCES.md](SOURCES.md) for the per-shader registry).
@@ -18,7 +18,7 @@ the rule's firing count is unchanged; otherwise the maintainer re-triages.
 
 ## Above-budget rules (FP rate > 5%)
 
-Per ADR 0018 Â§5 criterion #3, every warn-severity rule must carry an FP rate <= 5% against the corpus. The rules below exceed that budget on the v1.1 deterministic triage pass and need maintainer review (typically: tighten the rule's detection, suppress the rule on the offending category via `.hlsl-clippy.toml`, or downgrade severity).
+Per ADR 0018 Â§5 criterion #3, every warn-severity rule must carry an FP rate <= 5% against the corpus. The rules below exceed that budget on the v1.1 deterministic triage pass and need maintainer review (typically: tighten the rule's detection, suppress the rule on the offending category via `.shader-clippy.toml`, or downgrade severity).
 
 | Rule | TP | FP | FP rate | Note |
 |------|----|----|---------|------|

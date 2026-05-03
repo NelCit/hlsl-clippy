@@ -1,10 +1,10 @@
 <!--
 date: 2026-04-30
-prompt-summary: review proposed C++ architecture for hlsl-clippy — module decomposition, external deps, public API boundaries, risks, and the cross-cutting decisions to lock in before rule writing begins.
+prompt-summary: review proposed C++ architecture for shader-clippy — module decomposition, external deps, public API boundaries, risks, and the cross-cutting decisions to lock in before rule writing begins.
 preserved-verbatim: yes — see ../0001-compiler-choice-slang.md, ../0002-parser-tree-sitter-hlsl.md, ../0003-module-decomposition.md for the distilled decisions.
 -->
 
-# Architectural review: hlsl-clippy
+# Architectural review: shader-clippy
 
 ## 1. Module decomposition
 
@@ -13,7 +13,7 @@ Drop `crates/` (Rust-ism). Split `core` into focused static libraries so the rul
 Proposed layout:
 
 ```
-hlsl-clippy/
+shader-clippy/
   CMakeLists.txt              # top-level orchestration only
   cmake/                      # FindSlang.cmake, warning flags, sanitizer toggles
   third_party/                # vendored sources (see §2)
@@ -27,8 +27,8 @@ hlsl-clippy/
     rules/       (hlslc_rules)       # individual rules + registry glue
     driver/      (hlslc_driver)      # pipeline: source -> parse -> compile -> rules
   apps/
-    cli/         (hlsl-clippy)       # main.cpp, arg parsing, glob, exit codes
-    lsp/         (hlsl-clippy-lsp)   # JSON-RPC, document sync (Phase 5)
+    cli/         (shader-clippy)       # main.cpp, arg parsing, glob, exit codes
+    lsp/         (shader-clippy-lsp)   # JSON-RPC, document sync (Phase 5)
   tests/
     unit/  corpus/  golden/
 ```
@@ -107,6 +107,6 @@ The driver runs queries in one tree-walk per file (batched), then dispatches imp
 3. Diagnostic + Fix schema, including the `Applicability` enum. Serialization (text, JSON, LSP) keys off it. Adding a variant later is fine; renaming one breaks every consumer.
 4. `Rule` interface shape (queries + optional imperative + stage tag). Plus the static self-registration mechanism — retrofitting registration across 80 rules is grim.
 5. `SourceManager` as the single source of truth fed to both tree-sitter and Slang. Decide now that file I/O happens exactly once per file per run.
-6. Suppression syntax (`// hlsl-clippy: allow(rule-name)`) and how it's parsed — line comments must be tracked by the parser bridge from day one, since rules can't retroactively know about comments tree-sitter discarded.
+6. Suppression syntax (`// shader-clippy: allow(rule-name)`) and how it's parsed — line comments must be tracked by the parser bridge from day one, since rules can't retroactively know about comments tree-sitter discarded.
 7. Threading contract: rules are stateless and `const`-invocable; parallelism granularity is the file. Documented in `rule.hpp`.
 8. Slang version pin + upgrade policy as a top-level `cmake/SlangVersion.cmake` with a single `SLANG_REVISION` variable; CI matrix can override to test next-rev.

@@ -84,7 +84,7 @@ Bad:
 
 ```diff
  cmake_minimum_required(VERSION 3.20)
- project(hlsl-clippy LANGUAGES CXX VERSION 0.0.0)
+ project(shader-clippy LANGUAGES CXX VERSION 0.0.0)
 
 -set(CMAKE_CXX_STANDARD 20)
 -set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -100,8 +100,8 @@ Bad:
      )
  endif()
 
- add_executable(hlsl-clippy src/main.cpp)
-+target_compile_features(hlsl-clippy PRIVATE cxx_std_23)
+ add_executable(shader-clippy src/main.cpp)
++target_compile_features(shader-clippy PRIVATE cxx_std_23)
 +
 +if(MSVC AND MSVC_VERSION LESS 1944)
 +    message(FATAL_ERROR "MSVC 14.44 (VS 17.14) or newer required. Found MSVC ${MSVC_VERSION}.")

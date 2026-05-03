@@ -20,14 +20,14 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/rule.hpp"
 #include "rules/util/ast_helpers.hpp"
 #include "rules/util/reflect_stage.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/rule.hpp"
 
 #include "parser_internal.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 namespace {
 
@@ -278,4 +278,4 @@ std::uint32_t expected_wave_size_for_target(std::string_view target_profile) noe
     return (*minor >= 5U) ? 32U : 64U;
 }
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

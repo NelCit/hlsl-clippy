@@ -85,6 +85,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/interlocked-bin-without-wave-prereduce.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/interlocked-bin-without-wave-prereduce.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

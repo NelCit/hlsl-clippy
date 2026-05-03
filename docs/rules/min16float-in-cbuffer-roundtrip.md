@@ -99,7 +99,7 @@ none
 
 **suggestion** — The rule offers two candidate fixes: use the field as `float`
 (removing the demotion), or change the cbuffer declaration to `float16_t`.
-Either requires verifying that the precision change is acceptable; `hlsl-clippy
+Either requires verifying that the precision change is acceptable; `shader-clippy
 fix` presents the options and requests a choice.
 
 ## See also
@@ -114,7 +114,7 @@ fix` presents the options and requests a choice.
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/min16float-in-cbuffer-roundtrip.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/min16float-in-cbuffer-roundtrip.md)
 
 ---
 

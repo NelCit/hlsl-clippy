@@ -35,10 +35,10 @@
 #include <tree_sitter/api.h>
 
 #include "control_flow/cfg_storage.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::control_flow {
+namespace shader_clippy::control_flow {
 
 namespace {
 
@@ -463,4 +463,4 @@ BuildResult build_cfg(::TSNode root, SourceId source, std::string_view bytes) {
     return result;
 }
 
-}  // namespace hlsl_clippy::control_flow
+}  // namespace shader_clippy::control_flow

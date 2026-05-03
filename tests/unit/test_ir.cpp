@@ -32,23 +32,23 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/ir.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/ir.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 namespace {
 
-using hlsl_clippy::AstTree;
-using hlsl_clippy::Diagnostic;
-using hlsl_clippy::IrInfo;
-using hlsl_clippy::lint;
-using hlsl_clippy::LintOptions;
-using hlsl_clippy::Rule;
-using hlsl_clippy::RuleContext;
-using hlsl_clippy::SourceManager;
-using hlsl_clippy::Stage;
+using shader_clippy::AstTree;
+using shader_clippy::Diagnostic;
+using shader_clippy::IrInfo;
+using shader_clippy::lint;
+using shader_clippy::LintOptions;
+using shader_clippy::Rule;
+using shader_clippy::RuleContext;
+using shader_clippy::SourceManager;
+using shader_clippy::Stage;
 
 /// Spy rule with `stage() == Stage::Ir`. Records each invocation and a
 /// snapshot of the `IrInfo` it received. We snapshot rather than store a

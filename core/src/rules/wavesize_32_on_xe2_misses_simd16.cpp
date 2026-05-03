@@ -16,17 +16,17 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
 #include "rules/util/reflect_stage.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 constexpr std::string_view k_rule_id = "wavesize-32-on-xe2-misses-simd16";
@@ -77,4 +77,4 @@ std::unique_ptr<Rule> make_wavesize_32_on_xe2_misses_simd16() {
     return std::make_unique<WaveSize32OnXe2MissesSimd16>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

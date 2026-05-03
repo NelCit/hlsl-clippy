@@ -12,7 +12,7 @@ specifics — what's below is the cross-task boilerplate.
 
 - Rule source: `core/src/rules/<snake_id>.cpp` (e.g., `redundant_normalize.cpp`)
 - Rule test: `tests/unit/test_<snake_id>.cpp` (e.g., `test_redundant_normalize.cpp`)
-- Factory function: `hlsl_clippy::rules::make_<snake_id>()` returning `std::unique_ptr<Rule>`. The basename of `<snake_id>.cpp` and the suffix after `make_` MUST match exactly. The wiring agent greps for this; mismatches break the build.
+- Factory function: `shader_clippy::rules::make_<snake_id>()` returning `std::unique_ptr<Rule>`. The basename of `<snake_id>.cpp` and the suffix after `make_` MUST match exactly. The wiring agent greps for this; mismatches break the build.
 - Doc page: `docs/rules/<kebab-id>.md`. Kebab matches the rule-id string used inside `class Rule { id() { return "kebab-id"; } }`. The kebab-to-snake mapping is mechanical: `byteaddressbuffer-load-misaligned` ↔ `byteaddressbuffer_load_misaligned`.
 
 ## 2. Rule shape (canonical exemplars to pattern-match)
@@ -20,14 +20,14 @@ specifics — what's below is the cross-task boilerplate.
 | Stage | Exemplar | Public APIs used |
 |---|---|---|
 | `Stage::Ast` | `core/src/rules/lerp_extremes.cpp` | `AstTree`, tree-sitter via `parser_internal.hpp`, optional declarative TSQuery via `query/query.hpp` |
-| `Stage::Reflection` | (none yet shipped — read `core/include/hlsl_clippy/reflection.hpp` + `core/src/rules/util/reflect_*.hpp`) | `ReflectionInfo`, `reflect_resource::*`, `reflect_sampler::*`, `reflect_stage::*` |
+| `Stage::Reflection` | (none yet shipped — read `core/include/shader_clippy/reflection.hpp` + `core/src/rules/util/reflect_*.hpp`) | `ReflectionInfo`, `reflect_resource::*`, `reflect_sampler::*`, `reflect_stage::*` |
 | `Stage::ControlFlow` | (Pack 4c-A through 4c-E) | `ControlFlowInfo`, `cfg_query::*`, `uniformity::*`, `light_dataflow::*`, `helper_lane_analyzer::*` |
 
-When in doubt about a rule shape, copy the closest exemplar verbatim and edit the detection logic. The framing (`namespace hlsl_clippy::rules { namespace { ... } make_*() { ... } }`) is identical across all rules.
+When in doubt about a rule shape, copy the closest exemplar verbatim and edit the detection logic. The framing (`namespace shader_clippy::rules { namespace { ... } make_*() { ... } }`) is identical across all rules.
 
 ## 3. Hard constraints (CI enforces; violations break the build)
 
-- **No `<slang.h>` outside `core/src/reflection/slang_bridge.cpp`.** The `lint.yml` grep step fails the lint job if `<slang.h>` appears in `core/include/hlsl_clippy/`, `core/src/rules/`, or `lsp/src/`.
+- **No `<slang.h>` outside `core/src/reflection/slang_bridge.cpp`.** The `lint.yml` grep step fails the lint job if `<slang.h>` appears in `core/include/shader_clippy/`, `core/src/rules/`, or `lsp/src/`.
 - **No `<tree_sitter/api.h>` in public headers.** Same scope as Slang. Internal TUs only.
 - **No exceptions across the `core` API boundary.** Use `std::expected<T, Diagnostic>`. Catch internally if needed.
 - **No raw `new`/`delete` outside explicit ownership boundaries.** RAII; `std::unique_ptr` / `std::shared_ptr` default.
@@ -36,7 +36,7 @@ When in doubt about a rule shape, copy the closest exemplar verbatim and edit th
   - C4530 missing `/EHsc` → CMakeLists must add the flag (only an issue for new targets, not new rule files)
   - C2737 `const` object must be initialised → write `const T x{};` not `const T x;`
 - **C++23 stdlib feature-test guards.** Don't include `<flat_map>`, `<print>`, `<inplace_vector>` directly — wrap in `#if defined(__cpp_lib_<feature>) && __cpp_lib_<feature> >= NNN` with a `std::map` / `std::format` / `std::vector` fallback. Pattern: see `core/src/reflection/engine.hpp` lines 21-37 for the canonical block. libstdc++ 13 (Ubuntu 24.04 CI) ≠ MSVC 19.50 on stdlib coverage.
-- **`Span` and `ByteSpan` API.** `core/include/hlsl_clippy/source.hpp` defines: `struct Span { SourceId source; ByteSpan bytes; }` and `struct ByteSpan { uint32_t lo, hi; size(); empty(); }`. Access is `span.bytes.lo` / `.bytes.hi` / `.bytes.size()`, NOT `span.lo` directly. `tree.byte_range(node)` returns a `ByteSpan` (not a `Span`). To construct: `Span{.source = tree.source_id(), .bytes = ByteSpan{.lo = lo, .hi = hi}}` OR reuse a pre-built `Span` from a binding's `declaration_span` field.
+- **`Span` and `ByteSpan` API.** `core/include/shader_clippy/source.hpp` defines: `struct Span { SourceId source; ByteSpan bytes; }` and `struct ByteSpan { uint32_t lo, hi; size(); empty(); }`. Access is `span.bytes.lo` / `.bytes.hi` / `.bytes.size()`, NOT `span.lo` directly. `tree.byte_range(node)` returns a `ByteSpan` (not a `Span`). To construct: `Span{.source = tree.source_id(), .bytes = ByteSpan{.lo = lo, .hi = hi}}` OR reuse a pre-built `Span` from a binding's `declaration_span` field.
 
 ## 4. Mandatory clang-format step (per-agent, non-negotiable)
 
@@ -64,7 +64,7 @@ This step is the single biggest cost-saver in this project. The first Phase 3 di
 - Filter by `d.code == "<rule-id>"` only — never assert on total diagnostic count. The global registry fires every rule on every test snippet; cross-rule pollution is real.
 - For `Stage::Reflection` tests: pass `LintOptions{.enable_reflection = true, .target_profile = "sm_6_6"}`.
 - For `Stage::ControlFlow` tests: pass `LintOptions{.enable_control_flow = true}`.
-- Tests should forward-declare the factory in `namespace hlsl_clippy::rules { make_<id>(); }` and instantiate the rule directly via `std::vector<std::unique_ptr<Rule>>`. This pattern lets tests compile before the wiring commit lands and keeps the test executable independent of `make_default_rules()`.
+- Tests should forward-declare the factory in `namespace shader_clippy::rules { make_<id>(); }` and instantiate the rule directly via `std::vector<std::unique_ptr<Rule>>`. This pattern lets tests compile before the wiring commit lands and keeps the test executable independent of `make_default_rules()`.
 - Don't add a fixture-file test case for a new rule unless the corresponding fixture exists under `tests/fixtures/phaseN/`.
 
 ## 6. Don't-touch list (parallel-agent coordination)
@@ -103,7 +103,7 @@ Keep the report tight. The orchestrator commits based on it; don't pad with pros
 - `CLAUDE.md` — locked technical decisions, ban list, code-style enforcement. Most rule-pack agents do NOT need to read this; the conventions here in `AGENTS.md` cover the cross-task surface.
 - `ROADMAP.md` — phase status, candidate-rule expansion section.
 - `docs/decisions/0001`–`0014` — ADRs. Read the SPECIFIC ADR section your task references; don't read whole ADRs.
-- `core/include/hlsl_clippy/*.hpp` — public API. Stable surface; don't modify.
+- `core/include/shader_clippy/*.hpp` — public API. Stable surface; don't modify.
 
 ---
 

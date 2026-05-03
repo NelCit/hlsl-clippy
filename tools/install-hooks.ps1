@@ -1,4 +1,4 @@
-# Install hlsl-clippy git hooks into .git/hooks/ (Windows / PowerShell).
+# Install shader-clippy git hooks into .git/hooks/ (Windows / PowerShell).
 #
 # Idempotent: re-running overwrites existing hooks.
 #
@@ -51,5 +51,5 @@ foreach ($hook in $Hooks) {
 Write-Host ""
 Write-Host "Pre-commit hook installed. Override env vars:"
 Write-Host "  CLANG_FORMAT=C:\path\to\clang-format-18.exe    (explicit binary)"
-Write-Host "  HLSL_CLIPPY_HOOK_ALLOW_ANY_CLANG_FORMAT=1      (skip v18 check)"
-Write-Host "  HLSL_CLIPPY_HOOK_FIX=1                         (auto-fix + re-stage)"
+Write-Host "  SHADER_CLIPPY_HOOK_ALLOW_ANY_CLANG_FORMAT=1      (skip v18 check)"
+Write-Host "  SHADER_CLIPPY_HOOK_FIX=1                         (auto-fix + re-stage)"

@@ -1,12 +1,12 @@
-// Inline-suppression scanner for `// hlsl-clippy: allow(rule-name, ...)` and
-// `// hlsl-clippy: allow(*)` markers.
+// Inline-suppression scanner for `// shader-clippy: allow(rule-name, ...)` and
+// `// shader-clippy: allow(*)` markers.
 //
 // The scanner is intentionally grammar-agnostic: it walks the raw UTF-8 bytes
 // with a flat dispatch loop (line comments, block comments, string literals,
 // or plain code) so that it never depends on a tree-sitter parse. Suppression
 // must work even when the grammar produces ERROR nodes.
 
-#include "hlsl_clippy/suppress.hpp"
+#include "shader_clippy/suppress.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -18,11 +18,11 @@
 #include <utility>
 #include <vector>
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 namespace {
 
-constexpr std::string_view k_marker = "hlsl-clippy:";
+constexpr std::string_view k_marker = "shader-clippy:";
 constexpr std::string_view k_allow = "allow";
 constexpr std::string_view k_wildcard_rule = "*";
 
@@ -75,7 +75,7 @@ struct ParsedMarker {
     bool well_formed = true;
 };
 
-/// Parse the body of one `// hlsl-clippy:` comment, given indices into the
+/// Parse the body of one `// shader-clippy:` comment, given indices into the
 /// surrounding source. `comment_body_lo` is the first byte after `//`,
 /// `comment_body_hi` is one past the last byte before the end-of-line.
 [[nodiscard]] ParsedMarker parse_marker(std::string_view src,
@@ -420,7 +420,7 @@ struct ResolvedScope {
 }
 
 /// Build a malformed-marker scan diagnostic if the comment body started with
-/// the `hlsl-clippy:` trigger. Returns `std::nullopt` otherwise.
+/// the `shader-clippy:` trigger. Returns `std::nullopt` otherwise.
 [[nodiscard]] std::optional<SuppressionSet::ScanDiagnostic> build_malformed(
     std::string_view source, std::size_t line_comment_lo, std::size_t comment_hi) noexcept {
     const std::size_t probe = skip_inline_ws(source, line_comment_lo);
@@ -429,7 +429,7 @@ struct ResolvedScope {
     }
     SuppressionSet::ScanDiagnostic d;
     d.message =
-        std::string{"malformed `// hlsl-clippy:` annotation; expected `allow(rule-name, ...)`"};
+        std::string{"malformed `// shader-clippy:` annotation; expected `allow(rule-name, ...)`"};
     d.byte_lo = static_cast<std::uint32_t>(line_comment_lo - 2U);
     d.byte_hi = static_cast<std::uint32_t>(comment_hi);
     return d;
@@ -438,7 +438,7 @@ struct ResolvedScope {
 /// Process the body of a single line comment that just terminated. Either
 /// appends one or more `Suppression` entries to `entries_out` (well-formed
 /// marker), or appends a scan diagnostic to `diags_out` (malformed marker),
-/// or does nothing (the comment isn't a hlsl-clippy marker at all).
+/// or does nothing (the comment isn't a shader-clippy marker at all).
 void finalize_line_comment(std::string_view source,
                            std::size_t line_comment_lo,
                            std::size_t comment_hi,
@@ -560,4 +560,4 @@ bool SuppressionSet::suppresses(std::string_view rule_id,
     return covers(it->second);
 }
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

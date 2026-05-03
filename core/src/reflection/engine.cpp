@@ -10,12 +10,12 @@
 #include <tuple>
 #include <utility>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "reflection/slang_bridge.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::reflection {
+namespace shader_clippy::reflection {
 
 namespace {
 
@@ -85,4 +85,4 @@ void ReflectionEngine::clear_cache() {
     cache_.clear();
 }
 
-}  // namespace hlsl_clippy::reflection
+}  // namespace shader_clippy::reflection

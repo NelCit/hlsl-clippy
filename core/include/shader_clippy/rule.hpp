@@ -3,25 +3,25 @@
 #include <cstdint>
 #include <string_view>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 
 class SuppressionSet;
 struct Config;
 
-/// Experimental IHV target gate selectable from `.hlsl-clippy.toml` via
+/// Experimental IHV target gate selectable from `.shader-clippy.toml` via
 /// `[experimental] target = "rdna4" | "blackwell" | "xe2"`. Per ADR 0018,
 /// vendor-specific rules ship behind this gate so default builds emit zero
 /// IHV-specific diagnostics. Rules opt in by overriding
 /// `Rule::experimental_target()`; the orchestrator skips them silently when
 /// the rule's target does not match `Config::experimental_target()`.
 ///
-/// The enum lives here (rather than in `hlsl_clippy/config.hpp`) so that
+/// The enum lives here (rather than in `shader_clippy/config.hpp`) so that
 /// rule TUs can reference `ExperimentalTarget::Rdna4` without pulling in
 /// the heavier config header (`<filesystem>` / `<unordered_map>` /
-/// `<variant>`). `hlsl_clippy/config.hpp` includes this header to get the
+/// `<variant>`). `shader_clippy/config.hpp` includes this header to get the
 /// enum back.
 enum class ExperimentalTarget : std::uint8_t {
     /// Default — no experimental target selected. Every rule whose
@@ -64,19 +64,19 @@ class AstCursor;
 class AstTree;
 
 /// Forward declaration of the public reflection aggregate. The full definition
-/// lives in `hlsl_clippy/reflection.hpp`; `Rule::on_reflection` takes a const
+/// lives in `shader_clippy/reflection.hpp`; `Rule::on_reflection` takes a const
 /// reference so this header does not need to pull the (heavier) reflection
 /// header into every rule TU.
 struct ReflectionInfo;
 
 /// Forward declaration of the public control-flow aggregate. The full
-/// definition lives in `hlsl_clippy/control_flow.hpp`; `Rule::on_cfg` takes a
+/// definition lives in `shader_clippy/control_flow.hpp`; `Rule::on_cfg` takes a
 /// const reference so this header does not need to pull the (heavier)
 /// control-flow header into every rule TU.
 struct ControlFlowInfo;
 
 /// Forward declaration of the public IR aggregate. The full definition lives
-/// in `hlsl_clippy/ir.hpp`; `Rule::on_ir` takes a const reference so this
+/// in `shader_clippy/ir.hpp`; `Rule::on_ir` takes a const reference so this
 /// header does not need to pull the (heavier) IR header into every rule TU.
 struct IrInfo;
 
@@ -214,4 +214,4 @@ public:
     virtual void on_ir(const AstTree& tree, const IrInfo& ir, RuleContext& ctx);
 };
 
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy

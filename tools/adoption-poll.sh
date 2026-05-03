@@ -44,7 +44,7 @@ mp_updated='?'
 if ! command -v vsce >/dev/null 2>&1; then
   echo "adoption-poll: 'vsce' not on PATH. Install with 'npm i -g @vscode/vsce'." >&2
 else
-  vsce_raw=$(vsce show 'nelcit.hlsl-clippy' --json 2>/dev/null || true)
+  vsce_raw=$(vsce show 'nelcit.shader-clippy' --json 2>/dev/null || true)
   if [ -z "$vsce_raw" ]; then
     echo "adoption-poll: 'vsce show' produced no output." >&2
   elif ! command -v jq >/dev/null 2>&1; then
@@ -70,13 +70,13 @@ else
   if ! command -v jq >/dev/null 2>&1; then
     echo "adoption-poll: 'jq' not on PATH; cannot parse gh JSON." >&2
   else
-    gh_raw=$(gh search code 'hlsl-clippy filename:.github/workflows' \
+    gh_raw=$(gh search code 'shader-clippy filename:.github/workflows' \
       --json repository --limit 100 2>/dev/null || true)
     if [ -n "$gh_raw" ]; then
       # Dedup repos client-side, drop the project's own repo, count.
       mapfile -t repos < <(echo "$gh_raw" \
         | jq -r '.[] | (.repository.nameWithOwner // .repository.fullName // empty)' \
-        | grep -v -i '^NelCit/hlsl-clippy$' \
+        | grep -v -i '^NelCit/shader-clippy$' \
         | sort -u)
       downstream_count="${#repos[@]}"
       if [ "${#repos[@]}" -gt 0 ]; then
@@ -108,7 +108,7 @@ fi
 
 if [ ! -f "$OUTPUT_MD" ]; then
   cat > "$OUTPUT_MD" <<'EOF'
-# Adoption metrics — `nelcit.hlsl-clippy`
+# Adoption metrics — `nelcit.shader-clippy`
 
 External adoption signals tracked for ADR 0018 §5 criteria #7
 (Marketplace install count >= 5,000) and #8 (>= 5 downstream

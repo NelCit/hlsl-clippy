@@ -68,7 +68,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — The rewrite from `dot(v, e_i)` to `v.<i>` (negated when the axis component is -1) is a strictly semantic-preserving simplification: for the axis-aligned constant the algebraic identity is exact, with no rounding-mode considerations because the mul-by-zero terms are exactly zero and the mul-by-one term is exact. `hlsl-clippy fix` applies it automatically and chooses the correct swizzle and sign based on the literal vector contents.
+**machine-applicable** — The rewrite from `dot(v, e_i)` to `v.<i>` (negated when the axis component is -1) is a strictly semantic-preserving simplification: for the axis-aligned constant the algebraic identity is exact, with no rounding-mode considerations because the mul-by-zero terms are exactly zero and the mul-by-one term is exact. `shader-clippy fix` applies it automatically and chooses the correct swizzle and sign based on the literal vector contents.
 
 ## See also
 
@@ -79,6 +79,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/dot-on-axis-aligned-vector.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/dot-on-axis-aligned-vector.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

@@ -5,8 +5,8 @@
 // Generated at configure time by tests/bench/CMakeLists.txt. Provides the
 // absolute path to the public corpus directory so the bench binary can find
 // fixtures regardless of cwd at run-time.
-namespace hlsl_clippy::bench {
+namespace shader_clippy::bench {
 
-inline constexpr std::string_view k_corpus_dir = "@HLSL_CLIPPY_CORPUS_DIR@";
+inline constexpr std::string_view k_corpus_dir = "@SHADER_CLIPPY_CORPUS_DIR@";
 
-}  // namespace hlsl_clippy::bench
+}  // namespace shader_clippy::bench

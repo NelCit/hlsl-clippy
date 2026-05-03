@@ -1,4 +1,4 @@
-// Phase 2 — misc correctness rules (extra patterns).  Hand-written fixture for hlsl-clippy rule validation.
+// Phase 2 — misc correctness rules (extra patterns).  Hand-written fixture for shader-clippy rule validation.
 // Convention: `// HIT(rule-id): reason` on offending lines.
 // `// SHOULD-NOT-HIT(rule-id): reason` on near-miss lines that must NOT fire.
 

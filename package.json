@@ -1,5 +1,5 @@
 {
-  "name": "hlsl-clippy",
+  "name": "shader-clippy",
   "private": true,
   "scripts": {
     "docs:dev": "vitepress dev docs",

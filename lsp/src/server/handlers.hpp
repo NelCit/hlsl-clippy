@@ -27,7 +27,7 @@
 #include "rpc/dispatcher.hpp"
 #include "rpc/message.hpp"
 
-namespace hlsl_clippy::lsp::server {
+namespace shader_clippy::lsp::server {
 
 /// Sink for outbound notifications from the server. The framing layer wraps
 /// the body before writing it to stdout.
@@ -106,4 +106,4 @@ private:
 /// response. Public for unit tests.
 [[nodiscard]] nlohmann::json build_server_capabilities();
 
-}  // namespace hlsl_clippy::lsp::server
+}  // namespace shader_clippy::lsp::server

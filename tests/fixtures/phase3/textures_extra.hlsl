@@ -1,4 +1,4 @@
-// Phase 3 — texture / sampling rules (extra patterns). Hand-written fixture for hlsl-clippy rule validation.
+// Phase 3 — texture / sampling rules (extra patterns). Hand-written fixture for shader-clippy rule validation.
 // Convention: `// HIT(rule-id): reason` on offending lines.
 // `// SHOULD-NOT-HIT(rule-id): reason` on near-miss lines that must NOT fire.
 // Note: cbuffer register suffix omitted per tree-sitter-hlsl v0.2.0 parsing gap.

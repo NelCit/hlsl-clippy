@@ -8,7 +8,7 @@ add_executable(slang-smoke src/main.cpp)
 target_link_libraries(slang-smoke PRIVATE slang::slang)
 
 # Slang public headers come transitively from `slang::slang`'s
-# INTERFACE_INCLUDE_DIRECTORIES (set by `_hlsl_clippy_slang_import_prefix`
+# INTERFACE_INCLUDE_DIRECTORIES (set by `_shader_clippy_slang_import_prefix`
 # in cmake/UseSlang.cmake against the resolved prebuilt prefix). The
 # previous explicit `external/slang/include` path was retired with the
 # Slang submodule.

@@ -16,7 +16,7 @@ if(NOT _is_multi_config)
     if(NOT (CMAKE_BUILD_TYPE STREQUAL "Release"
             OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
         message(STATUS
-            "tests/bench: skipping hlsl_clippy_bench (build type is "
+            "tests/bench: skipping shader_clippy_bench (build type is "
             "'${CMAKE_BUILD_TYPE}'; requires Release or RelWithDebInfo).")
         return()
     endif()
@@ -25,35 +25,35 @@ endif()
 # Resolve the corpus directory at configure time so the bench binary can
 # locate fixtures regardless of cwd. Mirrors the test_config.hpp pattern in
 # tests/CMakeLists.txt.
-set(HLSL_CLIPPY_CORPUS_DIR "${CMAKE_SOURCE_DIR}/tests/corpus")
+set(SHADER_CLIPPY_CORPUS_DIR "${CMAKE_SOURCE_DIR}/tests/corpus")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/bench_config.hpp.in"
     "${CMAKE_CURRENT_BINARY_DIR}/bench_config.hpp"
     @ONLY
 )
 
-add_executable(hlsl_clippy_bench
+add_executable(shader_clippy_bench
     bench_lint.cpp
 )
 
-target_include_directories(hlsl_clippy_bench PRIVATE
+target_include_directories(shader_clippy_bench PRIVATE
     "${CMAKE_CURRENT_BINARY_DIR}"  # for generated bench_config.hpp
 )
 
-target_compile_definitions(hlsl_clippy_bench PRIVATE
+target_compile_definitions(shader_clippy_bench PRIVATE
     CATCH_CONFIG_ENABLE_BENCHMARKING
 )
 
-target_link_libraries(hlsl_clippy_bench
+target_link_libraries(shader_clippy_bench
     PRIVATE
-        hlsl_clippy_core
-        hlsl_clippy_warnings
+        shader_clippy_core
+        shader_clippy_warnings
         Catch2::Catch2WithMain
 )
 
-target_compile_features(hlsl_clippy_bench PRIVATE cxx_std_23)
+target_compile_features(shader_clippy_bench PRIVATE cxx_std_23)
 
-set_target_properties(hlsl_clippy_bench PROPERTIES
+set_target_properties(shader_clippy_bench PROPERTIES
     CXX_STANDARD 23
     CXX_STANDARD_REQUIRED ON
     CXX_EXTENSIONS OFF
@@ -62,21 +62,21 @@ set_target_properties(hlsl_clippy_bench PROPERTIES
 # Windows: deploy Slang's seven runtime DLLs next to the bench exe so it
 # can resolve them at run-time without polluting PATH. The helper is
 # defined by cmake/UseSlang.cmake (already included transitively via
-# hlsl_clippy_core); see its docstring for why we can't rely on
-# $<TARGET_RUNTIME_DLLS:hlsl_clippy_bench> alone.
+# shader_clippy_core); see its docstring for why we can't rely on
+# $<TARGET_RUNTIME_DLLS:shader_clippy_bench> alone.
 if(WIN32)
-    if(COMMAND hlsl_clippy_deploy_slang_dlls)
-        hlsl_clippy_deploy_slang_dlls(hlsl_clippy_bench)
+    if(COMMAND shader_clippy_deploy_slang_dlls)
+        shader_clippy_deploy_slang_dlls(shader_clippy_bench)
     else()
         # Fallback: should not happen because UseSlang.cmake is loaded by
         # the time core is built, but keep a TODO + safe default so the
         # build doesn't hard-fail if the helper ever moves.
-        # TODO(bench): remove once hlsl_clippy_deploy_slang_dlls is the
+        # TODO(bench): remove once shader_clippy_deploy_slang_dlls is the
         # documented public entry point in cmake/UseSlang.cmake.
-        add_custom_command(TARGET hlsl_clippy_bench POST_BUILD
+        add_custom_command(TARGET shader_clippy_bench POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                $<TARGET_RUNTIME_DLLS:hlsl_clippy_bench>
-                $<TARGET_FILE_DIR:hlsl_clippy_bench>
+                $<TARGET_RUNTIME_DLLS:shader_clippy_bench>
+                $<TARGET_FILE_DIR:shader_clippy_bench>
             COMMAND_EXPAND_LISTS
         )
     endif()

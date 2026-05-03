@@ -68,8 +68,8 @@ jobs:
           set -euo pipefail
           # Dummy LSP binary so vsce package has something to ship.
           mkdir -p server/linux-x86_64
-          touch server/linux-x86_64/hlsl-clippy-lsp
-          chmod +x server/linux-x86_64/hlsl-clippy-lsp
+          touch server/linux-x86_64/shader-clippy-lsp
+          chmod +x server/linux-x86_64/shader-clippy-lsp
           npx --yes @vscode/vsce package --target linux-x64 --out smoke.vsix
           rm -rf /tmp/vsix-unpack
           mkdir -p /tmp/vsix-unpack
@@ -105,7 +105,7 @@ jobs:
           echo "All prod deps bundled."
 
   # ── LSP smoke test ───────────────────────────────────────────────────
-  # Spawns hlsl-clippy-lsp.exe and drives a real JSON-RPC handshake +
+  # Spawns shader-clippy-lsp.exe and drives a real JSON-RPC handshake +
   # didOpen on a known-firing fixture. Catches:
   #   * Missing Slang shared libs (exe load failure).
   #   * Text-mode CRLF mangling (parser hangs forever) -- the v0.5.0
@@ -114,7 +114,7 @@ jobs:
   # Linux-only; the same `_setmode` Windows fix is exercised in
   # release-vscode.yml's matrix at tag time.
   lsp-smoke:
-    name: hlsl-clippy-lsp JSON-RPC smoke test
+    name: shader-clippy-lsp JSON-RPC smoke test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -134,7 +134,7 @@ jobs:
       - name: Cache Slang prebuilt
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ~/.cache/hlsl-clippy/slang
+          path: ~/.cache/shader-clippy/slang
           key: slang-Linux-${{ hashFiles('cmake/SlangVersion.cmake') }}
 
       - name: Fetch Slang prebuilt
@@ -145,7 +145,7 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Build hlsl_clippy_lsp
+      - name: Build shader_clippy_lsp
         env:
           CC: clang-18
           CXX: clang++-18
@@ -153,14 +153,14 @@ jobs:
           LDFLAGS: "-stdlib=libc++"
         run: |
           cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-          cmake --build build --target hlsl_clippy_lsp
+          cmake --build build --target shader_clippy_lsp
 
       - name: Run LSP smoke test
         run: |
-          # tools/smoke-lsp.js targets build/lsp/hlsl-clippy-lsp.exe by
-          # name; on Linux the binary is just hlsl-clippy-lsp. Symlink
+          # tools/smoke-lsp.js targets build/lsp/shader-clippy-lsp.exe by
+          # name; on Linux the binary is just shader-clippy-lsp. Symlink
           # so the same script works.
-          ln -sf hlsl-clippy-lsp build/lsp/hlsl-clippy-lsp.exe
+          ln -sf shader-clippy-lsp build/lsp/shader-clippy-lsp.exe
           node tools/smoke-lsp.js
 
   lint:
@@ -181,7 +181,7 @@ jobs:
         # core/src/reflection/slang_bridge.cpp et al. Pre-3a the lint job
         # could skip submodules — that fast-path no longer applies.
         # Future optimisation: download prebuilt Slang via
-        # tools/fetch-slang.sh into $HOME/.cache/hlsl-clippy/slang/<version>/
+        # tools/fetch-slang.sh into $HOME/.cache/shader-clippy/slang/<version>/
         # so UseSlang.cmake hits the cache tier instead of the submodule
         # build fallback (per ADR 0012 Slang-cache resolution order).
 
@@ -203,7 +203,7 @@ jobs:
       - name: Cache Slang prebuilt
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          path: ~/.cache/hlsl-clippy/slang
+          path: ~/.cache/shader-clippy/slang
           key: slang-Linux-${{ hashFiles('cmake/SlangVersion.cmake') }}
 
       - name: Fetch Slang prebuilt
@@ -211,14 +211,14 @@ jobs:
 
       # ── 2.5 Forbid <slang.h> in public headers + rule TUs ─────────────────
       # ADR 0001 / ADR 0012: <slang.h> may only appear inside
-      # core/src/reflection/. Public headers (core/include/hlsl_clippy/) and
+      # core/src/reflection/. Public headers (core/include/shader_clippy/) and
       # rule TUs (core/src/rules/) must go through the opaque reflection.hpp
       # types instead.
       - name: Forbid <slang.h> in public headers and rule TUs
         run: |
           set -e
-          if grep -RE '#\s*include\s*<slang\.h>' core/include/hlsl_clippy/ core/src/rules/ lsp/src/; then
-            echo "ERROR: <slang.h> must not appear in core/include/hlsl_clippy/, core/src/rules/, or lsp/src/"
+          if grep -RE '#\s*include\s*<slang\.h>' core/include/shader_clippy/ core/src/rules/ lsp/src/; then
+            echo "ERROR: <slang.h> must not appear in core/include/shader_clippy/, core/src/rules/, or lsp/src/"
             exit 1
           fi
           echo "Slang header confinement check passed."
@@ -271,7 +271,7 @@ jobs:
           cmake -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-            -DHLSL_CLIPPY_USE_PCH=OFF
+            -DSHADER_CLIPPY_USE_PCH=OFF
         # PCH off: clang-tidy walks compile_commands.json and tries to
         # follow the `-include cmake_pch.hxx` flag, then errors with
         # "PCH file not found" because we don't actually `cmake --build`

@@ -19,7 +19,7 @@
 //
 // All helpers are pure-functional value accessors. None depend on Slang types;
 // the AST-driven helper takes only the `AstTree` value type (forward-declared
-// in `hlsl_clippy/rule.hpp`) and an entry-point `TSNode`.
+// in `shader_clippy/rule.hpp`) and an entry-point `TSNode`.
 
 #pragma once
 
@@ -29,10 +29,10 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/reflection.hpp"
-#include "hlsl_clippy/rule.hpp"
+#include "shader_clippy/reflection.hpp"
+#include "shader_clippy/rule.hpp"
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 /// True when `reflection.target_profile` resolves to SM 6.10 or any later
 /// 6.x version. Accepts the `-preview` suffix (returns true) so rules
@@ -76,4 +76,4 @@ namespace hlsl_clippy::rules::util {
 /// rules that reason about wave alignment on dispatched grids).
 [[nodiscard]] std::uint32_t expected_wave_size_for_target(std::string_view target_profile) noexcept;
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

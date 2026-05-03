@@ -25,14 +25,14 @@
 #include <tree_sitter/api.h>
 
 #include "../parser_internal.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 
 namespace {
 
@@ -340,4 +340,4 @@ std::unique_ptr<Rule> make_pow_const_squared() {
     return std::make_unique<PowConstSquared>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

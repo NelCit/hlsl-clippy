@@ -29,11 +29,11 @@
 
 #include <tree_sitter/api.h>
 
-namespace hlsl_clippy {
+namespace shader_clippy {
 class AstTree;
-}  // namespace hlsl_clippy
+}  // namespace shader_clippy
 
-namespace hlsl_clippy::rules::util {
+namespace shader_clippy::rules::util {
 
 /// Coarse-grained purity classification. The enum is `std::uint8_t` so it
 /// fits in a register and ADR 0004's enum-naming rule (CamelCase) holds.
@@ -59,4 +59,4 @@ enum class Purity : std::uint8_t {
 /// — it walks the subtree iteratively where possible.
 [[nodiscard]] Purity classify_expression(const AstTree& tree, ::TSNode expr) noexcept;
 
-}  // namespace hlsl_clippy::rules::util
+}  // namespace shader_clippy::rules::util

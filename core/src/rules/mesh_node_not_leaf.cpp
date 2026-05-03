@@ -8,7 +8,7 @@
 //
 // CONFIG-GATED: this rule is preview / experimental and per ADR 0010 must be
 // gated behind `[experimental] work-graph-mesh-nodes = true` in
-// `.hlsl-clippy.toml`. The current `Config` does not yet surface that key,
+// `.shader-clippy.toml`. The current `Config` does not yet surface that key,
 // so this rule's `on_tree` returns early unconditionally -- it never fires
 // until the gate is wired through. The detection logic is in place; only
 // the gate is missing.
@@ -21,15 +21,15 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::node_kind;
@@ -100,4 +100,4 @@ std::unique_ptr<Rule> make_mesh_node_not_leaf() {
     return std::make_unique<MeshNodeNotLeaf>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

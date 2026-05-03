@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-This directory holds the durable record of significant decisions for `hlsl-clippy` — the kind of choices that shape the codebase for years and would otherwise be reconstructed from memory after the original context is gone.
+This directory holds the durable record of significant decisions for `shader-clippy` — the kind of choices that shape the codebase for years and would otherwise be reconstructed from memory after the original context is gone.
 
 ## Format
 

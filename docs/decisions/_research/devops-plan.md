@@ -1,10 +1,10 @@
 <!--
 date: 2026-04-30
-prompt-summary: produce a CI/CD + build plan for hlsl-clippy Phase 0 — runners, compilers, caching, gates, CMake hygiene, dev tooling, releases, and remaining open questions.
+prompt-summary: produce a CI/CD + build plan for shader-clippy Phase 0 — runners, compilers, caching, gates, CMake hygiene, dev tooling, releases, and remaining open questions.
 preserved-verbatim: yes — see ../0005-cicd-pipeline.md for the distilled decision.
 -->
 
-# hlsl-clippy CI/CD + Build Plan
+# shader-clippy CI/CD + Build Plan
 
 ## 1. GitHub Actions matrix
 
@@ -50,7 +50,7 @@ Current root file is fine for Phase 0 stub but won't survive Phase 1.
 Proposed split (after rename):
 - /CMakeLists.txt — project(), C++ settings, options, add_subdirectory(third_party), add_subdirectory(core), add_subdirectory(cli), add_subdirectory(tests). Defines hlslc_warnings INTERFACE library carrying /W4 /WX /permissive- via target_compile_options (...COMPILE_LANG_AND_ID:CXX,MSVC... ). Also hlslc_sanitizers interface gated on HLSLC_SANITIZE.
 - /core/CMakeLists.txt — add_library(hlslc_core STATIC ...), target_include_directories PUBLIC include PRIVATE src, target_link_libraries hlslc_core PUBLIC slang tree-sitter PRIVATE hlslc_warnings.
-- /cli/CMakeLists.txt — add_executable(hlsl-clippy src/main.cpp), target_link_libraries hlsl-clippy PRIVATE hlslc_core hlslc_warnings.
+- /cli/CMakeLists.txt — add_executable(shader-clippy src/main.cpp), target_link_libraries shader-clippy PRIVATE hlslc_core hlslc_warnings.
 
 Rule: warnings flags on an INTERFACE lib that ONLY first-party targets link to. Vendored libs never see /WX.
 
@@ -64,8 +64,8 @@ Conventional Commits spec: v1.0.0 (feat:, fix:, refactor:, docs:, chore:, test:,
 
 CPack is overkill for one binary per OS. Use actions/upload-artifact on each matrix leg → tag-triggered job downloading artifacts and running softprops/action-gh-release@v2.
 
-- Windows: hlsl-clippy.exe plus slang.dll if dynamic. Strip via /DEBUG:NONE on Release configs but emit a separate .pdb uploaded as a debug artifact.
-- Linux: hlsl-clippy static-linked against libstdc++ via -static-libstdc++ -static-libgcc; strip --strip-unneeded post-build. Don't statically link glibc — build on the oldest supported Ubuntu.
+- Windows: shader-clippy.exe plus slang.dll if dynamic. Strip via /DEBUG:NONE on Release configs but emit a separate .pdb uploaded as a debug artifact.
+- Linux: shader-clippy static-linked against libstdc++ via -static-libstdc++ -static-libgcc; strip --strip-unneeded post-build. Don't statically link glibc — build on the oldest supported Ubuntu.
 - Slang: prefer static. Phase 0 may ship Slang as shared library next to binary; revisit static-link at Phase 6.
 
 ## 7. Open questions

@@ -31,7 +31,7 @@ The architecture review proposes a finer split. This ADR captures that proposal 
 ### Option A — Shipped layout (current): `cli/` + `core/`
 
 ```
-hlsl-clippy/
+shader-clippy/
   CMakeLists.txt
   cli/
     src/main.cpp
@@ -46,7 +46,7 @@ Two libraries, simple build. Rules + parser + semantic backends all live inside 
 ### Option B — Architecture-review proposal: granular libs
 
 ```
-hlsl-clippy/
+shader-clippy/
   CMakeLists.txt
   cmake/                         # FindSlang.cmake, warnings.cmake, sanitizers.cmake
   third_party/                   # vendored: slang/, tree-sitter/, tree-sitter-hlsl/
@@ -60,8 +60,8 @@ hlsl-clippy/
     rules/       (hlslc_rules)       # individual rules + registry glue
     driver/      (hlslc_driver)      # pipeline: source -> parse -> compile -> rules
   apps/
-    cli/         (hlsl-clippy)
-    lsp/         (hlsl-clippy-lsp)   # Phase 5
+    cli/         (shader-clippy)
+    lsp/         (shader-clippy-lsp)   # Phase 5
   tests/  unit/  corpus/  golden/
 ```
 

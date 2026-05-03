@@ -27,17 +27,17 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/config.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
 #include "rules/util/purity_oracle.hpp"
+#include "shader_clippy/config.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::node_kind;
@@ -47,7 +47,7 @@ constexpr std::string_view k_rule_id = "div-without-epsilon";
 constexpr std::string_view k_category = "math";
 
 /// Render a float as a HLSL-grammar-valid literal with `f` suffix. We aim
-/// for a spelling the user will recognise in their `.hlsl-clippy.toml`:
+/// for a spelling the user will recognise in their `.shader-clippy.toml`:
 ///   * the default `div_epsilon` (1e-6) renders as `1e-06f`;
 ///   * the default `compare_epsilon` (1e-4) renders as `0.0001f` (handled
 ///     by `compare_equal_float` -- exposed here for symmetry);
@@ -176,4 +176,4 @@ std::unique_ptr<Rule> make_div_without_epsilon() {
     return std::make_unique<DivWithoutEpsilon>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

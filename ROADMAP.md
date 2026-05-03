@@ -1,4 +1,4 @@
-# hlsl-clippy roadmap
+# shader-clippy roadmap
 
 A linter for HLSL — performance and correctness rules beyond what `dxc` catches.
 
@@ -10,7 +10,7 @@ A linter for HLSL — performance and correctness rules beyond what `dxc` catche
 - tree-sitter + tree-sitter-hlsl vendored (`v0.26.8`, grammar at `bab9111`); `tools/treesitter-smoke/` smoke test.
 - Slang vendored as git submodule (`v2026.7.1`); `tools/slang-smoke/` smoke test; `cmake/UseSlang.cmake`.
 - CI: Windows (MSVC) + Linux (Clang) via `.github/workflows/ci.yml`; lint gate (`.github/workflows/lint.yml`); CodeQL stub (`.github/workflows/codeql.yml`).
-- Hardened build: `/W4 /WX /permissive-` (MSVC) and `-Wall -Wextra -Wpedantic -Werror` (Clang/GCC) scoped to project targets via `hlsl_clippy_warnings` INTERFACE library (`b58fa99`); vendored dependencies compile under their own flags.
+- Hardened build: `/W4 /WX /permissive-` (MSVC) and `-Wall -Wextra -Wpedantic -Werror` (Clang/GCC) scoped to project targets via `shader_clippy_warnings` INTERFACE library (`b58fa99`); vendored dependencies compile under their own flags.
 - `.clang-tidy` with C++ Core Guidelines check set; `tests/.clang-tidy` scoped separately; CI fails on diagnostics.
 - Beachhead corpus: 17 permissively-licensed shaders across vertex/pixel/compute/raytracing/mesh stages under `tests/corpus/`.
 - License: Apache-2.0 (switched from MIT per ADR 0006); `NOTICE` and `THIRD_PARTY_LICENSES.md` added.
@@ -25,18 +25,18 @@ A linter for HLSL — performance and correctness rules beyond what `dxc` catche
 
 ## What's shipped (Phase 1)
 
-- Inline suppression parser — `// hlsl-clippy: allow(rule-id)` (line, block, file scope)
+- Inline suppression parser — `// shader-clippy: allow(rule-id)` (line, block, file scope)
 - Declarative TSQuery wrapper for AST-pattern rules
 - Quick-fix `Rewriter` framework + `--fix` CLI flag (idempotent application)
 - Two new rules with machine-applicable fixes: `redundant-saturate`, `clamp01-to-saturate`
-- `.hlsl-clippy.toml` config (toml++ v3.4.0 single-include via FetchContent) — `[rules]`, `[includes]`, `[excludes]`, `[[overrides]]`; walk-up resolver bounded by `.git/`; `--config <path>` CLI flag
+- `.shader-clippy.toml` config (toml++ v3.4.0 single-include via FetchContent) — `[rules]`, `[includes]`, `[excludes]`, `[[overrides]]`; walk-up resolver bounded by `.git/`; `--config <path>` CLI flag
 - Catch2 v3.5.4 test suite — 46/46 passing
 - 22 hand-written fixture files across `tests/fixtures/{phase2,phase3,phase4,phase7}/` covering 76 unique rules with 116 `// HIT(...)` and 68 `// SHOULD-NOT-HIT(...)` annotations
 - Corpus expanded to 27 public-licensed shaders (`tests/corpus/SOURCES.md` registry per ADR 0006)
 
 ## North star
 
-`hlsl-clippy lint shaders/` produces actionable warnings on patterns that hurt GPU performance or hide correctness bugs. Output is human-readable for IDE use, JSON for CI gates, and quick-fixable wherever the fix is type-safe.
+`shader-clippy lint shaders/` produces actionable warnings on patterns that hurt GPU performance or hide correctness bugs. Output is human-readable for IDE use, JSON for CI gates, and quick-fixable wherever the fix is type-safe.
 
 The companion goal: **one short blog post per rule** explaining the GPU reason it matters. The tool is the artifact; the posts are the reputation engine.
 
@@ -69,7 +69,7 @@ Why this split: Slang's public API exposes compilation + reflection but not AST 
 - **`tests/corpus/`** (third-party shaders): each file retains its upstream license. `tests/corpus/SOURCES.md` tracks provenance + license per file. Apache/MIT/CC0 only; CC-BY allowed but never baked into the released binary.
 - **Contributions**: DCO (Signed-off-by) — not a CLA. Enforced via the DCO GitHub App or a small workflow.
 - **Required files**: `LICENSE` (verbatim Apache-2.0), `NOTICE` (short attribution paragraph + per-vendored-dep one-liners), `THIRD_PARTY_LICENSES.md` (full text of each vendored dep's license; ships inside binary releases).
-- **Naming**: keep `hlsl-clippy`. Rust-clippy precedent (2014); HLSL is descriptive; tooling like `dxc`, `glslang`, `naga` already coexist. No trademark filing pre-v0.
+- **Naming**: keep `shader-clippy`. Rust-clippy precedent (2014); HLSL is descriptive; tooling like `dxc`, `glslang`, `naga` already coexist. No trademark filing pre-v0.
 
 ## Phases
 
@@ -78,7 +78,7 @@ Why this split: Slang's public API exposes compilation + reflection but not AST 
 Goal: lint a real shader file end-to-end with one rule. No infrastructure-only milestones.
 
 - [x] CMake project, C++20, CLI binary stub
-- [x] CMake hardened: `/W4 /WX /permissive-` (MSVC) and `-Wall -Wextra -Wpedantic -Werror` (Clang/GCC); scoped to first-party targets via `hlsl_clippy_warnings` INTERFACE library (`b58fa99`)
+- [x] CMake hardened: `/W4 /WX /permissive-` (MSVC) and `-Wall -Wextra -Wpedantic -Werror` (Clang/GCC); scoped to first-party targets via `shader_clippy_warnings` INTERFACE library (`b58fa99`)
 - [x] `.clang-tidy` committed with Core Guidelines check set; CI fails on tidy diagnostics
 - [x] Slang vendored as a git submodule + linked as library; smoke test compiles an HLSL string and surfaces Slang's diagnostics (`cmake/UseSlang.cmake`, `v2026.7.1`)
 - [x] tree-sitter + tree-sitter-hlsl integrated; smoke test parses an HLSL file and walks the tree (`cmake/UseTreeSitter.cmake`, `v0.26.8`, grammar at `bab9111`)
@@ -103,8 +103,8 @@ Additional Phase 0 work landed:
 - [x] `Rule` interface + tree-sitter visitor harness; declarative s-expression query helper for the common syntactic-match case
 - [x] Diagnostic format: file, span, code, severity, message, optional fix (rustc-style)
 - [x] **Quick-fix framework lands here, not Phase 5.** Machine-applicable suggestions are the clippy comparison; range-based source rewriter built on tree-sitter spans.
-- [x] Inline suppression: `// hlsl-clippy: allow(rule-name)` (line-scoped) and block-scoped variants
-- [x] Config file: `.hlsl-clippy.toml` for rule severity, includes/excludes, per-directory overrides
+- [x] Inline suppression: `// shader-clippy: allow(rule-name)` (line-scoped) and block-scoped variants
+- [x] Config file: `.shader-clippy.toml` for rule severity, includes/excludes, per-directory overrides
 - [x] Three rules total, each with quick-fix where safe and a blog post: `pow-const-squared`, `redundant-saturate`, `clamp01-to-saturate`
 
 ### Phase 2 — AST-only rule pack (3-4 weeks)
@@ -308,17 +308,17 @@ Build a CFG over the tree-sitter AST. Add basic uniformity / loop-invariance ana
 
 **Gating dependency:** [ADR 0014](docs/decisions/0014-phase-5-lsp-architecture.md) (Accepted) — the JSON-RPC LSP-server + VS Code extension architecture (separate `lsp/` C++ binary thin-wrapping `core` via nlohmann/json, TypeScript extension under `vscode-extension/`, macOS CI bringup) shipped in the v0.5 launch chain.
 
-- [x] LSP server (small JSON-RPC layer; reuse the diagnostic + fix engine) — `lsp/` binary `hlsl_clippy_lsp`
-- [x] VS Code extension (thin wrapper around LSP) — `vscode-extension/`, `nelcit.hlsl-clippy` on Marketplace
+- [x] LSP server (small JSON-RPC layer; reuse the diagnostic + fix engine) — `lsp/` binary `shader_clippy_lsp`
+- [x] VS Code extension (thin wrapper around LSP) — `vscode-extension/`, `nelcit.shader-clippy` on Marketplace
 - [x] Quick-fix surfaced as VS Code code actions — `lsp/src/server/code_actions.cpp`
-- [x] Workspace-aware: respects `.hlsl-clippy.toml`, multi-root projects — `lsp/src/config_resolver.cpp`
+- [x] Workspace-aware: respects `.shader-clippy.toml`, multi-root projects — `lsp/src/config_resolver.cpp`
 - [x] Slang module / `#include` resolution wired into LSP (cross-file rules need it; Slang handles include paths natively) — handled via `core::lint()`'s reflection stage
 
 ### Phase 6 — Launch (v0.5) — COMPLETE
 
 - [ ] CI gate mode: exit codes, JSON output, GitHub Actions reporter (annotation format) *(deferred to v0.6)*
-- [x] Documentation site: one page per rule with *why it matters*, before/after, generated DXIL diff where instructive — live at https://nelcit.github.io/hlsl-clippy/
-- [x] Rule-pack catalog: `math`, `bindings`, `texture`, `workgroup`, `control-flow`, `vrs`, `sampler-feedback`, `mesh`, `dxr`, `work-graphs` togglable in config — per-rule severity in `.hlsl-clippy.toml` covers it
+- [x] Documentation site: one page per rule with *why it matters*, before/after, generated DXIL diff where instructive — live at https://nelcit.github.io/shader-clippy/
+- [x] Rule-pack catalog: `math`, `bindings`, `texture`, `workgroup`, `control-flow`, `vrs`, `sampler-feedback`, `mesh`, `dxr`, `work-graphs` togglable in config — per-rule severity in `.shader-clippy.toml` covers it
 - [ ] Launch posts: graphics-programming Discord, r/GraphicsProgramming, Hacker News, Twitter *(maintainer-driven)*
 - [x] Aggregate the blog posts into a "Why your HLSL is slower than it has to be" series — preface + 8 category overviews under `docs/blog/`
 
@@ -328,7 +328,7 @@ Per the architecture audits run during the v0.5 launch chain. Each item below is
 
 Build & maintainability:
 - [x] ✅ ast_helpers refactor — extract `node_kind`, `node_text`, `is_id_char` from 95+ rule TUs into `core/src/rules/util/ast_helpers.{hpp,cpp}` (commit `7afe88b`); 1422 LOC removed
-- [x] ✅ LSP static-lib factor (`hlsl_clippy_lsp_lib`) so unit-tests reuse the same 8 LSP TUs (commit `d5fa609`)
+- [x] ✅ LSP static-lib factor (`shader_clippy_lsp_lib`) so unit-tests reuse the same 8 LSP TUs (commit `d5fa609`)
 
 CI:
 - [x] ✅ Slang prebuilt cache step in every workflow (commit `d5fa609`)

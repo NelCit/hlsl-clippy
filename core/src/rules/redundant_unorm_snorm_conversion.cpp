@@ -34,15 +34,15 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::node_kind;
@@ -232,4 +232,4 @@ std::unique_ptr<Rule> make_redundant_unorm_snorm_conversion() {
     return std::make_unique<RedundantUnormSnormConversion>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

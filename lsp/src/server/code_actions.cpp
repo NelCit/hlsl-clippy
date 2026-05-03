@@ -9,20 +9,20 @@
 #include <utility>
 #include <vector>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "server/diagnostic_convert.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/source.hpp"
 
-namespace hlsl_clippy::lsp::server {
+namespace shader_clippy::lsp::server {
 
 namespace {
 
 /// Pre-Phase-6 docs URL prefix. ADR 0014 §"Sub-phase 5b" specifies that the
-/// permanent URL pattern is `https://nelcit.github.io/hlsl-clippy/rules/...`
+/// permanent URL pattern is `https://nelcit.github.io/shader-clippy/rules/...`
 /// once the docs site ships in Phase 6, but for now we link to the raw
 /// markdown source on GitHub so the link is never broken.
 constexpr std::string_view k_docs_url_prefix =
-    "https://github.com/NelCit/hlsl-clippy/blob/main/docs/rules/";
+    "https://github.com/NelCit/shader-clippy/blob/main/docs/rules/";
 
 /// LSP `CodeActionKind` literal for quick-fixes (per LSP §"CodeActionKind").
 constexpr std::string_view k_quickfix_kind = "quickfix";
@@ -41,8 +41,8 @@ struct Position {
 };
 
 /// Translate a (SourceId, byte-offset) into an LSP-style 0-based Position.
-[[nodiscard]] Position to_position(const hlsl_clippy::SourceManager& sources,
-                                   hlsl_clippy::SourceId source_id,
+[[nodiscard]] Position to_position(const shader_clippy::SourceManager& sources,
+                                   shader_clippy::SourceId source_id,
                                    std::uint32_t byte_offset) {
     const auto loc = sources.resolve(source_id, byte_offset);
     Position p{};
@@ -94,8 +94,8 @@ struct Position {
 }
 
 /// Map one Fix's edits into the WorkspaceEdit `changes[uri]` array.
-[[nodiscard]] nlohmann::json fix_edits_to_text_edits(const hlsl_clippy::Fix& fix,
-                                                     const hlsl_clippy::SourceManager& sources) {
+[[nodiscard]] nlohmann::json fix_edits_to_text_edits(const shader_clippy::Fix& fix,
+                                                     const shader_clippy::SourceManager& sources) {
     nlohmann::json arr = nlohmann::json::array();
     for (const auto& edit : fix.edits) {
         const auto start = to_position(sources, edit.span.source, edit.span.bytes.lo);
@@ -109,9 +109,9 @@ struct Position {
 }
 
 /// Build one CodeAction JSON object for a (diagnostic, fix) pair.
-[[nodiscard]] nlohmann::json build_code_action(const hlsl_clippy::Diagnostic& diag,
-                                               const hlsl_clippy::Fix& fix,
-                                               const hlsl_clippy::SourceManager& sources,
+[[nodiscard]] nlohmann::json build_code_action(const shader_clippy::Diagnostic& diag,
+                                               const shader_clippy::Fix& fix,
+                                               const shader_clippy::SourceManager& sources,
                                                std::string_view document_uri) {
     nlohmann::json action = nlohmann::json::object();
     // VS Code already groups code-actions by `kind: quickfix` and labels
@@ -144,8 +144,8 @@ std::string docs_url_for_rule(std::string_view rule_id) {
     return url;
 }
 
-nlohmann::json code_actions_for_range(const std::vector<hlsl_clippy::Diagnostic>& diagnostics,
-                                      const hlsl_clippy::SourceManager& sources,
+nlohmann::json code_actions_for_range(const std::vector<shader_clippy::Diagnostic>& diagnostics,
+                                      const shader_clippy::SourceManager& sources,
                                       std::string_view document_uri,
                                       std::int32_t requested_line_start,
                                       std::int32_t requested_char_start,
@@ -173,15 +173,15 @@ nlohmann::json code_actions_for_range(const std::vector<hlsl_clippy::Diagnostic>
     return out;
 }
 
-nlohmann::json hover_for_position(const std::vector<hlsl_clippy::Diagnostic>& diagnostics,
-                                  const hlsl_clippy::SourceManager& sources,
+nlohmann::json hover_for_position(const std::vector<shader_clippy::Diagnostic>& diagnostics,
+                                  const shader_clippy::SourceManager& sources,
                                   std::int32_t line,
                                   std::int32_t character) {
     const Position cursor{line, character};
     // Prefer the smallest-span diagnostic that covers the cursor — this is
     // what users intuitively expect when several diagnostics nest. Pick by
     // primary-span byte length; tie-break by first-seen.
-    const hlsl_clippy::Diagnostic* best = nullptr;
+    const shader_clippy::Diagnostic* best = nullptr;
     std::uint32_t best_len = 0U;
     for (const auto& diag : diagnostics) {
         const auto lo = to_position(sources, diag.primary_span.source, diag.primary_span.bytes.lo);
@@ -215,4 +215,4 @@ nlohmann::json hover_for_position(const std::vector<hlsl_clippy::Diagnostic>& di
     return out;
 }
 
-}  // namespace hlsl_clippy::lsp::server
+}  // namespace shader_clippy::lsp::server

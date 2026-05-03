@@ -11,7 +11,7 @@
 
 #include "control_flow/cfg_storage.hpp"
 
-namespace hlsl_clippy::control_flow {
+namespace shader_clippy::control_flow {
 
 namespace {
 
@@ -186,4 +186,4 @@ void compute_all_dominators(CfgStorage& storage) {
     }
 }
 
-}  // namespace hlsl_clippy::control_flow
+}  // namespace shader_clippy::control_flow

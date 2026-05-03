@@ -7,7 +7,7 @@
 // Stage: Ast (forward-compatible-stub).
 //
 // CONFIG-GATED: preview API, per ADR 0010 gated behind
-// `[experimental] work-graph-mesh-nodes = true` in `.hlsl-clippy.toml`.
+// `[experimental] work-graph-mesh-nodes = true` in `.shader-clippy.toml`.
 // `Config` does not yet surface the key, so this rule returns early
 // unconditionally.
 //
@@ -26,15 +26,15 @@
 
 #include <tree_sitter/api.h>
 
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
 #include "rules/util/ast_helpers.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 #include "parser_internal.hpp"
 #include "rules.hpp"
 
-namespace hlsl_clippy::rules {
+namespace shader_clippy::rules {
 namespace {
 
 using util::node_kind;
@@ -99,4 +99,4 @@ std::unique_ptr<Rule> make_mesh_node_uses_vertex_shader_pipeline() {
     return std::make_unique<MeshNodeUsesVertexShaderPipeline>();
 }
 
-}  // namespace hlsl_clippy::rules
+}  // namespace shader_clippy::rules

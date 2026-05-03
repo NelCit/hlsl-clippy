@@ -63,7 +63,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — When the bit-range analysis has a tight bound, `hlsl-clippy fix` rewrites the literal `hintBits` argument. When the bound is approximate, the diagnostic emits the candidate as a comment.
+**machine-applicable** — When the bit-range analysis has a tight bound, `shader-clippy fix` rewrites the literal `hintBits` argument. When the bound is approximate, the diagnostic emits the candidate as a comment.
 
 ## See also
 
@@ -75,6 +75,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/coherence-hint-redundant-bits.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/coherence-hint-redundant-bits.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

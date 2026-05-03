@@ -50,7 +50,7 @@ none
 
 ## Fix availability
 
-**machine-applicable** — The substitution is exact: `x > a ? 1.0 : 0.0` becomes `step(a, x)`. Note that `step(a, x)` uses `>=` semantics (`1.0` when `x >= a`), matching the common shader convention for strict `>` threshold tests when the equal case is not meaningful. If the calling code depends on the strict-greater-than distinction at the boundary point, a manual review is warranted; the tool emits a note to this effect when applying the fix. `hlsl-clippy fix` applies it automatically but flags the boundary note in the diff.
+**machine-applicable** — The substitution is exact: `x > a ? 1.0 : 0.0` becomes `step(a, x)`. Note that `step(a, x)` uses `>=` semantics (`1.0` when `x >= a`), matching the common shader convention for strict `>` threshold tests when the equal case is not meaningful. If the calling code depends on the strict-greater-than distinction at the boundary point, a manual review is warranted; the tool emits a note to this effect when applying the fix. `shader-clippy fix` applies it automatically but flags the boundary note in the diff.
 
 ## See also
 
@@ -60,6 +60,6 @@ none
 
 ---
 
-[Edit this page](https://github.com/NelCit/hlsl-clippy/edit/main/docs/rules/manual-step.md)
+[Edit this page](https://github.com/NelCit/shader-clippy/edit/main/docs/rules/manual-step.md)
 
 *© 2026 NelCit, CC-BY-4.0.*

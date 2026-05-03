@@ -161,7 +161,7 @@ maybe `cli/src/main.cpp` again for argparse. Adds:
   annotation format is purely a presentation transform.
 - **`.github/workflows/example/lint-hlsl.yml`** — a copy-paste-able
   starter step under `docs/ci/` that downloads the latest release,
-  runs `hlsl-clippy lint --format=github-annotations` over the
+  runs `shader-clippy lint --format=github-annotations` over the
   shader tree, and fails on exit 1 / 2.
 
 Test surface: `tests/unit/test_cli_format_*.cpp` (one new file per
@@ -177,9 +177,9 @@ Single PR. Builds on the docs site already wired in commit `25c2001`:
 
 - Replace the `<!-- TODO: enable docs site link once sub-phase 5e
   ships and the docs-site agent lands -->` marker in README.md with
-  a live link to `https://nelcit.github.io/hlsl-clippy/`.
+  a live link to `https://nelcit.github.io/shader-clippy/`.
 - Replace the `<!-- TODO: demo gif -->` marker with an `asciinema` /
-  `vhs` recording of `hlsl-clippy lint --fix` against the corpus.
+  `vhs` recording of `shader-clippy lint --fix` against the corpus.
   Asset under `docs/public/demo.gif`; embedded inline in README.
 - Pull the dead-link tolerations from `docs/.vitepress/config.mts`
   one at a time as the underlying gaps get fixed (or accept them as
@@ -221,7 +221,7 @@ Maintainer-only:
 
 If skipped, the v0.5 tag still produces a `.vsix` artifact attached
 to the GitHub Release; users sideload via
-`code --install-extension hlsl-clippy-0.5.0.vsix`. Not a blocker.
+`code --install-extension shader-clippy-0.5.0.vsix`. Not a blocker.
 
 ### 6e — Final launch readiness audit (≤1 day)
 
@@ -253,7 +253,7 @@ Posts queued for staggered publication:
   announcement to graphics-programming Discord; tweet from
   `@NelCit`.
 - **Day 1:** Hacker News submission. Title: "Show HN:
-  hlsl-clippy — a Clippy for HLSL with 154 portable perf rules". Link
+  shader-clippy — a Clippy for HLSL with 154 portable perf rules". Link
   to the GitHub Release. Open the comment thread before the post goes
   up so the first comment can pin the docs site link.
 - **Day 2:** r/GraphicsProgramming long-form post referencing the
@@ -271,7 +271,7 @@ firefighting at once.
   agent dispatched in parallel with this ADR's drafting; if it
   doesn't return green, the affected rules get marked
   `severity = "off"` by default in the bundled
-  `.hlsl-clippy.toml.example` and listed as "preview" in CHANGELOG —
+  `.shader-clippy.toml.example` and listed as "preview" in CHANGELOG —
   ship without them. v0.5.1 ramp.
 
 - **Risk: Marketplace listing rejected on first submission.** Common
@@ -303,9 +303,9 @@ firefighting at once.
 - **Risk: rule false positives on real-world shaders surface
   immediately.** The 27-shader corpus is permissively-licensed
   open-source; AAA studio codebases have idioms it doesn't capture.
-  Mitigation: every false positive gets a `// hlsl-clippy: allow(rule-id)`
+  Mitigation: every false positive gets a `// shader-clippy: allow(rule-id)`
   escape hatch (Phase 1 suppression parser) AND a
-  `severity = "off"` knob in `.hlsl-clippy.toml`. Document both
+  `severity = "off"` knob in `.shader-clippy.toml`. Document both
   prominently in the launch README.
 
 ## Consequences

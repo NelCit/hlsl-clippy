@@ -26,13 +26,13 @@ enough in the last five years that what is bad on one is usually bad on the
 others. That portability is the opening for a static linter that lives one
 layer above the per-IHV analyzer.
 
-`hlsl-clippy` is that linter. v0.5.0 ships 154 rules across fifteen
+`shader-clippy` is that linter. v0.5.0 ships 154 rules across fifteen
 categories, every one of them rooted in a documented GPU mechanism, every
 one with a companion blog post that explains why the pattern costs you
 cycles. This post is the overview. The eight category posts that follow go
 deep on specifics.
 
-## What hlsl-clippy actually is
+## What shader-clippy actually is
 
 A static linter for HLSL. AST via tree-sitter-hlsl, compile and reflection
 via Slang. Rules fire on three stages — pure-AST patterns (Phase 2),
@@ -172,7 +172,7 @@ overview](/blog/ser-coop-vector-overview).
 The honest scope statement, since "what does this tool not do" is usually
 more useful than the feature list:
 
-- **DXC handles syntax.** `hlsl-clippy` does not duplicate the compiler's
+- **DXC handles syntax.** `shader-clippy` does not duplicate the compiler's
   parser-level diagnostics. If your shader does not compile, fix that
   first.
 - **RGA, Nsight, PIX, RenderDoc, and the platform-specific console tools
@@ -180,7 +180,7 @@ more useful than the feature list:
   always beats a static linter. Use them when you have a frame to profile
   in front of you.
 - **A profiler tells you which patterns are actually costing you frames.**
-  `hlsl-clippy` flags what is provably suboptimal. The two answer
+  `shader-clippy` flags what is provably suboptimal. The two answer
   different questions and you need both.
 
 The portable middle layer — patterns that are bad on every IHV, with the
@@ -194,17 +194,17 @@ moment now, depending on when you read this). Prerequisites are a C++23
 compiler — MSVC 19.44+, Clang 18+, or GCC 14+ — and CMake 3.20.
 
 ```sh
-git clone --recurse-submodules https://github.com/NelCit/hlsl-clippy.git
-cd hlsl-clippy
+git clone --recurse-submodules https://github.com/NelCit/shader-clippy.git
+cd shader-clippy
 cmake -B build && cmake --build build
-./build/cli/hlsl-clippy lint shader.hlsl
-./build/cli/hlsl-clippy lint --fix shader.hlsl
+./build/cli/shader-clippy lint shader.hlsl
+./build/cli/shader-clippy lint --fix shader.hlsl
 ```
 
 On Windows, `tools\dev-shell.ps1` enters the VS Dev Shell and adds the
 Slang prebuilt cache to `PATH` in one step.
 
-Configuration is a `.hlsl-clippy.toml` next to your shader tree:
+Configuration is a `.shader-clippy.toml` next to your shader tree:
 
 ```toml
 [rules]
@@ -222,7 +222,7 @@ include / exclude globs, and a small set of `[experimental]` toggles for
 preview surfaces all live in the same file.
 
 For CI, drop the example workflow at
-[`docs/ci/lint-hlsl-example.yml`](https://github.com/NelCit/hlsl-clippy/blob/main/docs/ci/lint-hlsl-example.yml)
+[`docs/ci/lint-hlsl-example.yml`](https://github.com/NelCit/shader-clippy/blob/main/docs/ci/lint-hlsl-example.yml)
 into `.github/workflows/`. It downloads the latest release tarball, runs
 the linter over your shader glob, and emits inline annotations on the PR
 diff via `--format=github-annotations`. When `$GITHUB_ACTIONS=true` the
@@ -232,14 +232,14 @@ emission is the same either way. Exit codes are `0` clean, `1` warnings,
 
 ## The eighteen-month-old shader folder
 
-Open it. Run `hlsl-clippy lint --format=github-annotations` against the
+Open it. Run `shader-clippy lint --format=github-annotations` against the
 hot pass. Read the rule doc on the first warning — every one of them
 links to a blog post that explains the GPU mechanism. If the warning is
 real on your target hardware, take the fix. If the compiler is folding it
 on your specific SM target and you have measured that, suppress per-line:
 
 ```hlsl
-float r = pow(roughness, 2.0); // hlsl-clippy: allow(pow-const-squared)
+float r = pow(roughness, 2.0); // shader-clippy: allow(pow-const-squared)
 ```
 
 The rules are not snake oil. They will not make your shader 2x faster.
@@ -250,8 +250,8 @@ the first place. That second outcome is the one we actually care about.
 
 ---
 
-`hlsl-clippy` is open source. Rules, issues, and discussion live at
-[github.com/NelCit/hlsl-clippy](https://github.com/NelCit/hlsl-clippy).
+`shader-clippy` is open source. Rules, issues, and discussion live at
+[github.com/NelCit/shader-clippy](https://github.com/NelCit/shader-clippy).
 If you have encountered a shader pattern that should be a lint rule,
 open an issue.
 

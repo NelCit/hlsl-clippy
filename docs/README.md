@@ -1,13 +1,13 @@
 # Documentation
 
-Reference documentation for `hlsl-clippy` — a linter for HLSL that catches performance and correctness issues beyond what `dxc` reports.
+Reference documentation for `shader-clippy` — a linter for HLSL and Slang that catches performance and correctness issues beyond what `dxc` reports.
 
-> **Status:** v0.5.6 shipped — 154 rules + LSP + VS Code extension. The handful of doc pages whose underlying rule is still queued (per [ADR 0007](https://github.com/NelCit/hlsl-clippy/blob/main/docs/decisions/0007-rule-pack-expansion.md) / [ADR 0010](https://github.com/NelCit/hlsl-clippy/blob/main/docs/decisions/0010-sm69-rule-expansion.md) / [ADR 0011](https://github.com/NelCit/hlsl-clippy/blob/main/docs/decisions/0011-candidate-rule-adoption.md)) still carry their original "Pre-v0 status:" banner. See [ROADMAP](https://github.com/NelCit/hlsl-clippy/blob/main/ROADMAP.md) for the phase-by-phase plan.
+> **Status:** v0.5.6 shipped — 154 rules + LSP + VS Code extension. The handful of doc pages whose underlying rule is still queued (per [ADR 0007](https://github.com/NelCit/shader-clippy/blob/main/docs/decisions/0007-rule-pack-expansion.md) / [ADR 0010](https://github.com/NelCit/shader-clippy/blob/main/docs/decisions/0010-sm69-rule-expansion.md) / [ADR 0011](https://github.com/NelCit/shader-clippy/blob/main/docs/decisions/0011-candidate-rule-adoption.md)) still carry their original "Pre-v0 status:" banner. See [ROADMAP](https://github.com/NelCit/shader-clippy/blob/main/ROADMAP.md) for the phase-by-phase plan.
 
 ## Contents
 
 - [Getting Started](getting-started.md) — install, first lint invocation, basic config
-- [Configuration](configuration.md) — `.hlsl-clippy.toml` schema, severity levels, inline suppression
+- [Configuration](configuration.md) — `.shader-clippy.toml` schema, severity levels, inline suppression
 - [Rules Catalog](rules/index.md) — all rules by category, severity, and applicability
 - [Architecture](architecture.md) — pipeline overview for contributors
 - [Contributing](contributing.md) — dev setup, build, rule authoring, DCO sign-off

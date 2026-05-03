@@ -19,11 +19,11 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "hlsl_clippy/config.hpp"
-#include "hlsl_clippy/diagnostic.hpp"
-#include "hlsl_clippy/lint.hpp"
-#include "hlsl_clippy/rule.hpp"
-#include "hlsl_clippy/source.hpp"
+#include "shader_clippy/config.hpp"
+#include "shader_clippy/diagnostic.hpp"
+#include "shader_clippy/lint.hpp"
+#include "shader_clippy/rule.hpp"
+#include "shader_clippy/source.hpp"
 
 // `AstTree` is defined in the private parser-internal header; tests already
 // have `core/src` on the include path so they can pull this in.
@@ -31,17 +31,17 @@
 
 namespace {
 
-using hlsl_clippy::AstCursor;
-using hlsl_clippy::AstTree;
-using hlsl_clippy::Config;
-using hlsl_clippy::Diagnostic;
-using hlsl_clippy::ExperimentalTarget;
-using hlsl_clippy::Rule;
-using hlsl_clippy::RuleContext;
-using hlsl_clippy::Severity;
-using hlsl_clippy::SourceManager;
-using hlsl_clippy::Span;
-using hlsl_clippy::Stage;
+using shader_clippy::AstCursor;
+using shader_clippy::AstTree;
+using shader_clippy::Config;
+using shader_clippy::Diagnostic;
+using shader_clippy::ExperimentalTarget;
+using shader_clippy::Rule;
+using shader_clippy::RuleContext;
+using shader_clippy::Severity;
+using shader_clippy::SourceManager;
+using shader_clippy::Span;
+using shader_clippy::Stage;
 
 /// Spy rule that only fires under `experimental_target = Rdna4`. Emits a
 /// single fixed-id diagnostic on the whole-tree pass; the diagnostic count
@@ -65,7 +65,7 @@ public:
         Diagnostic diag;
         diag.code = std::string{id()};
         diag.severity = Severity::Warning;
-        diag.primary_span = Span{tree.source_id(), hlsl_clippy::ByteSpan{0U, 0U}};
+        diag.primary_span = Span{tree.source_id(), shader_clippy::ByteSpan{0U, 0U}};
         diag.message = "spy fired";
         ctx.emit(std::move(diag));
     }
@@ -95,7 +95,7 @@ TEST_CASE("Default Config reports experimental_target() == None", "[config][expe
     CHECK(cfg.warnings.empty());
 
     // Loading an empty TOML string also produces `None` and no warnings.
-    const auto result = hlsl_clippy::load_config_string("");
+    const auto result = shader_clippy::load_config_string("");
     REQUIRE(result.has_value());
     CHECK(result.value().experimental_target() == ExperimentalTarget::None);
     CHECK(result.value().warnings.empty());
@@ -106,7 +106,7 @@ TEST_CASE("[experimental] target = \"rdna4\" parses to Rdna4", "[config][experim
 [experimental]
 target = "rdna4"
 )";
-    const auto result = hlsl_clippy::load_config_string(k_toml);
+    const auto result = shader_clippy::load_config_string(k_toml);
     REQUIRE(result.has_value());
     const auto& cfg = result.value();
     CHECK(cfg.experimental_target() == ExperimentalTarget::Rdna4);
@@ -117,7 +117,7 @@ target = "rdna4"
 [experimental]
 target = "blackwell"
 )";
-    const auto bw = hlsl_clippy::load_config_string(k_blackwell);
+    const auto bw = shader_clippy::load_config_string(k_blackwell);
     REQUIRE(bw.has_value());
     CHECK(bw.value().experimental_target() == ExperimentalTarget::Blackwell);
 
@@ -125,7 +125,7 @@ target = "blackwell"
 [experimental]
 target = "xe2"
 )";
-    const auto xe2 = hlsl_clippy::load_config_string(k_xe2);
+    const auto xe2 = shader_clippy::load_config_string(k_xe2);
     REQUIRE(xe2.has_value());
     CHECK(xe2.value().experimental_target() == ExperimentalTarget::Xe2);
 }
@@ -135,7 +135,7 @@ TEST_CASE("Unrecognised target falls back to None and emits a warning", "[config
 [experimental]
 target = "ada"
 )";
-    const auto result = hlsl_clippy::load_config_string(k_toml);
+    const auto result = shader_clippy::load_config_string(k_toml);
     REQUIRE(result.has_value());
     const auto& cfg = result.value();
     CHECK(cfg.experimental_target() == ExperimentalTarget::None);
@@ -148,7 +148,7 @@ target = "ada"
 [experimental]
 target = ""
 )";
-    const auto empty_res = hlsl_clippy::load_config_string(k_empty);
+    const auto empty_res = shader_clippy::load_config_string(k_empty);
     REQUIRE(empty_res.has_value());
     CHECK(empty_res.value().experimental_target() == ExperimentalTarget::None);
     CHECK(empty_res.value().warnings.empty());
@@ -172,7 +172,7 @@ void cs_main(uint3 tid : SV_DispatchThreadID) {
     // but config target = None).
     {
         const Config cfg{};
-        const auto diags = hlsl_clippy::lint(
+        const auto diags = shader_clippy::lint(
             sources, src, rules, cfg, std::filesystem::path{"experimental_spy.hlsl"});
         CHECK(count_spy_diagnostics(diags) == 0U);
     }
@@ -181,7 +181,7 @@ void cs_main(uint3 tid : SV_DispatchThreadID) {
     {
         Config cfg{};
         cfg.experimental_target_value = ExperimentalTarget::Rdna4;
-        const auto diags = hlsl_clippy::lint(
+        const auto diags = shader_clippy::lint(
             sources, src, rules, cfg, std::filesystem::path{"experimental_spy.hlsl"});
         CHECK(count_spy_diagnostics(diags) == 1U);
     }
@@ -190,14 +190,14 @@ void cs_main(uint3 tid : SV_DispatchThreadID) {
     {
         Config cfg{};
         cfg.experimental_target_value = ExperimentalTarget::Blackwell;
-        const auto diags = hlsl_clippy::lint(
+        const auto diags = shader_clippy::lint(
             sources, src, rules, cfg, std::filesystem::path{"experimental_spy.hlsl"});
         CHECK(count_spy_diagnostics(diags) == 0U);
     }
 
     // No-config overload: experimental rules are gated off (active = None).
     {
-        const auto diags = hlsl_clippy::lint(sources, src, rules);
+        const auto diags = shader_clippy::lint(sources, src, rules);
         CHECK(count_spy_diagnostics(diags) == 0U);
     }
 }
