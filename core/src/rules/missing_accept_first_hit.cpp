@@ -30,7 +30,6 @@
 namespace hlsl_clippy::rules {
 namespace {
 
-using util::is_id_char;
 using util::node_kind;
 using util::node_text;
 

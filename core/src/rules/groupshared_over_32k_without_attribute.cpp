@@ -36,7 +36,6 @@ namespace {
 
 using util::is_id_char;
 using util::node_kind;
-using util::node_text;
 
 constexpr std::string_view k_rule_id = "groupshared-over-32k-without-attribute";
 constexpr std::string_view k_category = "sm6_10";

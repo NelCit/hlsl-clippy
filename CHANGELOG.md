@@ -13,6 +13,54 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [1.5.6] — 2026-05-03
+
+**Patch — 7 latent clang-tidy errors uncovered by v1.5.5's
+parallel pass.** v1.5.4's lint failure (single C-style array)
+was a fail-fast on the first error, hiding 6 other latent
+violations. v1.5.5 fixed the format issue, the parallel
+clang-tidy pass surfaced the rest:
+
+- 4 × `cppcoreguidelines-avoid-c-arrays` (4 files, 4 sites)
+- 2 × `misc-unused-using-decls` (2 files, 2 stale `using` decls)
+- 1 × `misc-redundant-expression` (dead ternary
+  `prefix.empty() ? prefix : prefix` in
+  `reference_data_type_not_supported_pre_sm610.cpp`)
+
+These are pure cleanups — no semantic change, no test count
+change. The redundant ternary was a no-op (both branches
+returned the same value) so removing it is a strict
+simplification.
+
+### Fixed
+
+- **`core/src/rules/groupshared_when_registers_suffice.cpp:133`** —
+  `k_markers[]` (8 elements) → `std::array<std::string_view, 8>`.
+  Added `#include <array>`.
+- **`core/src/rules/util/liveness.cpp:80,98`** —
+  `k_type_prefixes[]` (19) → `std::array<std::string_view, 19>`;
+  `k_keywords[]` (43) → `std::array<std::string_view, 43>`.
+  Added `#include <array>`.
+- **`core/src/rules/min16float_opportunity.cpp:161`** —
+  `k_keys[2]` → `std::array<std::string_view, 2>`. Added
+  `#include <array>`.
+- **`core/src/rules/missing_accept_first_hit.cpp:33`** —
+  removed unused `using util::is_id_char;`.
+- **`core/src/rules/groupshared_over_32k_without_attribute.cpp:39`** —
+  removed unused `using util::node_text;`.
+- **`core/src/rules/reference_data_type_not_supported_pre_sm610.cpp:69`** —
+  removed dead ternary
+  `const std::string_view trimmed_prefix = prefix.empty() ? prefix : prefix;`,
+  used `prefix` directly downstream.
+
+Local build verified clean against clang-format-15 (npm
+package, identical decisions to clang-format-18). Local test
+count: 99% passed (852 / 856); the 4 local failures are
+pre-existing Windows console code-page mangling of em-dashes
+in test names (`—` → `?`), exclusive to local PowerShell —
+CI's Linux + macOS runners pass these tests, as evidenced by
+v1.5.5's CI green.
+
 ## [1.5.5] — 2026-05-03
 
 **Patch — clang-format-18 vs v1.5.4 std::array init.** v1.5.4
@@ -1715,6 +1763,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[1.5.6]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.5...v1.5.6
 [1.5.5]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.4...v1.5.5
 [1.5.4]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.3...v1.5.4
 [1.5.3]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.2...v1.5.3

@@ -66,10 +66,9 @@ public:
             --k;
         }
         const auto prefix = bytes.substr(k, pos - k);
-        const std::string_view trimmed_prefix = prefix.empty() ? prefix : prefix;
-        const bool is_param_qual = trimmed_prefix.find("inout") != std::string_view::npos ||
-                                   trimmed_prefix.find("out") != std::string_view::npos ||
-                                   trimmed_prefix.find("in") != std::string_view::npos;
+        const bool is_param_qual = prefix.find("inout") != std::string_view::npos ||
+                                   prefix.find("out") != std::string_view::npos ||
+                                   prefix.find("in") != std::string_view::npos;
         if (!is_param_qual) {
             return;
         }

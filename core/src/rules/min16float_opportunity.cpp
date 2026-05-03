@@ -13,6 +13,7 @@
 // pipelines; if reflection cannot resolve a binding, the rule scans for
 // `min16float` / `half` declarations in source.
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -158,7 +159,7 @@ public:
         // Also accept locally-declared `min16float` / `half` identifiers.
         // Cheap textual scan for declarators.
         std::size_t pos = 0U;
-        constexpr std::string_view k_keys[2] = {"min16float", "half"};
+        constexpr std::array<std::string_view, 2> k_keys = {"min16float", "half"};
         for (const auto kw : k_keys) {
             pos = 0U;
             while (pos < bytes.size()) {

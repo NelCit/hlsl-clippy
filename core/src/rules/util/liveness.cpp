@@ -23,6 +23,7 @@
 #include "rules/util/liveness.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <span>
 #include <string>
@@ -77,7 +78,7 @@ namespace {
     // Numeric scalar / vector / matrix shapes -- we only check the prefix
     // because tree-sitter-hlsl exposes vector shapes as `floatN`, `intN`,
     // `uintN` etc. We use a tight prefix list to avoid overfiring.
-    static constexpr std::string_view k_type_prefixes[] = {
+    static constexpr std::array<std::string_view, 19> k_type_prefixes = {
         "float",     "double",  "half",    "min10float", "min16float", "min12int", "min16int",
         "min16uint", "uint",    "int",     "bool",       "uint16_t",   "uint32_t", "uint64_t",
         "int16_t",   "int32_t", "int64_t", "vector",     "matrix",
@@ -95,7 +96,7 @@ namespace {
             }
         }
     }
-    static constexpr std::string_view k_keywords[] = {
+    static constexpr std::array<std::string_view, 43> k_keywords = {
         "if",
         "else",
         "for",

@@ -9,6 +9,7 @@
 // because LDS layout introspection through Slang reflection is per-cbuffer
 // only; the AST gives us the declarator + access pattern in source order.
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -130,7 +131,7 @@ void scan_decls(std::string_view bytes, std::vector<GroupsharedDecl>& out) {
 [[nodiscard]] bool index_is_thread_id_like(std::string_view idx) noexcept {
     // Accept identifiers / expressions whose text matches a per-thread index:
     // `tid`, `gtid`, `dtid`, `groupIndex`, `SV_GroupIndex`, etc.
-    static constexpr std::string_view k_markers[] = {
+    static constexpr std::array<std::string_view, 8> k_markers = {
         "tid",
         "gtid",
         "dtid",
