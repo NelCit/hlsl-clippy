@@ -97,8 +97,7 @@ public:
         return value_;
     }
 
-    [[nodiscard]] friend constexpr bool operator==(IrFunctionId lhs,
-                                                   IrFunctionId rhs) noexcept {
+    [[nodiscard]] friend constexpr bool operator==(IrFunctionId lhs, IrFunctionId rhs) noexcept {
         return lhs.value_ == rhs.value_;
     }
 

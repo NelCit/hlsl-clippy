@@ -13,6 +13,23 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [1.5.3] — 2026-05-03
+
+**Patch — last clang-format straggler.** v1.5.2's full-repo
+format pass missed the public-header tree (`core/include/`); the
+sweep extracted file paths from v1.5.1's failure log, which only
+listed `core/src/` files. v1.5.2's CI run flagged exactly one
+remaining offender: `core/include/hlsl_clippy/ir.hpp:100` — a
+single line-break disagreement on `IrFunctionId::operator==`.
+
+### Fixed
+
+- **`core/include/hlsl_clippy/ir.hpp`** — single-line
+  reformatting (joined a wrapped function signature). No
+  semantic change.
+
+Test count unchanged: 856 cases / 2246 assertions, all green.
+
 ## [1.5.2] — 2026-05-03
 
 **Patch — full-repo clang-format pass.** v1.5.1's clang-format
@@ -1631,6 +1648,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[1.5.3]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.2...v1.5.3
 [1.5.2]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/NelCit/hlsl-clippy/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/NelCit/hlsl-clippy/compare/v1.4.1...v1.5.0
