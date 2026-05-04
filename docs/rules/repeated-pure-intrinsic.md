@@ -4,7 +4,7 @@ category: math
 severity: warn
 applicability: suggestion
 since-version: v2.0.3
-phase: 2
+phase: 4
 language_applicability:
   - hlsl
   - slang
@@ -17,7 +17,9 @@ references:
 
 # repeated-pure-intrinsic
 
-> **Status:** shipped (Phase 2) — see [CHANGELOG](../../CHANGELOG.md).
+> **Status:** shipped (Phase 4 since v2.0.4 — was Phase 2 in v2.0.3) —
+> see [CHANGELOG](../../CHANGELOG.md). Requires `enableControlFlow=true`
+> in the LSP / `LintOptions`.
 
 ## What it detects
 
@@ -43,6 +45,20 @@ calls A and B and skips the report if any apply to the argument:
    identifier — conservatively treated as a wildcard barrier because
    HLSL `out` / `inout` parameters cannot be detected from the AST
    alone.
+
+Two AST-based control-flow refinements (added in v2.0.4) make this
+function-scope:
+
+- **Dead-branch relaxation.** A mutation that sits inside a block
+  ending with `return` / `discard` / `break` / `continue` whose end
+  byte precedes B does NOT suppress — the mutation cannot reach B on
+  any path, so A and B are still genuine duplicates. Catches
+  early-return guards and PS `discard` patterns the v2.0.3 detector
+  missed.
+- **Disjoint `if`/`else` suppression.** When A and B sit in sibling
+  branches of the same `if_statement` (consequence vs. `else_clause`
+  body), at most one runs per execution and the "duplicate" report
+  is misleading. The detector skips the pair.
 
 ## Why it matters on a GPU
 

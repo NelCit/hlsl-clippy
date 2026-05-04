@@ -181,3 +181,97 @@ float foo(float x, float y)
 )hlsl";
     CHECK(count_rule(lint_buffer(hlsl, sources), k_rule) == 0U);
 }
+
+// ---- v2.0.4 CFG-aware precision (Stage::ControlFlow + reachability) ----
+//
+// In v2.0.3 the rule treated any lexical mutation between two duplicate
+// calls as a barrier — even if that mutation sat in an early-return
+// branch and therefore could not reach the second call along the CFG.
+// v2.0.4 routes the mutation filter through the Phase 4 CFG so dead-path
+// mutations no longer suppress the report. The cases below would have
+// been false negatives in v2.0.3.
+
+TEST_CASE("repeated-pure-intrinsic fires when the mutation sits in an early-return branch",
+          "[rules][repeated-pure-intrinsic][cfg]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float foo(float x, bool early)
+{
+    float a = sqrt(x);
+    if (early)
+    {
+        x = 0.0;
+        return a;
+    }
+    float b = sqrt(x);
+    return a + b;
+}
+)hlsl";
+    // The `x = 0.0` mutation lives in a block that returns and never
+    // flows to the second `sqrt(x)`. CFG-aware: NOT a barrier.
+    CHECK(count_rule(lint_buffer(hlsl, sources), k_rule) == 1U);
+}
+
+TEST_CASE("repeated-pure-intrinsic fires when the mutation sits in a `discard` branch",
+          "[rules][repeated-pure-intrinsic][cfg]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float ps_main(float x : TEXCOORD0) : SV_Target
+{
+    float a = sqrt(x);
+    if (x < 0.0)
+    {
+        x = 1.0;
+        discard;
+    }
+    float b = sqrt(x);
+    return a + b;
+}
+)hlsl";
+    // `discard` blocks don't flow to the join — same logic as early
+    // return.
+    CHECK(count_rule(lint_buffer(hlsl, sources), k_rule) == 1U);
+}
+
+TEST_CASE("repeated-pure-intrinsic stays silent when the mutation reaches both calls",
+          "[rules][repeated-pure-intrinsic][cfg]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float foo(float x, bool b)
+{
+    float a = sqrt(x);
+    if (b)
+    {
+        x = x + 1.0;
+        // No early exit — control flow joins back below.
+    }
+    float c = sqrt(x);
+    return a + c;
+}
+)hlsl";
+    // The `if (b)` branch joins back into the linear flow, so `x = x + 1`
+    // CAN reach the second `sqrt(x)`. Conservative suppression preserved.
+    CHECK(count_rule(lint_buffer(hlsl, sources), k_rule) == 0U);
+}
+
+TEST_CASE("repeated-pure-intrinsic stays silent when the two calls live on disjoint branches",
+          "[rules][repeated-pure-intrinsic][cfg]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float foo(float x, int mode)
+{
+    if (mode == 0)
+    {
+        return sqrt(x);
+    }
+    else
+    {
+        return sqrt(x) * 2.0;
+    }
+}
+)hlsl";
+    // Neither call dominates the other — they're on disjoint paths from
+    // the function entry. CFG-aware dominator check suppresses; the user
+    // genuinely needs both call sites because at most one runs.
+    CHECK(count_rule(lint_buffer(hlsl, sources), k_rule) == 0U);
+}

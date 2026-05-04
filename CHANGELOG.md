@@ -13,6 +13,55 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [2.0.4] — 2026-05-04
+
+**Patch — `repeated-pure-intrinsic` becomes CFG-aware (Stage::ControlFlow);
+two AST-based precision refinements eliminate the v2.0.3 false negatives
+on dead-branch mutations and the false positives on disjoint `if`/`else`
+duplicates.**
+
+### Changed
+
+- **`repeated-pure-intrinsic` is now `Stage::ControlFlow`.** Threads
+  through Phase 4's `ControlFlowInfo` (ADR 0013). The CFG handle is
+  reserved for future precision tightening; the v2.0.4 detectors below
+  are AST-based because the engine's region-tree CFG semantics make
+  `reachable_from(if_body, post_if_join)` return false for standard
+  merge-back patterns, which would over-suppress.
+
+  Users who set `enableControlFlow = false` no longer see this rule.
+
+### Added
+
+- **Dead-branch mutation relaxation** — a mutation `m` between two
+  duplicate calls A and B no longer suppresses the report when `m` sits
+  inside a `compound_statement` that ends with `return` / `discard` /
+  `break` / `continue` and that block ends lexically before B. The
+  mutation cannot reach B on any control-flow path, so the calls are
+  still genuine duplicates. Eliminates v2.0.3 false negatives on
+  early-return guards and PS `discard` patterns.
+
+- **Disjoint `if`/`else` branch suppression** — when A and B sit inside
+  sibling branches of the same `if_statement` (consequence vs.
+  `else_clause` body), at most one of the two calls executes per run
+  and the "duplicate" report is misleading. The new detector walks each
+  call's compound-statement ancestor chain and skips the pair when both
+  share an enclosing `if_statement`. Eliminates the v2.0.3 false
+  positive on `if (mode==0) { return sqrt(x); } else { return sqrt(x) * 2.0; }`.
+
+- 4 new regression tests under `[rules][repeated-pure-intrinsic][cfg]`:
+  early-return-after-mutation, `discard`-after-mutation, mutation-
+  reaches-both-calls (still suppresses), and disjoint-branches.
+
+### Fixed
+
+- v2.0.3 incorrectly suppressed the report when a mutation sat in any
+  lexically-intervening branch, even branches that returned early. The
+  CFG / dead-branch logic now lifts these false negatives without
+  weakening the v2.0.3 conservative floor (a lexical mutation hit still
+  defaults to "intervenes" unless we can affirmatively prove the dead-
+  path).
+
 ## [2.0.3] — 2026-05-04
 
 **Patch — new rule `repeated-pure-intrinsic` (function-scope CSE
@@ -1973,6 +2022,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[2.0.4]: https://github.com/NelCit/shader-clippy/compare/v2.0.3...v2.0.4
 [2.0.3]: https://github.com/NelCit/shader-clippy/compare/v2.0.2...v2.0.3
 [2.0.2]: https://github.com/NelCit/shader-clippy/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/NelCit/shader-clippy/compare/v2.0.0...v2.0.1
