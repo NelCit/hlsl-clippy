@@ -511,3 +511,113 @@ TEST_CASE("LintOptions::enable_reflection = true dispatches on_reflection once",
     // No reflection-failure diagnostic should leak through for a valid source.
     CHECK_FALSE(has_rule(diagnostics, "clippy::reflection"));
 }
+
+// --- v2.0.2 compatibility patchset regression tests -----------------------
+//
+// Each of the patterns below reflected as a fatal `clippy::reflection`
+// Severity::Error before v2.0.2. The compatibility patchset (sampler shim
+// prelude + warnings-only severity downgrade + include-roots wiring) keeps
+// reflection alive on all three: legacy `sampler` parameter, unknown
+// `#pragma pack_matrix`, and angle-bracket includes resolved via
+// `LintOptions::include_directories`.
+
+TEST_CASE("Reflection: legacy `sampler` parameter type compiles via shim prelude",
+          "[reflection][engine][v2.0.2][regression]") {
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
+    engine.clear_cache();
+
+    SourceManager sources;
+    const auto src = sources.add_buffer("legacy_sampler.hlsl", R"hlsl(
+Texture2D<float4> tex : register(t0);
+SamplerState g_sampler : register(s0);
+
+float4 sample_with_legacy_sampler(sampler s, float2 uv)
+{
+    return tex.Sample(s, uv);
+}
+
+[shader("pixel")]
+float4 ps_main(float2 uv : TEXCOORD0) : SV_Target
+{
+    return sample_with_legacy_sampler(g_sampler, uv);
+}
+)hlsl");
+    REQUIRE(src.valid());
+
+    const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"});
+    REQUIRE(result.has_value());
+    CHECK(result.value().entry_points.size() >= 1U);
+}
+
+TEST_CASE("Reflection: unknown `#pragma pack_matrix` does not produce a fatal Error",
+          "[reflection][engine][v2.0.2][regression]") {
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
+    engine.clear_cache();
+
+    SourceManager sources;
+    const auto src = sources.add_buffer("pack_matrix.hlsl", R"hlsl(
+#pragma pack_matrix(row_major)
+
+cbuffer Globals : register(b0)
+{
+    float4x4 view_proj;
+};
+
+[shader("vertex")]
+float4 vs_main(float3 pos : POSITION) : SV_Position
+{
+    return mul(view_proj, float4(pos, 1.0));
+}
+)hlsl");
+    REQUIRE(src.valid());
+
+    const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"});
+    if (!result.has_value()) {
+        // If Slang surfaces a warnings-only failure here, the bridge must
+        // downgrade severity to Note so the IDE doesn't red-screen.
+        const auto& diag = result.error();
+        CHECK(diag.severity != shader_clippy::Severity::Error);
+    } else {
+        SUCCEED("reflection succeeded — pack_matrix is accepted by Slang");
+    }
+}
+
+TEST_CASE("Reflection: angle-bracket include resolves through LintOptions::include_directories",
+          "[reflection][engine][v2.0.2][regression]") {
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
+    engine.clear_cache();
+
+    const auto stamp = static_cast<std::uint64_t>(
+        std::chrono::high_resolution_clock::now().time_since_epoch().count());
+    const auto root = std::filesystem::temp_directory_path() /
+                      (std::string{"shader-clippy-v202-angle-include-"} + std::to_string(stamp));
+    const auto include_dir = root / "donut" / "shaders";
+    std::filesystem::create_directories(include_dir);
+    {
+        std::ofstream out(include_dir / "helper_functions.hlsli", std::ios::binary | std::ios::trunc);
+        REQUIRE(out);
+        out << "float4 helper_color() { return float4(0.5, 0.5, 0.5, 1.0); }\n";
+    }
+
+    SourceManager sources;
+    const auto source_path = root / "translucent_depth.hlsl";
+    const auto src = sources.add_buffer(source_path.string(), R"hlsl(
+#include <donut/shaders/helper_functions.hlsli>
+
+[shader("pixel")]
+float4 ps_main(float2 uv : TEXCOORD0) : SV_Target
+{
+    return helper_color();
+}
+)hlsl");
+    REQUIRE(src.valid());
+
+    const std::vector<std::filesystem::path> include_dirs{root};
+    const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"}, include_dirs);
+
+    std::error_code ec;
+    std::filesystem::remove_all(root, ec);
+
+    REQUIRE(result.has_value());
+    CHECK(result.value().entry_points.size() >= 1U);
+}

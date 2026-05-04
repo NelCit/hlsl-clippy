@@ -13,6 +13,41 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [2.0.2] — 2026-05-04
+
+**Patch — reflection compatibility patchset.** Three real-world
+HLSL shaders that compiled fine under DXC were red-screening with
+`clippy::reflection` Errors in the IDE. v2.0.2 keeps reflection
+alive on all three patterns without touching user files.
+
+### Added
+
+- **Legacy `sampler` shim prelude.** Reflection now prepends a
+  guarded `#define sampler SamplerState` (plus `#line 1` reset) to
+  the in-memory copy passed to Slang for any non-`.slang` source.
+  Files using `sampler` as a parameter type — common in older HLSL
+  + donut-style codebases — now reflect cleanly. The on-disk file
+  and the `SourceManager` buffer rules read from are NOT modified;
+  rule spans continue to anchor at original byte offsets.
+- **`SHADER_CLIPPY_TRACE_REFLECTION` env var.** When set to `1` /
+  `true` / `on`, the bridge logs per-call: source path, target
+  profile, source language (`hlsl` / `slang`), prelude state, and
+  the resolved include directories. Goes to stderr so the LSP
+  client surfaces it under the trace channel.
+- **Regression tests** in `tests/unit/test_reflection.cpp` covering
+  legacy `sampler` parameter, `#pragma pack_matrix`, and angle-
+  bracket includes resolved through `LintOptions::include_directories`.
+
+### Fixed
+
+- **Warnings-only Slang failures no longer fatal.** When Slang
+  returns a null module pointer but the diagnostic blob contains
+  only `warning:` markers (no `error:` / `fatal error`), the bridge
+  now downgrades severity to `Note` (LSP Information) with a clear
+  "skipped — warnings only" message. Mirrors the existing min-
+  precision-only downgrade path. Eliminates the `pack_matrix`
+  pragma cascade that turned an advisory into a red-screen Error.
+
 ## [2.0.1] — 2026-05-04
 
 **Patch — shader include directories surface + `numeric_literal`
@@ -1893,6 +1928,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[2.0.2]: https://github.com/NelCit/shader-clippy/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/NelCit/shader-clippy/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/NelCit/shader-clippy/compare/v1.5.6...v2.0.0
 [1.5.6]: https://github.com/NelCit/shader-clippy/compare/v1.5.5...v1.5.6

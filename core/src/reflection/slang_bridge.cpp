@@ -17,8 +17,11 @@
 
 #include <array>
 #include <atomic>
+#include <cctype>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <expected>
 #include <filesystem>
 #include <memory>
@@ -103,6 +106,25 @@ namespace {
     return saw_min16 && !saw_non_min16_undef;
 }
 
+/// True when the Slang error blob carries no `error` markers — only
+/// `warning:` lines (or pragma / `pack_matrix` advisories that Slang surfaces
+/// at warning level). Some Slang versions report an unknown pragma plus a
+/// downstream non-fatal advisory and still return a null module pointer; in
+/// that case treating the whole thing as a fatal Error red-screens the IDE
+/// even though the shader is fundamentally compilable.
+///
+/// Heuristic: scan the blob for `error:` / `error(` / fatal-error markers.
+/// If none appear AND we saw at least one `warning:` line, downgrade.
+[[nodiscard]] bool is_warnings_only_failure(std::string_view blob) noexcept {
+    if (blob.empty()) {
+        return false;
+    }
+    if (blob.contains("error:") || blob.contains("error(") || blob.contains("fatal error")) {
+        return false;
+    }
+    return blob.contains("warning:") || blob.contains("warning(");
+}
+
 /// Build a `Diagnostic` describing a Slang failure. The diagnostic anchors at
 /// `(source, byte 0..0)` because Slang's diagnostic blob is plain text (it
 /// embeds line/col info, but parsing it back into a precise span is left for
@@ -114,9 +136,10 @@ namespace {
 /// identifiers, ...) keep Severity::Error so they still surface loudly.
 [[nodiscard]] Diagnostic make_reflection_error(SourceId source, std::string message) {
     const bool min_precision_only = is_min_precision_only_failure(message);
+    const bool warnings_only = !min_precision_only && is_warnings_only_failure(message);
     Diagnostic diag;
     diag.code = std::string{"clippy::reflection"};
-    diag.severity = min_precision_only ? Severity::Note : Severity::Error;
+    diag.severity = (min_precision_only || warnings_only) ? Severity::Note : Severity::Error;
     diag.primary_span = Span{.source = source, .bytes = ByteSpan{.lo = 0U, .hi = 0U}};
     if (min_precision_only) {
         diag.message =
@@ -127,10 +150,94 @@ namespace {
                 "Migrate to `float16_t` / `uint16_t` / `int16_t` to enable "
                 "reflection-aware rules. (Slang detail: "} +
             std::move(message) + ")";
+    } else if (warnings_only) {
+        diag.message =
+            std::string{
+                "Slang reflection skipped for this file: the compiler returned "
+                "warnings only (e.g. unknown `#pragma`, advisory notice). AST-only "
+                "rules still ran. (Slang detail: "} +
+            std::move(message) + ")";
     } else {
         diag.message = std::move(message);
     }
     return diag;
+}
+
+// --- Compatibility prelude + trace helpers (v2.0.2) -----------------------
+//
+// `apply_compatibility_prelude` returns a string containing the source as it
+// should be handed to Slang. The user's on-disk file (and the SourceManager
+// buffer rules read from) is never modified — rule spans must continue to
+// anchor at original byte offsets. The shim adds a guarded
+// `#define sampler SamplerState` so legacy HLSL that uses `sampler` as a
+// parameter type compiles under Slang's modern HLSL frontend.
+//
+// A `#line 1` directive after the prelude resets the line counter so Slang
+// diagnostics report the user's line numbers instead of prelude-relative
+// ones.
+//
+// Skipped for `.slang` inputs (the Slang language doesn't carry the legacy
+// `sampler` keyword), and for empty extensions where we conservatively
+// assume HLSL.
+
+constexpr std::string_view k_legacy_hlsl_prelude =
+    "#ifndef SHADER_CLIPPY_LEGACY_HLSL_COMPAT\n"
+    "#define SHADER_CLIPPY_LEGACY_HLSL_COMPAT\n"
+    "#ifndef sampler\n"
+    "#define sampler SamplerState\n"
+    "#endif\n"
+    "#endif\n"
+    "#line 1\n";
+
+[[nodiscard]] bool source_language_is_slang(const std::filesystem::path& path) noexcept {
+    auto ext = path.extension().string();
+    for (auto& c : ext) {
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+    return ext == ".slang";
+}
+
+[[nodiscard]] std::string apply_compatibility_prelude(std::string_view contents,
+                                                      bool include_prelude) {
+    if (!include_prelude) {
+        return std::string{contents};
+    }
+    std::string out;
+    out.reserve(k_legacy_hlsl_prelude.size() + contents.size());
+    out.append(k_legacy_hlsl_prelude);
+    out.append(contents);
+    return out;
+}
+
+[[nodiscard]] bool reflection_trace_enabled() noexcept {
+    const char* raw = std::getenv("SHADER_CLIPPY_TRACE_REFLECTION");
+    if (raw == nullptr) {
+        return false;
+    }
+    const std::string_view sv{raw};
+    return sv == "1" || sv == "true" || sv == "TRUE" || sv == "on" || sv == "ON";
+}
+
+void trace_reflection_call(const std::filesystem::path& source_path,
+                            std::string_view profile,
+                            std::span<const std::filesystem::path> include_directories,
+                            bool prelude_applied,
+                            bool is_slang_lang) {
+    if (!reflection_trace_enabled()) {
+        return;
+    }
+    std::fprintf(stderr,
+                 "[shader-clippy:reflection] source=%s profile=%.*s lang=%s prelude=%s "
+                 "include_dirs=%zu\n",
+                 source_path.string().c_str(),
+                 static_cast<int>(profile.size()),
+                 profile.data(),
+                 is_slang_lang ? "slang" : "hlsl",
+                 prelude_applied ? "legacy-hlsl" : "none",
+                 include_directories.size());
+    for (const auto& dir : include_directories) {
+        std::fprintf(stderr, "[shader-clippy:reflection]   -I %s\n", dir.string().c_str());
+    }
 }
 
 /// Map Slang's stage enum to the lowercase stage tag used in
@@ -782,7 +889,19 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(
     const std::uint64_t call_id = s_call_counter.fetch_add(1U, std::memory_order_relaxed);
     const std::string call_suffix = std::string{"__"} + std::to_string(call_id);
 
-    const std::string contents{file->contents()};
+    // v2.0.2 compatibility prelude: prepend `#define sampler SamplerState`
+    // (guarded) for HLSL inputs so legacy shaders that use `sampler` as a
+    // parameter type still reflect. The on-disk file and the SourceManager
+    // buffer are NOT modified — only the in-memory copy passed to Slang. A
+    // `#line 1` directive in the prelude keeps diagnostics anchored at the
+    // user's original line numbers.
+    const bool is_slang_lang = source_language_is_slang(file->path());
+    const bool apply_prelude = !is_slang_lang;
+    const std::string contents = apply_compatibility_prelude(file->contents(), apply_prelude);
+
+    trace_reflection_call(
+        file->path(), profile, include_directories, apply_prelude, is_slang_lang);
+
     const std::string base_module_name = file->path().stem().string().empty()
                                              ? std::string{"shader_clippy_module"}
                                              : file->path().stem().string();
