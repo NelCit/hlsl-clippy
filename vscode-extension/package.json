@@ -3,7 +3,7 @@
   "displayName": "Shader Clippy",
   "description": "Linter for HLSL and Slang — performance + correctness rules beyond what dxc catches. End-to-end coverage of both languages (AST + CFG + reflection) via tree-sitter-hlsl + tree-sitter-slang.",
   "publisher": "nelcit",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.85.0"

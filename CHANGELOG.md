@@ -13,6 +13,51 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [2.0.3] — 2026-05-04
+
+**Patch — new rule `repeated-pure-intrinsic` (function-scope CSE
+suggestion).** Flags two or more syntactically-identical calls to
+an expensive pure intrinsic within the same function body when no
+intervening mutation could have changed the argument's value. The
+canonical case is the IOR snippet:
+
+```hlsl
+float ior = (sqrt(f0) + 1.0f) / (1.0f - sqrt(f0));
+//           ^^^^^^^             ^^^^^^^
+//           computed twice — hoist into a local
+```
+
+### Added
+
+- **`repeated-pure-intrinsic`** rule (`category: math`, `severity: warn`,
+  `applicability: suggestion`). Allowlist of 19 expensive pure
+  intrinsics: `sqrt`, `rsqrt`, `length`, `normalize`, `pow`, `exp`,
+  `exp2`, `log`, `log2`, `log10`, `sin`, `cos`, `tan`, `asin`, `acos`,
+  `atan`, `atan2`, `sinh`, `cosh`, `tanh`. Cheap intrinsics
+  (`min` / `max` / `abs` / `dot` / `lerp` / ...) are excluded.
+
+  **Soundness.** Function-scope detection tracks three classes of
+  intervening mutation that suppress the report:
+  - direct assignment / augmented assignment to an argument
+    identifier (`x = ...`, `x += ...`),
+  - `++` / `--` of an argument identifier,
+  - calls to non-allowlisted functions that pass any argument
+    identifier — conservatively treated as a wildcard barrier
+    because HLSL `out` / `inout` parameters cannot be detected from
+    the AST alone.
+
+  **Fix.** Suggestion-only — hoisting changes evaluation order in
+  ways that may matter (precision-sensitive ordering, branch
+  guarding); `shader-clippy fix` does not auto-rewrite.
+
+- 9 unit tests under `[rules][repeated-pure-intrinsic]` covering
+  positive cases (IOR snippet, cross-statement duplication, triple
+  duplicate) and negative cases (mutation between calls, non-pure
+  call between calls, differing args, cross-function, cheap
+  intrinsics).
+
+- Doc page `docs/rules/repeated-pure-intrinsic.md`.
+
 ## [2.0.2] — 2026-05-04
 
 **Patch — reflection compatibility patchset.** Three real-world
@@ -1928,6 +1973,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[2.0.3]: https://github.com/NelCit/shader-clippy/compare/v2.0.2...v2.0.3
 [2.0.2]: https://github.com/NelCit/shader-clippy/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/NelCit/shader-clippy/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/NelCit/shader-clippy/compare/v1.5.6...v2.0.0

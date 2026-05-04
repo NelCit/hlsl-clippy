@@ -26,6 +26,7 @@ std::vector<std::unique_ptr<Rule>> make_default_rules() {
     rules.push_back(rules::make_redundant_transpose());
     rules.push_back(rules::make_redundant_abs());
     rules.push_back(rules::make_countbits_vs_manual_popcount());
+    rules.push_back(rules::make_repeated_pure_intrinsic());
     rules.push_back(rules::make_firstbit_vs_log2_trick());
     rules.push_back(rules::make_manual_mad_decomposition());
     // Phase 2 — pow + vec/length rules.

@@ -26,6 +26,7 @@ add_library(shader_clippy_core STATIC
     src/rules/redundant_transpose.cpp
     src/rules/redundant_abs.cpp
     src/rules/countbits_vs_manual_popcount.cpp
+    src/rules/repeated_pure_intrinsic.cpp
     src/rules/firstbit_vs_log2_trick.cpp
     src/rules/manual_mad_decomposition.cpp
 

@@ -67,6 +67,7 @@ add_executable(shader_clippy_unit_tests
     unit/test_redundant_transpose.cpp
     unit/test_redundant_abs.cpp
     unit/test_countbits_vs_manual_popcount.cpp
+    unit/test_repeated_pure_intrinsic.cpp
     unit/test_firstbit_vs_log2_trick.cpp
     unit/test_manual_mad_decomposition.cpp
 

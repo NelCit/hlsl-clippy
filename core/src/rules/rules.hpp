@@ -28,6 +28,7 @@ namespace shader_clippy::rules {
 [[nodiscard]] std::unique_ptr<Rule> make_redundant_transpose();
 [[nodiscard]] std::unique_ptr<Rule> make_redundant_abs();
 [[nodiscard]] std::unique_ptr<Rule> make_countbits_vs_manual_popcount();
+[[nodiscard]] std::unique_ptr<Rule> make_repeated_pure_intrinsic();
 [[nodiscard]] std::unique_ptr<Rule> make_firstbit_vs_log2_trick();
 [[nodiscard]] std::unique_ptr<Rule> make_manual_mad_decomposition();
 
