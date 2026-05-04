@@ -78,7 +78,7 @@ jobs:
 
       # ── Initialize CodeQL ────────────────────────────────────────────────
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@0daab03d71ff584ef619d027a3fd9146679c5d84 # v3.35.3
+        uses: github/codeql-action/init@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
         with:
           languages: ${{ matrix.language }}
           # `security-and-quality` is the broader query pack (security
@@ -112,6 +112,6 @@ jobs:
 
       # ── Analyze + upload to the Security tab ────────────────────────────
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@0daab03d71ff584ef619d027a3fd9146679c5d84 # v3.35.3
+        uses: github/codeql-action/analyze@e46ed2cbd01164d986452f91f178727624ae40d7 # v4.35.3
         with:
           category: "/language:${{ matrix.language }}"
