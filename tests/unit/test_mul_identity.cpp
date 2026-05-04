@@ -30,7 +30,8 @@ using shader_clippy::SourceManager;
 
 [[nodiscard]] bool has_rule(const std::vector<Diagnostic>& diags, std::string_view code) {
     for (const auto& d : diags) {
-        if (d.code == code) return true;
+        if (d.code == code)
+            return true;
     }
     return false;
 }
@@ -95,7 +96,8 @@ TEST_CASE("mul-identity does not fire on x * 1.001", "[rules][mul-identity]") {
 float3 f(float3 v) { return v * 1.001; }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "mul-identity");
+    for (const auto& d : diags)
+        CHECK(d.code != "mul-identity");
 }
 
 TEST_CASE("mul-identity does not fire on x * 2.0", "[rules][mul-identity]") {
@@ -104,7 +106,20 @@ TEST_CASE("mul-identity does not fire on x * 2.0", "[rules][mul-identity]") {
 float f(float x) { return x * 2.0; }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "mul-identity");
+    for (const auto& d : diags)
+        CHECK(d.code != "mul-identity");
+}
+
+TEST_CASE("mul-identity does not fire on x * 10 or x * 1000.0", "[rules][mul-identity]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float f(float x) {
+    return x * 10 + 1000.0 * x;
+}
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    for (const auto& d : diags)
+        CHECK(d.code != "mul-identity");
 }
 
 TEST_CASE("mul-identity does not fire on x - 0.0", "[rules][mul-identity]") {
@@ -115,7 +130,8 @@ TEST_CASE("mul-identity does not fire on x - 0.0", "[rules][mul-identity]") {
 float f(float x) { return x - 0.0; }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "mul-identity");
+    for (const auto& d : diags)
+        CHECK(d.code != "mul-identity");
 }
 
 // ---- fix applicability ----
@@ -128,7 +144,10 @@ float f(float x) { return x * 1.0; }
     const auto diags = lint_buffer(hlsl, sources);
     const Diagnostic* hit = nullptr;
     for (const auto& d : diags) {
-        if (d.code == "mul-identity") { hit = &d; break; }
+        if (d.code == "mul-identity") {
+            hit = &d;
+            break;
+        }
     }
     REQUIRE(hit != nullptr);
     REQUIRE_FALSE(hit->fixes.empty());
@@ -145,7 +164,10 @@ float f(float x) { return x + 0.0; }
     const auto diags = lint_buffer(hlsl, sources);
     const Diagnostic* hit = nullptr;
     for (const auto& d : diags) {
-        if (d.code == "mul-identity") { hit = &d; break; }
+        if (d.code == "mul-identity") {
+            hit = &d;
+            break;
+        }
     }
     REQUIRE(hit != nullptr);
     REQUIRE_FALSE(hit->fixes.empty());
@@ -160,7 +182,10 @@ float f(float x) { return x * 0.0; }
     const auto diags = lint_buffer(hlsl, sources);
     const Diagnostic* hit = nullptr;
     for (const auto& d : diags) {
-        if (d.code == "mul-identity") { hit = &d; break; }
+        if (d.code == "mul-identity") {
+            hit = &d;
+            break;
+        }
     }
     REQUIRE(hit != nullptr);
     REQUIRE_FALSE(hit->fixes.empty());
@@ -181,7 +206,8 @@ TEST_CASE("mul-identity fires on the phase2 math fixture", "[rules][mul-identity
 
     std::size_t count = 0;
     for (const auto& d : diags) {
-        if (d.code == "mul-identity") ++count;
+        if (d.code == "mul-identity")
+            ++count;
     }
     // math.hlsl has 3 mul-identity hits: v*1.0, a+0.0, b*0.0
     CHECK(count >= 3U);
@@ -200,5 +226,6 @@ TEST_CASE("mul-identity does not fire on negative_lookalikes fixture",
     auto rules = make_default_rules();
     const auto diags = lint(sources, src, rules);
 
-    for (const auto& d : diags) CHECK(d.code != "mul-identity");
+    for (const auto& d : diags)
+        CHECK(d.code != "mul-identity");
 }

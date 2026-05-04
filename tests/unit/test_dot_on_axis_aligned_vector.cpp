@@ -27,7 +27,8 @@ using shader_clippy::SourceManager;
 
 [[nodiscard]] bool has_rule(const std::vector<Diagnostic>& diags, std::string_view code) {
     for (const auto& d : diags) {
-        if (d.code == code) return true;
+        if (d.code == code)
+            return true;
     }
     return false;
 }
@@ -35,7 +36,8 @@ using shader_clippy::SourceManager;
 [[nodiscard]] const Diagnostic* find_rule(const std::vector<Diagnostic>& diags,
                                           std::string_view code) {
     for (const auto& d : diags) {
-        if (d.code == code) return &d;
+        if (d.code == code)
+            return &d;
     }
     return nullptr;
 }
@@ -94,7 +96,19 @@ TEST_CASE("dot-on-axis-aligned-vector does not fire on dot(v, float3(1, 1, 0))",
 float f(float3 v) { return dot(v, float3(1, 1, 0)); }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "dot-on-axis-aligned-vector");
+    for (const auto& d : diags)
+        CHECK(d.code != "dot-on-axis-aligned-vector");
+}
+
+TEST_CASE("dot-on-axis-aligned-vector does not treat 10 as axis unit",
+          "[rules][dot-on-axis-aligned-vector]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float f(float3 v) { return dot(v, float3(10, 0, 0)); }
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    for (const auto& d : diags)
+        CHECK(d.code != "dot-on-axis-aligned-vector");
 }
 
 TEST_CASE("dot-on-axis-aligned-vector does not fire on dot(v, float3(-1, 0, 0))",
@@ -104,7 +118,8 @@ TEST_CASE("dot-on-axis-aligned-vector does not fire on dot(v, float3(-1, 0, 0))"
 float f(float3 v) { return dot(v, float3(-1, 0, 0)); }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "dot-on-axis-aligned-vector");
+    for (const auto& d : diags)
+        CHECK(d.code != "dot-on-axis-aligned-vector");
 }
 
 TEST_CASE("dot-on-axis-aligned-vector does not fire on dot(a, b)",
@@ -114,7 +129,8 @@ TEST_CASE("dot-on-axis-aligned-vector does not fire on dot(a, b)",
 float f(float3 a, float3 b) { return dot(a, b); }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "dot-on-axis-aligned-vector");
+    for (const auto& d : diags)
+        CHECK(d.code != "dot-on-axis-aligned-vector");
 }
 
 TEST_CASE("dot-on-axis-aligned-vector fix replaces with v.x",

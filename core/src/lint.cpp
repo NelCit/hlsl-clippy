@@ -282,7 +282,8 @@ namespace {
         const std::string profile =
             options.target_profile.has_value() ? *options.target_profile : std::string{};
         auto& engine = reflection::ReflectionEngine::instance();
-        auto reflection_or_error = engine.reflect(sources, source, profile);
+        auto reflection_or_error =
+            engine.reflect(sources, source, profile, options.include_directories);
         if (!reflection_or_error.has_value()) {
             // Surface the engine's diagnostic and skip reflection rules for
             // this source.
@@ -379,7 +380,7 @@ namespace {
         const std::string profile =
             options.target_profile.has_value() ? *options.target_profile : std::string{};
         auto& ir_engine = ir::IrEngine::instance();
-        auto ir_or_error = ir_engine.analyze(sources, source, profile);
+        auto ir_or_error = ir_engine.analyze(sources, source, profile, options.include_directories);
         if (!ir_or_error.has_value()) {
             // Surface the engine's diagnostic (e.g. the 7a.1 not-implemented
             // notice, or in 7a.2 a real DXIL-parse failure) and skip IR rules
@@ -419,6 +420,19 @@ namespace {
 }  // namespace
 
 namespace {
+
+void append_unique_path(std::vector<std::filesystem::path>& paths, std::filesystem::path path) {
+    if (path.empty()) {
+        return;
+    }
+    path = path.lexically_normal();
+    for (const auto& existing : paths) {
+        if (existing == path) {
+            return;
+        }
+    }
+    paths.push_back(std::move(path));
+}
 
 /// Resolve the source language for one lint call. When the caller-supplied
 /// `selected` is `Auto`, look up the source file's path via the
@@ -501,8 +515,13 @@ std::vector<Diagnostic> lint(const SourceManager& sources,
         }
     }
 
-    auto diagnostics =
-        run_rules(sources, source, rules, options, config.experimental_target(), lang, &config);
+    LintOptions effective_options = options;
+    for (const auto& dir : config.shader_include_directories) {
+        append_unique_path(effective_options.include_directories, dir);
+    }
+
+    auto diagnostics = run_rules(
+        sources, source, rules, effective_options, config.experimental_target(), lang, &config);
 
     std::vector<Diagnostic> kept;
     kept.reserve(diagnostics.size());

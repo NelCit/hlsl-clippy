@@ -61,6 +61,9 @@ struct Config {
     std::vector<std::string> includes;
     /// `[excludes] patterns = [...]`.
     std::vector<std::string> excludes;
+    /// `[shader] include-directories = [...]`. Relative entries loaded from
+    /// disk are resolved against the `.shader-clippy.toml` directory.
+    std::vector<std::filesystem::path> shader_include_directories;
     /// `[[overrides]]` entries, in source order (later wins).
     std::vector<RuleOverride> overrides;
     /// `[experimental] target = "rdna4" | "blackwell" | "xe2"`. Default

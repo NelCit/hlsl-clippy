@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -63,6 +64,114 @@ constexpr int k_sync_incremental = 2;
         return 0;
     }
     return v_it->get<std::int32_t>();
+}
+
+void append_unique_path(std::vector<std::filesystem::path>& paths, std::filesystem::path path) {
+    if (path.empty()) {
+        return;
+    }
+    path = path.lexically_normal();
+    for (const auto& existing : paths) {
+        if (existing == path) {
+            return;
+        }
+    }
+    paths.push_back(std::move(path));
+}
+
+[[nodiscard]] bool path_is_inside(const std::filesystem::path& child,
+                                  const std::filesystem::path& parent) {
+    const auto c = child.lexically_normal();
+    const auto p = parent.lexically_normal();
+    if (c == p) {
+        return true;
+    }
+    const auto rel = c.lexically_relative(p);
+    if (rel.empty()) {
+        return false;
+    }
+    const auto first = *rel.begin();
+    return first != "..";
+}
+
+void append_workspace_roots_for_document(std::vector<std::filesystem::path>& paths,
+                                         const std::vector<std::filesystem::path>& workspaces,
+                                         const std::filesystem::path& document_path) {
+    bool matched = false;
+    for (const auto& workspace : workspaces) {
+        if (path_is_inside(document_path, workspace)) {
+            append_unique_path(paths, workspace);
+            matched = true;
+        }
+    }
+    if (matched) {
+        return;
+    }
+    for (const auto& workspace : workspaces) {
+        append_unique_path(paths, workspace);
+    }
+}
+
+[[nodiscard]] std::vector<std::filesystem::path> parse_path_array(const nlohmann::json& obj,
+                                                                  std::string_view key) {
+    std::vector<std::filesystem::path> out;
+    if (!obj.is_object()) {
+        return out;
+    }
+    const auto it = obj.find(std::string{key});
+    if (it == obj.end() || !it->is_array()) {
+        return out;
+    }
+    for (const auto& item : *it) {
+        if (item.is_string()) {
+            append_unique_path(out, std::filesystem::path{item.get<std::string>()});
+        }
+    }
+    return out;
+}
+
+[[nodiscard]] std::vector<std::filesystem::path> parse_workspace_folders(
+    const nlohmann::json& params) {
+    std::vector<std::filesystem::path> out;
+    if (!params.is_object()) {
+        return out;
+    }
+    const auto folders_it = params.find("workspaceFolders");
+    if (folders_it != params.end() && folders_it->is_array()) {
+        for (const auto& folder : *folders_it) {
+            if (!folder.is_object()) {
+                continue;
+            }
+            const auto uri_it = folder.find("uri");
+            if (uri_it == folder.end() || !uri_it->is_string()) {
+                continue;
+            }
+            if (auto path = document::uri_to_path(uri_it->get<std::string>()); path.has_value()) {
+                append_unique_path(out, std::move(*path));
+            }
+        }
+    }
+    if (!out.empty()) {
+        return out;
+    }
+    const auto root_uri_it = params.find("rootUri");
+    if (root_uri_it != params.end() && root_uri_it->is_string()) {
+        if (auto path = document::uri_to_path(root_uri_it->get<std::string>()); path.has_value()) {
+            append_unique_path(out, std::move(*path));
+        }
+    }
+    return out;
+}
+
+[[nodiscard]] std::optional<nlohmann::json> initialization_options(const nlohmann::json& params) {
+    if (!params.is_object()) {
+        return std::nullopt;
+    }
+    const auto it = params.find("initializationOptions");
+    if (it == params.end() || !it->is_object()) {
+        return std::nullopt;
+    }
+    return *it;
 }
 
 [[nodiscard]] std::vector<document::ContentChange> parse_content_changes(
@@ -192,7 +301,23 @@ void Server::register_handlers() {
 }
 
 std::expected<nlohmann::json, rpc::ErrorObject> Server::on_initialize(
-    const nlohmann::json& /*params*/) {
+    const nlohmann::json& params) {
+    workspace_folders_ = parse_workspace_folders(params);
+
+    if (const auto opts = initialization_options(params); opts.has_value()) {
+        if (const auto it = opts->find("targetProfile"); it != opts->end() && it->is_string()) {
+            target_profile_ = it->get<std::string>();
+        }
+        if (const auto it = opts->find("enableReflection"); it != opts->end() && it->is_boolean()) {
+            enable_reflection_ = it->get<bool>();
+        }
+        if (const auto it = opts->find("enableControlFlow");
+            it != opts->end() && it->is_boolean()) {
+            enable_control_flow_ = it->get<bool>();
+        }
+        initialization_include_directories_ = parse_path_array(*opts, "includeDirectories");
+    }
+
     nlohmann::json result = nlohmann::json::object();
     result["capabilities"] = build_server_capabilities();
     nlohmann::json server_info = nlohmann::json::object();
@@ -428,7 +553,20 @@ void Server::lint_and_publish(const std::string& uri) {
     std::vector<shader_clippy::Diagnostic> diagnostics;
     auto config = lsp::resolve_config_for(doc->path);
     shader_clippy::LintOptions options;
+    options.enable_reflection = enable_reflection_;
+    options.enable_control_flow = enable_control_flow_;
+    if (!target_profile_.empty()) {
+        options.target_profile = target_profile_;
+    }
+    append_unique_path(options.include_directories, doc->path.parent_path());
+    append_workspace_roots_for_document(options.include_directories, workspace_folders_, doc->path);
+    for (const auto& dir : initialization_include_directories_) {
+        append_unique_path(options.include_directories, dir);
+    }
     if (config.has_value()) {
+        for (const auto& dir : config->shader_include_directories) {
+            append_unique_path(options.include_directories, dir);
+        }
         diagnostics = shader_clippy::lint(sources, src_id, rules, *config, doc->path, options);
     } else {
         diagnostics = shader_clippy::lint(sources, src_id, rules, options);

@@ -30,7 +30,8 @@ using shader_clippy::SourceManager;
 
 [[nodiscard]] bool has_rule(const std::vector<Diagnostic>& diags, std::string_view code) {
     for (const auto& d : diags) {
-        if (d.code == code) return true;
+        if (d.code == code)
+            return true;
     }
     return false;
 }
@@ -62,7 +63,18 @@ TEST_CASE("manual-step does not fire on x > a ? 2.0 : -1.0 (non-step values)",
 float f(float x, float a) { return x > a ? 2.0 : -1.0; }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "manual-step");
+    for (const auto& d : diags)
+        CHECK(d.code != "manual-step");
+}
+
+TEST_CASE("manual-step does not treat 10 as the step high value", "[rules][manual-step]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float f(float x, float a) { return x > a ? 10.0 : 0.0; }
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    for (const auto& d : diags)
+        CHECK(d.code != "manual-step");
 }
 
 TEST_CASE("manual-step does not fire on x >= a ? 1.0 : 0.0 (already >= semantics)",
@@ -72,17 +84,18 @@ TEST_CASE("manual-step does not fire on x >= a ? 1.0 : 0.0 (already >= semantics
 float f(float x, float a) { return x >= a ? 1.0 : 0.0; }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "manual-step");
+    for (const auto& d : diags)
+        CHECK(d.code != "manual-step");
 }
 
-TEST_CASE("manual-step does not fire on swapped arms x > a ? 0.0 : 1.0",
-          "[rules][manual-step]") {
+TEST_CASE("manual-step does not fire on swapped arms x > a ? 0.0 : 1.0", "[rules][manual-step]") {
     SourceManager sources;
     const std::string hlsl = R"hlsl(
 float f(float x, float a) { return x > a ? 0.0 : 1.0; }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "manual-step");
+    for (const auto& d : diags)
+        CHECK(d.code != "manual-step");
 }
 
 TEST_CASE("manual-step fix is suggestion-only", "[rules][manual-step][fix]") {
@@ -93,7 +106,10 @@ float f(float x, float threshold) { return x > threshold ? 1.0 : 0.0; }
     const auto diags = lint_buffer(hlsl, sources);
     const Diagnostic* hit = nullptr;
     for (const auto& d : diags) {
-        if (d.code == "manual-step") { hit = &d; break; }
+        if (d.code == "manual-step") {
+            hit = &d;
+            break;
+        }
     }
     REQUIRE(hit != nullptr);
     REQUIRE_FALSE(hit->fixes.empty());
@@ -115,7 +131,8 @@ TEST_CASE("manual-step fires on math.hlsl fixture", "[rules][manual-step][fixtur
 
     std::size_t count = 0;
     for (const auto& d : diags) {
-        if (d.code == "manual-step") ++count;
+        if (d.code == "manual-step")
+            ++count;
     }
     CHECK(count >= 1U);
 }
@@ -133,5 +150,6 @@ TEST_CASE("manual-step does not fire on negative_lookalikes fixture",
     auto rules = make_default_rules();
     const auto diags = lint(sources, src, rules);
 
-    for (const auto& d : diags) CHECK(d.code != "manual-step");
+    for (const auto& d : diags)
+        CHECK(d.code != "manual-step");
 }

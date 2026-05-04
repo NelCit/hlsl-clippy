@@ -20,6 +20,7 @@
 #include <tree_sitter/api.h>
 
 #include "query/query.hpp"
+#include "rules/util/numeric_literal.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
@@ -42,44 +43,37 @@ constexpr std::string_view k_pattern = R"(
             (number_literal) @lod)) @call
 )";
 
-[[nodiscard]] std::string_view trim(std::string_view s) noexcept {
-    while (!s.empty() && (s.front() == ' ' || s.front() == '\t'))
-        s.remove_prefix(1);
-    while (!s.empty() && (s.back() == ' ' || s.back() == '\t'))
-        s.remove_suffix(1);
-    return s;
+using util::is_numeric_literal_zero;
+
+[[nodiscard]] ::TSNode enclosing_function(::TSNode node) noexcept {
+    auto cur = ::ts_node_parent(node);
+    while (!::ts_node_is_null(cur)) {
+        const char* type = ::ts_node_type(cur);
+        if (type != nullptr && std::string_view{type} == "function_definition") {
+            return cur;
+        }
+        cur = ::ts_node_parent(cur);
+    }
+    return {};
 }
 
-[[nodiscard]] bool literal_is_zero(std::string_view text) noexcept {
-    text = trim(text);
-    if (text.empty())
-        return false;
-    if (text[0] == '+')
-        text.remove_prefix(1);
-    bool seen_digit = false;
-    std::size_t i = 0U;
-    while (i < text.size() && text[i] >= '0' && text[i] <= '9') {
-        if (text[i] != '0')
-            return false;
-        seen_digit = true;
-        ++i;
-    }
-    if (i < text.size() && text[i] == '.') {
-        ++i;
-        while (i < text.size() && text[i] >= '0' && text[i] <= '9') {
-            if (text[i] != '0')
-                return false;
-            seen_digit = true;
-            ++i;
+[[nodiscard]] bool text_contains_any(std::string_view text,
+                                     std::initializer_list<std::string_view> needles) noexcept {
+    for (const auto needle : needles) {
+        if (text.find(needle) != std::string_view::npos) {
+            return true;
         }
     }
-    while (i < text.size()) {
-        const char c = text[i];
-        if (c != 'f' && c != 'F' && c != 'h' && c != 'H' && c != 'l' && c != 'L')
-            return false;
-        ++i;
+    return false;
+}
+
+[[nodiscard]] bool is_compute_entry_context(const AstTree& tree, ::TSNode call) noexcept {
+    const ::TSNode fn = enclosing_function(call);
+    if (::ts_node_is_null(fn)) {
+        return false;
     }
-    return seen_digit;
+    const auto fn_text = tree.text(fn);
+    return text_contains_any(fn_text, {"shader(\"compute\")", "shader('compute')", "numthreads"});
 }
 
 class SampleLevelWithZero : public Rule {
@@ -110,7 +104,9 @@ public:
                     return;
                 if (tree.text(method) != "SampleLevel")
                     return;
-                if (!literal_is_zero(tree.text(lod)))
+                if (!is_numeric_literal_zero(tree.text(lod)))
+                    return;
+                if (is_compute_entry_context(tree, call))
                     return;
                 const auto range = tree.byte_range(call);
                 Diagnostic diag;

@@ -93,6 +93,7 @@ code --install-extension shader-clippy-<version>-<target>.vsix
 | --- | --- | --- | --- |
 | `shaderClippy.serverPath` | `string` | `""` | Explicit path to a custom `shader-clippy-lsp` binary. Empty = use the binary bundled with the extension (or `shader-clippy-lsp` on `PATH`). |
 | `shaderClippy.targetProfile` | `string` | `""` | Slang target profile (e.g. `sm_6_6`, `vs_6_7`, `ps_6_8`). Empty = server default per stage. Forwarded to `LintOptions::target_profile`. |
+| `shaderClippy.includeDirectories` | `string[]` | `[]` | Additional shader include roots passed to Slang reflection. Supports `${workspaceFolder}`. The server also adds the document directory and workspace folder by default. |
 | `shaderClippy.enableReflection` | `boolean` | `true` | Enable Phase 3 reflection-aware rules. Disable on slow machines to keep AST-only latency. |
 | `shaderClippy.enableControlFlow` | `boolean` | `true` | Enable Phase 4 CFG-aware rules. |
 | `shaderClippy.trace.server` | `string` | `"off"` | Trace LSP communication (`off` / `messages` / `verbose`). |

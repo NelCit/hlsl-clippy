@@ -21,8 +21,10 @@
 
 #include <cstdint>
 #include <expected>
+#include <filesystem>
 #include <memory>
 #include <shared_mutex>
+#include <span>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -71,9 +73,11 @@ public:
     /// not yet wired). The orchestrator surfaces the diagnostic once per
     /// source per lint run and skips IR-stage rule dispatch for that
     /// source. AST / reflection / control-flow rules continue to fire.
-    [[nodiscard]] std::expected<IrInfo, Diagnostic> analyze(const SourceManager& sources,
-                                                            SourceId source,
-                                                            std::string_view target_profile);
+    [[nodiscard]] std::expected<IrInfo, Diagnostic> analyze(
+        const SourceManager& sources,
+        SourceId source,
+        std::string_view target_profile,
+        std::span<const std::filesystem::path> include_directories = {});
 
     /// Drop every cached `IrInfo`. Intended for tests that want to force
     /// a fresh parse on the second of two consecutive calls.
@@ -91,7 +95,7 @@ private:
     // content_fingerprint)` shape so two unit tests each constructing a
     // fresh `SourceManager` whose first `add_buffer` returns id 1 don't
     // collide on the process-singleton cache.
-    using CacheKey = std::tuple<std::uint32_t, std::string, std::uint64_t>;
+    using CacheKey = std::tuple<std::uint32_t, std::string, std::uint64_t, std::string>;
 
     std::unique_ptr<DxilBridge> bridge_;
     mutable std::shared_mutex cache_mu_;

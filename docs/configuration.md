@@ -77,6 +77,24 @@ Or per-source:
 // shader-clippy: allow(clippy::language-skip-ast)
 ```
 
+## `[shader] include-directories` - Slang reflection include roots
+
+Reflection-aware rules compile the shader through Slang. Add include roots
+here when your project uses logical include paths such as
+`#include <utils.hlsli>`:
+
+```toml
+[shader]
+include-directories = [
+  "donut/include",
+  "sources/light_propagation_engine/shaders",
+]
+```
+
+Relative paths are resolved against the directory containing
+`.shader-clippy.toml`. The VS Code extension also supports
+`shaderClippy.includeDirectories` for editor-only configuration.
+
 ## Severity levels
 
 | Level     | Behaviour                                              |

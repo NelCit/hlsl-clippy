@@ -18,8 +18,10 @@
 #pragma once
 
 #include <expected>
+#include <filesystem>
 #include <functional>
 #include <string>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
@@ -96,6 +98,12 @@ private:
     rpc::JsonRpcDispatcher* dispatcher_;
     document::DocumentManager* docs_;
     NotificationSink sink_;
+
+    std::string target_profile_;
+    std::vector<std::filesystem::path> initialization_include_directories_;
+    std::vector<std::filesystem::path> workspace_folders_;
+    bool enable_reflection_ = true;
+    bool enable_control_flow_ = true;
 
     bool initialized_ = false;
     bool shutdown_requested_ = false;

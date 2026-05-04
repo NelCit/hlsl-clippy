@@ -78,6 +78,7 @@ TEST_CASE("Empty config parses to a default Config", "[config]") {
     CHECK(cfg.rule_severity.empty());
     CHECK(cfg.includes.empty());
     CHECK(cfg.excludes.empty());
+    CHECK(cfg.shader_include_directories.empty());
     CHECK(cfg.overrides.empty());
 }
 
@@ -252,4 +253,22 @@ patterns = ["external/**"]
     CHECK(cfg.includes[1] == "**/*.hlsli");
     REQUIRE(cfg.excludes.size() == 1U);
     CHECK(cfg.excludes[0] == "external/**");
+}
+
+TEST_CASE("[shader] include-directories parse and resolve relative to config file",
+          "[config][shader]") {
+    TempDir tmp;
+    tmp.write(".shader-clippy.toml", R"(
+[shader]
+include-directories = ["donut/include", "sources/shaders"]
+)");
+
+    const auto result = shader_clippy::load_config(tmp.path() / ".shader-clippy.toml");
+    REQUIRE(result.has_value());
+    const auto& cfg = result.value();
+    REQUIRE(cfg.shader_include_directories.size() == 2U);
+    CHECK(cfg.shader_include_directories[0] ==
+          (tmp.path() / "donut" / "include").lexically_normal());
+    CHECK(cfg.shader_include_directories[1] ==
+          (tmp.path() / "sources" / "shaders").lexically_normal());
 }

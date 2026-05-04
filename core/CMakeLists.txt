@@ -148,6 +148,7 @@ add_library(shader_clippy_core STATIC
     # Shared AST helpers used by every tree-sitter-driven rule TU
     # (factored out of ~95 anonymous-namespace duplicates).
     src/rules/util/ast_helpers.cpp
+    src/rules/util/numeric_literal.cpp
 
     # Phase 3 — shared utilities for reflection-aware rules (ADR 0012 sub-phase 3b).
     src/rules/util/reflect_resource.cpp

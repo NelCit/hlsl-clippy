@@ -33,6 +33,7 @@
 #include <tree_sitter/api.h>
 
 #include "rules/util/ast_helpers.hpp"
+#include "rules/util/numeric_literal.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
@@ -46,6 +47,7 @@ namespace {
 
 using util::node_kind;
 using util::node_text;
+using util::is_numeric_literal_one;
 
 constexpr std::string_view k_rule_id = "countbits-vs-manual-popcount";
 constexpr std::string_view k_category = "math";
@@ -70,15 +72,7 @@ constexpr std::string_view k_category = "math";
 [[nodiscard]] bool is_literal_one(::TSNode node, std::string_view bytes) noexcept {
     if (node_kind(node) != "number_literal")
         return false;
-    const auto text = node_text(node, bytes);
-    if (text.empty() || text[0] != '1')
-        return false;
-    for (std::size_t i = 1; i < text.size(); ++i) {
-        const char c = text[i];
-        if (c != 'u' && c != 'U' && c != 'l' && c != 'L')
-            return false;
-    }
-    return true;
+    return is_numeric_literal_one(node_text(node, bytes));
 }
 
 /// True if `node` is a `binary_expression` of the form `<expr> & 1` or

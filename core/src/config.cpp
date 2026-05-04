@@ -113,6 +113,19 @@ namespace {
     return err;
 }
 
+[[nodiscard]] std::filesystem::path resolve_config_relative_path(
+    std::string_view text, const std::filesystem::path& source) {
+    std::filesystem::path path{std::string{text}};
+    if (path.is_absolute() || source.empty()) {
+        return path.lexically_normal();
+    }
+    const auto base = source.has_parent_path() ? source.parent_path() : std::filesystem::path{};
+    if (base.empty()) {
+        return path.lexically_normal();
+    }
+    return (base / path).lexically_normal();
+}
+
 [[nodiscard]] ConfigResult parse_root(const ::toml::table& root,
                                       const std::filesystem::path& source) {
     Config cfg;
@@ -183,6 +196,30 @@ namespace {
                     return make_error("`excludes.patterns` entries must be strings", source);
                 }
                 cfg.excludes.push_back(s->get());
+            }
+        }
+    }
+
+    // [shader] include-directories
+    if (const auto* shader = root.get("shader"); shader != nullptr) {
+        const auto* tbl = shader->as_table();
+        if (tbl == nullptr) {
+            return make_error("`shader` must be a table", source);
+        }
+        if (const auto* dirs = tbl->get("include-directories"); dirs != nullptr) {
+            const auto* arr = dirs->as_array();
+            if (arr == nullptr) {
+                return make_error("`shader.include-directories` must be an array of strings",
+                                  source);
+            }
+            for (const auto& el : *arr) {
+                const auto* s = el.as_string();
+                if (s == nullptr) {
+                    return make_error("`shader.include-directories` entries must be strings",
+                                      source);
+                }
+                cfg.shader_include_directories.push_back(
+                    resolve_config_relative_path(s->get(), source));
             }
         }
     }

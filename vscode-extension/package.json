@@ -3,7 +3,7 @@
   "displayName": "Shader Clippy",
   "description": "Linter for HLSL and Slang — performance + correctness rules beyond what dxc catches. End-to-end coverage of both languages (AST + CFG + reflection) via tree-sitter-hlsl + tree-sitter-slang.",
   "publisher": "nelcit",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "license": "Apache-2.0",
   "engines": {
     "vscode": "^1.85.0"
@@ -239,6 +239,14 @@
           "type": "string",
           "default": "",
           "description": "Slang target profile (e.g., sm_6_6, vs_6_7, ps_6_8). Empty = server default."
+        },
+        "shaderClippy.includeDirectories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Additional shader include directories passed to Slang reflection. Supports ${workspaceFolder}."
         },
         "shaderClippy.enableReflection": {
           "type": "boolean",

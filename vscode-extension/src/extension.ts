@@ -532,6 +532,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             if (
                 event.affectsConfiguration("shaderClippy.serverPath") ||
                 event.affectsConfiguration("shaderClippy.targetProfile") ||
+                event.affectsConfiguration("shaderClippy.includeDirectories") ||
                 event.affectsConfiguration("shaderClippy.enableReflection") ||
                 event.affectsConfiguration("shaderClippy.enableControlFlow") ||
                 event.affectsConfiguration("shaderClippy.slang.enable")

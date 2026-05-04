@@ -23,6 +23,7 @@
 #include <tree_sitter/api.h>
 
 #include "query/query.hpp"
+#include "rules/util/numeric_literal.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
@@ -46,68 +47,8 @@ constexpr std::string_view k_pattern = R"(
         alternative: (number_literal) @else) @ternary
 )";
 
-[[nodiscard]] bool is_float_suffix_char(char c) noexcept {
-    return c == 'f' || c == 'F' || c == 'h' || c == 'H' || c == 'l' || c == 'L';
-}
-
-[[nodiscard]] bool literal_is_zero(std::string_view text) noexcept {
-    if (text.empty())
-        return false;
-    std::size_t i = 0;
-    if (i < text.size() && text[i] == '+')
-        ++i;
-    if (i >= text.size())
-        return false;
-    while (i < text.size() && text[i] == '0')
-        ++i;
-    if (i < text.size() && text[i] == '.') {
-        ++i;
-        while (i < text.size() && text[i] == '0')
-            ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
-            return false;
-    }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
-        return false;
-    while (i < text.size()) {
-        if (!is_float_suffix_char(text[i]))
-            return false;
-        ++i;
-    }
-    return true;
-}
-
-[[nodiscard]] bool literal_is_one(std::string_view text) noexcept {
-    if (text.empty())
-        return false;
-    std::size_t i = 0;
-    if (i < text.size() && text[i] == '+')
-        ++i;
-    while (i < text.size() && text[i] == '0')
-        ++i;
-    if (i >= text.size() || text[i] != '1')
-        return false;
-    ++i;
-    if (i < text.size() && text[i] >= '2' && text[i] <= '9')
-        return false;
-    while (i < text.size() && text[i] == '0')
-        ++i;
-    if (i < text.size() && text[i] == '.') {
-        ++i;
-        while (i < text.size() && text[i] == '0')
-            ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
-            return false;
-    }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
-        return false;
-    while (i < text.size()) {
-        if (!is_float_suffix_char(text[i]))
-            return false;
-        ++i;
-    }
-    return true;
-}
+using util::is_numeric_literal_one;
+using util::is_numeric_literal_zero;
 
 /// Return the anonymous operator text within a binary_expression node.
 [[nodiscard]] std::string_view binary_op(::TSNode expr, std::string_view bytes) noexcept {
@@ -164,9 +105,9 @@ public:
                 }
 
                 // Consequence must be 1, alternative must be 0.
-                if (!literal_is_one(tree.text(then_n)))
+                if (!is_numeric_literal_one(tree.text(then_n)))
                     return;
-                if (!literal_is_zero(tree.text(else_n)))
+                if (!is_numeric_literal_zero(tree.text(else_n)))
                     return;
 
                 // Condition must be a binary_expression with operator `>`.

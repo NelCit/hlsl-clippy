@@ -13,6 +13,46 @@ follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ### Deprecated
 
+## [2.0.1] — 2026-05-04
+
+**Patch — shader include directories surface + `numeric_literal`
+util factor.** Reflection / IR rules now compile through Slang with
+caller-supplied include roots, fixing false-negative reflection on
+projects that use logical include paths (`#include <utils.hlsli>`).
+Internal cleanup: ten rule TUs lost ~600 LOC of duplicated decimal-
+literal predicates in favour of a shared `rules/util/numeric_literal`
+helper.
+
+### Added
+
+- `[shader] include-directories = [...]` in `.shader-clippy.toml`.
+  Relative entries are resolved against the config file's directory.
+- `LintOptions::include_directories` plumbed end-to-end into the
+  Slang reflection bridge and the IR engine. The `ISession` pool is
+  now keyed on `(target_profile, include_key)` so different include
+  sets don't share a session.
+- LSP `initialize.initializationOptions` now reads `targetProfile`,
+  `enableReflection`, `enableControlFlow`, and `includeDirectories`
+  from the client; per-document lint adds the document directory and
+  matching workspace folder to the include search path automatically.
+- VS Code: `shaderClippy.includeDirectories` setting (`string[]`,
+  supports `${workspaceFolder}` expansion). Settings change triggers
+  a server restart via the existing `onDidChangeConfiguration` hook.
+- `core/src/rules/util/numeric_literal.{hpp,cpp}` — shared
+  `is_numeric_literal_{zero,one,two,255,uint}` predicates extracted
+  from ten AST-only rule TUs (countbits-vs-manual-popcount,
+  cross-with-up-vector, dot-on-axis-aligned-vector, inv-sqrt-to-rsqrt,
+  lerp-on-bool-cond, manual-step, mul-identity, pow-base-two-to-exp2,
+  redundant-unorm-snorm-conversion, samplelevel-with-zero-on-mipped-tex).
+- `tools/fixture-hit-coverage.sh` — verifies every `// HIT(rule)`
+  annotation under `tests/fixtures/` actually fires via the CLI.
+
+### Changed
+
+- `samplelevel-with-zero-on-mipped-tex` now skips compute entry
+  points (explicit-LOD sampling is intentional where implicit
+  derivatives don't exist); doc page + tests updated to match.
+
 ## [2.0.0] — 2026-05-03
 
 **Major — rebrand to `shader-clippy` (clean break, no compat
@@ -1853,6 +1893,7 @@ wave-helper-lane. Phases 0 → 5 of the roadmap are complete; Phase 6
 
 - _(none this cycle)_
 
+[2.0.1]: https://github.com/NelCit/shader-clippy/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/NelCit/shader-clippy/compare/v1.5.6...v2.0.0
 [1.5.6]: https://github.com/NelCit/shader-clippy/compare/v1.5.5...v1.5.6
 [1.5.5]: https://github.com/NelCit/shader-clippy/compare/v1.5.4...v1.5.5

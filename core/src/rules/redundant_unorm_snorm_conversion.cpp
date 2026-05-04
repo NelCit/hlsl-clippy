@@ -35,6 +35,7 @@
 #include <tree_sitter/api.h>
 
 #include "rules/util/ast_helpers.hpp"
+#include "rules/util/numeric_literal.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
@@ -47,78 +48,11 @@ namespace {
 
 using util::node_kind;
 using util::node_text;
+using util::is_numeric_literal_255;
+using util::is_numeric_literal_one;
 
 constexpr std::string_view k_rule_id = "redundant-unorm-snorm-conversion";
 constexpr std::string_view k_category = "math";
-
-[[nodiscard]] bool is_float_suffix(char c) noexcept {
-    return c == 'f' || c == 'F' || c == 'h' || c == 'H' || c == 'l' || c == 'L';
-}
-
-/// True if `text` is a numeric literal whose value is exactly 255 (with
-/// optional `.0...0`, optional float suffix).
-[[nodiscard]] bool literal_is_255(std::string_view text) noexcept {
-    if (text.empty())
-        return false;
-    std::size_t i = 0;
-    if (i < text.size() && text[i] == '+')
-        ++i;
-    while (i < text.size() && text[i] == '0')
-        ++i;
-    // Now expect the digits "255".
-    if (i + 3 > text.size())
-        return false;
-    if (text[i] != '2' || text[i + 1] != '5' || text[i + 2] != '5')
-        return false;
-    i += 3;
-    if (i < text.size() && text[i] >= '0' && text[i] <= '9')
-        return false;
-    if (i < text.size() && text[i] == '.') {
-        ++i;
-        while (i < text.size() && text[i] == '0')
-            ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
-            return false;
-    }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
-        return false;
-    while (i < text.size()) {
-        if (!is_float_suffix(text[i]))
-            return false;
-        ++i;
-    }
-    return true;
-}
-
-[[nodiscard]] bool literal_is_one(std::string_view text) noexcept {
-    if (text.empty())
-        return false;
-    std::size_t i = 0;
-    if (i < text.size() && text[i] == '+')
-        ++i;
-    while (i < text.size() && text[i] == '0')
-        ++i;
-    if (i >= text.size() || text[i] != '1')
-        return false;
-    ++i;
-    if (i < text.size() && text[i] >= '0' && text[i] <= '9')
-        return false;
-    if (i < text.size() && text[i] == '.') {
-        ++i;
-        while (i < text.size() && text[i] == '0')
-            ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
-            return false;
-    }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
-        return false;
-    while (i < text.size()) {
-        if (!is_float_suffix(text[i]))
-            return false;
-        ++i;
-    }
-    return true;
-}
 
 /// Return the operator text of a binary_expression node.
 [[nodiscard]] std::string_view binary_op(::TSNode expr, std::string_view bytes) noexcept {
@@ -148,7 +82,7 @@ constexpr std::string_view k_category = "math";
     const ::TSNode r = ::ts_node_child_by_field_name(node, "right", 5);
     if (node_kind(l) != "number_literal" || node_kind(r) != "number_literal")
         return false;
-    return literal_is_one(node_text(l, bytes)) && literal_is_255(node_text(r, bytes));
+    return is_numeric_literal_one(node_text(l, bytes)) && is_numeric_literal_255(node_text(r, bytes));
 }
 
 void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContext& ctx) {
@@ -160,7 +94,8 @@ void walk(::TSNode node, std::string_view bytes, const AstTree& tree, RuleContex
         const ::TSNode r = ::ts_node_child_by_field_name(node, "right", 5);
 
         bool fires = false;
-        if (op == "/" && node_kind(r) == "number_literal" && literal_is_255(node_text(r, bytes))) {
+        if (op == "/" && node_kind(r) == "number_literal" &&
+            is_numeric_literal_255(node_text(r, bytes))) {
             fires = true;
         } else if (op == "*" && is_one_over_255(r, bytes)) {
             fires = true;

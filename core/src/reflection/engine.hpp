@@ -11,9 +11,11 @@
 
 #include <cstdint>
 #include <expected>
+#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
+#include <span>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -58,7 +60,10 @@ public:
     /// Cache misses construct (or re-use) a pooled `ISession`, run Slang, and
     /// store a shared pointer to the result.
     [[nodiscard]] std::expected<ReflectionInfo, Diagnostic> reflect(
-        const SourceManager& sources, SourceId source, std::string_view target_profile);
+        const SourceManager& sources,
+        SourceId source,
+        std::string_view target_profile,
+        std::span<const std::filesystem::path> include_directories = {});
 
     /// Drop every cached `ReflectionInfo`. Intended for tests that want to
     /// force a fresh compile in the second of two consecutive calls.
@@ -76,7 +81,7 @@ private:
     // same numeric `SourceId.value` (e.g. two unit tests each constructing a
     // fresh SourceManager whose first add_buffer returns id `1`) but
     // different contents do not collide on the process-singleton cache.
-    using CacheKey = std::tuple<std::uint32_t, std::string, std::uint64_t>;
+    using CacheKey = std::tuple<std::uint32_t, std::string, std::uint64_t, std::string>;
 
     std::unique_ptr<SlangBridge> bridge_;
     mutable std::shared_mutex cache_mu_;

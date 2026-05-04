@@ -19,6 +19,7 @@
 #include <tree_sitter/api.h>
 
 #include "rules/util/ast_helpers.hpp"
+#include "rules/util/numeric_literal.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
@@ -31,48 +32,11 @@ namespace {
 
 using util::node_kind;
 using util::node_text;
+using util::is_numeric_literal_two;
 
 constexpr std::string_view k_rule_id = "pow-base-two-to-exp2";
 constexpr std::string_view k_category = "math";
 constexpr std::string_view k_pow_name = "pow";
-
-[[nodiscard]] bool is_float_suffix(char c) noexcept {
-    return c == 'f' || c == 'F' || c == 'h' || c == 'H' || c == 'l' || c == 'L';
-}
-
-/// True if `text` is a numeric literal whose value is exactly 2 (`2`, `2.0`,
-/// `2.0f`, `2.0h`, ...).  Rejects scientific notation to keep the match
-/// conservative.
-[[nodiscard]] bool literal_is_two(std::string_view text) noexcept {
-    if (text.empty())
-        return false;
-    std::size_t i = 0;
-    if (text[i] == '+')
-        ++i;
-    // Read integer part: must be exactly "2" (any leading zeros allowed).
-    while (i < text.size() && text[i] == '0')
-        ++i;
-    if (i >= text.size() || text[i] != '2')
-        return false;
-    ++i;
-    if (i < text.size() && text[i] >= '0' && text[i] <= '9')
-        return false;
-    if (i < text.size() && text[i] == '.') {
-        ++i;
-        while (i < text.size() && text[i] == '0')
-            ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
-            return false;
-    }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
-        return false;
-    while (i < text.size()) {
-        if (!is_float_suffix(text[i]))
-            return false;
-        ++i;
-    }
-    return true;
-}
 
 class PowBaseTwoToExp2 : public Rule {
 public:
@@ -104,7 +68,7 @@ public:
         const ::TSNode arg1 = ::ts_node_named_child(args, 1);
         if (node_kind(arg0) != "number_literal" || ::ts_node_is_null(arg1))
             return;
-        if (!literal_is_two(node_text(arg0, bytes)))
+        if (!is_numeric_literal_two(node_text(arg0, bytes)))
             return;
 
         const auto exponent_text = node_text(arg1, bytes);

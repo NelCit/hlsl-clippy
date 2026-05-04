@@ -19,8 +19,7 @@ using shader_clippy::lint;
 using shader_clippy::make_default_rules;
 using shader_clippy::SourceManager;
 
-[[nodiscard]] std::vector<Diagnostic> lint_buffer(const std::string& hlsl,
-                                                  SourceManager& sources) {
+[[nodiscard]] std::vector<Diagnostic> lint_buffer(const std::string& hlsl, SourceManager& sources) {
     const auto src = sources.add_buffer("synthetic.hlsl", hlsl);
     REQUIRE(src.valid());
     auto rules = make_default_rules();
@@ -29,7 +28,8 @@ using shader_clippy::SourceManager;
 
 [[nodiscard]] bool has_rule(const std::vector<Diagnostic>& diags, std::string_view code) {
     for (const auto& d : diags) {
-        if (d.code == code) return true;
+        if (d.code == code)
+            return true;
     }
     return false;
 }
@@ -37,7 +37,8 @@ using shader_clippy::SourceManager;
 [[nodiscard]] const Diagnostic* find_rule(const std::vector<Diagnostic>& diags,
                                           std::string_view code) {
     for (const auto& d : diags) {
-        if (d.code == code) return &d;
+        if (d.code == code)
+            return &d;
     }
     return nullptr;
 }
@@ -78,17 +79,29 @@ TEST_CASE("cross-with-up-vector does not fire on cross(v, float3(1, 1, 0))",
 float3 f(float3 v) { return cross(v, float3(1, 1, 0)); }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "cross-with-up-vector");
+    for (const auto& d : diags)
+        CHECK(d.code != "cross-with-up-vector");
 }
 
-TEST_CASE("cross-with-up-vector does not fire on cross(a, b)",
+TEST_CASE("cross-with-up-vector does not treat 10 as a unit axis",
           "[rules][cross-with-up-vector]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float3 f(float3 v) { return cross(v, float3(0, 10, 0)); }
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    for (const auto& d : diags)
+        CHECK(d.code != "cross-with-up-vector");
+}
+
+TEST_CASE("cross-with-up-vector does not fire on cross(a, b)", "[rules][cross-with-up-vector]") {
     SourceManager sources;
     const std::string hlsl = R"hlsl(
 float3 f(float3 a, float3 b) { return cross(a, b); }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "cross-with-up-vector");
+    for (const auto& d : diags)
+        CHECK(d.code != "cross-with-up-vector");
 }
 
 TEST_CASE("cross-with-up-vector fix for cross(v, float3(0, 1, 0)) is float3(-v.z, 0, v.x)",

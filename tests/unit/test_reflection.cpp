@@ -11,19 +11,25 @@
 //   * `LintOptions::enable_reflection = false` causes the engine to NOT be
 //     invoked even when a reflection-stage rule is enabled.
 
+#include <chrono>
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
+#include <ios>
 #include <memory>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
 
+#include "reflection/engine.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/lint.hpp"
 #include "shader_clippy/reflection.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
-#include "reflection/engine.hpp"
 
 namespace {
 
@@ -127,6 +133,46 @@ float4 ps_bad(float2 uv : TEXCOORD0) : SV_Target
 )hlsl";
 
 }  // namespace
+
+TEST_CASE("ReflectionEngine resolves configured angle-bracket include roots",
+          "[reflection][engine][includes]") {
+    auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
+    engine.clear_cache();
+
+    const auto stamp = static_cast<std::uint64_t>(
+        std::chrono::high_resolution_clock::now().time_since_epoch().count());
+    const auto root = std::filesystem::temp_directory_path() /
+                      (std::string{"shader-clippy-reflection-include-"} + std::to_string(stamp));
+    const auto include_dir = root / "donut" / "include";
+    std::filesystem::create_directories(include_dir);
+    {
+        std::ofstream out(include_dir / "utils.hlsli", std::ios::binary | std::ios::trunc);
+        REQUIRE(out);
+        out << "float4 utility_color() { return float4(1.0, 0.0, 0.0, 1.0); }\n";
+    }
+
+    SourceManager sources;
+    const auto source_path = root / "shaders" / "main.hlsl";
+    const auto src = sources.add_buffer(source_path.string(), R"hlsl(
+#include <utils.hlsli>
+
+[shader("pixel")]
+float4 ps_main(float2 uv : TEXCOORD0) : SV_Target
+{
+    return utility_color();
+}
+)hlsl");
+    REQUIRE(src.valid());
+
+    const std::vector<std::filesystem::path> include_dirs{include_dir};
+    const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"}, include_dirs);
+
+    std::error_code ec;
+    std::filesystem::remove_all(root, ec);
+
+    REQUIRE(result.has_value());
+    CHECK(result.value().entry_points.size() >= 1U);
+}
 
 TEST_CASE("ReflectionEngine reflects a simple cbuffer plus one binding", "[reflection][engine]") {
     auto& engine = shader_clippy::reflection::ReflectionEngine::instance();
@@ -369,8 +415,7 @@ TEST_CASE("ResourceBinding surfaces DXGI format for `Texture2D<float4>`",
     engine.clear_cache();
 
     SourceManager sources;
-    const auto src =
-        sources.add_buffer("dxgi_typed.hlsl", std::string{k_typed_texture_float4});
+    const auto src = sources.add_buffer("dxgi_typed.hlsl", std::string{k_typed_texture_float4});
     REQUIRE(src.valid());
 
     const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"});
@@ -389,8 +434,7 @@ TEST_CASE("ResourceBinding either surfaces UNORM or empty for `RWTexture2D<unorm
     engine.clear_cache();
 
     SourceManager sources;
-    const auto src =
-        sources.add_buffer("dxgi_unorm.hlsl", std::string{k_typed_rwtexture_unorm});
+    const auto src = sources.add_buffer("dxgi_unorm.hlsl", std::string{k_typed_rwtexture_unorm});
     REQUIRE(src.valid());
 
     const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"});
@@ -428,8 +472,7 @@ TEST_CASE("ResourceBinding leaves DXGI format empty for `ByteAddressBuffer`",
     engine.clear_cache();
 
     SourceManager sources;
-    const auto src =
-        sources.add_buffer("dxgi_untyped.hlsl", std::string{k_byteaddress_buffer});
+    const auto src = sources.add_buffer("dxgi_untyped.hlsl", std::string{k_byteaddress_buffer});
     REQUIRE(src.valid());
 
     const auto result = engine.reflect(sources, src, std::string_view{"sm_6_6"});

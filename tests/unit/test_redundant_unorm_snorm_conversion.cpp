@@ -18,8 +18,7 @@ using shader_clippy::lint;
 using shader_clippy::make_default_rules;
 using shader_clippy::SourceManager;
 
-[[nodiscard]] std::vector<Diagnostic> lint_buffer(const std::string& hlsl,
-                                                  SourceManager& sources) {
+[[nodiscard]] std::vector<Diagnostic> lint_buffer(const std::string& hlsl, SourceManager& sources) {
     const auto src = sources.add_buffer("synthetic.hlsl", hlsl);
     REQUIRE(src.valid());
     auto rules = make_default_rules();
@@ -28,7 +27,8 @@ using shader_clippy::SourceManager;
 
 [[nodiscard]] bool has_rule(const std::vector<Diagnostic>& diags, std::string_view code) {
     for (const auto& d : diags) {
-        if (d.code == code) return true;
+        if (d.code == code)
+            return true;
     }
     return false;
 }
@@ -36,7 +36,8 @@ using shader_clippy::SourceManager;
 [[nodiscard]] const Diagnostic* find_rule(const std::vector<Diagnostic>& diags,
                                           std::string_view code) {
     for (const auto& d : diags) {
-        if (d.code == code) return &d;
+        if (d.code == code)
+            return &d;
     }
     return nullptr;
 }
@@ -77,7 +78,8 @@ TEST_CASE("redundant-unorm-snorm-conversion does not fire on / 256.0",
 float f(float x) { return x / 256.0; }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "redundant-unorm-snorm-conversion");
+    for (const auto& d : diags)
+        CHECK(d.code != "redundant-unorm-snorm-conversion");
 }
 
 TEST_CASE("redundant-unorm-snorm-conversion does not fire on x * 0.5",
@@ -87,7 +89,8 @@ TEST_CASE("redundant-unorm-snorm-conversion does not fire on x * 0.5",
 float f(float x) { return x * 0.5; }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "redundant-unorm-snorm-conversion");
+    for (const auto& d : diags)
+        CHECK(d.code != "redundant-unorm-snorm-conversion");
 }
 
 TEST_CASE("redundant-unorm-snorm-conversion fix drops the divide",

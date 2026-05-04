@@ -27,7 +27,8 @@ using shader_clippy::SourceManager;
 
 [[nodiscard]] bool has_rule(const std::vector<Diagnostic>& diags, std::string_view code) {
     for (const auto& d : diags) {
-        if (d.code == code) return true;
+        if (d.code == code)
+            return true;
     }
     return false;
 }
@@ -35,7 +36,8 @@ using shader_clippy::SourceManager;
 [[nodiscard]] const Diagnostic* find_rule(const std::vector<Diagnostic>& diags,
                                           std::string_view code) {
     for (const auto& d : diags) {
-        if (d.code == code) return &d;
+        if (d.code == code)
+            return &d;
     }
     return nullptr;
 }
@@ -67,24 +69,34 @@ float f(float x) { return 1.0f / sqrt(x); }
     CHECK(has_rule(lint_buffer(hlsl, sources), "inv-sqrt-to-rsqrt"));
 }
 
-TEST_CASE("inv-sqrt-to-rsqrt does not fire on 2.0 / sqrt(x)",
-          "[rules][inv-sqrt-to-rsqrt]") {
+TEST_CASE("inv-sqrt-to-rsqrt does not fire on 2.0 / sqrt(x)", "[rules][inv-sqrt-to-rsqrt]") {
     SourceManager sources;
     const std::string hlsl = R"hlsl(
 float f(float x) { return 2.0 / sqrt(x); }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "inv-sqrt-to-rsqrt");
+    for (const auto& d : diags)
+        CHECK(d.code != "inv-sqrt-to-rsqrt");
 }
 
-TEST_CASE("inv-sqrt-to-rsqrt does not fire on sqrt(x) / 1.0",
-          "[rules][inv-sqrt-to-rsqrt]") {
+TEST_CASE("inv-sqrt-to-rsqrt does not fire on 10.0 / sqrt(x)", "[rules][inv-sqrt-to-rsqrt]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+float f(float x) { return 10.0 / sqrt(x); }
+)hlsl";
+    const auto diags = lint_buffer(hlsl, sources);
+    for (const auto& d : diags)
+        CHECK(d.code != "inv-sqrt-to-rsqrt");
+}
+
+TEST_CASE("inv-sqrt-to-rsqrt does not fire on sqrt(x) / 1.0", "[rules][inv-sqrt-to-rsqrt]") {
     SourceManager sources;
     const std::string hlsl = R"hlsl(
 float f(float x) { return sqrt(x) / 1.0; }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "inv-sqrt-to-rsqrt");
+    for (const auto& d : diags)
+        CHECK(d.code != "inv-sqrt-to-rsqrt");
 }
 
 TEST_CASE("inv-sqrt-to-rsqrt does not fire on 1.0 / x", "[rules][inv-sqrt-to-rsqrt]") {
@@ -93,17 +105,18 @@ TEST_CASE("inv-sqrt-to-rsqrt does not fire on 1.0 / x", "[rules][inv-sqrt-to-rsq
 float f(float x) { return 1.0 / x; }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "inv-sqrt-to-rsqrt");
+    for (const auto& d : diags)
+        CHECK(d.code != "inv-sqrt-to-rsqrt");
 }
 
-TEST_CASE("inv-sqrt-to-rsqrt does not fire on 1.0 / pow(x, 0.5)",
-          "[rules][inv-sqrt-to-rsqrt]") {
+TEST_CASE("inv-sqrt-to-rsqrt does not fire on 1.0 / pow(x, 0.5)", "[rules][inv-sqrt-to-rsqrt]") {
     SourceManager sources;
     const std::string hlsl = R"hlsl(
 float f(float x) { return 1.0 / pow(x, 0.5); }
 )hlsl";
     const auto diags = lint_buffer(hlsl, sources);
-    for (const auto& d : diags) CHECK(d.code != "inv-sqrt-to-rsqrt");
+    for (const auto& d : diags)
+        CHECK(d.code != "inv-sqrt-to-rsqrt");
 }
 
 TEST_CASE("inv-sqrt-to-rsqrt fix is machine-applicable", "[rules][inv-sqrt-to-rsqrt][fix]") {

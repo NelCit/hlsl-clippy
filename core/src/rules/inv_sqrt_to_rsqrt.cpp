@@ -20,6 +20,7 @@
 #include <tree_sitter/api.h>
 
 #include "query/query.hpp"
+#include "rules/util/numeric_literal.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
@@ -45,40 +46,7 @@ constexpr std::string_view k_pattern = R"(
             arguments: (argument_list) @args) @inner_call) @expr
 )";
 
-[[nodiscard]] bool is_float_suffix(char c) noexcept {
-    return c == 'f' || c == 'F' || c == 'h' || c == 'H' || c == 'l' || c == 'L';
-}
-
-/// True if `text` is a numeric literal whose value is exactly 1.
-[[nodiscard]] bool literal_is_one(std::string_view text) noexcept {
-    if (text.empty())
-        return false;
-    std::size_t i = 0;
-    if (text[i] == '+')
-        ++i;
-    while (i < text.size() && text[i] == '0')
-        ++i;
-    if (i >= text.size() || text[i] != '1')
-        return false;
-    ++i;
-    if (i < text.size() && text[i] >= '0' && text[i] <= '9')
-        return false;
-    if (i < text.size() && text[i] == '.') {
-        ++i;
-        while (i < text.size() && text[i] == '0')
-            ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
-            return false;
-    }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
-        return false;
-    while (i < text.size()) {
-        if (!is_float_suffix(text[i]))
-            return false;
-        ++i;
-    }
-    return true;
-}
+using util::is_numeric_literal_one;
 
 /// Return the operator text of a binary_expression node (anonymous child
 /// between `left` and `right` named children).
@@ -137,7 +105,7 @@ public:
 
                        if (binary_operator(expr, tree.source_bytes()) != "/")
                            return;
-                       if (!literal_is_one(tree.text(one)))
+                       if (!is_numeric_literal_one(tree.text(one)))
                            return;
                        if (tree.text(fn) != k_sqrt_name)
                            return;

@@ -14,6 +14,8 @@ export interface ClippySettings {
     readonly serverPath: string;
     /** Slang target profile forwarded to `LintOptions::target_profile`. */
     readonly targetProfile: string;
+    /** Extra include roots forwarded to Slang reflection. */
+    readonly includeDirectories: readonly string[];
     /** Phase 3 toggle — `LintOptions::enable_reflection`. */
     readonly enableReflection: boolean;
     /** Phase 4 toggle — `LintOptions::enable_control_flow`. */
@@ -29,10 +31,41 @@ export function readSettings(): ClippySettings {
     return {
         serverPath: cfg.get<string>("serverPath", "").trim(),
         targetProfile: cfg.get<string>("targetProfile", "").trim(),
+        includeDirectories: expandIncludeDirectories(
+            cfg.get<string[]>("includeDirectories", []),
+        ),
         enableReflection: cfg.get<boolean>("enableReflection", true),
         enableControlFlow: cfg.get<boolean>("enableControlFlow", true),
         trace: getTraceLevel(),
     };
+}
+
+function expandIncludeDirectories(raw: readonly string[]): string[] {
+    const folders = vscode.workspace.workspaceFolders ?? [];
+    const out: string[] = [];
+    const seen = new Set<string>();
+    const push = (value: string): void => {
+        const trimmed = value.trim();
+        if (trimmed.length === 0 || seen.has(trimmed)) {
+            return;
+        }
+        seen.add(trimmed);
+        out.push(trimmed);
+    };
+
+    for (const entry of raw) {
+        if (typeof entry !== "string") {
+            continue;
+        }
+        if (entry.includes("${workspaceFolder}") && folders.length > 0) {
+            for (const folder of folders) {
+                push(entry.replaceAll("${workspaceFolder}", folder.uri.fsPath));
+            }
+        } else {
+            push(entry);
+        }
+    }
+    return out;
 }
 
 export function getTraceLevel(): TraceLevel {
@@ -53,6 +86,7 @@ export function toInitializationOptions(settings: ClippySettings): Record<string
     const opts: Record<string, unknown> = {
         enableReflection: settings.enableReflection,
         enableControlFlow: settings.enableControlFlow,
+        includeDirectories: settings.includeDirectories,
     };
     if (settings.targetProfile.length > 0) {
         opts.targetProfile = settings.targetProfile;

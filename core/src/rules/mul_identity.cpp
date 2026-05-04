@@ -22,6 +22,7 @@
 #include <tree_sitter/api.h>
 
 #include "query/query.hpp"
+#include "rules/util/numeric_literal.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
@@ -43,80 +44,8 @@ constexpr std::string_view k_pattern = R"(
         right: (_) @right) @expr
 )";
 
-[[nodiscard]] bool is_float_suffix_char(char c) noexcept {
-    return c == 'f' || c == 'F' || c == 'h' || c == 'H' || c == 'l' || c == 'L';
-}
-
-/// Returns true if `text` is a numeric literal whose value is exactly 0.
-[[nodiscard]] bool literal_is_zero(std::string_view text) noexcept {
-    if (text.empty())
-        return false;
-    std::size_t i = 0;
-    if (i < text.size() && text[i] == '+')
-        ++i;
-    if (i >= text.size())
-        return false;
-    // All digits must be '0'
-    if (!(text[i] >= '0' && text[i] <= '9'))
-        return false;
-    while (i < text.size() && text[i] == '0')
-        ++i;
-    // Optional fractional part of all zeros
-    if (i < text.size() && text[i] == '.') {
-        ++i;
-        while (i < text.size() && text[i] == '0')
-            ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
-            return false;
-    }
-    // No exponent
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
-        return false;
-    // Suffix
-    while (i < text.size()) {
-        if (!is_float_suffix_char(text[i]))
-            return false;
-        ++i;
-    }
-    return true;
-}
-
-/// Returns true if `text` is a numeric literal whose value is exactly 1.
-[[nodiscard]] bool literal_is_one(std::string_view text) noexcept {
-    if (text.empty())
-        return false;
-    std::size_t i = 0;
-    if (i < text.size() && text[i] == '+')
-        ++i;
-    if (i >= text.size())
-        return false;
-    // Skip leading zeros then exactly one '1'
-    while (i < text.size() && text[i] == '0')
-        ++i;
-    if (i >= text.size() || text[i] != '1')
-        return false;
-    ++i;
-    // After the '1' must come only '0' digits / dot / suffix
-    if (i < text.size() && text[i] >= '2' && text[i] <= '9')
-        return false;
-    while (i < text.size() && text[i] == '0')
-        ++i;
-    if (i < text.size() && text[i] == '.') {
-        ++i;
-        while (i < text.size() && text[i] == '0')
-            ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
-            return false;
-    }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
-        return false;
-    while (i < text.size()) {
-        if (!is_float_suffix_char(text[i]))
-            return false;
-        ++i;
-    }
-    return true;
-}
+using util::is_numeric_literal_one;
+using util::is_numeric_literal_zero;
 
 /// True if a TSNode is a number_literal.
 [[nodiscard]] bool is_number_literal(::TSNode node) noexcept {
@@ -196,7 +125,7 @@ public:
                        // ---- x * 1  or  1 * x ----
                        if (op == "*") {
                            // right is 1
-                           if (is_number_literal(right) && literal_is_one(right_text)) {
+                           if (is_number_literal(right) && is_numeric_literal_one(right_text)) {
                                emit_identity(tree,
                                              ctx,
                                              expr_range,
@@ -207,7 +136,7 @@ public:
                                return;
                            }
                            // left is 1
-                           if (is_number_literal(left) && literal_is_one(left_text)) {
+                           if (is_number_literal(left) && is_numeric_literal_one(left_text)) {
                                emit_identity(tree,
                                              ctx,
                                              expr_range,
@@ -218,7 +147,7 @@ public:
                                return;
                            }
                            // right is 0 (suggestion-only)
-                           if (is_number_literal(right) && literal_is_zero(right_text)) {
+                           if (is_number_literal(right) && is_numeric_literal_zero(right_text)) {
                                emit_mul_zero(tree,
                                              ctx,
                                              expr_range,
@@ -229,7 +158,7 @@ public:
                                return;
                            }
                            // left is 0 (suggestion-only)
-                           if (is_number_literal(left) && literal_is_zero(left_text)) {
+                           if (is_number_literal(left) && is_numeric_literal_zero(left_text)) {
                                emit_mul_zero(tree,
                                              ctx,
                                              expr_range,
@@ -243,7 +172,7 @@ public:
 
                        // ---- x + 0  or  0 + x ----
                        if (op == "+") {
-                           if (is_number_literal(right) && literal_is_zero(right_text)) {
+                           if (is_number_literal(right) && is_numeric_literal_zero(right_text)) {
                                emit_identity(tree,
                                              ctx,
                                              expr_range,
@@ -253,7 +182,7 @@ public:
                                              true);
                                return;
                            }
-                           if (is_number_literal(left) && literal_is_zero(left_text)) {
+                           if (is_number_literal(left) && is_numeric_literal_zero(left_text)) {
                                emit_identity(tree,
                                              ctx,
                                              expr_range,

@@ -27,9 +27,11 @@
 
 #include <cstdint>
 #include <expected>
+#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
+#include <span>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -89,6 +91,17 @@ namespace {
     return h;
 }
 
+[[nodiscard]] std::string include_key(std::span<const std::filesystem::path> include_directories) {
+    std::string out;
+    for (const auto& dir : include_directories) {
+        if (!out.empty()) {
+            out.push_back('\n');
+        }
+        out += dir.lexically_normal().generic_string();
+    }
+    return out;
+}
+
 }  // namespace
 
 // PIMPL'd bridge placeholder. 7a.2-step1 doesn't construct one (`bridge_`
@@ -107,9 +120,11 @@ IrEngine& IrEngine::instance() noexcept {
     return engine;
 }
 
-std::expected<IrInfo, Diagnostic> IrEngine::analyze(const SourceManager& sources,
-                                                    SourceId source,
-                                                    std::string_view target_profile) {
+std::expected<IrInfo, Diagnostic> IrEngine::analyze(
+    const SourceManager& sources,
+    SourceId source,
+    std::string_view target_profile,
+    std::span<const std::filesystem::path> include_directories) {
     // Cache lookup -- read lock first so concurrent lint runs on the same
     // process-singleton don't serialise.
     const std::string profile_key{target_profile};
@@ -125,7 +140,7 @@ std::expected<IrInfo, Diagnostic> IrEngine::analyze(const SourceManager& sources
         return std::unexpected(std::move(diag));
     }
     const auto fp = fingerprint(file->contents());
-    const CacheKey key{source.value, profile_key, fp};
+    const CacheKey key{source.value, profile_key, fp, include_key(include_directories)};
 
     {
         std::shared_lock lock{cache_mu_};
@@ -141,7 +156,8 @@ std::expected<IrInfo, Diagnostic> IrEngine::analyze(const SourceManager& sources
     // its DXC bridge, the additional `getEntryPointCode` call lives inside
     // the same Slang ISession invocation as reflection.
     auto& reflection_engine = reflection::ReflectionEngine::instance();
-    auto reflection_or_error = reflection_engine.reflect(sources, source, target_profile);
+    auto reflection_or_error =
+        reflection_engine.reflect(sources, source, target_profile, include_directories);
     if (!reflection_or_error.has_value()) {
         // Reflection failed -- the orchestrator would have surfaced the
         // reflection error already if a Stage::Reflection rule was enabled.

@@ -20,8 +20,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <expected>
+#include <filesystem>
 #include <memory>
 #include <mutex>
+#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -589,7 +591,12 @@ struct SlangBridge::Impl {
     Slang::ComPtr<slang::IGlobalSession> global_session;
 
     std::mutex pool_mu;
-    std::vector<Slang::ComPtr<slang::ISession>> session_pool;
+    struct SessionEntry {
+        Slang::ComPtr<slang::ISession> session;
+        std::string target_profile;
+        std::string include_key;
+    };
+    std::vector<SessionEntry> session_pool;
     std::uint32_t pool_size_cap = 4U;
 
     explicit Impl(std::uint32_t pool_size) : pool_size_cap(pool_size == 0U ? 1U : pool_size) {
@@ -604,17 +611,33 @@ struct SlangBridge::Impl {
 
     /// Acquire a session from the pool, creating one on demand. Returns null
     /// when the global session is unavailable or session creation failed.
-    [[nodiscard]] Slang::ComPtr<slang::ISession> acquire(std::string_view target_profile) {
+    [[nodiscard]] Slang::ComPtr<slang::ISession> acquire(
+        std::string_view target_profile,
+        std::span<const std::filesystem::path> include_directories) {
         Slang::ComPtr<slang::ISession> session;
         if (global_session == nullptr) {
             return session;
         }
+        std::vector<std::string> search_path_storage;
+        search_path_storage.reserve(include_directories.size());
+        std::string include_key;
+        for (const auto& dir : include_directories) {
+            const std::string path = dir.lexically_normal().string();
+            if (!include_key.empty()) {
+                include_key.push_back('\n');
+            }
+            include_key += path;
+            search_path_storage.push_back(path);
+        }
+        const std::string profile_string{target_profile};
         {
             std::lock_guard<std::mutex> lock(pool_mu);
-            if (!session_pool.empty()) {
-                session = std::move(session_pool.back());
-                session_pool.pop_back();
-                return session;
+            for (auto it = session_pool.begin(); it != session_pool.end(); ++it) {
+                if (it->target_profile == profile_string && it->include_key == include_key) {
+                    session = std::move(it->session);
+                    session_pool.erase(it);
+                    return session;
+                }
             }
         }
 
@@ -622,7 +645,6 @@ struct SlangBridge::Impl {
         // requested profile.
         slang::TargetDesc target_desc{};
         target_desc.format = SLANG_DXIL;
-        const std::string profile_string{target_profile};
         target_desc.profile = global_session->findProfile(profile_string.c_str());
         if (target_desc.profile == SLANG_PROFILE_UNKNOWN) {
             target_desc.profile =
@@ -632,6 +654,13 @@ struct SlangBridge::Impl {
         slang::SessionDesc session_desc{};
         session_desc.targets = &target_desc;
         session_desc.targetCount = 1;
+        std::vector<const char*> search_paths;
+        search_paths.reserve(search_path_storage.size());
+        for (const auto& path : search_path_storage) {
+            search_paths.push_back(path.c_str());
+        }
+        session_desc.searchPaths = search_paths.empty() ? nullptr : search_paths.data();
+        session_desc.searchPathCount = static_cast<SlangInt>(search_paths.size());
 
         const SlangResult res = global_session->createSession(session_desc, session.writeRef());
         if (SLANG_FAILED(res)) {
@@ -642,13 +671,19 @@ struct SlangBridge::Impl {
 
     /// Return a session to the pool when there's headroom, otherwise let it
     /// drop (the ComPtr destructor will release).
-    void release(Slang::ComPtr<slang::ISession> session) {
+    void release(Slang::ComPtr<slang::ISession> session,
+                 std::string target_profile,
+                 std::string include_key) {
         if (session == nullptr) {
             return;
         }
         std::lock_guard<std::mutex> lock(pool_mu);
         if (session_pool.size() < pool_size_cap) {
-            session_pool.push_back(std::move(session));
+            session_pool.push_back(SessionEntry{
+                .session = std::move(session),
+                .target_profile = std::move(target_profile),
+                .include_key = std::move(include_key),
+            });
         }
     }
 };
@@ -656,9 +691,11 @@ struct SlangBridge::Impl {
 SlangBridge::SlangBridge(std::uint32_t pool_size) : impl_(std::make_unique<Impl>(pool_size)) {}
 SlangBridge::~SlangBridge() = default;
 
-std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManager& sources,
-                                                               SourceId source,
-                                                               std::string_view target_profile) {
+std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(
+    const SourceManager& sources,
+    SourceId source,
+    std::string_view target_profile,
+    std::span<const std::filesystem::path> include_directories) {
     const SourceFile* file = sources.get(source);
     if (file == nullptr) {
         return std::unexpected{make_reflection_error(source, std::string{"unknown source id"})};
@@ -670,8 +707,15 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManag
 
     const std::string profile =
         target_profile.empty() ? std::string{k_default_profile} : std::string{target_profile};
+    std::string include_key;
+    for (const auto& dir : include_directories) {
+        if (!include_key.empty()) {
+            include_key.push_back('\n');
+        }
+        include_key += dir.lexically_normal().string();
+    }
 
-    Slang::ComPtr<slang::ISession> session = impl_->acquire(profile);
+    Slang::ComPtr<slang::ISession> session = impl_->acquire(profile, include_directories);
     if (session == nullptr) {
         return std::unexpected{make_reflection_error(
             source, std::string{"failed to acquire Slang ISession from pool"})};
@@ -684,16 +728,27 @@ std::expected<ReflectionInfo, Diagnostic> SlangBridge::reflect(const SourceManag
     struct Releaser {
         Impl* impl;
         Slang::ComPtr<slang::ISession>* session_slot;
-        Releaser(Impl* i, Slang::ComPtr<slang::ISession>* s) : impl(i), session_slot(s) {}
+        std::string target_profile;
+        std::string include_key;
+        Releaser(Impl* i,
+                 Slang::ComPtr<slang::ISession>* s,
+                 std::string profile_in,
+                 std::string include_key_in)
+            : impl(i),
+              session_slot(s),
+              target_profile(std::move(profile_in)),
+              include_key(std::move(include_key_in)) {}
         Releaser(const Releaser&) = delete;
         Releaser& operator=(const Releaser&) = delete;
         Releaser(Releaser&&) = delete;
         Releaser& operator=(Releaser&&) = delete;
         ~Releaser() {
-            impl->release(std::move(*session_slot));
+            impl->release(
+                std::move(*session_slot), std::move(target_profile), std::move(include_key));
         }
     };
-    [[maybe_unused]] Releaser releaser{impl_.get(), std::addressof(session)};
+    [[maybe_unused]] Releaser releaser{
+        impl_.get(), std::addressof(session), profile, std::move(include_key)};
 
     // Load the source as a module.
     //

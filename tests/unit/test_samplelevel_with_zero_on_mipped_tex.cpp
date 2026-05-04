@@ -65,3 +65,20 @@ float4 ps_main(float2 uv : TEXCOORD0) : SV_Target {
 )hlsl";
     CHECK_FALSE(has_rule(lint_buffer(hlsl, sources), "samplelevel-with-zero-on-mipped-tex"));
 }
+
+TEST_CASE("samplelevel-with-zero-on-mipped-tex does not fire in compute shaders",
+          "[rules][samplelevel-with-zero-on-mipped-tex]") {
+    SourceManager sources;
+    const std::string hlsl = R"hlsl(
+Texture2D    t : register(t0);
+SamplerState s : register(s0);
+
+[numthreads(8, 8, 1)]
+[shader("compute")]
+void cs_main(uint3 tid : SV_DispatchThreadID) {
+    float2 uv = float2(tid.xy) / 64.0;
+    float4 c = t.SampleLevel(s, uv, 0);
+}
+)hlsl";
+    CHECK_FALSE(has_rule(lint_buffer(hlsl, sources), "samplelevel-with-zero-on-mipped-tex"));
+}

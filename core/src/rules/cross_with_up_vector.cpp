@@ -32,6 +32,7 @@
 #include <tree_sitter/api.h>
 
 #include "rules/util/ast_helpers.hpp"
+#include "rules/util/numeric_literal.hpp"
 #include "shader_clippy/diagnostic.hpp"
 #include "shader_clippy/rule.hpp"
 #include "shader_clippy/source.hpp"
@@ -44,75 +45,12 @@ namespace {
 
 using util::node_kind;
 using util::node_text;
+using util::is_numeric_literal_one;
+using util::is_numeric_literal_zero;
 
 constexpr std::string_view k_rule_id = "cross-with-up-vector";
 constexpr std::string_view k_category = "math";
 constexpr std::string_view k_cross_name = "cross";
-
-[[nodiscard]] bool is_float_suffix(char c) noexcept {
-    return c == 'f' || c == 'F' || c == 'h' || c == 'H' || c == 'l' || c == 'L';
-}
-
-/// True if `text` is a numeric literal whose value is exactly 0.
-[[nodiscard]] bool literal_is_zero(std::string_view text) noexcept {
-    if (text.empty())
-        return false;
-    std::size_t i = 0;
-    if (i < text.size() && text[i] == '+')
-        ++i;
-    if (i >= text.size() || text[i] < '0' || text[i] > '9')
-        return false;
-    while (i < text.size() && text[i] == '0')
-        ++i;
-    if (i < text.size() && text[i] >= '1' && text[i] <= '9')
-        return false;
-    if (i < text.size() && text[i] == '.') {
-        ++i;
-        while (i < text.size() && text[i] == '0')
-            ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
-            return false;
-    }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
-        return false;
-    while (i < text.size()) {
-        if (!is_float_suffix(text[i]))
-            return false;
-        ++i;
-    }
-    return true;
-}
-
-/// True if `text` is a numeric literal whose value is exactly 1.
-[[nodiscard]] bool literal_is_one(std::string_view text) noexcept {
-    if (text.empty())
-        return false;
-    std::size_t i = 0;
-    if (i < text.size() && text[i] == '+')
-        ++i;
-    while (i < text.size() && text[i] == '0')
-        ++i;
-    if (i >= text.size() || text[i] != '1')
-        return false;
-    ++i;
-    if (i < text.size() && text[i] >= '0' && text[i] <= '9')
-        return false;
-    if (i < text.size() && text[i] == '.') {
-        ++i;
-        while (i < text.size() && text[i] == '0')
-            ++i;
-        if (i < text.size() && text[i] >= '1' && text[i] <= '9')
-            return false;
-    }
-    if (i < text.size() && (text[i] == 'e' || text[i] == 'E'))
-        return false;
-    while (i < text.size()) {
-        if (!is_float_suffix(text[i]))
-            return false;
-        ++i;
-    }
-    return true;
-}
 
 /// Component classification: 0, +1, -1, or "anything else".
 enum class ComponentKind {
@@ -129,9 +67,9 @@ enum class ComponentKind {
     const auto kind = node_kind(node);
     if (kind == "number_literal") {
         const auto t = node_text(node, bytes);
-        if (literal_is_zero(t))
+        if (is_numeric_literal_zero(t))
             return ComponentKind::Zero;
-        if (literal_is_one(t))
+        if (is_numeric_literal_one(t))
             return ComponentKind::Positive;
         return ComponentKind::Other;
     }
@@ -162,9 +100,9 @@ enum class ComponentKind {
         if (node_kind(operand) != "number_literal")
             return ComponentKind::Other;
         const auto t = node_text(operand, bytes);
-        if (literal_is_zero(t))
+        if (is_numeric_literal_zero(t))
             return ComponentKind::Zero;
-        if (literal_is_one(t))
+        if (is_numeric_literal_one(t))
             return ComponentKind::Negative;
         return ComponentKind::Other;
     }

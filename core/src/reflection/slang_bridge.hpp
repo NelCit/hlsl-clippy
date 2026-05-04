@@ -12,7 +12,9 @@
 
 #include <cstdint>
 #include <expected>
+#include <filesystem>
 #include <memory>
+#include <span>
 #include <string_view>
 
 #include "shader_clippy/diagnostic.hpp"
@@ -38,7 +40,10 @@ public:
     /// reflection failure; the diagnostic carries `code = "clippy::reflection"`
     /// and `severity = Severity::Error`.
     [[nodiscard]] std::expected<ReflectionInfo, Diagnostic> reflect(
-        const SourceManager& sources, SourceId source, std::string_view target_profile);
+        const SourceManager& sources,
+        SourceId source,
+        std::string_view target_profile,
+        std::span<const std::filesystem::path> include_directories = {});
 
 private:
     struct Impl;

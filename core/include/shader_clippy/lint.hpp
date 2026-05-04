@@ -26,6 +26,11 @@ struct LintOptions {
     /// Ignored entirely when no enabled rule has `stage() == Stage::Reflection`.
     std::optional<std::string> target_profile;
 
+    /// Include search roots forwarded to Slang for reflection / IR-backed
+    /// compilation. Paths are interpreted by the caller; the LSP resolves
+    /// workspace-relative settings before populating this vector.
+    std::vector<std::filesystem::path> include_directories;
+
     /// When false, the reflection stage is skipped even if reflection-stage
     /// rules are enabled. Useful for fast iteration / AST-only smoke runs /
     /// tests that want to isolate AST behaviour from reflection.

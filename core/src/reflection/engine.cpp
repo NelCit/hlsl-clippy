@@ -2,9 +2,11 @@
 
 #include <cstdint>
 #include <expected>
+#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
+#include <span>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -33,6 +35,17 @@ namespace {
     return hash;
 }
 
+[[nodiscard]] std::string include_key(std::span<const std::filesystem::path> include_directories) {
+    std::string out;
+    for (const auto& dir : include_directories) {
+        if (!out.empty()) {
+            out.push_back('\n');
+        }
+        out += dir.lexically_normal().generic_string();
+    }
+    return out;
+}
+
 }  // namespace
 
 ReflectionEngine::ReflectionEngine(std::uint32_t pool_size)
@@ -49,10 +62,14 @@ ReflectionEngine& ReflectionEngine::instance() noexcept {
 }
 
 std::expected<ReflectionInfo, Diagnostic> ReflectionEngine::reflect(
-    const SourceManager& sources, SourceId source, std::string_view target_profile) {
+    const SourceManager& sources,
+    SourceId source,
+    std::string_view target_profile,
+    std::span<const std::filesystem::path> include_directories) {
     const SourceFile* file = sources.get(source);
     const std::uint64_t fp = file != nullptr ? fingerprint(file->contents()) : 0ULL;
-    const CacheKey key{source.value, std::string{target_profile}, fp};
+    const CacheKey key{
+        source.value, std::string{target_profile}, fp, include_key(include_directories)};
 
     {
         std::shared_lock<std::shared_mutex> read_lock(cache_mu_);
@@ -64,7 +81,7 @@ std::expected<ReflectionInfo, Diagnostic> ReflectionEngine::reflect(
         }
     }
 
-    auto computed = bridge_->reflect(sources, source, target_profile);
+    auto computed = bridge_->reflect(sources, source, target_profile, include_directories);
     if (!computed.has_value()) {
         return std::unexpected{std::move(computed.error())};
     }
